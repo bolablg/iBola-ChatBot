@@ -5,6 +5,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from app.retriever import get_retriever
 from app.guardrails import is_in_scope
 from app.fallback import fallback_response
+import config
 
 GREETINGS = ["hello", "hi", "hey", "greetings", "good morning", "good afternoon", "good evening", "salut", "bonjour", "hola"]
 GREETING_RESPONSES = [
@@ -46,7 +47,7 @@ QA_PROMPT = PromptTemplate.from_template(qa_template)
 
 def get_agent():
     """Initialize and return the conversational RAG agent."""
-    llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro-latest", temperature=0.7)
+    llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro-latest", temperature=0.7, google_api_key=config.GEMINI_API_KEY)
     retriever = get_retriever()
     
     agent = ConversationalRetrievalChain.from_llm(
