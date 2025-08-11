@@ -1,0 +1,7 @@
+At Data Scientist at Rintio from July 2018 to May 2019, Bolaji was In charge of the development of analytics and data science products to feed a smart application for precision agricultural guidance, and supported outsourcing clients in their data transformation.
+
+- Implemented and maintained robust big data stack by combining Hadoop data lake, Spark cluster, and ElasticSearch to store and transform diverse data into valuable insights and intelligent features.
+- Strengthened the knowledge base to support data-driven actions by engineering agricultural (weather, crops, soil, yields...) data scraping and designing surveys to collect additional market information.
+- Enabled predictive decision-making for robust business strategies fueled by statistical crop yield forecast based on inferential analysis and multiple regression algorithms.
+- Delivered timely and accurate performance reports by translating complex analytical insights into accessible reports through interactive dashboards using Kibana and Apache Superset.
+- Empowered the management boards and supported innovative decision-making for some outsourcing clients by co-assessing their advanced analytics needs and crafting customized training materials, including demo and hands-on labs.

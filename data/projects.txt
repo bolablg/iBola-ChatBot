@@ -1,0 +1,4 @@
+- AI-powered chatbot for customer service using langchain, google gemini, github.
+- Data quality observability system using Asana for ticketing, Google looker studio for monitoring, Airflow for program orchestration.
+- Data stack migration from on premises to Google cloud platform, adopting google cloud storage for raw and temp file storage, bigquery for data lakehouse, vertex ai for machine learning, Dataform for data modeling.
+- African low-resources 
