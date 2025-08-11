@@ -18,18 +18,11 @@ This project is a Gemini-powered agentic RAG chatbot that helps people learn abo
     GOOGLE_API_KEY="your_gemini_api_key"
 
     # Database Configuration (choose one)
-    DB_TYPE="sqlite"  # or "postgresql"
+    DB_TYPE="mariadb"  # or "sqlite"
+    DATABASE_URL="mariadb://user:password@host:port/database"
 
     # For SQLite
-    DB_NAME="feedback.db"
-
-    # For PostgreSQL
-    DB_USER="your_db_user"
-    DB_PASSWORD="your_db_password"
-    DB_HOST="your_db_host"
-    DB_PORT="your_db_port"
-    DB_NAME="your_db_name"
-    CLOUD_SQL_CONNECTION_NAME="your-project:your-region:your-instance"
+    # DB_NAME="feedback.db"
 
     # Google Drive Configuration
     GOOGLE_DRIVE_FOLDER_ID="your_google_drive_folder_id"

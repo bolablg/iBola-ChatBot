@@ -6,7 +6,7 @@ from datetime import datetime
 # Add the project root directory to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
@@ -28,18 +28,12 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 agent = get_agent()
 
-# In-memory store for chat histories. 
-# For production, you would replace this with a persistent store like Redis or a database.
-chat_histories = {}
-
 class ChatInput(BaseModel):
     user_input: str
     session_id: str
 
 class FeedbackInput(BaseModel):
     session_id: str
-    question: str
-    answer: str
     rating: int
 
 @app.get("/", tags=["App"])
@@ -47,13 +41,17 @@ def read_root():
     return FileResponse('static/index.html')
 
 @app.post("/chat", tags=["Chat"])
-def chat(payload: ChatInput):
+def chat(payload: ChatInput, request: Request):
     """Chat with the agent."""
     session_id = payload.session_id
     user_input = payload.user_input
+    user_ip = request.client.host
 
-    # Get chat history or create a new one
-    history = chat_histories.get(session_id, [])
+    conn = database.create_connection()
+    if conn:
+        history = database.get_chat_history(conn, session_id)
+    else:
+        history = []
 
     # Get the full response from the agent, which includes source documents
     result = generate_response(agent, user_input, chat_history=history)
@@ -64,7 +62,7 @@ def chat(payload: ChatInput):
         for doc in result["source_documents"]:
             print(f"Page {doc.metadata.get('page', '?')}:")
             print(doc.page_content)
-        print("--- END SOURCE DOCUMENTS ---\\n")
+        print("--- END SOURCE DOCUMENTS ---\n")
     # ----------------------------------------------------------
 
     # Prepare the response for the frontend
@@ -74,21 +72,37 @@ def chat(payload: ChatInput):
     }
 
     # Update the history
-    history.append((user_input, result.get("answer", "")))
-    chat_histories[session_id] = history
+    if conn:
+        chat_history_data = (
+            session_id,
+            user_input,
+            result.get("answer", ""),
+            datetime.now().isoformat()
+        )
+        database.add_chat_history(conn, chat_history_data)
+        conn.close()
 
     return response_for_frontend
 
 @app.post("/feedback", tags=["Feedback"])
-def feedback(payload: FeedbackInput):
+def feedback(payload: FeedbackInput, request: Request):
     """Receive and store user feedback."""
+    session_id = payload.session_id
+    rating = payload.rating
+    user_ip = request.client.host
+
     conn = database.create_connection()
     if conn:
+        chat_history = database.get_chat_history(conn, session_id)
+        user_questions = "\n\n".join([row[0] for row in chat_history])
+        bot_answers = "\n\n".join([row[1] for row in chat_history])
+
         feedback_data = (
-            payload.session_id,
-            payload.question,
-            payload.answer,
-            payload.rating,
+            session_id,
+            user_ip,
+            user_questions,
+            bot_answers,
+            rating,
             datetime.now().isoformat()
         )
         database.add_feedback(conn, feedback_data)

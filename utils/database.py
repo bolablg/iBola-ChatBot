@@ -1,11 +1,11 @@
-import psycopg2
+import mariadb
 import sqlite3
 from sqlite3 import Error
 from datetime import datetime
 import config
 
 def create_connection():
-    """ create a database connection to a SQLite or PostgreSQL database """
+    """ create a database connection to a SQLite or MariaDB database """
     conn = None
     if config.DB_TYPE == "sqlite":
         try:
@@ -13,17 +13,11 @@ def create_connection():
             return conn
         except Error as e:
             print(e)
-    elif config.DB_TYPE == "postgresql":
+    elif config.DB_TYPE == "mariadb":
         try:
-            conn = psycopg2.connect(
-                dbname=config.DB_NAME,
-                user=config.DB_USER,
-                password=config.DB_PASSWORD,
-                host=config.DB_HOST,
-                port=config.DB_PORT
-            )
+            conn = mariadb.connect(url=config.DATABASE_URL)
             return conn
-        except psycopg2.Error as e:
+        except mariadb.Error as e:
             print(e)
     return conn
 
@@ -34,35 +28,79 @@ def create_table(conn):
             sql_create_feedback_table = """ CREATE TABLE IF NOT EXISTS feedback (
                                             id integer PRIMARY KEY,
                                             session_id text NOT NULL,
-                                            question text NOT NULL,
-                                            answer text NOT NULL,
+                                            user_ip text,
+                                            user_questions text,
+                                            bot_answers text,
                                             rating integer NOT NULL,
-                                            timestamp text NOT NULL
+                                            creation_time text NOT NULL
                                         ); """
-        elif config.DB_TYPE == "postgresql":
+            sql_create_chat_history_table = """ CREATE TABLE IF NOT EXISTS chat_history (
+                                                id integer PRIMARY KEY,
+                                                session_id text NOT NULL,
+                                                user_message text NOT NULL,
+                                                bot_message text NOT NULL,
+                                                timestamp text NOT NULL
+                                            ); """
+        elif config.DB_TYPE == "mariadb":
             sql_create_feedback_table = """ CREATE TABLE IF NOT EXISTS feedback (
-                                            id serial PRIMARY KEY,
-                                            session_id text NOT NULL,
-                                            question text NOT NULL,
-                                            answer text NOT NULL,
-                                            rating integer NOT NULL,
-                                            timestamp timestamp NOT NULL
+                                            id int NOT NULL AUTO_INCREMENT,
+                                            session_id varchar(255) NOT NULL,
+                                            user_ip varchar(255),
+                                            user_questions text,
+                                            bot_answers text,
+                                            rating int NOT NULL,
+                                            creation_time timestamp NOT NULL,
+                                            PRIMARY KEY (id)
                                         ); """
+            sql_create_chat_history_table = """ CREATE TABLE IF NOT EXISTS chat_history (
+                                                id int NOT NULL AUTO_INCREMENT,
+                                                session_id varchar(255) NOT NULL,
+                                                user_message text NOT NULL,
+                                                bot_message text NOT NULL,
+                                                timestamp timestamp NOT NULL,
+                                                PRIMARY KEY (id)
+                                            ); """
         c = conn.cursor()
         c.execute(sql_create_feedback_table)
+        c.execute(sql_create_chat_history_table)
         conn.commit()
-    except (Error, psycopg2.Error) as e:
+    except (Error, mariadb.Error) as e:
         print(e)
+
+def add_chat_history(conn, chat_history_data):
+    """ Log a new chat history entry """
+    if config.DB_TYPE == "sqlite":
+        sql = ''' INSERT INTO chat_history(session_id,user_message,bot_message,timestamp)
+                  VALUES(?,?,?,?)
+              '''
+    elif config.DB_TYPE == "mariadb":
+        sql = ''' INSERT INTO chat_history(session_id,user_message,bot_message,timestamp)
+                  VALUES(%s,%s,%s,%s)
+              '''
+    cur = conn.cursor()
+    cur.execute(sql, chat_history_data)
+    conn.commit()
+    return cur.lastrowid
+
+def get_chat_history(conn, session_id):
+    """ Query chat history by session_id """
+    cur = conn.cursor()
+    if config.DB_TYPE == "sqlite":
+        cur.execute("SELECT user_message, bot_message FROM chat_history WHERE session_id = ? ORDER BY timestamp ASC", (session_id,))
+    elif config.DB_TYPE == "mariadb":
+        cur.execute("SELECT user_message, bot_message FROM chat_history WHERE session_id = %s ORDER BY timestamp ASC", (session_id,))
+    rows = cur.fetchall()
+    return rows
 
 def add_feedback(conn, feedback_data):
     """ Log a new feedback entry """
     if config.DB_TYPE == "sqlite":
-        sql = ''' INSERT INTO feedback(session_id,question,answer,rating,timestamp)
-                  VALUES(?,?,?,?,?)
+        sql = ''' INSERT INTO feedback(session_id,user_ip,user_questions,bot_answers,rating,creation_time)
+                  VALUES(?,?,?,?,?,?)
               '''
-    elif config.DB_TYPE == "postgresql":
-        sql = ''' INSERT INTO feedback(session_id,question,answer,rating,timestamp)
-                  VALUES(%s,%s,%s,%s,%s)
+    elif config.DB_TYPE == "mariadb":
+        sql = ''' INSERT INTO feedback(session_id,user_ip,user_questions,bot_answers,rating,creation_time)
+                  VALUES(%s,%s,%s,%s,%s,%s)
               '''
     cur = conn.cursor()
     cur.execute(sql, feedback_data)
@@ -76,3 +114,6 @@ def initialize_database():
         conn.close()
     else:
         print("Error! cannot create the database connection.")
+
+if __name__ == '__main__':
+    initialize_database()

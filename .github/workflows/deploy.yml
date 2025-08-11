@@ -36,6 +36,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Create credentials file
+        run: |
+          echo "${{ secrets.GCP_CREDENTIALS }}" > _conf/gcp-credentials.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/_conf/gcp-credentials.json" >> $GITHUB_ENV
+          echo "GOOGLE_API_CREDENTIALS_PATH=$(pwd)/_conf/gcp-credentials.json" >> $GITHUB_ENV
+
       - name: Authenticate to Google Cloud
         id: auth
         uses: google-github-actions/auth@v1
@@ -46,6 +52,10 @@ jobs:
         uses: google-github-actions/setup-gcloud@v1
         with:
           project_id: ${{ secrets.GCP_PROJECT }}
+
+      - name: Create token.json
+        run: |
+          echo "${{ secrets.TOKEN_JSON }}" > _conf/token.json
 
       - name: Build and push Docker image
         run: |
@@ -58,16 +68,15 @@ jobs:
             --platform managed \
             --region us-central1 \
             --allow-unauthenticated \
-            --add-cloudsql-instances ${{ secrets.CLOUD_SQL_CONNECTION_NAME }} \
-            --set-env-vars "DB_TYPE=postgresql" \
-            --set-env-vars "DB_USER=${{ secrets.DB_USER }}" \
-            --set-env-vars "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" \
-            --set-env-vars "DB_NAME=${{ secrets.DB_NAME }}" \
-            --set-env-vars "DB_HOST=${{ secrets.DB_HOST }}" \
+            --set-env-vars "DATABASE_URL=${{ secrets.DATABASE_URL }}" \
             --set-env-vars "GOOGLE_DRIVE_FOLDER_ID=${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}" \
-            --set-env-vars "GOOGLE_API_CREDENTIALS_PATH=${{ secrets.GOOGLE_API_CREDENTIALS_PATH }}" \
-            --set-env-vars "GOOGLE_CHAT_WEBHOOK_URL=${{ secrets.GOOGLE_CHAT_WEBHOOK_URL }}"
+            --set-env-vars "GOOGLE_CHAT_WEBHOOK_URL=${{ secrets.GOOGLE_CHAT_WEBHOOK_URL }}" \
+            --set-env-vars "GOOGLE_API_CREDENTIALS_PATH=${{ env.GOOGLE_API_CREDENTIALS_PATH }}"
 
       - name: Map custom domain
         run: |
           gcloud run domains map bolablg.com --service ibola-chatbot --region us-central1
+
+      - name: Clean up credentials file
+        run: |
+          rm _conf/gcp-credentials.json
