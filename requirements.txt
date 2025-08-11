@@ -9,7 +9,7 @@ watchdog
 schedule
 fastapi
 uvicorn
-psycopg2-binary
+mariadb
 google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib

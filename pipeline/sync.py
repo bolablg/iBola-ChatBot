@@ -118,8 +118,8 @@ def sync_folder_recursive(service, folder_id, local_path, sync_state):
 def sync_google_drive():
     """Syncs a Google Drive folder with a local folder."""
     creds = None
-    if os.path.exists("token.json"):
-        creds = Credentials.from_authorized_user_file("token.json", SCOPES)
+    if os.path.exists("_conf/token.json"):
+        creds = Credentials.from_authorized_user_file("_conf/token.json", SCOPES)
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
@@ -128,7 +128,7 @@ def sync_google_drive():
                 config.GOOGLE_API_CREDENTIALS_PATH, SCOPES
             )
             creds = flow.run_local_server(port=8080)
-        with open("token.json", "w") as token:
+        with open("_conf/token.json", "w") as token:
             token.write(creds.to_json())
 
     service = build("drive", "v3", credentials=creds)

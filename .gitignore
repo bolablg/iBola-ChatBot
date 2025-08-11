@@ -98,7 +98,5 @@ env/
 .env
 
 # Ignore the _conf directory
-_conf/
-
-# token.json
-token.json
+_conf/*
+!_conf/.gitkeep
