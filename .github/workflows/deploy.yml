@@ -41,26 +41,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Create credentials file
+      - name: Create OAuth credentials file
         run: |
-          echo "${{ secrets.GCP_CREDENTIALS }}" > _conf/gcp-credentials.json
-          echo "GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/_conf/gcp-credentials.json" >> $GITHUB_ENV
-          echo "GOOGLE_API_CREDENTIALS_PATH=$(pwd)/_conf/gcp-credentials.json" >> $GITHUB_ENV
+          echo "${{ secrets.GOOGLE_OAUTH_KEY }}" > _conf/ibola_agent_oauth.json
+          echo "GOOGLE_OAUTH_CREDENTIALS_PATH=$(pwd)/_conf/ibola_agent_oauth.json" >> $GITHUB_ENV
 
       - name: Authenticate to Google Cloud
         id: auth
         uses: google-github-actions/auth@v1
         with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
         with:
           project_id: ${{ secrets.GCP_PROJECT }}
 
-      - name: Create token.json
+      - name: Create GOOGLE OAUTH Token
         run: |
-          echo "${{ secrets.TOKEN_JSON }}" > _conf/token.json
+          echo "${{ secrets.GOOGLE_OAUTH_TOKEN }}" > _conf/token.json
 
       - name: Build and push Docker image
         run: |
@@ -73,15 +72,14 @@ jobs:
             --platform managed \
             --region us-central1 \
             --allow-unauthenticated \
-            --set-env-vars "DATABASE_URL=${{ secrets.DATABASE_URL }}" \
-            --set-env-vars "GOOGLE_DRIVE_FOLDER_ID=${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}" \
-            --set-env-vars "GOOGLE_CHAT_WEBHOOK_URL=${{ secrets.GOOGLE_CHAT_WEBHOOK_URL }}" \
-            --set-env-vars "GOOGLE_API_CREDENTIALS_PATH=${{ env.GOOGLE_API_CREDENTIALS_PATH }}"
+            --set-env-vars "GCP_SA_CRENDIALS_PATH=${{ env.GCP_SA_CRENDIALS_PATH }}" \
+            --set-env-vars "GOOGLE_OAUTH_CREDENTIALS_PATH=${{ env.GOOGLE_OAUTH_CREDENTIALS_PATH }}" \
+            --set-env-vars "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" \
+            --set-env-vars "GCP_PROJECT=${{ secrets.GCP_PROJECT }}" \
+            --set-env-vars "GDRIVE_FOLDER_ID=${{ secrets.GDRIVE_FOLDER_ID }}" \
+            --set-env-vars "GCHAT_WEBHOOK_URL=${{ secrets.GCHAT_WEBHOOK_URL }}" \
+            --set-env-vars "FEEDBACK_DB_CONN_URL=${{ secrets.FEEDBACK_DB_CONN_URL }}"
 
       - name: Map custom domain
         run: |
           gcloud run domains map bolablg.com --service ibola-chatbot --region us-central1
-
-      - name: Clean up credentials file
-        run: |
-          rm _conf/gcp-credentials.json

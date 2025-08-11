@@ -15,26 +15,65 @@ This project is a Gemini-powered agentic RAG chatbot that helps people learn abo
     Create a `.env` file in the project root and add the following variables:
 
     ```
-    GOOGLE_API_KEY="your_gemini_api_key"
+    #----------------------------------------------------------------
+    # Environment variables for the iBola ChatBot
+    #----------------------------------------------------------------
 
-    # Database Configuration (choose one)
-    DB_TYPE="mariadb"  # or "sqlite"
-    DATABASE_URL="mariadb://user:password@host:port/database"
+    # Gemini API Key
+    GEMINI_API_KEY="your_gemini_api_key"
 
-    # For SQLite
-    # DB_NAME="feedback.db"
+    # GCP Project ID
+    GCP_PROJECT="your_gcp_project_id"
 
-    # Google Drive Configuration
-    GOOGLE_DRIVE_FOLDER_ID="your_google_drive_folder_id"
-    GOOGLE_API_CREDENTIALS_PATH="path/to/your/credentials.json"
-    GOOGLE_CHAT_WEBHOOK_URL="your_google_chat_webhook_url"
+    #----------------------------------------------------------------
+    # Database Configuration
+    #----------------------------------------------------------------
+
+    # DB_TYPE: The type of database to use. Can be "mariadb" or "sqlite".
+    DB_TYPE="mariadb"
+
+    # DB_NAME: The name of the SQLite database file.
+    DB_NAME="feedback.db"
+
+    # FEEDBACK_DB_CONN_URL: The connection URL for the MariaDB database.
+    FEEDBACK_DB_CONN_URL="mariadb://user:password@host:port/database"
+
+    #----------------------------------------------------------------
+    # Vector Store and Data Configuration
+    #----------------------------------------------------------------
+
+    # DB_PATH: The path to the vector store database.
+    DB_PATH="chroma_db"
+
+    # DATA_PATH: The path to the data directory.
+    DATA_PATH="data"
+
+    #----------------------------------------------------------------
+    # Google Drive and Chat Configuration
+    #----------------------------------------------------------------
+
+    # GDRIVE_FOLDER_ID: The ID of the Google Drive folder to sync.
+    GDRIVE_FOLDER_ID="your_google_drive_folder_id"
+
+    # GCHAT_WEBHOOK_URL: The URL of the Google Chat webhook to send alerts to.
+    GCHAT_WEBHOOK_URL="your_google_chat_webhook_url"
+
+    #----------------------------------------------------------------
+    # Credentials Configuration
+    #----------------------------------------------------------------
+
+    # GCP_SA_CRENDIALS_PATH: The path to the GCP service account credentials file.
+    GCP_SA_CRENDIALS_PATH="_conf/ibola_agent_sa.json"
+
+    # GOOGLE_OAUTH_CREDENTIALS_PATH: The path to the Google OAuth credentials file.
+    GOOGLE_OAUTH_CREDENTIALS_PATH="_conf/ibola_agent_oauth.json"
     ```
 
 3.  **Google Drive API Setup:**
 
     *   Enable the Google Drive API in your Google Cloud Platform project.
     *   Create an OAuth 2.0 Client ID and download the `credentials.json` file.
-    *   Move the `credentials.json` file to the path specified in the `GOOGLE_API_CREDENTIALS_PATH` environment variable.
+    *   Move the `credentials.json` file to the path specified in the `GOOGLE_OAUTH_CREDENTIALS_PATH` environment variable.
     *   Share your Google Drive folder with the client email found in your `credentials.json` file.
 
 ## Running the Application with Docker

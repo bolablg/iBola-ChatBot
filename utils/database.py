@@ -9,13 +9,13 @@ def create_connection():
     conn = None
     if config.DB_TYPE == "sqlite":
         try:
-            conn = sqlite3.connect(config.DB_NAME or "feedback.db")
+            conn = sqlite3.connect(config.DB_NAME)
             return conn
         except Error as e:
             print(e)
     elif config.DB_TYPE == "mariadb":
         try:
-            conn = mariadb.connect(url=config.DATABASE_URL)
+            conn = mariadb.connect(url=config.FEEDBACK_DB_CONN_URL)
             return conn
         except mariadb.Error as e:
             print(e)

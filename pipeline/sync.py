@@ -19,7 +19,7 @@ SYNC_STATE_FILE = os.path.join(config.DATA_PATH, ".sync_state.json")
 
 def send_webhook_alert(updated_files):
     """Sends a message to a Google Chat webhook."""
-    webhook_url = config.GOOGLE_CHAT_WEBHOOK_URL
+    webhook_url = config.GCHAT_WEBHOOK_URL
     if webhook_url:
         if updated_files:
             message = {
@@ -125,7 +125,7 @@ def sync_google_drive():
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
-                config.GOOGLE_API_CREDENTIALS_PATH, SCOPES
+                config.GOOGLE_OAUTH_CREDENTIALS_PATH, SCOPES
             )
             creds = flow.run_local_server(port=8080)
         with open("_conf/token.json", "w") as token:
@@ -134,7 +134,7 @@ def sync_google_drive():
     service = build("drive", "v3", credentials=creds)
 
     sync_state = get_sync_state()
-    updated_files = sync_folder_recursive(service, config.GOOGLE_DRIVE_FOLDER_ID, config.DATA_PATH, sync_state)
+    updated_files = sync_folder_recursive(service, config.GDRIVE_FOLDER_ID, config.DATA_PATH, sync_state)
 
     if updated_files:
         print("Changes detected, updating vector store...")
