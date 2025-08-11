@@ -40,7 +40,7 @@ jobs:
         id: auth
         uses: google-github-actions/auth@v1
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
@@ -49,16 +49,16 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          gcloud builds submit --tag gcr.io/${{ secrets.GCP_PROJECT }}/agentic-rag-chatbot
+          gcloud builds submit --tag gcr.io/${{ secrets.GCP_PROJECT }}/ibola-chatbot
 
       - name: Deploy to Cloud Run
         run: |
-          gcloud run deploy agentic-rag-chatbot \
-            --image gcr.io/${{ secrets.GCP_PROJECT }}/agentic-rag-chatbot \
+          gcloud run deploy ibola-chatbot \
+            --image gcr.io/${{ secrets.GCP_PROJECT }}/ibola-chatbot \
             --platform managed \
             --region us-central1 \
             --allow-unauthenticated \
-            --add-cloudsql-instances ${{ secrets.DB_HOST }} \
+            --add-cloudsql-instances ${{ secrets.CLOUD_SQL_CONNECTION_NAME }} \
             --set-env-vars "DB_TYPE=postgresql" \
             --set-env-vars "DB_USER=${{ secrets.DB_USER }}" \
             --set-env-vars "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" \
@@ -70,4 +70,4 @@ jobs:
 
       - name: Map custom domain
         run: |
-          gcloud run domains map bolablg.com --service agentic-rag-chatbot --region us-central1
+          gcloud run domains map bolablg.com --service ibola-chatbot --region us-central1

@@ -1,4 +1,4 @@
-# Agentic RAG Chatbot
+# iBola-ChatBot
 
 This project is a Gemini-powered agentic RAG chatbot that helps people learn about my professional background, resume, skills, and experience.
 
@@ -24,11 +24,12 @@ This project is a Gemini-powered agentic RAG chatbot that helps people learn abo
     DB_NAME="feedback.db"
 
     # For PostgreSQL
-    # DB_USER="your_db_user"
-    # DB_PASSWORD="your_db_password"
-    # DB_HOST="your_db_host"
-    # DB_PORT="your_db_port"
-    # DB_NAME="your_db_name"
+    DB_USER="your_db_user"
+    DB_PASSWORD="your_db_password"
+    DB_HOST="your_db_host"
+    DB_PORT="your_db_port"
+    DB_NAME="your_db_name"
+    CLOUD_SQL_CONNECTION_NAME="your-project:your-region:your-instance"
 
     # Google Drive Configuration
     GOOGLE_DRIVE_FOLDER_ID="your_google_drive_folder_id"
@@ -106,7 +107,7 @@ To deploy the main FastAPI application, we will use Google Cloud Run.
 **1. Build the Docker Image:**
 
 ```bash
-gcloud builds submit --tag gcr.io/<your-gcp-project-id>/agentic-rag-chatbot
+gcloud builds submit --tag gcr.io/<your-gcp-project-id>/ibola-chatbot
 ```
 
 *   Replace `<your-gcp-project-id>` with your Google Cloud project ID.
@@ -114,8 +115,8 @@ gcloud builds submit --tag gcr.io/<your-gcp-project-id>/agentic-rag-chatbot
 **2. Deploy to Cloud Run:**
 
 ```bash
-gcloud run deploy agentic-rag-chatbot \ 
-    --image gcr.io/<your-gcp-project-id>/agentic-rag-chatbot \ 
+gcloud run deploy ibola-chatbot \ 
+    --image gcr.io/<your-gcp-project-id>/ibola-chatbot \ 
     --platform managed \ 
     --region <your-gcp-region> \ 
     --allow-unauthenticated

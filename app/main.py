@@ -14,7 +14,7 @@ from app.agent import get_agent, generate_response
 from utils import database
 
 app = FastAPI(
-    title="iBola Agentic RAG Chatbot",
+    title="iBola ChatBot",
     description="A chatbot for answering questions about Bolaji's professional background.",
     version="1.0.0"
 )
