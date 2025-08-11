@@ -1,0 +1,34 @@
+### Presentation 
+Hi, my name is Bolaji BALOGOUN, a data professional experienced in turning raw information into strategic value. My journey began in 2013 as a Statistician right after earning my Bachelor’s degree in Statistics. I went on to complete a Master’s in the same field, and in 2018, I transitioned into Data Science through an intensive Big Data Bootcamp. That’s where I mastered Python and SQL, and immersed myself in Data Engineering, Big Data visualization, and Machine Learning, working with tools like Apache Spark, Hadoop, ElasticSearch, Kibana, Superset, and GitLab. Since then, I’ve worked across almost every layer of the data spectrum — from collection, engineering, and governance to analysis, visualization, predictive modeling, and architecture. I thrive on automation to deliver faster, more scalable solutions. While my career so far has focused heavily on operational and business performance analytics, I’m increasingly passionate about advancing my Product Analytics expertise — diving deeper into feature usage analysis, advanced A/B testing and experimentation, and applying machine learning to optimize ad spend and improve user experience. My mission is to empower product managers and business leaders with actionable, data-driven insights to guide product development and maximize impact. I’m committed to fostering a data-centric culture, delivering cost-effective and secure solutions, and blending technical excellence with strategic vision to drive measurable business growth.
+
+### An example of Technical Challenges. What was the problem and how did I get it fixed. 
+At Gozem, I faced a pressing challenge: our data stack wasn’t scalable, and we lacked a data warehouse to centralize and accelerate insights. Initially, I considered building an open-source stack from scratch, but with no dedicated data engineer and my responsibilities as a global data analyst, maintaining such a setup alone would have been unsustainable.Instead, I opted for a cloud-first approach to avoid the overhead of constant maintenance. Even though I had never worked with GCP or AWS before, I dove into online courses, quickly mastering Google BigQuery, Cloud Storage, and related tools. For data ingestion, urgency drove me to choose Stitch Data over building pipelines from scratch, enabling faster delivery.Within a single quarter, I deployed a fully functional cloud-based analytics infrastructure. In the process, I stepped into a hybrid role—acting simultaneously as a data analyst, cloud data engineer, analytics engineer, and data governance specialist—ensuring Gozem could scale its data capabilities and make decisions faster than ever. 
+
+### Management and other experience
+Lead with Care' resonates deeply with Bolaji because it aligns with my experience managing multi-cultural data science teams over the past five years. I've seen firsthand how prioritizing both professional growth and mental well-being of team members leads to exceptional results, fostering an environment where innovation thrives and complex challenges are overcome collaboratively. This approach has been instrumental in our team's successes, reinforcing my belief that genuine care is the cornerstone of effective leadership and the key to unlocking each team member's full potential.
+
+In my current role, I spearheaded a major overhaul of our company's data infrastructure:
+1. Cloud Migration: Transitioned our entire data ecosystem to Google Cloud Platform, with BigQuery as our central data warehouse.
+2. Diverse Data Sources: Integrated data from various platforms:
+    * MongoDB Atlas for application data
+    * Zendesk for customer support
+    * Pipedrive for sales information
+    * Asana for task and project management
+    * CallCenterStudio for additional customer support data
+3. Advanced Pipeline Implementation: Designed and deployed a sophisticated data pipeline utilizing:
+    * Google Cloud Storage
+    * Google Dataflow
+    * Apache Airflow for near real-time processing
+    * StitchData for long-period batch operations
+This pipeline efficiently loads data into BigQuery, where it's structured, cleaned, and organized into business-specific datamarts.
+4. Cost Optimization: After two years of successful operation, I tackled rising costs head-on. Through strategic optimizations, I slashed our BigQuery bills by over 40%, significantly improving our data infrastructure's efficiency.
+5. Continuous Learning and Leadership: As the leader of our data team, I've worn multiple hats - data architect, data engineer, and analytics engineer. When faced with new challenges, I proactively seek solutions, including enrolling in specialized online courses to acquire the necessary skills.
+My approach combines technical expertise with a commitment to continuous improvement, ensuring our data infrastructure remains cutting-edge and cost-effective.
+
+In our fintech division, we revolutionized vehicle financing for drivers by offering installment-based sales. Initially, we faced a significant challenge: our data was in disarray. However, my close collaboration with our business and operations teams proved invaluable.
+By understanding their day-to-day struggles and goals, I was able to:
+1. Effectively manage the complex data
+2. Transform it to suit our specific needs
+3. Extract accurate and actionable insights
+Simultaneously, I worked hand-in-hand with our development team to enhance our data collection methods. This comprehensive approach not only improved our data quality but also drove more informed decision-making across the company.
+This experience highlighted the power of cross-team collaboration in turning chaotic data into a strategic asset.
