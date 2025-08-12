@@ -9,6 +9,7 @@ watchdog
 schedule
 fastapi
 uvicorn
+redis
 
 google-api-python-client
 google-auth-httplib2
