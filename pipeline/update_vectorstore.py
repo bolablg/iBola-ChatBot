@@ -42,7 +42,15 @@ def update_vectorstore():
             file_path = os.path.join(root, file)
             file_hash = get_file_hash(file_path)
 
-            if file_path not in vectorstore_state or vectorstore_state[file_path] != file_hash:
+            if file_path not in vectorstore_state:
+                print(f"New file detected: {file_path}")
+                print(f"  New hash: {file_hash}")
+            elif vectorstore_state[file_path] != file_hash:
+                print(f"Modified file detected: {file_path}")
+                print(f"  Old hash: {vectorstore_state[file_path]}")
+                print(f"  New hash: {file_hash}")
+            else:
+                continue
                 print(f"Processing {file_path}...")
                 try:
                     if file.endswith(".pdf"):

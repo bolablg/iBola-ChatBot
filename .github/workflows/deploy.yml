@@ -85,8 +85,12 @@ jobs:
             --set-env-vars "GCP_PROJECT=${{ secrets.GCP_PROJECT }}" \
             --set-env-vars "GDRIVE_FOLDER_ID=${{ secrets.GDRIVE_FOLDER_ID }}" \
             --set-env-vars "GCHAT_WEBHOOK_URL=${{ secrets.GCHAT_WEBHOOK_URL }}" \
-            --set-env-vars "FEEDBACK_DB_CONN_URL=${{ secrets.FEEDBACK_DB_CONN_URL }}"
+            --set-env-vars "DATA_PATH=${{ secrets.DATA_PATH }}" \
+            --set-env-vars "DB_PATH=${{ secrets.DB_PATH }}"
 
       - name: Map custom domain
         run: |
-          gcloud run domains map bolablg.com --service ibola-chatbot --region us-central1
+          gcloud run domain-mappings create \
+            --service ibola-chatbot \
+            --domain bolablg.com \
+            --region us-central1

@@ -88,7 +88,14 @@ def sync_folder_recursive(service, folder_id, local_path, sync_state):
         if item["mimeType"] == "application/vnd.google-apps.folder":
             updated_files.extend(sync_folder_recursive(service, item["id"], item_path, sync_state))
         else:
-            if item["id"] not in sync_state or item["modifiedTime"] > sync_state.get(item["id"]):
+            if item["id"] not in sync_state:
+                print(f"New file: {item['name']} (Modified: {item['modifiedTime']})")
+                file_status = "New"
+            elif item["modifiedTime"] > sync_state.get(item["id"]):
+                print(f"Updated file: {item['name']} (Modified: {item['modifiedTime']})")
+                file_status = "Updated"
+            else:
+                continue
                 if item["mimeType"].startswith("application/vnd.google-apps"):
                     if item["mimeType"] == "application/vnd.google-apps.document":
                         request = service.files().export_media(fileId=item["id"], mimeType="application/pdf")
@@ -114,7 +121,7 @@ def sync_folder_recursive(service, folder_id, local_path, sync_state):
                     f.write(fh.getbuffer())
                 
                 sync_state[item["id"]] = item["modifiedTime"]
-                updated_files.append(item['name'])
+                updated_files.append(f"{file_status}: {item['name']} (Modified: {item['modifiedTime']})")
     return updated_files
 
 def sync_google_drive():
