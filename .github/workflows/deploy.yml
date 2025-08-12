@@ -72,7 +72,6 @@ jobs:
             --platform managed \
             --region us-central1 \
             --allow-unauthenticated \
-            --set-env-vars "GCP_SA_CRENDIALS_PATH=${{ env.GCP_SA_CRENDIALS_PATH }}" \
             --set-env-vars "GOOGLE_OAUTH_CREDENTIALS_PATH=${{ env.GOOGLE_OAUTH_CREDENTIALS_PATH }}" \
             --set-env-vars "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" \
             --set-env-vars "GCP_PROJECT=${{ secrets.GCP_PROJECT }}" \
