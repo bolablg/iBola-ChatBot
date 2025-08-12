@@ -10,7 +10,11 @@ with patch("app.agent.get_agent", return_value=MagicMock()), \
      patch("app.agent.generate_response", return_value={"answer": "mock_answer", "actions": []}):
     from app.main import app
 
-client = TestClient(app)
+if os.getenv("GEMINI_API_KEY"):
+    from app.main import app
+    client = TestClient(app)
+else:
+    pytestmark = pytest.mark.skip(reason="GEMINI_API_KEY not set")
 
 def test_read_main():
     response = client.get("/")

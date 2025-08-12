@@ -3,6 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from app.agent import get_agent, generate_response
+from app.history_store import get_history, append_history
 
 app = FastAPI(
     title="iBola Agentic RAG Chatbot",
@@ -17,11 +18,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 agent = get_agent()
 
-# In-memory store for chat histories. 
-# For production, you would replace this with a persistent store like Redis or a database.
-# In-memory store for chat histories. 
-# For production, you would replace this with a persistent store like Redis or a database.
-chat_histories = {}
+
 
 class ChatInput(BaseModel):
     user_input: str = Field(..., min_length=1, max_length=500)
@@ -40,8 +37,8 @@ def chat(payload: ChatInput):
     user_input = payload.user_input
 
     try:
-        # Get chat history or create a new one
-        history = chat_histories.get(session_id, [])
+        # Get chat history from the configured store
+        history = get_history(session_id)
 
         # Get the full response from the agent, which includes source documents
         result = generate_response(agent, user_input, chat_history=history)
@@ -61,9 +58,8 @@ def chat(payload: ChatInput):
             "actions": result.get("actions")
         }
 
-        # Update the history
-        history.append((user_input, result.get("answer", "")))
-        chat_histories[session_id] = history
+        # Update the history in the store
+        append_history(session_id, (user_input, result.get("answer", "")))
 
         return response_for_frontend
     except Exception as e:
