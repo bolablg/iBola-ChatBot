@@ -92,5 +92,5 @@ jobs:
         run: |
           gcloud beta run domain-mappings create \
             --service=ibola-chatbot \
-            --domain=bolablg.com \
+            --domain=chat.bolablg.com \
             --region=us-central1
