@@ -27,7 +27,7 @@ RUN chmod 0644 /etc/cron.d/sync-cron
 RUN touch /var/log/cron.log
 
 # Expose the port the app runs on
-EXPOSE 8000
+EXPOSE 8080
 
 # Start the cron daemon in the background and run the app
-CMD cron && tail -f /var/log/cron.log & uvicorn app.main:app --host 0.0.0.0 --port 8000
+CMD cron && tail -f /var/log/cron.log & uvicorn app.main:app --host 0.0.0.0 --port 8080
