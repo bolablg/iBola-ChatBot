@@ -96,32 +96,33 @@ def sync_folder_recursive(service, folder_id, local_path, sync_state):
                 file_status = "Updated"
             else:
                 continue
-                if item["mimeType"].startswith("application/vnd.google-apps"):
-                    if item["mimeType"] == "application/vnd.google-apps.document":
-                        request = service.files().export_media(fileId=item["id"], mimeType="application/pdf")
-                        item_path += ".pdf"
-                    elif item["mimeType"] == "application/vnd.google-apps.spreadsheet":
-                        request = service.files().export_media(fileId=item["id"], mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-                        item_path += ".xlsx"
-                    elif item["mimeType"] == "application/vnd.google-apps.presentation":
-                        request = service.files().export_media(fileId=item["id"], mimeType="application/vnd.openxmlformats-officedocument.presentationml.presentation")
-                        item_path += ".pptx"
-                    else:
-                        continue
+
+            if item["mimeType"].startswith("application/vnd.google-apps"):
+                if item["mimeType"] == "application/vnd.google-apps.document":
+                    request = service.files().export_media(fileId=item["id"], mimeType="application/pdf")
+                    item_path += ".pdf"
+                elif item["mimeType"] == "application/vnd.google-apps.spreadsheet":
+                    request = service.files().export_media(fileId=item["id"], mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                    item_path += ".xlsx"
+                elif item["mimeType"] == "application/vnd.google-apps.presentation":
+                    request = service.files().export_media(fileId=item["id"], mimeType="application/vnd.openxmlformats-officedocument.presentationml.presentation")
+                    item_path += ".pptx"
                 else:
-                    request = service.files().get_media(fileId=item["id"])
-                
-                fh = io.BytesIO()
-                downloader = MediaIoBaseDownload(fh, request)
-                done = False
-                while done is False:
-                    status, done = downloader.next_chunk()
-                    print(f"Download {item['name']} {int(status.progress() * 100)}%.")
-                with open(item_path, "wb") as f:
-                    f.write(fh.getbuffer())
-                
-                sync_state[item["id"]] = item["modifiedTime"]
-                updated_files.append(f"{file_status}: {item['name']} (Modified: {item['modifiedTime']})")
+                    continue
+            else:
+                request = service.files().get_media(fileId=item["id"])
+
+            fh = io.BytesIO()
+            downloader = MediaIoBaseDownload(fh, request)
+            done = False
+            while done is False:
+                status, done = downloader.next_chunk()
+                print(f"Download {item['name']} {int(status.progress() * 100)}%.")
+            with open(item_path, "wb") as f:
+                f.write(fh.getbuffer())
+
+            sync_state[item["id"]] = item["modifiedTime"]
+            updated_files.append(f"{file_status}: {item['name']} (Modified: {item['modifiedTime']})")
     return updated_files
 
 def sync_google_drive():
