@@ -1,9 +1,18 @@
+import logging
+import os
+
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from app.agent import get_agent, generate_response
 from app.history_store import get_history, append_history
+
+log_level_str = os.getenv("LOG_LEVEL", "INFO").upper()
+numeric_level = getattr(logging, log_level_str, logging.INFO)
+logging.basicConfig(level=numeric_level)
+logger = logging.getLogger(__name__)
+logger.setLevel(numeric_level)
 
 app = FastAPI(
     title="iBola Agentic RAG Chatbot",
@@ -45,11 +54,11 @@ def chat(payload: ChatInput):
 
         # --- DEBUG LOGGING: Print source documents to the console ---
         if "source_documents" in result:
-            print("\n--- SOURCE DOCUMENTS ---")
+            logger.debug("\n--- SOURCE DOCUMENTS ---")
             for doc in result["source_documents"]:
-                print(f"Page {doc.metadata.get('page', '?')}:")
-                print(doc.page_content)
-            print("--- END SOURCE DOCUMENTS ---\n")
+                logger.debug("Page %s:", doc.metadata.get('page', '?'))
+                logger.debug(doc.page_content)
+            logger.debug("--- END SOURCE DOCUMENTS ---\n")
         # ----------------------------------------------------------
 
         # Prepare the response for the frontend
@@ -63,7 +72,7 @@ def chat(payload: ChatInput):
 
         return response_for_frontend
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logger.error("An error occurred: %s", e)
         raise e
 
     
