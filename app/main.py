@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from app.agent import get_agent, generate_response
 
 app = FastAPI(
@@ -24,8 +24,8 @@ agent = get_agent()
 chat_histories = {}
 
 class ChatInput(BaseModel):
-    user_input: str
-    session_id: str
+    user_input: str = Field(..., min_length=1, max_length=500)
+    session_id: str = Field(..., min_length=1)
 
 
 
