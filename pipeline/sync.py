@@ -18,7 +18,7 @@ SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
 SYNC_STATE_FILE = os.path.join(config.DATA_PATH, ".sync_state.json")
 
 def send_webhook_alert(updated_files):
-    """Sends a message to a Google Chat webhook."""
+    """Sends a notification to a Google Chat webhook about the sync status."""
     webhook_url = config.GCHAT_WEBHOOK_URL
     if webhook_url:
         if updated_files:
@@ -59,17 +59,19 @@ def send_webhook_alert(updated_files):
             response.raise_for_status()
 
 def get_sync_state():
+    """Loads the last sync state from a local file."""
     if os.path.exists(SYNC_STATE_FILE):
         with open(SYNC_STATE_FILE, "r") as f:
             return json.load(f)
     return {}
 
 def save_sync_state(state):
+    """Saves the current sync state to a local file."""
     with open(SYNC_STATE_FILE, "w") as f:
         json.dump(state, f)
 
 def sync_folder_recursive(service, folder_id, local_path, sync_state):
-    """Syncs a folder and its contents recursively."""
+    """Recursively syncs a Google Drive folder to a local path."""
     if not os.path.exists(local_path):
         os.makedirs(local_path)
 
@@ -116,10 +118,10 @@ def sync_folder_recursive(service, folder_id, local_path, sync_state):
     return updated_files
 
 def sync_google_drive():
-    """Syncs a Google Drive folder with a local folder."""
+    """Main function to sync a Google Drive folder with a local folder."""
     creds = None
-    if os.path.exists("_conf/token.json"):
-        creds = Credentials.from_authorized_user_file("_conf/token.json", SCOPES)
+    if os.path.exists(config.GOOGLE_OAUTH_TOKEN_PATH):
+        creds = Credentials.from_authorized_user_file(config.GOOGLE_OAUTH_TOKEN_PATH, SCOPES)
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
@@ -128,7 +130,7 @@ def sync_google_drive():
                 config.GOOGLE_OAUTH_CREDENTIALS_PATH, SCOPES
             )
             creds = flow.run_local_server(port=8080)
-        with open("_conf/token.json", "w") as token:
+        with open(config.GOOGLE_OAUTH_TOKEN_PATH, "w") as token:
             token.write(creds.to_json())
 
     service = build("drive", "v3", credentials=creds)
