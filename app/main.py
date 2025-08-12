@@ -3,6 +3,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from app.agent import get_agent, generate_response
+import sqlite3
+from config import DB_TYPE, DB_NAME
 
 app = FastAPI(
     title="iBola Agentic RAG Chatbot",
@@ -26,6 +28,39 @@ chat_histories = {}
 class ChatInput(BaseModel):
     user_input: str
     session_id: str
+
+
+class FeedbackInput(BaseModel):
+    session_id: str
+    question: str
+    answer: str
+    rating: str
+
+
+def save_feedback(feedback: FeedbackInput):
+    if DB_TYPE == "sqlite":
+        conn = sqlite3.connect(DB_NAME)
+        cur = conn.cursor()
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS feedback (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT,
+                question TEXT,
+                answer TEXT,
+                rating TEXT,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+        cur.execute(
+            "INSERT INTO feedback (session_id, question, answer, rating) VALUES (?, ?, ?, ?)",
+            (feedback.session_id, feedback.question, feedback.answer, feedback.rating),
+        )
+        conn.commit()
+        conn.close()
+    else:
+        print("Feedback received:", feedback.dict())
 
 
 
@@ -70,5 +105,12 @@ def chat(payload: ChatInput):
         print(f"An error occurred: {e}")
         raise e
 
-    
+
+
+
+@app.post("/feedback", tags=["Feedback"])
+def feedback(payload: FeedbackInput):
+    save_feedback(payload)
+    return {"status": "success"}
+
 

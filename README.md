@@ -104,6 +104,11 @@ uvicorn app.main:app --reload
 
 Once running, the API documentation will be available at `http://127.0.0.1:8000/docs`.
 
+## Feedback Workflow
+
+Each bot response includes a small feedback icon. Clicking it reveals 👍 and 👎 options. Selecting a rating sends the question,
+the bot's answer and your choice to the `/feedback` endpoint where it is stored in the configured database (SQLite by default).
+
 ## Updating the Vectorstore
 
 To sync your Google Drive folder and update the vectorstore, run the following command:

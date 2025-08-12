@@ -43,7 +43,55 @@ document.addEventListener('DOMContentLoaded', () => {
         messageElement.classList.add('message', `${sender}-message`);
         messageElement.textContent = text;
         wrapper.appendChild(messageElement);
-        
+
+        if (sender === 'bot' && question) {
+            const feedbackContainer = document.createElement('div');
+            feedbackContainer.classList.add('feedback-container');
+
+            const trigger = document.createElement('span');
+            trigger.classList.add('feedback-trigger');
+            trigger.textContent = '💬';
+
+            const choices = document.createElement('div');
+            choices.classList.add('feedback-choices', 'hidden');
+
+            const up = document.createElement('span');
+            up.textContent = '👍';
+            const down = document.createElement('span');
+            down.textContent = '👎';
+
+            const sendFeedback = async (rating) => {
+                try {
+                    await fetch('/feedback', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            session_id: sessionId,
+                            question: question,
+                            answer: text,
+                            rating: rating
+                        })
+                    });
+                    feedbackContainer.innerHTML = '<span class="feedback-thanks">Thanks for the feedback!</span>';
+                } catch (err) {
+                    console.error('Feedback error:', err);
+                    feedbackContainer.innerHTML = '<span class="feedback-thanks">Feedback failed</span>';
+                }
+            };
+
+            trigger.addEventListener('click', () => {
+                choices.classList.toggle('hidden');
+            });
+            up.addEventListener('click', () => sendFeedback('up'));
+            down.addEventListener('click', () => sendFeedback('down'));
+
+            choices.appendChild(up);
+            choices.appendChild(down);
+            feedbackContainer.appendChild(trigger);
+            feedbackContainer.appendChild(choices);
+            wrapper.appendChild(feedbackContainer);
+        }
+
         chatBox.insertBefore(wrapper, typingIndicator);
         chatBox.scrollTop = chatBox.scrollHeight;
     };
