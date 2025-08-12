@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let afterResponseInactiveTimer = null;
 
     const endChatDueToInactivity = () => {
-        addMessage("A plus...", 'bot');
+        addMessage("Ciao...✌🏿", 'bot');
         endChat();
     };
 
