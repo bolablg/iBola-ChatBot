@@ -90,7 +90,7 @@ jobs:
 
       - name: Map custom domain
         run: |
-          gcloud run domain-mappings create \
-            --service ibola-chatbot \
-            --domain bolablg.com \
-            --region us-central1
+          gcloud beta run domain-mappings create \
+            --service=ibola-chatbot \
+            --domain=bolablg.com \
+            --region=us-central1
