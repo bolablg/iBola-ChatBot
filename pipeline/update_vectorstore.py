@@ -13,16 +13,19 @@ import config
 VECTORSTORE_STATE_FILE = os.path.join(config.DB_PATH, ".vectorstore_state.json")
 
 def get_vectorstore_state():
+    """Loads the last vectorstore state from a local file."""
     if os.path.exists(VECTORSTORE_STATE_FILE):
         with open(VECTORSTORE_STATE_FILE, "r") as f:
             return json.load(f)
     return {}
 
 def save_vectorstore_state(state):
+    """Saves the current vectorstore state to a local file."""
     with open(VECTORSTORE_STATE_FILE, "w") as f:
         json.dump(state, f)
 
 def get_file_hash(file_path):
+    """Calculates the MD5 hash of a file."""
     hasher = hashlib.md5()
     with open(file_path, 'rb') as f:
         buf = f.read()
@@ -30,6 +33,7 @@ def get_file_hash(file_path):
     return hasher.hexdigest()
 
 def update_vectorstore():
+    """Scans the data directory and updates the vectorstore with new or modified files."""
     print("Scanning for new or modified files...")
     vectorstore_state = get_vectorstore_state()
     updated = False

@@ -9,10 +9,11 @@ watchdog
 schedule
 fastapi
 uvicorn
-mariadb
+
 google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
 functions-framework
 apache-airflow-providers-google
 httpx
+docx2txt

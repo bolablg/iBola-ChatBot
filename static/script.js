@@ -28,20 +28,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const resetGlobalInactiveTimer = () => {
         if (globalInactivityTimerId) clearTimeout(globalInactivityTimerId);
-        globalInactivityTimerId = setTimeout(endChat, 60000);
+        globalInactivityTimerId = setTimeout(endChat, 300000);
     };
 
-    const sendFeedback = async (question, answer, rating) => {
-        try {
-            await fetch('/feedback', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ session_id: sessionId, question, answer, rating })
-            });
-        } catch (error) {
-            console.error("Failed to send feedback:", error);
-        }
+    let afterResponseInactiveTimer = null;
+
+    const askForAnotherQuestion = () => {
+        addMessage("Do you have another question?", 'bot');
+        if (afterResponseInactiveTimer) clearTimeout(afterResponseInactiveTimer);
+        afterResponseInactiveTimer = setTimeout(endChat, 60000);
     };
+
+    const resetAfterResponseInactiveTimer = () => {
+        if (afterResponseInactiveTimer) clearTimeout(afterResponseInactiveTimer);
+        afterResponseInactiveTimer = setTimeout(askForAnotherQuestion, 120000);
+    };
+
+    
+
+    
 
     const addMessage = (text, sender, question = null) => {
         const wrapper = document.createElement('div');
@@ -50,36 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
         messageElement.classList.add('message', `${sender}-message`);
         messageElement.textContent = text;
         wrapper.appendChild(messageElement);
-        if (sender === 'bot' && question) {
-            const feedbackContainer = document.createElement('div');
-            feedbackContainer.classList.add('feedback-container');
-            const trigger = document.createElement('span');
-            trigger.classList.add('feedback-trigger');
-            trigger.textContent = '🤔';
-            const choices = document.createElement('div');
-            choices.classList.add('feedback-choices', 'hidden');
-            const likeBtn = document.createElement('span');
-            likeBtn.textContent = '👍';
-            likeBtn.onclick = () => {
-                sendFeedback(question, text, 1);
-                feedbackContainer.innerHTML = '<span class="feedback-thanks">Thanks for your feedback!</span>';
-            };
-            const dislikeBtn = document.createElement('span');
-            dislikeBtn.textContent = '👎';
-            dislikeBtn.onclick = () => {
-                sendFeedback(question, text, -1);
-                feedbackContainer.innerHTML = '<span class="feedback-thanks">Thanks for your feedback!</span>';
-            };
-            choices.appendChild(likeBtn);
-            choices.appendChild(dislikeBtn);
-            trigger.onclick = () => {
-                choices.classList.toggle('hidden');
-                trigger.style.display = 'none';
-            };
-            feedbackContainer.appendChild(trigger);
-            feedbackContainer.appendChild(choices);
-            wrapper.appendChild(feedbackContainer);
-        }
+        
         chatBox.insertBefore(wrapper, typingIndicator);
         chatBox.scrollTop = chatBox.scrollHeight;
     };
@@ -135,10 +111,8 @@ document.addEventListener('DOMContentLoaded', () => {
     chatForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         resetGlobalInactiveTimer();
-        if (rejectionInactivityTimerId) {
-            clearTimeout(rejectionInactivityTimerId);
-            rejectionInactivityTimerId = null;
-        }
+        if (afterResponseInactiveTimer) clearTimeout(afterResponseInactiveTimer);
+        
         const messageText = userInput.value.trim();
         if (!messageText) return;
         if (["no", "non", "nein"].includes(messageText.toLowerCase())) {
@@ -161,11 +135,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             if (data.answer) {
                 addMessage(data.answer, 'bot', lastUserQuestion);
+                resetAfterResponseInactiveTimer();
                 if (data.answer === REJECTION_MESSAGE) {
-                    setTimeout(() => {
+                                        setTimeout(() => {
                         addMessage("Do you have another question?", 'bot');
-                        rejectionInactivityTimerId = setTimeout(endChat, 15000);
-                    }, 30000);
+                    }, 60000);
                 }
             }
             if (data.actions) {
