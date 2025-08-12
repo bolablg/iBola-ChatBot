@@ -25,9 +25,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let afterResponseInactiveTimer = null;
 
+    const typeMessage = (text, sender = 'bot', question = null, speed = 40) => {
+        return new Promise(resolve => {
+            typingIndicator.style.display = 'flex';
+            const wrapper = document.createElement('div');
+            wrapper.classList.add('message-wrapper', `${sender}-message-wrapper`);
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', `${sender}-message`);
+            wrapper.appendChild(messageElement);
+
+            chatBox.insertBefore(wrapper, typingIndicator);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            let index = 0;
+            const interval = setInterval(() => {
+                messageElement.textContent += text.charAt(index);
+                index++;
+                chatBox.scrollTop = chatBox.scrollHeight;
+                if (index >= text.length) {
+                    clearInterval(interval);
+                    typingIndicator.style.display = 'none';
+                    resolve();
+                }
+            }, speed);
+        });
+    };
+
     const endChatDueToInactivity = () => {
-        addMessage("Ciao...✌🏿", 'bot');
-        endChat();
+        typeMessage("Ciao...✌🏿", 'bot').then(endChat);
     };
 
     const resetAfterResponseInactiveTimer = () => {
@@ -35,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
         afterResponseInactiveTimer = setTimeout(endChatDueToInactivity, 180000);
     };
 
-    
+
     const addMessage = (text, sender, question = null) => {
         const wrapper = document.createElement('div');
         wrapper.classList.add('message-wrapper', `${sender}-message-wrapper`);
@@ -43,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
         messageElement.classList.add('message', `${sender}-message`);
         messageElement.textContent = text;
         wrapper.appendChild(messageElement);
-        
+
         chatBox.insertBefore(wrapper, typingIndicator);
         chatBox.scrollTop = chatBox.scrollHeight;
     };
@@ -125,17 +150,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
             if (data.answer) {
-                addMessage(data.answer, 'bot', lastUserQuestion);
+                await typeMessage(data.answer, 'bot', lastUserQuestion);
                 resetAfterResponseInactiveTimer();
+            } else {
+                typingIndicator.style.display = 'none';
             }
             if (data.actions) {
                 addActionButtons(data.actions);
             }
         } catch (error) {
             console.error('Error:', error);
-            addMessage('Sorry, something went wrong. Please try again later.', 'bot');
-        } finally {
-            typingIndicator.style.display = 'none';
+            await typeMessage('Sorry, something went wrong. Please try again later.', 'bot');
         }
     });
 
@@ -147,8 +172,13 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const userLang = navigator.language.split('-')[0];
     const messages = welcomeMessages[userLang] || welcomeMessages.en;
-    setTimeout(() => addMessage(messages[0], 'bot'), 500);
-    setTimeout(() => addMessage(messages[1], 'bot'), 1200);
+    const showWelcomeMessages = async () => {
+        await new Promise(res => setTimeout(res, 500));
+        await typeMessage(messages[0], 'bot');
+        await new Promise(res => setTimeout(res, 700));
+        await typeMessage(messages[1], 'bot');
+    };
+    showWelcomeMessages();
 
     const savedTheme = localStorage.getItem('theme') || 'light';
     applyTheme(savedTheme);
