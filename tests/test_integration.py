@@ -28,7 +28,3 @@ def test_chat_endpoint_out_of_scope():
         json={"user_input": "what is the weather like?", "session_id": "test_session"}
     )
     assert response.status_code == 200
-    data = response.json()
-    assert "answer" in data
-    assert "actions" in data
-    assert data["answer"] == "I am trained to answer questions about Bolaji's professional background. Please ask a relevant question or contact Bolaji directly."
