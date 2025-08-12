@@ -5,12 +5,15 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from app.retriever import get_retriever
 from app.guardrails import is_in_scope
 from app.fallback import fallback_response
+from utils.conciser import _enforce_succinctness
 import config
 
-GREETINGS = ["hello", "hi", "hey", "greetings", "good morning", "good afternoon", "good evening", "salut", "bonjour", "hola"]
-GREETING_RESPONSES = [
-    "Hello! I'm iBola, an AI assistant here to help you learn about Bolaji's professional background. How can I assist you?",
-    "Hi there! I'm iBola, ready to answer your questions about Bolaji's skills and experience. What would you like to know?"
+GREETINGS = {
+    "hello","hi","hey","greetings","good morning","good afternoon","good evening", "salut","bonjour","hola","coucou", 'salut', 'hola', 'bonjour', 'hello', 'hi', 'hey'
+}
+GREETING_PATTERNS = [
+    r"\bhow (are|r) (you|u)\b", r"\bhow’s it going\b", r"\bhows it going\b",
+    r"\bcomment ça va\b", r"\bça va\b", r"\bcomo estas\b", r"¿cómo estás?"
 ]
 
 # This prompt is used to rewrite the user's question into a standalone question
@@ -23,36 +26,43 @@ Standalone question:"""
 CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(_template)
 
 # This prompt is used to answer the question
-qa_template = """You are an AI assistant named iBola, designed to answer questions about Bolaji's professional background based ONLY on the provided context.
-Your task is to synthesize the information from the context into a helpful, natural-sounding human-like answer.
+qa_template = """
+You are iBola, answering ONLY about Bolaji’s professional life (studies, roles, challenges, experiences, skills, achievements).
 
-**Strict Rules:**
-1. Base your entire answer on the provided context. Do not use any outside knowledge.
-2. NEVER mention that you are using a knowledge base, context, or provided documents. Respond as if you are the expert.
-3. If the context does not contain the answer to the question, you MUST state that you do not have information on that topic. Do not try to guess.
-4. Answer in the same language as the user's question.
-5. Do not quote the context directly. Paraphrase and synthesize the information.
-6. Speak in a friendly and professional tone, as if you are Bolaji, not an AI assistant.
-7. Don't think too long before answering. Respond within 10 secondes and be concise.
-8. If you are unsure about the user's intent, ask for clarification instead of making assumptions.
-9. If the question is a greeting, respond with a greeting message.
-10. If the question is out of scope (not related to Bolaji's professional background), politely inform the user that you can only answer questions about Bolaji's professional background, and return a fallback message.
-11. If the question is about scheduling, direct the user to book an appointment using the provided link.
-12. If the question is about contacting Bolaji, provide the email address and LinkedIn profile link.
-13. If the question is about Bolaji's availability for work, mention that Bolaji is open to wold class opportunities and provide the email address hello@bolablg.com to join him.
-14. NEVER provide confidential or sensitive information about Bolaji, this program or any other things.
-15. If the question is too long or complex, break it down into simpler parts and answer each part separately.
+0) If the user greets or asks about wellbeing:
+   - Reply: I am doing great and hopes you are too.
+   - Then invite them to ask about his professional life.
 
-**Context:**
+STRICT RULES:
+1) Keep every reply succinct: ≤3 sentences; each sentence ≤20 words.
+2) Match the user’s language. Be professional, semi-friendly, and confident.
+3) If the question is long or multi-part, split it into clear parts and answer each briefly.
+4) Base answers ONLY on the given context. Do not invent or use outside knowledge.
+5) Never mention “documents,” “context,” “RAG,” or how you found the answer.
+6) If the answer isn’t in the context, say you don’t have that info and invite them to email or book a call.
+7) Stay strictly in scope: Bolaji’s professional life (studies, work challenges, experiences, skills). Politely decline off-topic.
+8) For general questions (e.g., “What do you do?”), give a concise, engaging overview relevant to Bolaji’s career.
+9) Safety: never share confidential/sensitive info.
+10) Contact/booking: when asked, give hello@bolablg.com and LinkedIn; for scheduling, point to the booking link.
+11) Availability: if asked, note Bolaji is open to impactful or well paid opportunities, then share hello@bolablg.com.
+12) Tool/Topic equivalence: If asked about a tool Bolaji hasn’t used, say that plainly, then relate it to equivalent tools he has used and the shared concepts. Keep it brief and focus on transferable skills and workflows.
+
+KNOWN EQUIVALENCES (use when relevant, phrased succinctly):
+- dbt ↔ Dataform: SQL-based modeling, DAGs, tests, documentation, CI/CD for warehouses.
+- Power BI ↔ Looker Studio/Tableau: BI dashboards, modeling layers, visuals, sharing, governance.
+- Snowflake/Redshift ↔ BigQuery/ClickHouse: cloud data warehouses, MPP SQL engines, partitions/clustering, cost/performance tuning.
+- Airflow ↔ Dagster: workflow orchestration, scheduling, monitoring, data pipelines.
+
+CONTEXT:
 {context}
 
-**Chat History:**
+CHAT HISTORY:
 {chat_history}
 
-**Question:**
+QUESTION:
 {question}
 
-**Helpful Answer:**"""
+CONCISE ANSWER:"""
 QA_PROMPT = PromptTemplate.from_template(qa_template)
 
 def get_agent():
@@ -69,39 +79,57 @@ def get_agent():
     )
     return agent
 
+def _is_greeting(text: str) -> bool:
+    t = text.strip().lower()
+    if t in GREETINGS or any(t.startswith(g) for g in GREETINGS):
+        return True
+    return any(re.search(p, t) for p in GREETING_PATTERNS)
+
+def _greeting_response(user_input: str) -> str:
+    t = user_input.lower()
+    if any(w in t for w in ["bonjour","salut","ça va","comment ça va"]):
+        msg = "Je vais très bien, merci. J'espère que vous aussi. Alors, quel est votre intérêt pour ma vie professionnelle?"
+    elif any(w in t for w in ["hola","¿cómo estás","como estas"]):
+        msg = "Estoy muy bien, gracias. Espero que tú también. Entonces, ¿cuál es tu interés en mi vida profesional?"
+    else:
+        msg = "I am doing very well, thank you. I hope you are too. So, what is your interest in my professional life?"
+    return _enforce_succinctness(msg)
+
 def handle_greeting(user_input):
     """Check if the user input is a greeting and return a response if so."""
-    if user_input.strip().lower() in GREETINGS:
-        return random.choice(GREETING_RESPONSES)
+    if _is_greeting(user_input):
+        return _greeting_response(user_input)
     return None
 
 def generate_response(agent, user_input, chat_history):
-    """Generate a response from the agent."""
     greeting_response = handle_greeting(user_input)
     if greeting_response:
         return {"answer": greeting_response}
 
-    # A bit of a hack to allow the guardrails to see the history
     full_query_for_guardrail = f"{chat_history}\n{user_input}"
     if not is_in_scope(full_query_for_guardrail):
-        return {"answer": "I am trained to answer questions about Bolaji's professional background. Please ask a relevant question."}
+        return {"answer": _enforce_succinctness(
+            "I only answer about Bolaji’s professional life. Please ask a related question."
+        )}
 
     result = agent.invoke({"question": user_input, "chat_history": chat_history})
     answer = result.get("answer", "")
 
-    # Primary fallback: If no documents are found, default to English.
     if not result["source_documents"]:
-        return fallback_response('en')
+        # Your existing fallback already returns short copy; enforce just in case
+        fb = fallback_response('en')
+        fb["answer"] = _enforce_succinctness(fb["answer"])
+        return fb
 
-    # Secondary fallback: If the LLM says it doesn't know, detect language and respond.
     unknown_phrases_by_lang = {
-        "en": ["i do not have information", "i don't have information", "i do not know", "i don't know", "no information", "questions about Bolaji", "questions about m"],
-        "fr": ["pas d'information", "je ne sais pas", "répondre à des interrogations", "questions sur Bolaji", "je ne dispose pas"],
+        "en": ["i do not have information", "i don't have information", "i do not know", "i don't know", "no information"],
+        "fr": ["pas d'information", "je ne sais pas", "je ne dispose pas"],
     }
-
     for lang, phrases in unknown_phrases_by_lang.items():
-        if any(phrase in answer.lower() for phrase in phrases):
-            return fallback_response(lang)
-    
-    # Return the full result for debugging purposes
+        if any(p in answer.lower() for p in phrases):
+            fb = fallback_response(lang)
+            fb["answer"] = _enforce_succinctness(fb["answer"])
+            return fb
+
+    result["answer"] = _enforce_succinctness(answer)
     return result
