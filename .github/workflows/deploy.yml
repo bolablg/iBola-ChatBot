@@ -88,6 +88,10 @@ jobs:
             --set-env-vars "DATA_PATH=${{ secrets.DATA_PATH }}" \
             --set-env-vars "DB_PATH=${{ secrets.DB_PATH }}"
 
+      - name: Install beta component
+        run: |
+          gcloud components install beta --quiet
+
       - name: Map custom domain
         run: |
           gcloud beta run domain-mappings create --quiet \
