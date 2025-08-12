@@ -3,14 +3,19 @@ FALLBACK_MESSAGES = {
         "answer": "I don't have specific information on that topic. For more details, please feel free to contact Bolaji directly.",
         "actions": [
             {
-                "text": "📧 Direct Email",
+                "text": "📧 Email",
                 "url": "mailto:hello@bolablg.com",
                 "type": "link"
             },
             {
-                "text": "📅 Book an Appointment",
+                "text": "📅 Appointment",
                 "url": "https://calendar.google.com/calendar/appointments/schedules/AcZssZ3YeidR5Og4YSGZIlxUIlDAf0AiRA6N8-MAzr-Sy55BtbKhBLXkfa8M_P_92eokXRnayLVlEXiW?gv=true",
                 "type": "popup"
+            },
+            {
+                "text": "[in] LinkedIn",
+                "url": "https://linkedin.com/in/bolablg",
+                "type": "link"
             }
         ]
     },
@@ -26,21 +31,11 @@ FALLBACK_MESSAGES = {
                 "text": "📅 Prendre rendez-vous",
                 "url": "https://calendar.google.com/calendar/appointments/schedules/AcZssZ3YeidR5Og4YSGZIlxUIlDAf0AiRA6N8-MAzr-Sy55BtbKhBLXkfa8M_P_92eokXRnayLVlEXiW?gv=true",
                 "type": "popup"
-            }
-        ]
-    },
-    "es": {
-        "answer": "No tengo información específica sobre ese tema. Para más detalles, no dude en contactar a Bolaji directamente.",
-        "actions": [
-            {
-                "text": "📧 Correo Electrónico Directo",
-                "url": "mailto:hello@bolablg.com",
-                "type": "link"
             },
             {
-                "text": "📅 Reservar una Cita",
-                "url": "https://calendar.google.com/calendar/appointments/schedules/AcZssZ3YeidR5Og4YSGZIlxUIlDAf0AiRA6N8-MAzr-Sy55BtbKhBLXkfa8M_P_92eokXRnayLVlEXiW?gv=true",
-                "type": "popup"
+                "text": "[in] LinkedIn",
+                "url": "https://linkedin.com/in/bolablg",
+                "type": "link"
             }
         ]
     }

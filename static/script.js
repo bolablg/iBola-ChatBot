@@ -12,42 +12,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const sessionId = `web-session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     let lastUserQuestion = "";
-    
-    let rejectionInactivityTimerId = null;
-    let globalInactivityTimerId = null;
 
-    const REJECTION_MESSAGE = "I am trained to answer questions about Bolaji's professional background. Please ask a relevant question.";
+    const REJECTION_MESSAGE = "I'm here to help with questions about Bolaji's professional background. Feel free to ask anything relevant! 🙂";
 
     const endChat = () => {
         userInput.disabled = true;
         userInput.placeholder = "Chat ended.";
         sendButton.classList.add('disabled');
-        if (rejectionInactivityTimerId) clearTimeout(rejectionInactivityTimerId);
-        if (globalInactivityTimerId) clearTimeout(globalInactivityTimerId);
     };
 
-    const resetGlobalInactiveTimer = () => {
-        if (globalInactivityTimerId) clearTimeout(globalInactivityTimerId);
-        globalInactivityTimerId = setTimeout(endChat, 300000);
-    };
+    
 
     let afterResponseInactiveTimer = null;
 
-    const askForAnotherQuestion = () => {
-        addMessage("Do you have another question?", 'bot');
-        if (afterResponseInactiveTimer) clearTimeout(afterResponseInactiveTimer);
-        afterResponseInactiveTimer = setTimeout(endChat, 60000);
+    const endChatDueToInactivity = () => {
+        addMessage("A plus...", 'bot');
+        endChat();
     };
 
     const resetAfterResponseInactiveTimer = () => {
         if (afterResponseInactiveTimer) clearTimeout(afterResponseInactiveTimer);
-        afterResponseInactiveTimer = setTimeout(askForAnotherQuestion, 120000);
+        afterResponseInactiveTimer = setTimeout(endChatDueToInactivity, 180000);
     };
 
     
-
-    
-
     const addMessage = (text, sender, question = null) => {
         const wrapper = document.createElement('div');
         wrapper.classList.add('message-wrapper', `${sender}-message-wrapper`);
@@ -107,10 +95,13 @@ document.addEventListener('DOMContentLoaded', () => {
         applyTheme(newTheme);
     });
 
+    userInput.addEventListener('input', () => {
+        if (afterResponseInactiveTimer) clearTimeout(afterResponseInactiveTimer);
+    });
+
     // --- FORM SUBMISSION LOGIC ---
     chatForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        resetGlobalInactiveTimer();
         if (afterResponseInactiveTimer) clearTimeout(afterResponseInactiveTimer);
         
         const messageText = userInput.value.trim();
@@ -136,11 +127,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.answer) {
                 addMessage(data.answer, 'bot', lastUserQuestion);
                 resetAfterResponseInactiveTimer();
-                if (data.answer === REJECTION_MESSAGE) {
-                                        setTimeout(() => {
-                        addMessage("Do you have another question?", 'bot');
-                    }, 60000);
-                }
             }
             if (data.actions) {
                 addActionButtons(data.actions);
@@ -166,6 +152,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const savedTheme = localStorage.getItem('theme') || 'light';
     applyTheme(savedTheme);
-
-    resetGlobalInactiveTimer();
 });
