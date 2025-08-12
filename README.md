@@ -39,6 +39,14 @@ This project is a Gemini-powered agentic RAG chatbot that helps people learn abo
     FEEDBACK_DB_CONN_URL="mariadb://user:password@host:port/database"
 
     #----------------------------------------------------------------
+    # Chat History Storage
+    #----------------------------------------------------------------
+
+    # REDIS_URL: Connection URL for Redis used to store chat history.
+    # If not set, the app falls back to an in-memory store.
+    REDIS_URL="redis://localhost:6379/0"
+
+    #----------------------------------------------------------------
     # Vector Store and Data Configuration
     #----------------------------------------------------------------
 
@@ -68,6 +76,10 @@ This project is a Gemini-powered agentic RAG chatbot that helps people learn abo
     # GOOGLE_OAUTH_CREDENTIALS_PATH: The path to the Google OAuth credentials file.
     GOOGLE_OAUTH_CREDENTIALS_PATH="_conf/ibola_agent_oauth.json"
     ```
+
+    Setting the `REDIS_URL` environment variable enables Redis-backed
+    chat history. If it is unset, the application stores history in
+    memory, which clears on restart.
 
 3.  **Google Drive API Setup:**
 
