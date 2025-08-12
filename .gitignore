@@ -100,4 +100,5 @@ env/
 # Ignore the _conf contents
 _conf/*.json
 
+.DS_Store
 **/.DS_Store
