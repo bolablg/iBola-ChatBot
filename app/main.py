@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
+from fastapi.middleware.cors import CORSMiddleware
 from app.agent import get_agent, generate_response
 from app.history_store import get_history, append_history
 
@@ -18,6 +19,22 @@ app = FastAPI(
     title="iBola Agentic RAG Chatbot",
     description="A chatbot for answering questions about Bolaji's professional background.",
     version="1.0.0"
+)
+
+bolablg_origins = origins = [
+    "https://bolablg.com",
+    "https://www.bolablg.com",
+    "https://app.bolablg.com",
+    "https://api.bolablg.com",
+    "https://chat.bolablg.com",
+]
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=bolablg_origins,  # Specific origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
 )
 
 
