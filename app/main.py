@@ -21,20 +21,21 @@ app = FastAPI(
     version="1.0.0"
 )
 
-bolablg_origins = origins = [
-    "https://bolablg.com",
-    "https://www.bolablg.com",
-    "https://app.bolablg.com",
-    "https://api.bolablg.com",
-    "https://chat.bolablg.com",
-]
-# Add CORS middleware
+# Configure CORS
+# It's recommended to use an environment variable for the regex to allow for more flexibility
+# across different environments (e.g., development, staging, production).
+ALLOWED_ORIGIN_REGEX = os.getenv("ALLOWED_ORIGIN_REGEX", r"https://(.+\.)?bolablg\.com")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=bolablg_origins,  # Specific origins
+    allow_origin_regex=ALLOWED_ORIGIN_REGEX,
+    # allow_credentials=True is required to allow cookies to be sent from the
+    # embedded iframe. This is necessary for session management.
+    # However, it's important to be aware of the security implications of this,
+    # as it can make the application more vulnerable to CSRF attacks.
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],  # Allows all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -54,7 +55,20 @@ class ChatInput(BaseModel):
 
 @app.get("/", tags=["App"])
 def read_root():
-    return FileResponse('static/index.html')
+    # Set Content-Security-Policy to allow embedding in iframes on specified domains.
+    # This is a more modern and flexible alternative to X-Frame-Options.
+    # Note on secure cookies for iframes:
+    # If you were to use cookies for authentication in the iframe, you would need to set
+    # SameSite=None; Secure. This means the cookie will be sent with cross-site requests,
+    # but only over HTTPS. FastAPI/Starlette session cookies can be configured accordingly.
+    #
+    # Note on postMessage:
+    # For more complex interactions between the parent page and the iframe,
+    # you can use the `postMessage` API to send messages securely between them.
+    headers = {
+        "Content-Security-Policy": "frame-ancestors 'self' https://bolablg.com https://*.bolablg.com"
+    }
+    return FileResponse('static/index.html', headers=headers)
 
 @app.post("/chat", tags=["Chat"])
 def chat(payload: ChatInput):
@@ -75,7 +89,7 @@ def chat(payload: ChatInput):
             for doc in result["source_documents"]:
                 logger.debug("Page %s:", doc.metadata.get('page', '?'))
                 logger.debug(doc.page_content)
-            logger.debug("--- END SOURCE DOCUMENTS ---\n")
+            logger.debug("--- END SOURCE DOCUMENTS ---\\n")
         # ----------------------------------------------------------
 
         # Prepare the response for the frontend

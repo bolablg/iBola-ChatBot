@@ -7,7 +7,7 @@ Bolaji has two university degrees in Statistics at the university of Abomey cala
 - Sharpen abilities in high-dimensional data processing, and statistical inference on big datasets
 - Manage and query SQL databases
 - Manipulate datasets with R, Python and Java
-In 2024, IEE evaluated Bolaji’s Master’s transcript and determined it to be equivalent to a U.S. Master’s degree in Statistics, with an A– grade based on a GPA of 3.72 out of 4.
+In 2024, IEE evaluated Bolaji’s Master’s transcript and determined it to be equivalent to a US Master’s degree in Statistics, with an A– grade based on a GPA of 3,72 out of 4.
 
 ### Bachelor in Statistics & Econometrics at College of Economics & Management, in 2013.
 - Gain proficiency in statistical methodologies and tools for econometric modeling.
