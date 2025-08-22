@@ -40,39 +40,46 @@ def update_vectorstore():
     for root, _, files in os.walk(config.DATA_PATH):
         for file in files:
             file_path = os.path.join(root, file)
+            
+            # Skip hidden files
+            if file.startswith('.'):
+                continue
+
             file_hash = get_file_hash(file_path)
+
+            if file_path in vectorstore_state and vectorstore_state[file_path] == file_hash:
+                # File is unchanged, skip it
+                continue
 
             if file_path not in vectorstore_state:
                 print(f"New file detected: {file_path}")
-                print(f"  New hash: {file_hash}")
-            elif vectorstore_state[file_path] != file_hash:
-                print(f"Modified file detected: {file_path}")
-                print(f"  Old hash: {vectorstore_state[file_path]}")
-                print(f"  New hash: {file_hash}")
             else:
-                continue
-                print(f"Processing {file_path}...")
-                try:
-                    if file.endswith(".pdf"):
-                        loader = PyPDFLoader(file_path)
-                    elif file.endswith(".docx"):
-                        loader = Docx2txtLoader(file_path)
-                    elif file.endswith(".txt"):
-                        loader = TextLoader(file_path)
-                    else:
-                        continue
+                print(f"Modified file detected: {file_path}")
 
-                    documents = loader.load()
-                    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-                    texts = text_splitter.split_documents(documents)
+            print(f"Processing {file_path}...")
+            try:
+                if file.endswith(".pdf"):
+                    loader = PyPDFLoader(file_path)
+                elif file.endswith(".docx"):
+                    loader = Docx2txtLoader(file_path)
+                elif file.endswith(".txt"):
+                    loader = TextLoader(file_path)
+                else:
+                    # Skip files with unsupported extensions
+                    print(f"Skipping unsupported file type: {file_path}")
+                    continue
 
-                    embeddings = get_embeddings()
-                    Chroma.from_documents(texts, embeddings, persist_directory=config.DB_PATH)
-                    vectorstore_state[file_path] = file_hash
-                    updated = True
-                    print(f"Successfully processed and updated vectorstore for {file_path}")
-                except Exception as e:
-                    print(f"Error processing {file_path}: {e}")
+                documents = loader.load()
+                text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+                texts = text_splitter.split_documents(documents)
+
+                embeddings = get_embeddings()
+                Chroma.from_documents(texts, embeddings, persist_directory=config.DB_PATH)
+                vectorstore_state[file_path] = file_hash
+                updated = True
+                print(f"Successfully processed and updated vectorstore for {file_path}")
+            except Exception as e:
+                print(f"Error processing {file_path}: {e}")
     
     if updated:
         save_vectorstore_state(vectorstore_state)

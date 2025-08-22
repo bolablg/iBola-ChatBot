@@ -1,4 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('minimal') === '1') {
+        document.documentElement.classList.add('minimal');
+    }
+
     const chatBox = document.getElementById('chat-box');
     const chatForm = document.getElementById('chat-form');
     const userInput = document.getElementById('user-input');
