@@ -34,6 +34,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
+          # Install specific versions of linting tools to match local setup
+          pip install black==24.8.0 isort==5.13.2 flake8==7.1.0
 
       - name: Run linting
         run: |
@@ -42,7 +44,7 @@ jobs:
           # Check import sorting
           isort --check-only --diff app/ tests/
           # Run static analysis
-          flake8 app/ tests/ --max-line-length=100 --extend-ignore=E203,W503,E501,F401,F841,E402,E712,F811,E722,F821
+          flake8 app/ tests/
 
       - name: Run unit tests
         env:
