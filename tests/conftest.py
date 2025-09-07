@@ -43,7 +43,9 @@ def mock_external_services():
         patch("app.agents.education_agent.ChatGoogleGenerativeAI") as mock_llm_edu,
         patch("app.agents.learning_agent.ChatGoogleGenerativeAI") as mock_llm_learn,
         patch("app.agents.redirect_agent.ChatGoogleGenerativeAI") as mock_llm_redirect,
-        patch("app.agents.classification_agent.ChatGoogleGenerativeAI") as mock_llm_classification,
+        patch(
+            "app.agents.classification_agent.ChatGoogleGenerativeAI"
+        ) as mock_llm_classification,
         patch(
             "app.agents.professional_agent.ConversationalRetrievalChain"
         ) as mock_chain,
@@ -112,28 +114,43 @@ def mock_external_services():
             return MockLLM()
 
         # Set up all LLM mocks
-        for mock_llm in [mock_llm, mock_llm_edu, mock_llm_learn, mock_llm_redirect, mock_llm_classification]:
+        for mock_llm in [
+            mock_llm,
+            mock_llm_edu,
+            mock_llm_learn,
+            mock_llm_redirect,
+            mock_llm_classification,
+        ]:
             mock_llm.return_value = create_llm_mock()
 
         # Create comprehensive chain mock instances
         def create_chain_mock():
             mock_chain_instance = Mock()
-            mock_chain_instance.invoke = Mock(return_value={
-                "answer": "Mocked chain response",
-                "agent_type": "professional",
-                "confidence": 0.8,
-            })
+            mock_chain_instance.invoke = Mock(
+                return_value={
+                    "answer": "Mocked chain response",
+                    "agent_type": "professional",
+                    "confidence": 0.8,
+                }
+            )
             mock_chain_instance.run = Mock(return_value="Mocked chain response")
             mock_chain_instance.predict = Mock(return_value="Mocked chain response")
-            mock_chain_instance._call = Mock(return_value={
-                "answer": "Mocked chain response",
-                "agent_type": "professional",
-                "confidence": 0.8,
-            })
+            mock_chain_instance._call = Mock(
+                return_value={
+                    "answer": "Mocked chain response",
+                    "agent_type": "professional",
+                    "confidence": 0.8,
+                }
+            )
             return mock_chain_instance
 
         # Set up all chain mocks
-        for mock_chain_obj in [mock_chain, mock_chain_edu, mock_chain_learn, mock_chain_redirect]:
+        for mock_chain_obj in [
+            mock_chain,
+            mock_chain_edu,
+            mock_chain_learn,
+            mock_chain_redirect,
+        ]:
             mock_chain_obj.return_value = create_chain_mock()
 
         # Mock the _chat_with_retry function
@@ -141,16 +158,20 @@ def mock_external_services():
 
         # Mock LLMChain
         mock_llm_chain_instance = Mock()
-        mock_llm_chain_instance.invoke = Mock(return_value={
-            "text": "Mocked classification response",
-            "agent_type": "professional"
-        })
+        mock_llm_chain_instance.invoke = Mock(
+            return_value={
+                "text": "Mocked classification response",
+                "agent_type": "professional",
+            }
+        )
         mock_llm_chain_instance.run = Mock(return_value="professional")
         mock_llm_chain_instance.predict = Mock(return_value="professional")
-        mock_llm_chain_instance.__call__ = Mock(return_value={
-            "text": "Mocked classification response",
-            "agent_type": "professional"
-        })
+        mock_llm_chain_instance.__call__ = Mock(
+            return_value={
+                "text": "Mocked classification response",
+                "agent_type": "professional",
+            }
+        )
         mock_llm_chain.return_value = mock_llm_chain_instance
 
         yield
