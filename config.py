@@ -3,8 +3,8 @@ Configuration file for the multi-agent chatbot system.
 """
 
 import os
-from typing import Optional
 from pathlib import Path
+from typing import Optional
 
 
 # Load environment variables from .env files

@@ -23,21 +23,26 @@ os.environ["LOG_LEVEL"] = "DEBUG"
 @pytest.fixture(autouse=True)
 def mock_external_services():
     """Mock external services for testing."""
-    with patch("app.services.logging_service.GOOGLE_CLOUD_AVAILABLE", False), patch(
-        "app.services.cache_service.CACHE_AVAILABLE", False
-    ), patch(
-        "app.agents.professional_agent.get_professional_retriever"
-    ) as mock_prof_retriever, patch(
-        "app.agents.education_agent.get_education_retriever"
-    ) as mock_edu_retriever, patch(
-        "app.agents.learning_agent.get_learning_retriever"
-    ) as mock_learn_retriever, patch(
-        "app.agents.redirect_agent.get_redirect_retriever"
-    ) as mock_redirect_retriever, patch(
-        "app.agents.professional_agent.ChatGoogleGenerativeAI"
-    ) as mock_llm, patch(
-        "app.agents.professional_agent.ConversationalRetrievalChain"
-    ) as mock_chain:
+    with (
+        patch("app.services.logging_service.GOOGLE_CLOUD_AVAILABLE", False),
+        patch("app.services.cache_service.CACHE_AVAILABLE", False),
+        patch(
+            "app.agents.professional_agent.get_professional_retriever"
+        ) as mock_prof_retriever,
+        patch(
+            "app.agents.education_agent.get_education_retriever"
+        ) as mock_edu_retriever,
+        patch(
+            "app.agents.learning_agent.get_learning_retriever"
+        ) as mock_learn_retriever,
+        patch(
+            "app.agents.redirect_agent.get_redirect_retriever"
+        ) as mock_redirect_retriever,
+        patch("app.agents.professional_agent.ChatGoogleGenerativeAI") as mock_llm,
+        patch(
+            "app.agents.professional_agent.ConversationalRetrievalChain"
+        ) as mock_chain,
+    ):
 
         # Set up retriever mocks
         mock_prof_retriever.return_value = Mock()
@@ -71,10 +76,11 @@ def test_client():
 @pytest.fixture
 def mock_orchestrator():
     """Mock orchestrator for testing."""
-    with patch("app.agents.orchestrator.ProfessionalAgent"), patch(
-        "app.agents.orchestrator.EducationAgent"
-    ), patch("app.agents.orchestrator.LearningAgent"), patch(
-        "app.agents.orchestrator.RedirectAgent"
+    with (
+        patch("app.agents.orchestrator.ProfessionalAgent"),
+        patch("app.agents.orchestrator.EducationAgent"),
+        patch("app.agents.orchestrator.LearningAgent"),
+        patch("app.agents.orchestrator.RedirectAgent"),
     ):
 
         from app.agents.orchestrator import AgentOrchestrator
