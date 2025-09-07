@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Python cache directories
+**/__pycache__/
+
 # C extensions
 *.so
 
@@ -100,8 +103,13 @@ env/
 # Ignore the _conf contents
 _conf/*.json
 
+# Local development files
+local/
+
+# Vector database (local data)
+chroma_db/
+
 .DS_Store
 **/.DS_Store
 .env.backup_before_fix
-original_env.txt
 .env.example

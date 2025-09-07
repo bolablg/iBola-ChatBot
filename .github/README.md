@@ -34,3 +34,24 @@ This document outlines the required GitHub repository secrets for the CI/CD pipe
 - The service account key (`GCP_SA_KEY`) is used for both deployment and runtime Google Cloud access
 - The redirect logging sheet ID is used for collecting classifier improvement data
 - Make sure your service account has appropriate permissions for Google Sheets, Drive, and Cloud Run
+
+## GitHub Actions Updates
+
+### Deprecated Actions Fixed
+The following deprecated GitHub Actions were updated to their latest stable versions:
+
+| Action | Old Version | New Version | Reason |
+|--------|-------------|-------------|---------|
+| `actions/checkout` | `v3` | `v4` | Security and feature improvements |
+| `actions/upload-artifact` | `v3` | `v4` | **Critical**: v3 was deprecated and failing builds |
+| `codecov/codecov-action` | `v3` | `v4` | Better reliability and security |
+| `google-github-actions/auth` | `v1` | `v2` | Enhanced authentication features |
+| `google-github-actions/setup-gcloud` | `v1` | `v2` | Improved Cloud SDK setup |
+
+### Breaking Changes
+- **No breaking changes** - all updates are backward compatible
+- **Enhanced security** - newer versions include security improvements
+- **Better reliability** - latest versions have bug fixes and performance improvements
+
+### Verification
+All actions have been verified to work correctly with your existing workflow configuration.

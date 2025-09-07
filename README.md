@@ -175,7 +175,7 @@ The project includes comprehensive testing with multiple test suites:
 #### Run All Tests
 ```bash
 # Run all test suites
-python run_tests.py all
+python local/run_tests.py all
 
 # Or use pytest directly
 pytest tests/ -v --cov=app --cov-report=html
@@ -184,25 +184,25 @@ pytest tests/ -v --cov=app --cov-report=html
 #### Run Specific Test Types
 ```bash
 # Run only unit tests
-python run_tests.py unit
+python local/run_tests.py unit
 
 # Run integration tests
-python run_tests.py integration
+python local/run_tests.py integration
 
 # Run security tests
-python run_tests.py security
+python local/run_tests.py security
 
 # Run performance tests
-python run_tests.py performance
+python local/run_tests.py performance
 
 # Run linting checks
-python run_tests.py lint
+python local/run_tests.py lint
 ```
 
 #### CI/CD Mode
 ```bash
 # Run tests in CI mode (exits with error code on failure)
-python run_tests.py --ci unit integration security
+python local/run_tests.py --ci unit integration security
 ```
 
 ### Test Coverage
@@ -302,10 +302,10 @@ Test that your environment variables are loaded correctly:
 
 ```bash
 # Test configuration loading
-python test_env_loading.py
+python local/test_env_loading.py
 
 # Test with your actual API key
-GEMINI_API_KEY="your_actual_key" python test_config_fix.py
+GEMINI_API_KEY="your_actual_key" python local/test_config_fix.py
 ```
 
 #### Docker Environment Variables
@@ -368,7 +368,7 @@ The `/health` endpoint provides comprehensive system health information:
 - Active session count and performance metrics
 
 ### Logging & Analytics
-- **Local Logging**: Structured logs in `logs/chatbot.log`
+- **Local Logging**: Structured logs in `local/logs/chatbot.log`
 - **Google Cloud Logging**: Automatic cloud logging when GCP credentials are configured
 - **Performance Metrics**: Request duration, cache hit rates, error rates
 - **Security Events**: Rate limiting violations, blocked requests, validation failures
