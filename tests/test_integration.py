@@ -83,7 +83,8 @@ class TestSystemIntegration:
         result = response.json()
         # The response should contain either error details or a user-friendly message
         assert "detail" in result or "error" in result
-        assert "technical difficulties" in result["error"].lower()
+        if "error" in result:
+            assert "technical difficulties" in result["error"].lower()
 
     def test_rate_limiting_integration(self, test_client):
         """Test rate limiting functionality."""

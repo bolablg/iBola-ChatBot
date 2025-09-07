@@ -50,13 +50,10 @@ def mock_external_services():
 
         # Create proper mock retriever classes that inherit from BaseRetriever
         class MockRetriever(BaseRetriever):
-            def __init__(self):
-                super().__init__()
-
-            def get_relevant_documents(self, query, **kwargs):
+            def _get_relevant_documents(self, query, **kwargs):
                 return []
 
-            async def aget_relevant_documents(self, query, **kwargs):
+            async def _aget_relevant_documents(self, query, **kwargs):
                 return []
 
             def __len__(self):
@@ -69,15 +66,19 @@ def mock_external_services():
 
         # Set up LLM and chain mocks
         mock_llm_instance = Mock()
+        mock_llm_instance.invoke = Mock(return_value="Mocked LLM response")
+        mock_llm_instance.generate = Mock(return_value=Mock(generations=[Mock(text="Mocked response")]))
+        mock_llm_instance.predict = Mock(return_value="Mocked response")
         mock_llm.return_value = mock_llm_instance
 
         mock_chain_instance = Mock()
-        mock_chain.return_value = mock_chain_instance
-        mock_chain_instance.invoke.return_value = {
-            "answer": "Test response",
+        mock_chain_instance.invoke = Mock(return_value={
+            "answer": "Mocked chain response",
             "agent_type": "professional",
             "confidence": 0.8,
-        }
+        })
+        mock_chain_instance.run = Mock(return_value="Mocked chain response")
+        mock_chain.return_value = mock_chain_instance
 
         yield
 
