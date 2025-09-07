@@ -115,9 +115,9 @@ class TestDynamicGuardrails:
         assert analysis["primary_category"] in ["education", "learning"]
         assert "confidence" in analysis
 
-        # Test off-topic query
+        # Test off-topic query (system converts high off-topic scores to redirect)
         analysis = guardrails.analyze_message("What's the weather like?")
-        assert analysis["primary_category"] == "off_topic"
+        assert analysis["primary_category"] == "redirect"
 
     def test_context_analysis(self):
         """Test analysis with conversation context."""

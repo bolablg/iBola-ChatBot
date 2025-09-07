@@ -344,6 +344,9 @@ class AgentOrchestrator:
 
     def _is_greeting(self, message: str) -> bool:
         """Check if message is a greeting."""
+        import re
+
+        # Simple greetings
         greetings = [
             "hello",
             "hi",
@@ -358,8 +361,26 @@ class AgentOrchestrator:
             "guten tag",
             "konnichiwa",
         ]
+
+        # Greeting patterns (regex)
+        greeting_patterns = [
+            r"\bhow (are|r) (you|u)\b",
+            r"\bhow's it going\b",
+            r"\bhows it going\b",
+            r"\bcomment ça va\b",
+            r"\bça va\b",
+            r"\bcomo estas\b",
+            r"¿cómo estás?",
+        ]
+
         message_lower = message.lower().strip()
-        return any(greeting in message_lower for greeting in greetings)
+
+        # Check simple greetings
+        if any(greeting in message_lower for greeting in greetings):
+            return True
+
+        # Check greeting patterns
+        return any(re.search(pattern, message_lower) for pattern in greeting_patterns)
 
     def _is_contact_request(self, message: str) -> bool:
         """Check if message indicates intent to contact directly."""
