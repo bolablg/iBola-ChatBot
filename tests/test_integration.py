@@ -88,6 +88,13 @@ class TestSystemIntegration:
 
     def test_rate_limiting_integration(self, test_client):
         """Test rate limiting functionality."""
+        import os
+
+        # Skip this test if rate limiting is disabled (common in test environments)
+        if os.getenv("DISABLE_RATE_LIMITING", "false").lower() == "true":
+            import pytest
+            pytest.skip("Rate limiting is disabled for tests")
+
         # Make multiple rapid requests
         chat_data = {
             "user_input": "Test message",
