@@ -3,17 +3,20 @@ Rate limiting service for API protection.
 """
 
 import asyncio
-import time
-from typing import Dict, Tuple, Optional, Any
-import sys
 import os
+import sys
+import time
 from collections import defaultdict, deque
+from typing import Any, Dict, Optional, Tuple
 
 # Add project root to path for imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 try:
     from cachetools import TTLCache
+
     CACHE_AVAILABLE = True
 except ImportError:
     CACHE_AVAILABLE = False
@@ -27,14 +30,14 @@ class RateLimiter:
         self.global_limits = {
             "requests_per_minute": 60,
             "requests_per_hour": 1000,
-            "burst_limit": 10
+            "burst_limit": 10,
         }
 
         self.endpoint_limits = {
             "/chat": {"per_minute": 30, "per_hour": 500},
             "/welcome": {"per_minute": 10, "per_hour": 100},
             "/health": {"per_minute": 60, "per_hour": 1000},
-            "/session": {"per_minute": 20, "per_hour": 200}
+            "/session": {"per_minute": 20, "per_hour": 200},
         }
 
         # Sliding window storage
@@ -81,7 +84,9 @@ class RateLimiter:
         """Block a client for a specified duration."""
         self.blocked_clients[client_ip] = time.time() + duration_seconds
 
-    async def check_rate_limit(self, client_ip: str, endpoint: str) -> Tuple[bool, Dict[str, Any]]:
+    async def check_rate_limit(
+        self, client_ip: str, endpoint: str
+    ) -> Tuple[bool, Dict[str, Any]]:
         """
         Check if request is within rate limits.
 
@@ -92,7 +97,7 @@ class RateLimiter:
             return False, {
                 "blocked": True,
                 "reason": "client_blocked",
-                "retry_after": int(self.blocked_clients[client_ip] - time.time())
+                "retry_after": int(self.blocked_clients[client_ip] - time.time()),
             }
 
         current_time = time.time()
@@ -100,7 +105,9 @@ class RateLimiter:
         global_key = self._get_global_key(client_ip)
 
         # Get endpoint-specific limits
-        endpoint_config = self.endpoint_limits.get(endpoint, self.endpoint_limits.get("/chat", {}))
+        endpoint_config = self.endpoint_limits.get(
+            endpoint, self.endpoint_limits.get("/chat", {})
+        )
         global_config = self.global_limits
 
         # Check endpoint limits
@@ -122,7 +129,7 @@ class RateLimiter:
                 "endpoint_requests": endpoint_info["current_requests"],
                 "global_requests": global_info["current_requests"],
                 "endpoint_limit": endpoint_config.get("per_minute", 30),
-                "global_limit": global_config["requests_per_minute"]
+                "global_limit": global_config["requests_per_minute"],
             }
 
         # Determine the most restrictive limit
@@ -131,7 +138,7 @@ class RateLimiter:
                 "blocked": False,
                 "reason": "endpoint_limit_exceeded",
                 "retry_after": endpoint_info.get("retry_after", 60),
-                "limit": endpoint_config.get("per_minute", 30)
+                "limit": endpoint_config.get("per_minute", 30),
             }
 
         if not global_allowed:
@@ -139,12 +146,14 @@ class RateLimiter:
                 "blocked": False,
                 "reason": "global_limit_exceeded",
                 "retry_after": global_info.get("retry_after", 60),
-                "limit": global_config["requests_per_minute"]
+                "limit": global_config["requests_per_minute"],
             }
 
         return False, {"reason": "unknown_limit_exceeded"}
 
-    def _check_endpoint_limit(self, client_key: str, config: Dict, current_time: float) -> Tuple[bool, Dict]:
+    def _check_endpoint_limit(
+        self, client_key: str, config: Dict, current_time: float
+    ) -> Tuple[bool, Dict]:
         """Check endpoint-specific rate limits."""
         per_minute = config.get("per_minute", 30)
         per_hour = config.get("per_hour", 500)
@@ -160,7 +169,7 @@ class RateLimiter:
             retry_after = 60 - (current_time - oldest_request)
             return False, {
                 "retry_after": max(1, int(retry_after)),
-                "current_requests": len(minute_window)
+                "current_requests": len(minute_window),
             }
 
         # Check hour limit
@@ -172,12 +181,14 @@ class RateLimiter:
             retry_after = 3600 - (current_time - oldest_request)
             return False, {
                 "retry_after": max(1, int(retry_after)),
-                "current_requests": len(hour_window)
+                "current_requests": len(hour_window),
             }
 
         return True, {"current_requests": len(minute_window)}
 
-    def _check_global_limit(self, global_key: str, config: Dict, current_time: float) -> Tuple[bool, Dict]:
+    def _check_global_limit(
+        self, global_key: str, config: Dict, current_time: float
+    ) -> Tuple[bool, Dict]:
         """Check global rate limits."""
         per_minute = config.get("requests_per_minute", 60)
         per_hour = config.get("requests_per_hour", 1000)
@@ -191,10 +202,7 @@ class RateLimiter:
         burst_key = f"{global_key}_burst"
         burst_window = self.request_windows[burst_key]
         if len(burst_window) >= burst_limit:
-            return False, {
-                "retry_after": 10,
-                "current_requests": len(burst_window)
-            }
+            return False, {"retry_after": 10, "current_requests": len(burst_window)}
 
         # Check minute limit
         minute_window = self.request_windows[global_key]
@@ -203,7 +211,7 @@ class RateLimiter:
             retry_after = 60 - (current_time - oldest_request)
             return False, {
                 "retry_after": max(1, int(retry_after)),
-                "current_requests": len(minute_window)
+                "current_requests": len(minute_window),
             }
 
         return True, {"current_requests": len(minute_window)}
@@ -213,7 +221,7 @@ class RateLimiter:
         stats = {
             "client_ip": client_ip,
             "blocked": self._is_blocked(client_ip),
-            "endpoints": {}
+            "endpoints": {},
         }
 
         if stats["blocked"]:
@@ -225,7 +233,7 @@ class RateLimiter:
             window = self.request_windows[client_key]
             stats["endpoints"][endpoint] = {
                 "current_requests": len(window),
-                "limit_per_minute": self.endpoint_limits[endpoint]["per_minute"]
+                "limit_per_minute": self.endpoint_limits[endpoint]["per_minute"],
             }
 
         return stats
@@ -255,7 +263,7 @@ class RateLimiter:
             "total_requests_tracked": total_requests,
             "blocked_clients": blocked_clients,
             "endpoint_limits": self.endpoint_limits,
-            "global_limits": self.global_limits
+            "global_limits": self.global_limits,
         }
 
 

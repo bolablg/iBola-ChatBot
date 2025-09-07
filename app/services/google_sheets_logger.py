@@ -5,19 +5,26 @@ Logs all redirected messages with detailed information for classifier improvemen
 
 import json
 import os
-from datetime import datetime
-from typing import Dict, Any, Optional, List
 import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-from config import GCP_SA_CREDENTIALS_PATH, GCP_PROJECT_ID
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
+from config import GCP_PROJECT_ID, GCP_SA_CREDENTIALS_PATH
 
 try:
-    from googleapiclient.discovery import build
     from google.oauth2.service_account import Credentials
+    from googleapiclient.discovery import build
+
     GOOGLE_SHEETS_AVAILABLE = True
 except ImportError:
     GOOGLE_SHEETS_AVAILABLE = False
-    print("Google Sheets API not available. Install with: pip install google-api-python-client google-auth")
+    print(
+        "Google Sheets API not available. Install with: pip install google-api-python-client google-auth"
+    )
+
 
 class GoogleSheetsLogger:
     """
@@ -40,16 +47,16 @@ class GoogleSheetsLogger:
                 return
 
             # Set credentials path
-            os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = GCP_SA_CREDENTIALS_PATH
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GCP_SA_CREDENTIALS_PATH
 
             # Create credentials
             creds = Credentials.from_service_account_file(
                 GCP_SA_CREDENTIALS_PATH,
-                scopes=['https://www.googleapis.com/auth/spreadsheets']
+                scopes=["https://www.googleapis.com/auth/spreadsheets"],
             )
 
             # Build the service
-            self.service = build('sheets', 'v4', credentials=creds)
+            self.service = build("sheets", "v4", credentials=creds)
 
             # Ensure the sheet exists and has headers
             self._ensure_sheet_exists()
@@ -67,40 +74,37 @@ class GoogleSheetsLogger:
 
         try:
             # Check if sheet exists
-            sheet_metadata = self.service.spreadsheets().get(
-                spreadsheetId=self.spreadsheet_id
-            ).execute()
+            sheet_metadata = (
+                self.service.spreadsheets()
+                .get(spreadsheetId=self.spreadsheet_id)
+                .execute()
+            )
 
             sheet_exists = any(
-                sheet['properties']['title'] == self.sheet_name
-                for sheet in sheet_metadata.get('sheets', [])
+                sheet["properties"]["title"] == self.sheet_name
+                for sheet in sheet_metadata.get("sheets", [])
             )
 
             if not sheet_exists:
                 # Create the sheet
-                requests = [{
-                    'addSheet': {
-                        'properties': {
-                            'title': self.sheet_name
-                        }
-                    }
-                }]
+                requests = [{"addSheet": {"properties": {"title": self.sheet_name}}}]
 
                 self.service.spreadsheets().batchUpdate(
-                    spreadsheetId=self.spreadsheet_id,
-                    body={'requests': requests}
+                    spreadsheetId=self.spreadsheet_id, body={"requests": requests}
                 ).execute()
 
                 print(f"📊 Created new sheet: {self.sheet_name}")
 
             # Add headers if sheet is empty
             range_name = f"{self.sheet_name}!A1:Z1"
-            result = self.service.spreadsheets().values().get(
-                spreadsheetId=self.spreadsheet_id,
-                range=range_name
-            ).execute()
+            result = (
+                self.service.spreadsheets()
+                .values()
+                .get(spreadsheetId=self.spreadsheet_id, range=range_name)
+                .execute()
+            )
 
-            if not result.get('values'):
+            if not result.get("values"):
                 # Add headers
                 headers = [
                     [
@@ -121,15 +125,15 @@ class GoogleSheetsLogger:
                         "Cache Hit",
                         "Geolocation",
                         "Device Type",
-                        "Referrer"
+                        "Referrer",
                     ]
                 ]
 
                 self.service.spreadsheets().values().update(
                     spreadsheetId=self.spreadsheet_id,
                     range=range_name,
-                    valueInputOption='RAW',
-                    body={'values': headers}
+                    valueInputOption="RAW",
+                    body={"values": headers},
                 ).execute()
 
                 print("📋 Added headers to redirect logging sheet")
@@ -154,45 +158,52 @@ class GoogleSheetsLogger:
         try:
             # Prepare the row data
             row_data = [
-                redirect_data.get('timestamp', datetime.now().isoformat()),
-                redirect_data.get('session_id', ''),
-                redirect_data.get('ip_address', ''),
-                redirect_data.get('user_agent', ''),
-                redirect_data.get('browser_language', ''),
-                redirect_data.get('user_language', ''),
-                redirect_data.get('user_input', ''),
-                redirect_data.get('redirect_count', 0),
-                redirect_data.get('agent_type', ''),
-                redirect_data.get('confidence', 0.0),
-                redirect_data.get('redirect_reason', ''),
-                redirect_data.get('chat_history_summary', ''),
-                redirect_data.get('response_time', 0),
-                redirect_data.get('source_documents_count', 0),
-                redirect_data.get('cache_hit', False),
-                redirect_data.get('geolocation', ''),
-                redirect_data.get('device_type', ''),
-                redirect_data.get('referrer', '')
+                redirect_data.get("timestamp", datetime.now().isoformat()),
+                redirect_data.get("session_id", ""),
+                redirect_data.get("ip_address", ""),
+                redirect_data.get("user_agent", ""),
+                redirect_data.get("browser_language", ""),
+                redirect_data.get("user_language", ""),
+                redirect_data.get("user_input", ""),
+                redirect_data.get("redirect_count", 0),
+                redirect_data.get("agent_type", ""),
+                redirect_data.get("confidence", 0.0),
+                redirect_data.get("redirect_reason", ""),
+                redirect_data.get("chat_history_summary", ""),
+                redirect_data.get("response_time", 0),
+                redirect_data.get("source_documents_count", 0),
+                redirect_data.get("cache_hit", False),
+                redirect_data.get("geolocation", ""),
+                redirect_data.get("device_type", ""),
+                redirect_data.get("referrer", ""),
             ]
 
             # Convert all values to strings to avoid type issues
             row_data = [str(value) for value in row_data]
 
             # Append the row to the sheet
-            range_name = f"{self.sheet_name}!A:A"  # Append to column A (will auto-expand)
+            range_name = (
+                f"{self.sheet_name}!A:A"  # Append to column A (will auto-expand)
+            )
 
-            body = {
-                'values': [row_data]
-            }
+            body = {"values": [row_data]}
 
-            result = self.service.spreadsheets().values().append(
-                spreadsheetId=self.spreadsheet_id,
-                range=range_name,
-                valueInputOption='RAW',
-                insertDataOption='INSERT_ROWS',
-                body=body
-            ).execute()
+            result = (
+                self.service.spreadsheets()
+                .values()
+                .append(
+                    spreadsheetId=self.spreadsheet_id,
+                    range=range_name,
+                    valueInputOption="RAW",
+                    insertDataOption="INSERT_ROWS",
+                    body=body,
+                )
+                .execute()
+            )
 
-            print(f"📊 Logged redirect event for session {redirect_data.get('session_id', 'unknown')}")
+            print(
+                f"📊 Logged redirect event for session {redirect_data.get('session_id', 'unknown')}"
+            )
             return True
 
         except Exception as e:
@@ -207,12 +218,14 @@ class GoogleSheetsLogger:
         try:
             # Get all data from the sheet
             range_name = f"{self.sheet_name}!A:Z"
-            result = self.service.spreadsheets().values().get(
-                spreadsheetId=self.spreadsheet_id,
-                range=range_name
-            ).execute()
+            result = (
+                self.service.spreadsheets()
+                .values()
+                .get(spreadsheetId=self.spreadsheet_id, range=range_name)
+                .execute()
+            )
 
-            rows = result.get('values', [])
+            rows = result.get("values", [])
             if len(rows) <= 1:  # Only headers or empty
                 return {"total_redirects": 0, "message": "No redirect data available"}
 
@@ -220,7 +233,9 @@ class GoogleSheetsLogger:
             data_rows = rows[1:]
 
             # Filter by recent days
-            cutoff_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            cutoff_date = datetime.now().replace(
+                hour=0, minute=0, second=0, microsecond=0
+            )
             cutoff_date = cutoff_date.replace(day=cutoff_date.day - days)
 
             recent_redirects = []
@@ -237,7 +252,10 @@ class GoogleSheetsLogger:
             total_redirects = len(recent_redirects)
 
             if total_redirects == 0:
-                return {"total_redirects": 0, "message": f"No redirects in the last {days} days"}
+                return {
+                    "total_redirects": 0,
+                    "message": f"No redirects in the last {days} days",
+                }
 
             # Count by agent type (column 8)
             agent_types = {}
@@ -251,7 +269,9 @@ class GoogleSheetsLogger:
                     language = row[5] if len(row) > 5 else "unknown"
 
                     agent_types[agent_type] = agent_types.get(agent_type, 0) + 1
-                    redirect_reasons[redirect_reason] = redirect_reasons.get(redirect_reason, 0) + 1
+                    redirect_reasons[redirect_reason] = (
+                        redirect_reasons.get(redirect_reason, 0) + 1
+                    )
                     languages[language] = languages.get(language, 0) + 1
 
             return {
@@ -260,7 +280,7 @@ class GoogleSheetsLogger:
                 "agent_type_distribution": agent_types,
                 "redirect_reason_distribution": redirect_reasons,
                 "language_distribution": languages,
-                "average_redirects_per_day": total_redirects / days
+                "average_redirects_per_day": total_redirects / days,
             }
 
         except Exception as e:
@@ -278,7 +298,7 @@ class GoogleSheetsLogger:
             "report_generated": datetime.now().isoformat(),
             "analysis_period_days": 30,
             **stats,
-            "insights": []
+            "insights": [],
         }
 
         # Generate insights
@@ -300,13 +320,18 @@ class GoogleSheetsLogger:
         languages = stats.get("language_distribution", {})
         if languages:
             language_insights = []
-            for lang, count in sorted(languages.items(), key=lambda x: x[1], reverse=True):
+            for lang, count in sorted(
+                languages.items(), key=lambda x: x[1], reverse=True
+            ):
                 if count > stats["total_redirects"] * 0.1:  # More than 10%
                     language_insights.append(f"{lang}: {count}")
             if language_insights:
-                report["insights"].append(f"Languages with significant redirects: {', '.join(language_insights)}")
+                report["insights"].append(
+                    f"Languages with significant redirects: {', '.join(language_insights)}"
+                )
 
         return report
+
 
 # Global instance
 google_sheets_logger = GoogleSheetsLogger() if GOOGLE_SHEETS_AVAILABLE else None

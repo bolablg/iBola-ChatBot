@@ -5,8 +5,10 @@ Education Agent - Handles questions about educational background, degrees, and a
 from langchain.chains import ConversationalRetrievalChain
 from langchain.prompts import PromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
-from .retrievers import get_education_retriever
+
 import config
+
+from .retrievers import get_education_retriever
 
 # Specialized prompt for education agent
 EDUCATION_QA_TEMPLATE = """
@@ -44,11 +46,16 @@ Chat History:
 Follow Up Input: {question}
 Standalone question:"""
 
+
 class EducationAgent:
     """Agent specialized in educational background."""
 
     def __init__(self):
-        self.llm = ChatGoogleGenerativeAI(model="gemini-2.5-pro", temperature=0.7, google_api_key=config.GEMINI_API_KEY)
+        self.llm = ChatGoogleGenerativeAI(
+            model="gemini-2.5-pro",
+            temperature=0.7,
+            google_api_key=config.GEMINI_API_KEY,
+        )
         self.retriever = get_education_retriever()
         self.qa_prompt = PromptTemplate.from_template(EDUCATION_QA_TEMPLATE)
         self.condense_prompt = PromptTemplate.from_template(EDUCATION_CONDENSE_PROMPT)
@@ -58,7 +65,7 @@ class EducationAgent:
             retriever=self.retriever,
             condense_question_prompt=self.condense_prompt,
             combine_docs_chain_kwargs={"prompt": self.qa_prompt},
-            return_source_documents=True
+            return_source_documents=True,
         )
 
     def invoke(self, inputs):

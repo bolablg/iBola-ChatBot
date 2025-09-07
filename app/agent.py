@@ -1,20 +1,43 @@
 import random
+import re
+
 from langchain.chains import ConversationalRetrievalChain
 from langchain.prompts import PromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
-from app.retriever import get_retriever
-from app.guardrails import is_in_scope
-from app.fallback import fallback_response
-from utils.conciser import _enforce_succinctness
-import re
+
 import config
+from app.fallback import fallback_response
+from app.guardrails import is_in_scope
+from app.retriever import get_retriever
+from utils.conciser import _enforce_succinctness
 
 GREETINGS = {
-    "hello","hi","hey","greetings","good morning","good afternoon","good evening", "salut","bonjour","hola","coucou", 'salut', 'hola', 'bonjour', 'hello', 'hi', 'hey'
+    "hello",
+    "hi",
+    "hey",
+    "greetings",
+    "good morning",
+    "good afternoon",
+    "good evening",
+    "salut",
+    "bonjour",
+    "hola",
+    "coucou",
+    "salut",
+    "hola",
+    "bonjour",
+    "hello",
+    "hi",
+    "hey",
 }
 GREETING_PATTERNS = [
-    r"\bhow (are|r) (you|u)\b", r"\bhow’s it going\b", r"\bhows it going\b",
-    r"\bcomment ça va\b", r"\bça va\b", r"\bcomo estas\b", r"¿cómo estás?"
+    r"\bhow (are|r) (you|u)\b",
+    r"\bhow’s it going\b",
+    r"\bhows it going\b",
+    r"\bcomment ça va\b",
+    r"\bça va\b",
+    r"\bcomo estas\b",
+    r"¿cómo estás?",
 ]
 
 # This prompt is used to rewrite the user's question into a standalone question
@@ -80,19 +103,23 @@ QUESTION:
 CONCISE ANSWER:"""
 QA_PROMPT = PromptTemplate.from_template(qa_template)
 
+
 def get_agent():
     """Initialize and return the conversational RAG agent."""
-    llm = ChatGoogleGenerativeAI(model="gemini-2.5-pro", temperature=0.7, google_api_key=config.GEMINI_API_KEY)
+    llm = ChatGoogleGenerativeAI(
+        model="gemini-2.5-pro", temperature=0.7, google_api_key=config.GEMINI_API_KEY
+    )
     retriever = get_retriever()
-    
+
     agent = ConversationalRetrievalChain.from_llm(
         llm=llm,
         retriever=retriever,
         condense_question_prompt=CONDENSE_QUESTION_PROMPT,
         combine_docs_chain_kwargs={"prompt": QA_PROMPT},
-        return_source_documents=True
+        return_source_documents=True,
     )
     return agent
+
 
 def _is_greeting(text: str) -> bool:
     t = text.strip().lower()
@@ -100,21 +127,24 @@ def _is_greeting(text: str) -> bool:
         return True
     return any(re.search(p, t) for p in GREETING_PATTERNS)
 
+
 def _greeting_response(user_input: str) -> str:
     t = user_input.lower()
-    if any(w in t for w in ["bonjour","salut","ça va","comment ça va"]):
+    if any(w in t for w in ["bonjour", "salut", "ça va", "comment ça va"]):
         msg = "Je vais très bien, merci. J'espère que vous aussi. Alors, quel est votre intérêt pour ma vie professionnelle?"
-    elif any(w in t for w in ["hola","¿cómo estás","como estas"]):
+    elif any(w in t for w in ["hola", "¿cómo estás", "como estas"]):
         msg = "Estoy muy bien, gracias. Espero que tú también. Entonces, ¿cuál es tu interés en mi vida profesional?"
     else:
         msg = "I am doing very well, thank you. I hope you are too. So, what is your interest in my professional life?"
     return _enforce_succinctness(msg)
+
 
 def handle_greeting(user_input):
     """Check if the user input is a greeting and return a response if so."""
     if _is_greeting(user_input):
         return _greeting_response(user_input)
     return None
+
 
 def generate_response(agent, user_input, chat_history):
     greeting_response = handle_greeting(user_input)
@@ -123,21 +153,29 @@ def generate_response(agent, user_input, chat_history):
 
     full_query_for_guardrail = f"{chat_history}\n{user_input}"
     if not is_in_scope(full_query_for_guardrail):
-        return {"answer": _enforce_succinctness(
-            "I only answer about Bolaji’s professional life. Please ask a related question."
-        )}
+        return {
+            "answer": _enforce_succinctness(
+                "I only answer about Bolaji’s professional life. Please ask a related question."
+            )
+        }
 
     result = agent.invoke({"question": user_input, "chat_history": chat_history})
     answer = result.get("answer", "")
 
     if not result["source_documents"]:
         # Your existing fallback already returns short copy; enforce just in case
-        fb = fallback_response('en')
+        fb = fallback_response("en")
         fb["answer"] = _enforce_succinctness(fb["answer"])
         return fb
 
     unknown_phrases_by_lang = {
-        "en": ["i do not have information", "i don't have information", "i do not know", "i don't know", "no information"],
+        "en": [
+            "i do not have information",
+            "i don't have information",
+            "i do not know",
+            "i don't know",
+            "no information",
+        ],
         "fr": ["pas d'information", "je ne sais pas", "je ne dispose pas"],
     }
     for lang, phrases in unknown_phrases_by_lang.items():

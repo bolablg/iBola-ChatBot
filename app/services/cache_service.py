@@ -3,18 +3,21 @@ Caching service for performance optimization.
 """
 
 import asyncio
-from typing import Any, Dict, Optional
-import json
 import hashlib
-from datetime import datetime, timedelta
-import sys
+import json
 import os
+import sys
+from datetime import datetime, timedelta
+from typing import Any, Dict, Optional
 
 # Add project root to path for imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 try:
-    from cachetools import TTLCache, LRUCache
+    from cachetools import LRUCache, TTLCache
+
     CACHE_AVAILABLE = True
 except ImportError:
     CACHE_AVAILABLE = False
@@ -46,14 +49,16 @@ class CacheService:
     def _generate_cache_key(self, *args, **kwargs) -> str:
         """Generate a unique cache key from arguments."""
         key_data = {
-            'args': args,
-            'kwargs': kwargs,
-            'timestamp': datetime.now().isoformat()
+            "args": args,
+            "kwargs": kwargs,
+            "timestamp": datetime.now().isoformat(),
         }
         key_string = json.dumps(key_data, sort_keys=True, default=str)
         return hashlib.md5(key_string.encode()).hexdigest()
 
-    async def get_cached_response(self, query: str, agent_type: str, language: str = 'en') -> Optional[Dict[str, Any]]:
+    async def get_cached_response(
+        self, query: str, agent_type: str, language: str = "en"
+    ) -> Optional[Dict[str, Any]]:
         """Get cached response for a query."""
         if not self.response_cache:
             return None
@@ -63,12 +68,14 @@ class CacheService:
 
         if cached_result:
             # Update cache hit metrics
-            cached_result['cache_hit'] = True
-            cached_result['cache_timestamp'] = datetime.now().isoformat()
+            cached_result["cache_hit"] = True
+            cached_result["cache_timestamp"] = datetime.now().isoformat()
 
         return cached_result
 
-    async def set_cached_response(self, query: str, agent_type: str, language: str, response: Dict[str, Any]):
+    async def set_cached_response(
+        self, query: str, agent_type: str, language: str, response: Dict[str, Any]
+    ):
         """Cache a response."""
         if not self.response_cache:
             return
@@ -77,8 +84,8 @@ class CacheService:
 
         # Add cache metadata
         cached_response = response.copy()
-        cached_response['cached_at'] = datetime.now().isoformat()
-        cached_response['cache_hit'] = False
+        cached_response["cached_at"] = datetime.now().isoformat()
+        cached_response["cache_hit"] = False
 
         self.response_cache[cache_key] = cached_response
 
@@ -101,7 +108,9 @@ class CacheService:
         if self.session_cache and session_id in self.session_cache:
             del self.session_cache[session_id]
 
-    async def get_agent_response(self, agent_type: str, query_hash: str) -> Optional[Dict[str, Any]]:
+    async def get_agent_response(
+        self, agent_type: str, query_hash: str
+    ) -> Optional[Dict[str, Any]]:
         """Get cached agent response."""
         if not self.agent_cache:
             return None
@@ -109,7 +118,9 @@ class CacheService:
         cache_key = f"{agent_type}:{query_hash}"
         return self.agent_cache.get(cache_key)
 
-    async def set_agent_response(self, agent_type: str, query_hash: str, response: Dict[str, Any]):
+    async def set_agent_response(
+        self, agent_type: str, query_hash: str, response: Dict[str, Any]
+    ):
         """Cache agent response."""
         if not self.agent_cache:
             return
@@ -117,7 +128,9 @@ class CacheService:
         cache_key = f"{agent_type}:{query_hash}"
         self.agent_cache[cache_key] = response
 
-    async def get_localized_content(self, content_key: str, language: str) -> Optional[str]:
+    async def get_localized_content(
+        self, content_key: str, language: str
+    ) -> Optional[str]:
         """Get cached localized content."""
         if not self.language_cache:
             return None
@@ -125,7 +138,9 @@ class CacheService:
         cache_key = f"{content_key}:{language}"
         return self.language_cache.get(cache_key)
 
-    async def set_localized_content(self, content_key: str, language: str, content: str):
+    async def set_localized_content(
+        self, content_key: str, language: str, content: str
+    ):
         """Cache localized content."""
         if not self.language_cache:
             return
@@ -142,22 +157,22 @@ class CacheService:
             "response_cache": {
                 "size": len(self.response_cache) if self.response_cache else 0,
                 "maxsize": self.response_cache.maxsize if self.response_cache else 0,
-                "ttl": self.response_cache.ttl if self.response_cache else 0
+                "ttl": self.response_cache.ttl if self.response_cache else 0,
             },
             "session_cache": {
                 "size": len(self.session_cache) if self.session_cache else 0,
                 "maxsize": self.session_cache.maxsize if self.session_cache else 0,
-                "ttl": self.session_cache.ttl if self.session_cache else 0
+                "ttl": self.session_cache.ttl if self.session_cache else 0,
             },
             "agent_cache": {
                 "size": len(self.agent_cache) if self.agent_cache else 0,
-                "maxsize": self.agent_cache.maxsize if self.agent_cache else 0
+                "maxsize": self.agent_cache.maxsize if self.agent_cache else 0,
             },
             "language_cache": {
                 "size": len(self.language_cache) if self.language_cache else 0,
                 "maxsize": self.language_cache.maxsize if self.language_cache else 0,
-                "ttl": self.language_cache.ttl if self.language_cache else 0
-            }
+                "ttl": self.language_cache.ttl if self.language_cache else 0,
+            },
         }
 
         return stats

@@ -3,16 +3,19 @@ Orchestrator - Routes queries to the appropriate specialized agent.
 """
 
 import re
-from typing import Dict, Any, List, Tuple
-from .professional_agent import ProfessionalAgent
-from .education_agent import EducationAgent
-from .learning_agent import LearningAgent
-from .redirect_agent import RedirectAgent
-from .classification_agent import ClassificationAgent
+from typing import Any, Dict, List, Tuple
+
 from app.services.dynamic_guardrails import dynamic_guardrails
 from app.services.google_chat_alert import google_chat_alert
-from app.services.language_detection import language_service
 from app.services.google_sheets_logger import google_sheets_logger
+from app.services.language_detection import language_service
+
+from .classification_agent import ClassificationAgent
+from .education_agent import EducationAgent
+from .learning_agent import LearningAgent
+from .professional_agent import ProfessionalAgent
+from .redirect_agent import RedirectAgent
+
 
 class AgentOrchestrator:
     """Routes queries to appropriate specialized agents."""
@@ -26,39 +29,43 @@ class AgentOrchestrator:
         self.redirect_agent = RedirectAgent()
 
         # Session tracking for redirect counts and user context
-        self.session_data = {}  # {session_id: {'redirect_count': int, 'language': str, 'last_agent': str}}
+        self.session_data = (
+            {}
+        )  # {session_id: {'redirect_count': int, 'language': str, 'last_agent': str}}
 
         # Keep dynamic guardrails as fallback
         self.guardrails = dynamic_guardrails
 
         # Legacy patterns (still useful for regex matching)
         self.professional_patterns = [
-            r'\b(what|which|where)\s+(do|did|does|is|are|was|were)\s+(you|i|he|bolaji)\s+(work|do)\b',
-            r'\b(your|his|bolaji.?s)\s+(job|role|position|career)\b',
-            r'\b(experience|background|resume|cv)\b',
-            r'\b(skill|technology|tool|expertise)\b',
-            r'\b(project|achievement|accomplishment)\b'
+            r"\b(what|which|where)\s+(do|did|does|is|are|was|were)\s+(you|i|he|bolaji)\s+(work|do)\b",
+            r"\b(your|his|bolaji.?s)\s+(job|role|position|career)\b",
+            r"\b(experience|background|resume|cv)\b",
+            r"\b(skill|technology|tool|expertise)\b",
+            r"\b(project|achievement|accomplishment)\b",
         ]
 
         self.education_patterns = [
-            r'\b(education|degree|university|college|school)\b',
-            r'\b(master|bachelor|diploma|transcript)\b',
-            r'\b(study|studied|studying)\b',
-            r'\b(statistics|econometrics|mathematics)\b'
+            r"\b(education|degree|university|college|school)\b",
+            r"\b(master|bachelor|diploma|transcript)\b",
+            r"\b(study|studied|studying)\b",
+            r"\b(statistics|econometrics|mathematics)\b",
         ]
 
         self.learning_patterns = [
-            r'\b(how|what|where)\s+(to|do|can|should)\s+(learn|study|start|begin|get)\b',
-            r'\b(learn|study|practice|improve)\s+(data|python|sql|ai|ml)\b',
-            r'\b(advice|guidance|recommendation|tips?)\b',
-            r'\b(course|tutorial|training|resource)\b'
+            r"\b(how|what|where)\s+(to|do|can|should)\s+(learn|study|start|begin|get)\b",
+            r"\b(learn|study|practice|improve)\s+(data|python|sql|ai|ml)\b",
+            r"\b(advice|guidance|recommendation|tips?)\b",
+            r"\b(course|tutorial|training|resource)\b",
         ]
 
     def _normalize_text(self, text: str) -> str:
         """Normalize text for keyword matching."""
         return text.lower().strip()
 
-    def _calculate_relevance_score(self, text: str, keywords: list, patterns: list = None) -> float:
+    def _calculate_relevance_score(
+        self, text: str, keywords: list, patterns: list = None
+    ) -> float:
         """Calculate relevance score for a category."""
         normalized_text = self._normalize_text(text)
 
@@ -68,11 +75,17 @@ class AgentOrchestrator:
         # Pattern matching
         pattern_score = 0
         if patterns:
-            pattern_score = sum(1 for pattern in patterns if re.search(pattern, normalized_text, re.IGNORECASE))
+            pattern_score = sum(
+                1
+                for pattern in patterns
+                if re.search(pattern, normalized_text, re.IGNORECASE)
+            )
 
         return keyword_score + pattern_score
 
-    def route_query(self, user_input: str, chat_history: str = "", session_id: str = "") -> Dict[str, Any]:
+    def route_query(
+        self, user_input: str, chat_history: str = "", session_id: str = ""
+    ) -> Dict[str, Any]:
         """
         Route the query to the most appropriate agent using dynamic guardrails.
 
@@ -85,61 +98,72 @@ class AgentOrchestrator:
             dict: Contains agent instance, agent type, and confidence score
         """
         # Get session data
-        session_info = self.session_data.get(session_id, {'redirect_count': 0, 'last_agent': 'redirect'})
+        session_info = self.session_data.get(
+            session_id, {"redirect_count": 0, "last_agent": "redirect"}
+        )
 
         # Use dynamic guardrails for intelligent analysis
         context_messages = []
         if chat_history:
             # Extract last few messages for context (chat_history is now list of tuples)
             # Convert tuples to strings for analysis
-            context_messages = [f"Human: {h[0]}\nAssistant: {h[1]}" for h in chat_history[-2:]]
+            context_messages = [
+                f"Human: {h[0]}\nAssistant: {h[1]}" for h in chat_history[-2:]
+            ]
 
         analysis = self.guardrails.analyze_message(user_input, context_messages)
 
         # Handle special cases
         if self._is_greeting(user_input):
             return {
-                'agent': self.professional_agent,
-                'agent_type': 'professional',
-                'confidence': 0.8,
-                'scores': {'professional': 1, 'education': 0, 'learning': 0, 'off_topic': 0}
+                "agent": self.professional_agent,
+                "agent_type": "professional",
+                "confidence": 0.8,
+                "scores": {
+                    "professional": 1,
+                    "education": 0,
+                    "learning": 0,
+                    "off_topic": 0,
+                },
             }
 
         # If confidence is low or off-topic score is high, use redirect
-        if analysis['confidence'] < 0.5 or analysis['primary_category'] == 'off_topic':
+        if analysis["confidence"] < 0.5 or analysis["primary_category"] == "off_topic":
             return {
-                'agent': self.redirect_agent,
-                'agent_type': 'redirect',
-                'confidence': analysis['confidence'],
-                'scores': analysis['scores'],
-                'redirect_count': session_info['redirect_count']
+                "agent": self.redirect_agent,
+                "agent_type": "redirect",
+                "confidence": analysis["confidence"],
+                "scores": analysis["scores"],
+                "redirect_count": session_info["redirect_count"],
             }
 
         # Route to appropriate agent
         agents = {
-            'professional': self.professional_agent,
-            'education': self.education_agent,
-            'learning': self.learning_agent
+            "professional": self.professional_agent,
+            "education": self.education_agent,
+            "learning": self.learning_agent,
         }
 
         # Handle edge case where primary category might not be in agents
-        if analysis['primary_category'] not in agents:
+        if analysis["primary_category"] not in agents:
             return {
-                'agent': self.redirect_agent,
-                'agent_type': 'redirect',
-                'confidence': 0.0,
-                'scores': analysis['scores'],
-                'redirect_count': session_info['redirect_count']
+                "agent": self.redirect_agent,
+                "agent_type": "redirect",
+                "confidence": 0.0,
+                "scores": analysis["scores"],
+                "redirect_count": session_info["redirect_count"],
             }
 
         return {
-            'agent': agents[analysis['primary_category']],
-            'agent_type': analysis['primary_category'],
-            'confidence': analysis['confidence'],
-            'scores': analysis['scores']
+            "agent": agents[analysis["primary_category"]],
+            "agent_type": analysis["primary_category"],
+            "confidence": analysis["confidence"],
+            "scores": analysis["scores"],
         }
 
-    def route_with_classification_agent(self, user_input: str, chat_history: List[Tuple[str, str]], session_id: str) -> Dict[str, Any]:
+    def route_with_classification_agent(
+        self, user_input: str, chat_history: List[Tuple[str, str]], session_id: str
+    ) -> Dict[str, Any]:
         """
         Route using the advanced ClassificationAgent with internet access.
 
@@ -153,26 +177,28 @@ class AgentOrchestrator:
         """
         try:
             # Get session info for fallback logic
-            session_info = self.session_data.get(session_id, {'last_agent': None})
+            session_info = self.session_data.get(session_id, {"last_agent": None})
 
             # Convert chat history to string format for ClassificationAgent
-            chat_history_str = "\n".join([f"Human: {h[0]}\nAssistant: {h[1]}" for h in chat_history[-5:]])  # Last 5 exchanges
+            chat_history_str = "\n".join(
+                [f"Human: {h[0]}\nAssistant: {h[1]}" for h in chat_history[-5:]]
+            )  # Last 5 exchanges
 
             # Use ClassificationAgent for routing decision
             routing_decision = self.classification_agent.get_routing_decision(
                 user_input=user_input,
                 chat_history=chat_history_str,
-                last_agent=session_info.get('last_agent')
+                last_agent=session_info.get("last_agent"),
             )
 
-            target_agent = routing_decision['target_agent']
+            target_agent = routing_decision["target_agent"]
 
             # Map to agent instances
             agent_mapping = {
-                'professional': self.professional_agent,
-                'education': self.education_agent,
-                'learning': self.learning_agent,
-                'redirect': self.redirect_agent
+                "professional": self.professional_agent,
+                "education": self.education_agent,
+                "learning": self.learning_agent,
+                "redirect": self.redirect_agent,
             }
 
             # Get the appropriate agent
@@ -182,22 +208,24 @@ class AgentOrchestrator:
             else:
                 # Fallback to redirect agent
                 agent = self.redirect_agent
-                agent_type = 'redirect'
+                agent_type = "redirect"
 
             # Update session info
-            session_info['last_agent'] = agent_type
+            session_info["last_agent"] = agent_type
 
             result = {
-                'agent': agent,
-                'agent_type': agent_type,
-                'confidence': routing_decision['confidence'],
-                'reasoning': routing_decision['reasoning'],
-                'classification_agent_used': True,
-                'fallback_applied': routing_decision.get('fallback_applied', False),
-                'fallback_reason': routing_decision.get('fallback_reason')
+                "agent": agent,
+                "agent_type": agent_type,
+                "confidence": routing_decision["confidence"],
+                "reasoning": routing_decision["reasoning"],
+                "classification_agent_used": True,
+                "fallback_applied": routing_decision.get("fallback_applied", False),
+                "fallback_reason": routing_decision.get("fallback_reason"),
             }
 
-            print(f"🎯 ClassificationAgent routing: {user_input[:50]}... -> {agent_type} (confidence: {routing_decision['confidence']:.2f})")
+            print(
+                f"🎯 ClassificationAgent routing: {user_input[:50]}... -> {agent_type} (confidence: {routing_decision['confidence']:.2f})"
+            )
 
             return result
 
@@ -206,7 +234,14 @@ class AgentOrchestrator:
             # Fallback to legacy dynamic guardrails routing
             return self.route_query(user_input, chat_history, session_id)
 
-    def process_query(self, user_input: str, chat_history: List[Tuple[str, str]] = None, session_id: str = "", user_language: str = "en", request_info: Dict[str, Any] = None) -> Dict[str, Any]:
+    def process_query(
+        self,
+        user_input: str,
+        chat_history: List[Tuple[str, str]] = None,
+        session_id: str = "",
+        user_language: str = "en",
+        request_info: Dict[str, Any] = None,
+    ) -> Dict[str, Any]:
         if chat_history is None:
             chat_history = []
         """
@@ -221,40 +256,43 @@ class AgentOrchestrator:
         # Get or create session data
         if session_id not in self.session_data:
             self.session_data[session_id] = {
-                'redirect_count': 0,
-                'last_agent': 'redirect',
-                'language': user_language,
-                'conversation_start': True
+                "redirect_count": 0,
+                "last_agent": "redirect",
+                "language": user_language,
+                "conversation_start": True,
             }
 
         session_info = self.session_data[session_id]
 
         # Use ClassificationAgent for intelligent routing
-        routing_result = self.route_with_classification_agent(user_input, chat_history, session_id)
+        routing_result = self.route_with_classification_agent(
+            user_input, chat_history, session_id
+        )
 
-        agent = routing_result['agent']
-        agent_type = routing_result['agent_type']
+        agent = routing_result["agent"]
+        agent_type = routing_result["agent_type"]
 
         # Handle redirect agent with enhanced logic
-        if agent_type == 'redirect':
-            redirect_count = routing_result.get('redirect_count', session_info['redirect_count'])
+        if agent_type == "redirect":
+            redirect_count = routing_result.get(
+                "redirect_count", session_info["redirect_count"]
+            )
 
             # Update redirect count first (so should_end_chat logic works correctly)
             redirect_count += 1
-            session_info['redirect_count'] = redirect_count
+            session_info["redirect_count"] = redirect_count
 
             # Send Google Chat alert if redirect count is high
             if redirect_count >= 3:
-                google_chat_alert.send_redirect_limit_alert(session_id, chat_history, redirect_count)
+                google_chat_alert.send_redirect_limit_alert(
+                    session_id, chat_history, redirect_count
+                )
 
             result = self.redirect_agent.generate_redirect_response(
-                user_input,
-                chat_history,
-                redirect_count,
-                session_id
+                user_input, chat_history, redirect_count, session_id
             )
 
-            result['redirect_count'] = redirect_count
+            result["redirect_count"] = redirect_count
 
             # Log redirect event to Google Sheets for classifier analysis
             self._log_redirect_event(
@@ -263,59 +301,77 @@ class AgentOrchestrator:
                 session_id=session_id,
                 redirect_count=redirect_count,
                 agent_type=agent_type,
-                confidence=routing_result.get('confidence', 0.0),
+                confidence=routing_result.get("confidence", 0.0),
                 routing_result=routing_result,
-                request_info=request_info
+                request_info=request_info,
             )
 
             return result
 
         # Reset redirect count if we successfully routed to a specialist
-        session_info['redirect_count'] = 0
-        session_info['last_agent'] = agent_type
+        session_info["redirect_count"] = 0
+        session_info["last_agent"] = agent_type
 
         # Handle contact actions (Google Chat alerts)
         if self._is_contact_request(user_input):
             contact_type = self._detect_contact_type(user_input)
             if contact_type:
-                google_chat_alert.send_contact_alert(contact_type, session_id, chat_history)
+                google_chat_alert.send_contact_alert(
+                    contact_type, session_id, chat_history
+                )
 
         # Invoke the appropriate agent
         try:
-            result = agent.invoke({
-                "question": user_input,
-                "chat_history": chat_history
-            })
+            result = agent.invoke(
+                {"question": user_input, "chat_history": chat_history}
+            )
 
             # Add metadata to the result
-            result['agent_type'] = agent_type
-            result['confidence'] = routing_result['confidence']
-            result['language'] = user_language
+            result["agent_type"] = agent_type
+            result["confidence"] = routing_result["confidence"]
+            result["language"] = user_language
 
             return result
 
         except Exception as e:
             # Fallback to redirect agent if there's an error
             print(f"Error with {agent_type} agent: {e}")
-            session_info['redirect_count'] += 1
+            session_info["redirect_count"] += 1
 
             return self.redirect_agent.generate_redirect_response(
-                user_input,
-                chat_history,
-                session_info['redirect_count'],
-                session_id
+                user_input, chat_history, session_info["redirect_count"], session_id
             )
 
     def _is_greeting(self, message: str) -> bool:
         """Check if message is a greeting."""
-        greetings = ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening',
-                    'salut', 'bonjour', 'hola', 'ciao', 'guten tag', 'konnichiwa']
+        greetings = [
+            "hello",
+            "hi",
+            "hey",
+            "good morning",
+            "good afternoon",
+            "good evening",
+            "salut",
+            "bonjour",
+            "hola",
+            "ciao",
+            "guten tag",
+            "konnichiwa",
+        ]
         message_lower = message.lower().strip()
         return any(greeting in message_lower for greeting in greetings)
 
     def _is_contact_request(self, message: str) -> bool:
         """Check if message indicates intent to contact directly."""
-        contact_keywords = ['contact', 'email', 'meeting', 'appointment', 'book', 'schedule', 'call']
+        contact_keywords = [
+            "contact",
+            "email",
+            "meeting",
+            "appointment",
+            "book",
+            "schedule",
+            "call",
+        ]
         message_lower = message.lower()
         return any(keyword in message_lower for keyword in contact_keywords)
 
@@ -323,10 +379,13 @@ class AgentOrchestrator:
         """Detect the type of contact request."""
         message_lower = message.lower()
 
-        if any(word in message_lower for word in ['email', 'mail', 'write']):
-            return 'email'
-        elif any(word in message_lower for word in ['meeting', 'appointment', 'book', 'schedule', 'call']):
-            return 'booking'
+        if any(word in message_lower for word in ["email", "mail", "write"]):
+            return "email"
+        elif any(
+            word in message_lower
+            for word in ["meeting", "appointment", "book", "schedule", "call"]
+        ):
+            return "booking"
 
         return None
 
@@ -334,15 +393,23 @@ class AgentOrchestrator:
         """Get statistics for a session."""
         session_info = self.session_data.get(session_id, {})
         return {
-            'redirect_count': session_info.get('redirect_count', 0),
-            'last_agent': session_info.get('last_agent', 'unknown'),
-            'language': session_info.get('language', 'en'),
-            'conversation_active': session_id in self.session_data
+            "redirect_count": session_info.get("redirect_count", 0),
+            "last_agent": session_info.get("last_agent", "unknown"),
+            "language": session_info.get("language", "en"),
+            "conversation_active": session_id in self.session_data,
         }
 
-    def _log_redirect_event(self, user_input: str, chat_history: List[Tuple[str, str]],
-                           session_id: str, redirect_count: int, agent_type: str,
-                           confidence: float, routing_result: Dict[str, Any], request_info: Dict[str, Any] = None):
+    def _log_redirect_event(
+        self,
+        user_input: str,
+        chat_history: List[Tuple[str, str]],
+        session_id: str,
+        redirect_count: int,
+        agent_type: str,
+        confidence: float,
+        routing_result: Dict[str, Any],
+        request_info: Dict[str, Any] = None,
+    ):
         """Log redirect event to Google Sheets for classifier analysis."""
         if not google_sheets_logger:
             return
@@ -355,44 +422,72 @@ class AgentOrchestrator:
             if chat_history:
                 # Take last 3 exchanges for summary
                 recent_history = chat_history[-3:]
-                chat_history_summary = " | ".join([
-                    f"User: {h[0][:50]}... -> AI: {h[1][:50]}..."
-                    for h in recent_history
-                ])
+                chat_history_summary = " | ".join(
+                    [
+                        f"User: {h[0][:50]}... -> AI: {h[1][:50]}..."
+                        for h in recent_history
+                    ]
+                )
 
             # Extract device type from user agent
             device_type = "unknown"
-            if request_info and request_info.get('user_agent'):
-                user_agent = request_info['user_agent'].lower()
-                if 'mobile' in user_agent or 'android' in user_agent or 'iphone' in user_agent:
+            if request_info and request_info.get("user_agent"):
+                user_agent = request_info["user_agent"].lower()
+                if (
+                    "mobile" in user_agent
+                    or "android" in user_agent
+                    or "iphone" in user_agent
+                ):
                     device_type = "mobile"
-                elif 'tablet' in user_agent or 'ipad' in user_agent:
+                elif "tablet" in user_agent or "ipad" in user_agent:
                     device_type = "tablet"
                 else:
                     device_type = "desktop"
 
             # Prepare redirect data
             redirect_data = {
-                'timestamp': datetime.now().isoformat(),
-                'session_id': session_id,
-                'ip_address': request_info.get('ip_address', 'unknown') if request_info else 'unknown',
-                'user_agent': request_info.get('user_agent', 'unknown') if request_info else 'unknown',
-                'browser_language': request_info.get('accept_language', 'unknown') if request_info else 'unknown',
-                'user_language': self.session_data.get(session_id, {}).get('language', 'en'),
-                'user_input': user_input,
-                'redirect_count': redirect_count,
-                'agent_type': agent_type,
-                'confidence': confidence,
-                'redirect_reason': routing_result.get('reasoning', 'Classification routing'),
-                'chat_history_summary': chat_history_summary,
-                'response_time': 0,  # Will be updated later if available
-                'source_documents_count': 0,  # Not applicable for redirects
-                'cache_hit': False,  # Not applicable for redirects
-                'device_type': device_type,
-                'referrer': request_info.get('referrer', 'unknown') if request_info else 'unknown',
-                'classification_agent_used': routing_result.get('classification_agent_used', False),
-                'fallback_applied': routing_result.get('fallback_applied', False),
-                'fallback_reason': routing_result.get('fallback_reason', '')
+                "timestamp": datetime.now().isoformat(),
+                "session_id": session_id,
+                "ip_address": (
+                    request_info.get("ip_address", "unknown")
+                    if request_info
+                    else "unknown"
+                ),
+                "user_agent": (
+                    request_info.get("user_agent", "unknown")
+                    if request_info
+                    else "unknown"
+                ),
+                "browser_language": (
+                    request_info.get("accept_language", "unknown")
+                    if request_info
+                    else "unknown"
+                ),
+                "user_language": self.session_data.get(session_id, {}).get(
+                    "language", "en"
+                ),
+                "user_input": user_input,
+                "redirect_count": redirect_count,
+                "agent_type": agent_type,
+                "confidence": confidence,
+                "redirect_reason": routing_result.get(
+                    "reasoning", "Classification routing"
+                ),
+                "chat_history_summary": chat_history_summary,
+                "response_time": 0,  # Will be updated later if available
+                "source_documents_count": 0,  # Not applicable for redirects
+                "cache_hit": False,  # Not applicable for redirects
+                "device_type": device_type,
+                "referrer": (
+                    request_info.get("referrer", "unknown")
+                    if request_info
+                    else "unknown"
+                ),
+                "classification_agent_used": routing_result.get(
+                    "classification_agent_used", False
+                ),
+                "fallback_applied": routing_result.get("fallback_applied", False),
+                "fallback_reason": routing_result.get("fallback_reason", ""),
             }
 
             # Log to Google Sheets

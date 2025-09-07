@@ -4,10 +4,11 @@ Dynamic guardrails system that learns from conversation patterns to make more in
 
 import json
 import os
-from collections import defaultdict, Counter
-from typing import Dict, List, Set
 import re
+from collections import Counter, defaultdict
 from datetime import datetime, timedelta
+from typing import Dict, List, Set
+
 
 class DynamicGuardrails:
     """Dynamic guardrails that learn from conversation patterns."""
@@ -34,7 +35,7 @@ class DynamicGuardrails:
         """Load dynamic patterns from file."""
         if os.path.exists(self.patterns_file):
             try:
-                with open(self.patterns_file, 'r') as f:
+                with open(self.patterns_file, "r") as f:
                     return json.load(f)
             except Exception as e:
                 print(f"Error loading patterns: {e}")
@@ -42,41 +43,147 @@ class DynamicGuardrails:
         # Default patterns
         return {
             "professional_keywords": [
-                "experience", "work", "job", "career", "project", "company", "role",
-                "position", "skill", "technology", "tool", "expertise", "achievement",
-                "gozem", "rintio", "data", "analytics", "ai", "machine learning",
-                "cloud", "bigquery", "python", "sql", "airflow", "looker", "dataform",
-                "leadership", "team", "automation", "optimization", "business"
+                "experience",
+                "work",
+                "job",
+                "career",
+                "project",
+                "company",
+                "role",
+                "position",
+                "skill",
+                "technology",
+                "tool",
+                "expertise",
+                "achievement",
+                "gozem",
+                "rintio",
+                "data",
+                "analytics",
+                "ai",
+                "machine learning",
+                "cloud",
+                "bigquery",
+                "python",
+                "sql",
+                "airflow",
+                "looker",
+                "dataform",
+                "leadership",
+                "team",
+                "automation",
+                "optimization",
+                "business",
             ],
             "education_keywords": [
-                "education", "degree", "university", "college", "master", "bachelor",
-                "diploma", "study", "academic", "school", "statistics", "econometrics",
-                "icmpa", "unesco", "transcript", "grade", "gpa", "thesis", "dissertation"
+                "education",
+                "degree",
+                "university",
+                "college",
+                "master",
+                "bachelor",
+                "diploma",
+                "study",
+                "academic",
+                "school",
+                "statistics",
+                "econometrics",
+                "icmpa",
+                "unesco",
+                "transcript",
+                "grade",
+                "gpa",
+                "thesis",
+                "dissertation",
             ],
             "learning_keywords": [
-                "learn", "study", "how to", "tutorial", "course", "training", "advice",
-                "guide", "beginner", "start", "career path", "skill development",
-                "resources", "practice", "improve", "tips", "recommend"
+                "learn",
+                "study",
+                "how to",
+                "tutorial",
+                "course",
+                "training",
+                "advice",
+                "guide",
+                "beginner",
+                "start",
+                "career path",
+                "skill development",
+                "resources",
+                "practice",
+                "improve",
+                "tips",
+                "recommend",
             ],
             "off_topic_indicators": [
-                "weather", "sports", "politics", "election", "president", "government",
-                "political", "vote", "voting", "candidate", "party", "democracy",
-                "religion", "religious", "faith", "belief", "church", "temple",
-                "entertainment", "celebrity", "gossip", "food", "restaurant", "recipe",
-                "travel", "vacation", "hotel", "shopping", "store", "purchase",
-                "music", "song", "album", "concert", "band", "artist",
-                "movies", "film", "cinema", "actor", "actress", "director",
-                "games", "gaming", "video game", "console", "playstation", "xbox",
-                "football", "soccer", "basketball", "baseball", "tennis", "golf",
-                "cricket", "rugby", "hockey", "swimming", "athletics", "olympics"
-            ]
+                "weather",
+                "sports",
+                "politics",
+                "election",
+                "president",
+                "government",
+                "political",
+                "vote",
+                "voting",
+                "candidate",
+                "party",
+                "democracy",
+                "religion",
+                "religious",
+                "faith",
+                "belief",
+                "church",
+                "temple",
+                "entertainment",
+                "celebrity",
+                "gossip",
+                "food",
+                "restaurant",
+                "recipe",
+                "travel",
+                "vacation",
+                "hotel",
+                "shopping",
+                "store",
+                "purchase",
+                "music",
+                "song",
+                "album",
+                "concert",
+                "band",
+                "artist",
+                "movies",
+                "film",
+                "cinema",
+                "actor",
+                "actress",
+                "director",
+                "games",
+                "gaming",
+                "video game",
+                "console",
+                "playstation",
+                "xbox",
+                "football",
+                "soccer",
+                "basketball",
+                "baseball",
+                "tennis",
+                "golf",
+                "cricket",
+                "rugby",
+                "hockey",
+                "swimming",
+                "athletics",
+                "olympics",
+            ],
         }
 
     def _load_feedback(self):
         """Load conversation feedback history."""
         if os.path.exists(self.feedback_file):
             try:
-                with open(self.feedback_file, 'r') as f:
+                with open(self.feedback_file, "r") as f:
                     return json.load(f)
             except Exception as e:
                 print(f"Error loading feedback: {e}")
@@ -90,9 +197,9 @@ class DynamicGuardrails:
                 "education_keywords": list(self.education_keywords),
                 "learning_keywords": list(self.learning_keywords),
                 "off_topic_indicators": list(self.off_topic_indicators),
-                "last_updated": datetime.now().isoformat()
+                "last_updated": datetime.now().isoformat(),
             }
-            with open(self.patterns_file, 'w') as f:
+            with open(self.patterns_file, "w") as f:
                 json.dump(patterns_data, f, indent=2)
         except Exception as e:
             print(f"Error saving patterns: {e}")
@@ -102,7 +209,7 @@ class DynamicGuardrails:
         try:
             # Keep only last 1000 feedback entries
             recent_feedback = self.feedback_history[-1000:]
-            with open(self.feedback_file, 'w') as f:
+            with open(self.feedback_file, "w") as f:
                 json.dump(recent_feedback, f, indent=2)
         except Exception as e:
             print(f"Error saving feedback: {e}")
@@ -122,10 +229,18 @@ class DynamicGuardrails:
 
         # Calculate scores for each category
         scores = {
-            "professional": self._calculate_category_score(normalized_message, self.professional_keywords),
-            "education": self._calculate_category_score(normalized_message, self.education_keywords),
-            "learning": self._calculate_category_score(normalized_message, self.learning_keywords),
-            "off_topic": self._calculate_category_score(normalized_message, self.off_topic_indicators)
+            "professional": self._calculate_category_score(
+                normalized_message, self.professional_keywords
+            ),
+            "education": self._calculate_category_score(
+                normalized_message, self.education_keywords
+            ),
+            "learning": self._calculate_category_score(
+                normalized_message, self.learning_keywords
+            ),
+            "off_topic": self._calculate_category_score(
+                normalized_message, self.off_topic_indicators
+            ),
         }
 
         # Consider conversation context
@@ -137,14 +252,20 @@ class DynamicGuardrails:
         off_topic_score = scores.get("off_topic", 0)
 
         # If off-topic score is significant, prioritize redirect
-        if off_topic_score > 2 or (off_topic_score > 1 and off_topic_score >= max(scores.values()) * 0.8):
+        if off_topic_score > 2 or (
+            off_topic_score > 1 and off_topic_score >= max(scores.values()) * 0.8
+        ):
             primary_category = "redirect"
             # Add redirect score to the scores dict for confidence calculation
             scores["redirect"] = off_topic_score
         else:
             primary_category = max(scores, key=scores.get)
 
-        confidence = scores[primary_category] / sum(scores.values()) if sum(scores.values()) > 0 else 0
+        confidence = (
+            scores[primary_category] / sum(scores.values())
+            if sum(scores.values()) > 0
+            else 0
+        )
 
         # Generate recommendations
         recommendations = self._generate_recommendations(scores, confidence, context)
@@ -154,7 +275,7 @@ class DynamicGuardrails:
             "confidence": confidence,
             "scores": scores,
             "recommendations": recommendations,
-            "needs_human_review": self._needs_human_review(scores, confidence)
+            "needs_human_review": self._needs_human_review(scores, confidence),
         }
 
     def _calculate_category_score(self, message: str, keywords: Set[str]) -> float:
@@ -172,11 +293,21 @@ class DynamicGuardrails:
                 score += 1.5  # Increased from 1 to 1.5
 
         # Boost for question patterns
-        if any(word in message for word in ['what', 'how', 'where', 'when', 'why', 'who']):
+        if any(
+            word in message for word in ["what", "how", "where", "when", "why", "who"]
+        ):
             score += 0.5
 
         # Special handling for political topics
-        political_indicators = ['election', 'president', 'vote', 'political', 'government', 'party', 'candidate']
+        political_indicators = [
+            "election",
+            "president",
+            "vote",
+            "political",
+            "government",
+            "party",
+            "candidate",
+        ]
         if any(indicator in message for indicator in political_indicators):
             score += 2  # Strong boost for political content
 
@@ -184,7 +315,12 @@ class DynamicGuardrails:
 
     def _analyze_context(self, context: List[str], current_message: str) -> Dict:
         """Analyze conversation context to improve categorization."""
-        context_scores = {"professional": 0, "education": 0, "learning": 0, "off_topic": 0}
+        context_scores = {
+            "professional": 0,
+            "education": 0,
+            "learning": 0,
+            "off_topic": 0,
+        }
 
         # Look for topic continuity in recent messages
         recent_context = context[-3:] if len(context) > 3 else context
@@ -195,7 +331,7 @@ class DynamicGuardrails:
             ("professional", self.professional_keywords),
             ("education", self.education_keywords),
             ("learning", self.learning_keywords),
-            ("off_topic", self.off_topic_indicators)
+            ("off_topic", self.off_topic_indicators),
         ]:
             context_matches = sum(1 for keyword in keywords if keyword in context_text)
             if context_matches > 0:
@@ -208,10 +344,14 @@ class DynamicGuardrails:
         combined = {}
         for category in base_scores:
             # Base score has higher weight, context provides boost
-            combined[category] = base_scores[category] + (context_scores[category] * 0.4)
+            combined[category] = base_scores[category] + (
+                context_scores[category] * 0.4
+            )
         return combined
 
-    def _generate_recommendations(self, scores: Dict, confidence: float, context: List[str]) -> List[str]:
+    def _generate_recommendations(
+        self, scores: Dict, confidence: float, context: List[str]
+    ) -> List[str]:
         """Generate recommendations based on analysis."""
         recommendations = []
 
@@ -247,7 +387,9 @@ class DynamicGuardrails:
 
         return False
 
-    def learn_from_feedback(self, message: str, correct_category: str, context: List[str] = None):
+    def learn_from_feedback(
+        self, message: str, correct_category: str, context: List[str] = None
+    ):
         """
         Learn from user feedback to improve future categorizations.
 
@@ -288,7 +430,7 @@ class DynamicGuardrails:
             "message": message,
             "correct_category": correct_category,
             "timestamp": datetime.now().isoformat(),
-            "context_length": len(context) if context else 0
+            "context_length": len(context) if context else 0,
         }
         self.feedback_history.append(feedback_entry)
 
@@ -299,7 +441,9 @@ class DynamicGuardrails:
     def get_statistics(self) -> Dict:
         """Get statistics about the dynamic guardrails performance."""
         total_feedback = len(self.feedback_history)
-        category_distribution = Counter([f["correct_category"] for f in self.feedback_history])
+        category_distribution = Counter(
+            [f["correct_category"] for f in self.feedback_history]
+        )
 
         return {
             "total_feedback_entries": total_feedback,
@@ -308,18 +452,19 @@ class DynamicGuardrails:
                 "professional": len(self.professional_keywords),
                 "education": len(self.education_keywords),
                 "learning": len(self.learning_keywords),
-                "off_topic": len(self.off_topic_indicators)
+                "off_topic": len(self.off_topic_indicators),
             },
-            "last_updated": datetime.now().isoformat()
+            "last_updated": datetime.now().isoformat(),
         }
 
     def _normalize_text(self, text: str) -> str:
         """Normalize text for analysis."""
         # Convert to lowercase and remove punctuation
-        text = re.sub(r'[^\w\s]', '', text.lower())
+        text = re.sub(r"[^\w\s]", "", text.lower())
         # Remove extra whitespace
-        text = re.sub(r'\s+', ' ', text).strip()
+        text = re.sub(r"\s+", " ", text).strip()
         return text
+
 
 # Global instance
 dynamic_guardrails = DynamicGuardrails()

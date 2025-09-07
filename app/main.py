@@ -1,20 +1,21 @@
 import logging
 import os
 import time
-from typing import Optional, Dict, Any, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
-from pydantic import BaseModel, Field, validator
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, Field, validator
+
 from app.agents.orchestrator import AgentOrchestrator
-from app.history_store import get_history, append_history
-from app.services.language_detection import language_service
-from app.services.logging_service import logging_service, get_logger
+from app.history_store import append_history, get_history
 from app.services.cache_service import cache_service
-from app.services.rate_limiting import rate_limiter
 from app.services.google_chat_alert import google_chat_alert
+from app.services.language_detection import language_service
+from app.services.logging_service import get_logger, logging_service
+from app.services.rate_limiting import rate_limiter
 
 # Initialize logging service
 app_logger = get_logger("main")
@@ -44,7 +45,7 @@ app = FastAPI(
     version="2.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
-    openapi_url="/openapi.json"
+    openapi_url="/openapi.json",
 )
 
 # Configure CORS
@@ -65,12 +66,12 @@ app.add_middleware(
 )
 
 
-
 # Mount the static directory to serve frontend files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Initialize the multi-agent orchestrator
 orchestrator = AgentOrchestrator()
+
 
 # Global exception handler
 @app.exception_handler(Exception)
@@ -84,20 +85,22 @@ async def global_exception_handler(request: Request, exc: Exception):
         "error_code": type(exc).__name__,
         "timestamp": datetime.now().isoformat(),
         "path": str(request.url),
-        "method": request.method
+        "method": request.method,
     }
 
     # Log the error
-    logger.error(f"Unhandled exception: {exc}", exc_info=True, extra={
-        "error_details": error_details,
-        "user_agent": request.headers.get("user-agent"),
-        "client_ip": request.client.host if request.client else "unknown"
-    })
-
-    return JSONResponse(
-        status_code=500,
-        content=error_details
+    logger.error(
+        f"Unhandled exception: {exc}",
+        exc_info=True,
+        extra={
+            "error_details": error_details,
+            "user_agent": request.headers.get("user-agent"),
+            "client_ip": request.client.host if request.client else "unknown",
+        },
     )
+
+    return JSONResponse(status_code=500, content=error_details)
+
 
 # Request logging and rate limiting middleware
 @app.middleware("http")
@@ -107,71 +110,89 @@ async def log_and_rate_limit_requests(request: Request, call_next):
     client_ip = request.client.host if request.client else "unknown"
 
     # Check rate limits first
-    allowed, rate_limit_info = await rate_limiter.check_rate_limit(client_ip, request.url.path)
+    allowed, rate_limit_info = await rate_limiter.check_rate_limit(
+        client_ip, request.url.path
+    )
 
     if not allowed:
         if rate_limit_info.get("blocked"):
-            logger.warning(f"Blocked request from {client_ip}", extra={
-                "client_ip": client_ip,
-                "endpoint": request.url.path,
-                "reason": rate_limit_info.get("reason", "unknown")
-            })
+            logger.warning(
+                f"Blocked request from {client_ip}",
+                extra={
+                    "client_ip": client_ip,
+                    "endpoint": request.url.path,
+                    "reason": rate_limit_info.get("reason", "unknown"),
+                },
+            )
 
             return JSONResponse(
                 status_code=429,
                 content={
                     "error": "Too many requests",
                     "retry_after": rate_limit_info.get("retry_after", 60),
-                    "message": "Please wait before making more requests"
+                    "message": "Please wait before making more requests",
                 },
-                headers={"Retry-After": str(rate_limit_info.get("retry_after", 60))}
+                headers={"Retry-After": str(rate_limit_info.get("retry_after", 60))},
             )
 
-        logger.warning(f"Rate limited request from {client_ip}", extra={
-            "client_ip": client_ip,
-            "endpoint": request.url.path,
-            "reason": rate_limit_info.get("reason", "unknown"),
-            "retry_after": rate_limit_info.get("retry_after", 60)
-        })
+        logger.warning(
+            f"Rate limited request from {client_ip}",
+            extra={
+                "client_ip": client_ip,
+                "endpoint": request.url.path,
+                "reason": rate_limit_info.get("reason", "unknown"),
+                "retry_after": rate_limit_info.get("retry_after", 60),
+            },
+        )
 
         return JSONResponse(
             status_code=429,
             content={
                 "error": "Rate limit exceeded",
                 "retry_after": rate_limit_info.get("retry_after", 60),
-                "limit": rate_limit_info.get("limit", "unknown")
+                "limit": rate_limit_info.get("limit", "unknown"),
             },
-            headers={"Retry-After": str(rate_limit_info.get("retry_after", 60))}
+            headers={"Retry-After": str(rate_limit_info.get("retry_after", 60))},
         )
 
     # Log incoming request
-    logger.info(f"Incoming {request.method} {request.url.path}", extra={
-        "method": request.method,
-        "path": request.url.path,
-        "user_agent": request.headers.get("user-agent"),
-        "client_ip": client_ip,
-        "rate_limit_info": rate_limit_info
-    })
+    logger.info(
+        f"Incoming {request.method} {request.url.path}",
+        extra={
+            "method": request.method,
+            "path": request.url.path,
+            "user_agent": request.headers.get("user-agent"),
+            "client_ip": client_ip,
+            "rate_limit_info": rate_limit_info,
+        },
+    )
 
     try:
         response = await call_next(request)
         process_time = time.time() - start_time
 
         # Log successful response
-        logger.info(f"Completed {request.method} {request.url.path} -> {response.status_code}", extra={
-            "status_code": response.status_code,
-            "process_time": round(process_time, 3),
-            "response_size": response.headers.get("content-length", 0),
-            "client_ip": client_ip
-        })
+        logger.info(
+            f"Completed {request.method} {request.url.path} -> {response.status_code}",
+            extra={
+                "status_code": response.status_code,
+                "process_time": round(process_time, 3),
+                "response_size": response.headers.get("content-length", 0),
+                "client_ip": client_ip,
+            },
+        )
 
         # Log performance metric
-        logging_service.log_performance_metric("request_duration", process_time, {
-            "endpoint": request.url.path,
-            "method": request.method,
-            "status_code": response.status_code,
-            "client_ip": client_ip
-        })
+        logging_service.log_performance_metric(
+            "request_duration",
+            process_time,
+            {
+                "endpoint": request.url.path,
+                "method": request.method,
+                "status_code": response.status_code,
+                "client_ip": client_ip,
+            },
+        )
 
         return response
 
@@ -179,83 +200,107 @@ async def log_and_rate_limit_requests(request: Request, call_next):
         process_time = time.time() - start_time
 
         # Log failed request
-        logger.error(f"Failed {request.method} {request.url.path} -> {type(exc).__name__}", extra={
-            "error": str(exc),
-            "process_time": round(process_time, 3),
-            "client_ip": client_ip
-        })
+        logger.error(
+            f"Failed {request.method} {request.url.path} -> {type(exc).__name__}",
+            extra={
+                "error": str(exc),
+                "process_time": round(process_time, 3),
+                "client_ip": client_ip,
+            },
+        )
 
         raise exc
 
 
-
 class ChatInput(BaseModel):
-    user_input: str = Field(..., min_length=1, max_length=1000, description="User's message")
-    session_id: str = Field(..., min_length=1, max_length=100, description="Unique session identifier")
-    user_language: str = Field(default="en", max_length=5, description="User's preferred language code")
+    user_input: str = Field(
+        ..., min_length=1, max_length=1000, description="User's message"
+    )
+    session_id: str = Field(
+        ..., min_length=1, max_length=100, description="Unique session identifier"
+    )
+    user_language: str = Field(
+        default="en", max_length=5, description="User's preferred language code"
+    )
 
-    @validator('user_input')
+    @validator("user_input")
     def validate_user_input(cls, v):
         """Validate user input for security and quality."""
         if not v or not v.strip():
-            raise ValueError('Input cannot be empty')
+            raise ValueError("Input cannot be empty")
 
         # Check for potentially harmful content
         harmful_patterns = [
-            '<script', 'javascript:', 'onload=', 'onerror=',
-            'SELECT ', 'INSERT ', 'UPDATE ', 'DELETE ', 'DROP '
+            "<script",
+            "javascript:",
+            "onload=",
+            "onerror=",
+            "SELECT ",
+            "INSERT ",
+            "UPDATE ",
+            "DELETE ",
+            "DROP ",
         ]
 
         v_lower = v.lower()
         for pattern in harmful_patterns:
             if pattern.lower() in v_lower:
-                raise ValueError('Invalid input detected')
+                raise ValueError("Invalid input detected")
 
         # Check length after cleaning
         cleaned_input = v.strip()
         if len(cleaned_input) < 1:
-            raise ValueError('Input is too short')
+            raise ValueError("Input is too short")
         if len(cleaned_input) > 1000:
-            raise ValueError('Input is too long (max 1000 characters)')
+            raise ValueError("Input is too long (max 1000 characters)")
 
         return cleaned_input
 
-    @validator('session_id')
+    @validator("session_id")
     def validate_session_id(cls, v):
         """Validate session ID format."""
         if not v or not v.strip():
-            raise ValueError('Session ID cannot be empty')
+            raise ValueError("Session ID cannot be empty")
 
         # Check for valid characters (alphanumeric, hyphens, underscores)
         import re
-        if not re.match(r'^[a-zA-Z0-9_-]+$', v):
-            raise ValueError('Session ID contains invalid characters')
+
+        if not re.match(r"^[a-zA-Z0-9_-]+$", v):
+            raise ValueError("Session ID contains invalid characters")
 
         return v.strip()
 
-    @validator('user_language')
+    @validator("user_language")
     def validate_language(cls, v):
         """Validate language code."""
         from app.services.language_detection import language_service
+
         if v not in language_service.supported_languages:
-            return 'en'  # Default to English for unsupported languages
+            return "en"  # Default to English for unsupported languages
         return v.lower()
 
-class WelcomeInput(BaseModel):
-    session_id: str = Field(..., min_length=1, max_length=100, description="Unique session identifier")
-    browser_language: str = Field(default="en", max_length=10, description="Browser language tag")
 
-    @validator('session_id')
+class WelcomeInput(BaseModel):
+    session_id: str = Field(
+        ..., min_length=1, max_length=100, description="Unique session identifier"
+    )
+    browser_language: str = Field(
+        default="en", max_length=10, description="Browser language tag"
+    )
+
+    @validator("session_id")
     def validate_session_id(cls, v):
         """Validate session ID format."""
         if not v or not v.strip():
-            raise ValueError('Session ID cannot be empty')
+            raise ValueError("Session ID cannot be empty")
 
         import re
-        if not re.match(r'^[a-zA-Z0-9_-]+$', v):
-            raise ValueError('Session ID contains invalid characters')
+
+        if not re.match(r"^[a-zA-Z0-9_-]+$", v):
+            raise ValueError("Session ID contains invalid characters")
 
         return v.strip()
+
 
 class ChatResponse(BaseModel):
     answer: str = Field(..., description="AI response message")
@@ -266,11 +311,11 @@ class ChatResponse(BaseModel):
     redirect_count: int = Field(default=0, description="Number of redirects in session")
     session_id: str = Field(..., description="Session identifier")
 
+
 class ErrorResponse(BaseModel):
     error: str = Field(..., description="Error message")
     error_code: str = Field(..., description="Error code for debugging")
     timestamp: str = Field(..., description="Error timestamp")
-
 
 
 @app.get("/", tags=["App"])
@@ -288,7 +333,8 @@ def read_root():
     headers = {
         "Content-Security-Policy": "frame-ancestors 'self' https://bolablg.com https://*.bolablg.com"
     }
-    return FileResponse('static/index.html', headers=headers)
+    return FileResponse("static/index.html", headers=headers)
+
 
 @app.post("/welcome", tags=["Chat"], response_model=Dict[str, Any])
 async def get_welcome_message(payload: WelcomeInput):
@@ -299,10 +345,10 @@ async def get_welcome_message(payload: WelcomeInput):
         session_id = payload.session_id
         browser_language = payload.browser_language
 
-        logger.info(f"Welcome request for session {session_id}", extra={
-            "session_id": session_id,
-            "browser_language": browser_language
-        })
+        logger.info(
+            f"Welcome request for session {session_id}",
+            extra={"session_id": session_id, "browser_language": browser_language},
+        )
 
         # Check cache for localized content
         cache_key = f"welcome:{browser_language}"
@@ -311,10 +357,12 @@ async def get_welcome_message(payload: WelcomeInput):
         if cached_content:
             logger.info(f"Welcome cache hit for session {session_id}")
             return {
-                "welcome_messages": eval(cached_content),  # Safe since we control the content
-                "detected_language": browser_language.split('-')[0],
+                "welcome_messages": eval(
+                    cached_content
+                ),  # Safe since we control the content
+                "detected_language": browser_language.split("-")[0],
                 "session_id": session_id,
-                "cached": True
+                "cached": True,
             }
 
         # Detect user's preferred language
@@ -325,30 +373,34 @@ async def get_welcome_message(payload: WelcomeInput):
 
         # Cache the localized content
         await cache_service.set_localized_content(
-            cache_key,
-            "welcome",
-            str(welcome_messages)
+            cache_key, "welcome", str(welcome_messages)
         )
 
         response = {
             "welcome_messages": welcome_messages,
             "detected_language": detected_language,
             "session_id": session_id,
-            "cached": False
+            "cached": False,
         }
 
         # Log performance
         process_time = time.time() - start_time
-        logging_service.log_performance_metric("welcome_request", process_time, {
-            "session_id": session_id,
-            "detected_language": detected_language
-        })
+        logging_service.log_performance_metric(
+            "welcome_request",
+            process_time,
+            {"session_id": session_id, "detected_language": detected_language},
+        )
 
         return response
 
     except Exception as e:
-        logger.error(f"Welcome request failed: {e}", extra={"session_id": payload.session_id})
-        raise HTTPException(status_code=500, detail="Failed to generate welcome message")
+        logger.error(
+            f"Welcome request failed: {e}", extra={"session_id": payload.session_id}
+        )
+        raise HTTPException(
+            status_code=500, detail="Failed to generate welcome message"
+        )
+
 
 @app.post("/chat", tags=["Chat"], response_model=Dict[str, Any])
 async def chat(payload: ChatInput, request: Request):
@@ -359,11 +411,14 @@ async def chat(payload: ChatInput, request: Request):
     user_language = payload.user_language
 
     try:
-        logger.info(f"Chat request from session {session_id}", extra={
-            "session_id": session_id,
-            "user_language": user_language,
-            "input_length": len(user_input)
-        })
+        logger.info(
+            f"Chat request from session {session_id}",
+            extra={
+                "session_id": session_id,
+                "user_language": user_language,
+                "input_length": len(user_input),
+            },
+        )
 
         # Check cache first for similar queries
         cached_response = await cache_service.get_cached_response(
@@ -371,10 +426,10 @@ async def chat(payload: ChatInput, request: Request):
         )
 
         if cached_response:
-            logger.info(f"Cache hit for session {session_id}", extra={
-                "session_id": session_id,
-                "cached": True
-            })
+            logger.info(
+                f"Cache hit for session {session_id}",
+                extra={"session_id": session_id, "cached": True},
+            )
 
             # Update cache metadata
             cached_response["cached"] = True
@@ -390,19 +445,15 @@ async def chat(payload: ChatInput, request: Request):
 
         # Collect request information for logging
         request_info = {
-            'ip_address': request.client.host if request.client else 'unknown',
-            'user_agent': request.headers.get('user-agent', 'unknown'),
-            'referrer': request.headers.get('referer', 'unknown'),
-            'accept_language': request.headers.get('accept-language', 'unknown')
+            "ip_address": request.client.host if request.client else "unknown",
+            "user_agent": request.headers.get("user-agent", "unknown"),
+            "referrer": request.headers.get("referer", "unknown"),
+            "accept_language": request.headers.get("accept-language", "unknown"),
         }
 
         # Get the full response from the orchestrator with enhanced features
         result = orchestrator.process_query(
-            user_input,
-            chat_history_tuples,
-            session_id,
-            user_language,
-            request_info
+            user_input, chat_history_tuples, session_id, user_language, request_info
         )
 
         # Calculate response time
@@ -410,10 +461,7 @@ async def chat(payload: ChatInput, request: Request):
 
         # Cache the response for future similar queries
         await cache_service.set_cached_response(
-            user_input,
-            result.get("agent_type", "unknown"),
-            user_language,
-            result
+            user_input, result.get("agent_type", "unknown"), user_language, result
         )
 
         # Log chat interaction
@@ -423,11 +471,13 @@ async def chat(payload: ChatInput, request: Request):
             agent_type=result.get("agent_type", "unknown"),
             response=result.get("answer", ""),
             response_time=response_time,
-            user_language=user_language
+            user_language=user_language,
         )
 
         # Debug logging for development
-        logger.debug(f"Agent: {result.get('agent_type', 'unknown')} | Confidence: {result.get('confidence', 0.0)}")
+        logger.debug(
+            f"Agent: {result.get('agent_type', 'unknown')} | Confidence: {result.get('confidence', 0.0)}"
+        )
         if "source_documents" in result:
             logger.debug(f"Source documents: {len(result['source_documents'])} found")
 
@@ -442,7 +492,9 @@ async def chat(payload: ChatInput, request: Request):
             "session_id": session_id,
             "response_time": round(response_time, 3),
             "cached": False,
-            "should_end_chat": result.get("should_end_chat", False)  # Add the missing field
+            "should_end_chat": result.get(
+                "should_end_chat", False
+            ),  # Add the missing field
         }
 
         # Update the history in the store
@@ -452,10 +504,10 @@ async def chat(payload: ChatInput, request: Request):
 
     except ValueError as ve:
         # Handle validation errors
-        logger.warning(f"Validation error for session {session_id}: {ve}", extra={
-            "session_id": session_id,
-            "error_type": "validation"
-        })
+        logger.warning(
+            f"Validation error for session {session_id}: {ve}",
+            extra={"session_id": session_id, "error_type": "validation"},
+        )
         raise HTTPException(status_code=400, detail=str(ve))
 
     except Exception as e:
@@ -464,9 +516,9 @@ async def chat(payload: ChatInput, request: Request):
             "session_id": session_id,
             "user_language": user_language,
             "input_length": len(user_input),
-            "history_length": len(history) if 'history' in locals() else 0,
+            "history_length": len(history) if "history" in locals() else 0,
             "user_agent": request.headers.get("user-agent"),
-            "client_ip": request.client.host if request.client else "unknown"
+            "client_ip": request.client.host if request.client else "unknown",
         }
 
         logging_service.log_error(e, error_context)
@@ -474,14 +526,16 @@ async def chat(payload: ChatInput, request: Request):
         # Return user-friendly error message
         raise HTTPException(
             status_code=500,
-            detail="I'm experiencing technical difficulties. Please try again in a moment."
+            detail="I'm experiencing technical difficulties. Please try again in a moment.",
         )
+
 
 @app.get("/health", tags=["Health"])
 async def health_check():
     """Health check endpoint for monitoring (async)."""
-    import psutil
     from datetime import datetime
+
+    import psutil
 
     try:
         # Basic system metrics
@@ -498,19 +552,21 @@ async def health_check():
             "system": {
                 "memory_usage": f"{memory.percent:.1f}%",
                 "cpu_usage": f"{cpu_percent:.1f}%",
-                "memory_available": f"{memory.available / 1024 / 1024:.0f}MB"
+                "memory_available": f"{memory.available / 1024 / 1024:.0f}MB",
             },
             "services": {
                 "orchestrator": "healthy" if orchestrator else "unhealthy",
                 "language_service": "healthy",
                 "logging_service": "healthy",
-                "cache_service": "healthy" if cache_stats.get("status") != "disabled" else "disabled",
-                "rate_limiter": "healthy"
+                "cache_service": (
+                    "healthy" if cache_stats.get("status") != "disabled" else "disabled"
+                ),
+                "rate_limiter": "healthy",
             },
             "performance": {
                 "cache_stats": cache_stats,
-                "rate_limit_stats": rate_limiter.get_global_stats()
-            }
+                "rate_limit_stats": rate_limiter.get_global_stats(),
+            },
         }
 
         # Check if services are accessible
@@ -528,46 +584,48 @@ async def health_check():
         return {
             "status": "unhealthy",
             "timestamp": datetime.now().isoformat(),
-            "error": str(e)
+            "error": str(e),
         }
+
 
 @app.get("/cache/stats", tags=["Monitoring"])
 async def get_cache_stats():
     """Get cache performance statistics."""
     try:
         stats = cache_service.get_cache_stats()
-        return {
-            "cache_stats": stats,
-            "timestamp": datetime.now().isoformat()
-        }
+        return {"cache_stats": stats, "timestamp": datetime.now().isoformat()}
     except Exception as e:
         logger.error(f"Cache stats retrieval failed: {e}")
-        raise HTTPException(status_code=500, detail="Failed to retrieve cache statistics")
+        raise HTTPException(
+            status_code=500, detail="Failed to retrieve cache statistics"
+        )
+
 
 @app.get("/rate-limit/stats", tags=["Monitoring"])
 async def get_rate_limit_stats():
     """Get rate limiting statistics."""
     try:
         stats = rate_limiter.get_global_stats()
-        return {
-            "rate_limit_stats": stats,
-            "timestamp": datetime.now().isoformat()
-        }
+        return {"rate_limit_stats": stats, "timestamp": datetime.now().isoformat()}
     except Exception as e:
         logger.error(f"Rate limit stats retrieval failed: {e}")
-        raise HTTPException(status_code=500, detail="Failed to retrieve rate limit statistics")
+        raise HTTPException(
+            status_code=500, detail="Failed to retrieve rate limit statistics"
+        )
+
 
 @app.get("/performance/metrics", tags=["Monitoring"])
 async def get_performance_metrics():
     """Get comprehensive performance metrics."""
     try:
-        import psutil
         from datetime import datetime
+
+        import psutil
 
         # System metrics
         memory = psutil.virtual_memory()
         cpu_percent = psutil.cpu_percent(interval=1)
-        disk = psutil.disk_usage('/')
+        disk = psutil.disk_usage("/")
 
         metrics = {
             "timestamp": datetime.now().isoformat(),
@@ -577,20 +635,27 @@ async def get_performance_metrics():
                 "memory_used_mb": memory.used / 1024 / 1024,
                 "memory_available_mb": memory.available / 1024 / 1024,
                 "disk_percent": disk.percent,
-                "disk_free_gb": disk.free / 1024 / 1024 / 1024
+                "disk_free_gb": disk.free / 1024 / 1024 / 1024,
             },
             "application": {
                 "cache_stats": cache_service.get_cache_stats(),
                 "rate_limit_stats": rate_limiter.get_global_stats(),
-                "active_sessions": len(orchestrator.session_data) if hasattr(orchestrator, 'session_data') else 0
-            }
+                "active_sessions": (
+                    len(orchestrator.session_data)
+                    if hasattr(orchestrator, "session_data")
+                    else 0
+                ),
+            },
         }
 
         return metrics
 
     except Exception as e:
         logger.error(f"Performance metrics retrieval failed: {e}")
-        raise HTTPException(status_code=500, detail="Failed to retrieve performance metrics")
+        raise HTTPException(
+            status_code=500, detail="Failed to retrieve performance metrics"
+        )
+
 
 @app.post("/cache/clear", tags=["Maintenance"])
 async def clear_cache():
@@ -603,6 +668,7 @@ async def clear_cache():
         logger.error(f"Cache clear failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to clear cache")
 
+
 @app.get("/session/{session_id}/stats", tags=["Session"], response_model=Dict[str, Any])
 def get_session_stats(session_id: str):
     """Get statistics for a user session."""
@@ -613,10 +679,10 @@ def get_session_stats(session_id: str):
 
         stats = orchestrator.get_session_stats(session_id)
 
-        logger.info(f"Session stats retrieved for {session_id}", extra={
-            "session_id": session_id,
-            "stats": stats
-        })
+        logger.info(
+            f"Session stats retrieved for {session_id}",
+            extra={"session_id": session_id, "stats": stats},
+        )
 
         return stats
 
@@ -624,7 +690,10 @@ def get_session_stats(session_id: str):
         raise
     except Exception as e:
         logger.error(f"Error getting session stats for {session_id}: {e}")
-        raise HTTPException(status_code=500, detail="Unable to retrieve session statistics")
+        raise HTTPException(
+            status_code=500, detail="Unable to retrieve session statistics"
+        )
+
 
 @app.delete("/session/{session_id}", tags=["Session"])
 def reset_session(session_id: str):
@@ -649,9 +718,14 @@ def reset_session(session_id: str):
 
 # Contact Alert Models
 class ContactAlertInput(BaseModel):
-    contact_type: str = Field(..., description="Type of contact request (e.g., booking_request, email_request)")
+    contact_type: str = Field(
+        ...,
+        description="Type of contact request (e.g., booking_request, email_request)",
+    )
     session_id: str = Field(..., description="Session ID of the chat")
-    chat_history: List[Tuple[str, str]] = Field(..., description="Full chat history leading to the contact request")
+    chat_history: List[Tuple[str, str]] = Field(
+        ..., description="Full chat history leading to the contact request"
+    )
     timestamp: str = Field(..., description="Timestamp of the request")
 
 
@@ -659,24 +733,31 @@ class ContactAlertInput(BaseModel):
 async def handle_contact_alert(payload: ContactAlertInput):
     """Handle contact alerts from frontend and forward to Google Chat."""
     try:
-        logger.info(f"Received contact alert for session {payload.session_id}: {payload.contact_type}")
+        logger.info(
+            f"Received contact alert for session {payload.session_id}: {payload.contact_type}"
+        )
 
         # Send alert to Google Chat (pass raw chat history, service will format it)
         result = google_chat_alert.send_contact_alert(
             contact_type=payload.contact_type,
             session_id=payload.session_id,
-            chat_history=payload.chat_history
+            chat_history=payload.chat_history,
         )
 
         if result:
-            return {"status": "success", "message": "Contact alert sent to Google Chat."}
+            return {
+                "status": "success",
+                "message": "Contact alert sent to Google Chat.",
+            }
         else:
-            logger.warning(f"Contact alert not sent (Google Chat not configured) for session {payload.session_id}")
-            return {"status": "warning", "message": "Contact alert not sent - Google Chat not configured."}
+            logger.warning(
+                f"Contact alert not sent (Google Chat not configured) for session {payload.session_id}"
+            )
+            return {
+                "status": "warning",
+                "message": "Contact alert not sent - Google Chat not configured.",
+            }
 
     except Exception as e:
         logger.error(f"Failed to send contact alert to Google Chat: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to send contact alert.")
-
-
-

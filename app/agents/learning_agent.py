@@ -5,8 +5,10 @@ Learning Advice Agent - Provides guidance on learning professional skills and ca
 from langchain.chains import ConversationalRetrievalChain
 from langchain.prompts import PromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
-from .retrievers import get_learning_retriever
+
 import config
+
+from .retrievers import get_learning_retriever
 
 # Specialized prompt for learning advice agent
 LEARNING_QA_TEMPLATE = """
@@ -44,11 +46,16 @@ Chat History:
 Follow Up Input: {question}
 Standalone question:"""
 
+
 class LearningAgent:
     """Agent specialized in providing learning advice."""
 
     def __init__(self):
-        self.llm = ChatGoogleGenerativeAI(model="gemini-2.5-pro", temperature=0.8, google_api_key=config.GEMINI_API_KEY)  # Slightly higher temperature for creative advice
+        self.llm = ChatGoogleGenerativeAI(
+            model="gemini-2.5-pro",
+            temperature=0.8,
+            google_api_key=config.GEMINI_API_KEY,
+        )  # Slightly higher temperature for creative advice
         self.retriever = get_learning_retriever()
         self.qa_prompt = PromptTemplate.from_template(LEARNING_QA_TEMPLATE)
         self.condense_prompt = PromptTemplate.from_template(LEARNING_CONDENSE_PROMPT)
@@ -58,7 +65,7 @@ class LearningAgent:
             retriever=self.retriever,
             condense_question_prompt=self.condense_prompt,
             combine_docs_chain_kwargs={"prompt": self.qa_prompt},
-            return_source_documents=True
+            return_source_documents=True,
         )
 
     def invoke(self, inputs):

@@ -2,26 +2,31 @@
 Continuous Learning Pipeline with Automated Model Updates.
 """
 
-import json
 import asyncio
-import threading
-from typing import Dict, List, Any, Optional, Tuple
-from datetime import datetime, timedelta
-from collections import defaultdict, Counter
+import json
+import os
 import statistics
 import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+import threading
+from collections import Counter, defaultdict
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
+
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 from config import GEMINI_API_KEY
 
 try:
-    from langchain_google_genai import ChatGoogleGenerativeAI
-    from langchain.prompts import PromptTemplate
     from langchain.chains import LLMChain
+    from langchain.prompts import PromptTemplate
+    from langchain_google_genai import ChatGoogleGenerativeAI
+
     CONTINUOUS_LEARNING_AVAILABLE = True
 except ImportError:
     CONTINUOUS_LEARNING_AVAILABLE = False
     print("Continuous learning service requires langchain-google-genai")
+
 
 class FeedbackCollector:
     """
@@ -35,18 +40,23 @@ class FeedbackCollector:
         self.common_issues = Counter()
         self.improvement_suggestions = []
 
-    def add_feedback(self, session_id: str, feedback_type: str,
-                    rating: Optional[int] = None, comments: str = "",
-                    response_quality: Optional[int] = None):
+    def add_feedback(
+        self,
+        session_id: str,
+        feedback_type: str,
+        rating: Optional[int] = None,
+        comments: str = "",
+        response_quality: Optional[int] = None,
+    ):
         """Add user feedback."""
 
         feedback = {
-            'session_id': session_id,
-            'timestamp': datetime.now().isoformat(),
-            'type': feedback_type,
-            'rating': rating,
-            'comments': comments,
-            'response_quality': response_quality
+            "session_id": session_id,
+            "timestamp": datetime.now().isoformat(),
+            "type": feedback_type,
+            "rating": rating,
+            "comments": comments,
+            "response_quality": response_quality,
         }
 
         self.feedback_data.append(feedback)
@@ -66,12 +76,12 @@ class FeedbackCollector:
         comments_lower = comments.lower()
 
         issue_keywords = {
-            'slow': ['slow', 'waiting', 'delay', 'takes time'],
-            'inaccurate': ['wrong', 'incorrect', 'not right', 'mistake'],
-            'unclear': ['unclear', 'confusing', 'not understand', 'confused'],
-            'incomplete': ['incomplete', 'missing', 'not enough', 'more info'],
-            'irrelevant': ['irrelevant', 'off topic', 'not related', 'unrelated'],
-            'technical': ['error', 'bug', 'problem', 'issue', 'broken']
+            "slow": ["slow", "waiting", "delay", "takes time"],
+            "inaccurate": ["wrong", "incorrect", "not right", "mistake"],
+            "unclear": ["unclear", "confusing", "not understand", "confused"],
+            "incomplete": ["incomplete", "missing", "not enough", "more info"],
+            "irrelevant": ["irrelevant", "off topic", "not related", "unrelated"],
+            "technical": ["error", "bug", "problem", "issue", "broken"],
         }
 
         for issue, keywords in issue_keywords.items():
@@ -92,34 +102,36 @@ class FeedbackCollector:
         for feedback_type, ratings in self.user_satisfaction.items():
             if ratings:
                 satisfaction_scores[feedback_type] = {
-                    'average': statistics.mean(ratings),
-                    'count': len(ratings),
-                    'distribution': Counter(ratings)
+                    "average": statistics.mean(ratings),
+                    "count": len(ratings),
+                    "distribution": Counter(ratings),
                 }
 
         for feedback_type, qualities in self.response_quality.items():
             if qualities:
                 quality_scores[feedback_type] = {
-                    'average': statistics.mean(qualities),
-                    'count': len(qualities),
-                    'distribution': Counter(qualities)
+                    "average": statistics.mean(qualities),
+                    "count": len(qualities),
+                    "distribution": Counter(qualities),
                 }
 
         return {
-            'total_feedback': total_feedback,
-            'date_range': {
-                'start': min(f['timestamp'] for f in self.feedback_data),
-                'end': max(f['timestamp'] for f in self.feedback_data)
+            "total_feedback": total_feedback,
+            "date_range": {
+                "start": min(f["timestamp"] for f in self.feedback_data),
+                "end": max(f["timestamp"] for f in self.feedback_data),
             },
-            'satisfaction_scores': satisfaction_scores,
-            'response_quality': quality_scores,
-            'common_issues': dict(self.common_issues.most_common(5)),
-            'feedback_types': Counter(f['type'] for f in self.feedback_data)
+            "satisfaction_scores": satisfaction_scores,
+            "response_quality": quality_scores,
+            "common_issues": dict(self.common_issues.most_common(5)),
+            "feedback_types": Counter(f["type"] for f in self.feedback_data),
         }
 
     def get_recent_feedback(self, limit: int = 10) -> List[Dict]:
         """Get most recent feedback entries."""
-        return sorted(self.feedback_data, key=lambda x: x['timestamp'], reverse=True)[:limit]
+        return sorted(self.feedback_data, key=lambda x: x["timestamp"], reverse=True)[
+            :limit
+        ]
 
 
 class ModelPerformanceTracker:
@@ -134,70 +146,104 @@ class ModelPerformanceTracker:
         self.response_times = []
         self.accuracy_scores = []
 
-    def log_performance(self, agent_type: str, metric_name: str, value: float,
-                       metadata: Dict[str, Any] = None):
+    def log_performance(
+        self,
+        agent_type: str,
+        metric_name: str,
+        value: float,
+        metadata: Dict[str, Any] = None,
+    ):
         """Log a performance metric."""
 
         metric = {
-            'timestamp': datetime.now().isoformat(),
-            'agent_type': agent_type,
-            'metric_name': metric_name,
-            'value': value,
-            'metadata': metadata or {}
+            "timestamp": datetime.now().isoformat(),
+            "agent_type": agent_type,
+            "metric_name": metric_name,
+            "value": value,
+            "metadata": metadata or {},
         }
 
         self.performance_metrics[metric_name].append(metric)
         self.agent_performance[agent_type].append(metric)
 
-    def log_response_time(self, agent_type: str, response_time: float,
-                         query_complexity: str = "medium"):
+    def log_response_time(
+        self, agent_type: str, response_time: float, query_complexity: str = "medium"
+    ):
         """Log response time for performance tracking."""
 
-        self.response_times.append({
-            'timestamp': datetime.now().isoformat(),
-            'agent_type': agent_type,
-            'response_time': response_time,
-            'query_complexity': query_complexity
-        })
+        self.response_times.append(
+            {
+                "timestamp": datetime.now().isoformat(),
+                "agent_type": agent_type,
+                "response_time": response_time,
+                "query_complexity": query_complexity,
+            }
+        )
 
         # Log to performance metrics
-        self.log_performance(agent_type, 'response_time', response_time,
-                           {'query_complexity': query_complexity})
+        self.log_performance(
+            agent_type,
+            "response_time",
+            response_time,
+            {"query_complexity": query_complexity},
+        )
 
-    def log_accuracy(self, agent_type: str, accuracy_score: float,
-                    expected_answer: str = "", actual_answer: str = ""):
+    def log_accuracy(
+        self,
+        agent_type: str,
+        accuracy_score: float,
+        expected_answer: str = "",
+        actual_answer: str = "",
+    ):
         """Log accuracy score."""
 
-        self.accuracy_scores.append({
-            'timestamp': datetime.now().isoformat(),
-            'agent_type': agent_type,
-            'accuracy_score': accuracy_score,
-            'expected_answer': expected_answer,
-            'actual_answer': actual_answer
-        })
+        self.accuracy_scores.append(
+            {
+                "timestamp": datetime.now().isoformat(),
+                "agent_type": agent_type,
+                "accuracy_score": accuracy_score,
+                "expected_answer": expected_answer,
+                "actual_answer": actual_answer,
+            }
+        )
 
-        self.log_performance(agent_type, 'accuracy', accuracy_score,
-                           {'expected': expected_answer, 'actual': actual_answer})
+        self.log_performance(
+            agent_type,
+            "accuracy",
+            accuracy_score,
+            {"expected": expected_answer, "actual": actual_answer},
+        )
 
-    def log_error(self, agent_type: str, error_type: str, error_message: str,
-                 context: Dict[str, Any] = None):
+    def log_error(
+        self,
+        agent_type: str,
+        error_type: str,
+        error_message: str,
+        context: Dict[str, Any] = None,
+    ):
         """Log an error for analysis."""
 
         error = {
-            'timestamp': datetime.now().isoformat(),
-            'agent_type': agent_type,
-            'error_type': error_type,
-            'error_message': error_message,
-            'context': context or {}
+            "timestamp": datetime.now().isoformat(),
+            "agent_type": agent_type,
+            "error_type": error_type,
+            "error_message": error_message,
+            "context": context or {},
         }
 
         self.error_logs.append(error)
 
         # Log as performance metric
-        self.log_performance(agent_type, 'error_rate', 1.0,
-                           {'error_type': error_type, 'message': error_message})
+        self.log_performance(
+            agent_type,
+            "error_rate",
+            1.0,
+            {"error_type": error_type, "message": error_message},
+        )
 
-    def get_performance_summary(self, time_window: timedelta = timedelta(days=7)) -> Dict[str, Any]:
+    def get_performance_summary(
+        self, time_window: timedelta = timedelta(days=7)
+    ) -> Dict[str, Any]:
         """Get performance summary for the specified time window."""
 
         cutoff_time = datetime.now() - time_window
@@ -206,40 +252,46 @@ class ModelPerformanceTracker:
         # Filter metrics within time window
         recent_metrics = {}
         for metric_name, metrics in self.performance_metrics.items():
-            recent = [m for m in metrics if m['timestamp'] >= cutoff_str]
+            recent = [m for m in metrics if m["timestamp"] >= cutoff_str]
             if recent:
-                values = [m['value'] for m in recent]
+                values = [m["value"] for m in recent]
                 recent_metrics[metric_name] = {
-                    'count': len(values),
-                    'average': statistics.mean(values) if values else 0,
-                    'min': min(values) if values else 0,
-                    'max': max(values) if values else 0,
-                    'recent_values': values[-10:]  # Last 10 values
+                    "count": len(values),
+                    "average": statistics.mean(values) if values else 0,
+                    "min": min(values) if values else 0,
+                    "max": max(values) if values else 0,
+                    "recent_values": values[-10:],  # Last 10 values
                 }
 
         # Calculate response time statistics
-        recent_response_times = [rt for rt in self.response_times if rt['timestamp'] >= cutoff_str]
+        recent_response_times = [
+            rt for rt in self.response_times if rt["timestamp"] >= cutoff_str
+        ]
         response_time_stats = {}
         if recent_response_times:
-            times = [rt['response_time'] for rt in recent_response_times]
+            times = [rt["response_time"] for rt in recent_response_times]
             response_time_stats = {
-                'count': len(times),
-                'average': statistics.mean(times),
-                'median': statistics.median(times),
-                'p95': sorted(times)[int(len(times) * 0.95)] if len(times) > 1 else max(times)
+                "count": len(times),
+                "average": statistics.mean(times),
+                "median": statistics.median(times),
+                "p95": (
+                    sorted(times)[int(len(times) * 0.95)]
+                    if len(times) > 1
+                    else max(times)
+                ),
             }
 
         # Error analysis
-        recent_errors = [e for e in self.error_logs if e['timestamp'] >= cutoff_str]
-        error_stats = Counter(e['error_type'] for e in recent_errors)
+        recent_errors = [e for e in self.error_logs if e["timestamp"] >= cutoff_str]
+        error_stats = Counter(e["error_type"] for e in recent_errors)
 
         return {
-            'time_window_days': time_window.days,
-            'metrics_summary': recent_metrics,
-            'response_time_stats': response_time_stats,
-            'error_analysis': dict(error_stats.most_common(5)),
-            'total_errors': len(recent_errors),
-            'data_points': len(recent_response_times)
+            "time_window_days": time_window.days,
+            "metrics_summary": recent_metrics,
+            "response_time_stats": response_time_stats,
+            "error_analysis": dict(error_stats.most_common(5)),
+            "total_errors": len(recent_errors),
+            "data_points": len(recent_response_times),
         }
 
 
@@ -257,13 +309,12 @@ class ContinuousLearningPipeline:
 
         if CONTINUOUS_LEARNING_AVAILABLE:
             self.llm = ChatGoogleGenerativeAI(
-                model="gemini-2.5-pro",
-                temperature=0.3,
-                google_api_key=GEMINI_API_KEY
+                model="gemini-2.5-pro", temperature=0.3, google_api_key=GEMINI_API_KEY
             )
 
             # Improvement analysis chain
-            self.improvement_prompt = PromptTemplate.from_template("""
+            self.improvement_prompt = PromptTemplate.from_template(
+                """
             Analyze the following performance data and feedback to identify areas for improvement.
 
             Performance Metrics:
@@ -284,12 +335,11 @@ class ContinuousLearningPipeline:
             5. **Performance Optimizations**: Speed and efficiency improvements
 
             Provide actionable recommendations:
-            """)
+            """
+            )
 
             self.improvement_chain = LLMChain(
-                llm=self.llm,
-                prompt=self.improvement_prompt,
-                verbose=False
+                llm=self.llm, prompt=self.improvement_prompt, verbose=False
             )
 
     def start_continuous_learning(self):
@@ -332,33 +382,39 @@ class ContinuousLearningPipeline:
         """Analyze performance data and generate improvement suggestions."""
         try:
             # Get recent performance data
-            performance_summary = self.performance_tracker.get_performance_summary(timedelta(hours=1))
+            performance_summary = self.performance_tracker.get_performance_summary(
+                timedelta(hours=1)
+            )
             feedback_summary = self.feedback_collector.get_feedback_summary()
 
             # Skip if insufficient data
-            if performance_summary.get('data_points', 0) < 5:
+            if performance_summary.get("data_points", 0) < 5:
                 return
 
             # Generate improvement recommendations
             improvement_result = self.improvement_chain.run(
                 performance_data=json.dumps(performance_summary, indent=2),
                 feedback_summary=json.dumps(feedback_summary, indent=2),
-                common_issues=json.dumps(feedback_summary.get('common_issues', {}), indent=2)
+                common_issues=json.dumps(
+                    feedback_summary.get("common_issues", {}), indent=2
+                ),
             )
 
             # Store improvement suggestions
             improvement_task = {
-                'timestamp': datetime.now().isoformat(),
-                'performance_data': performance_summary,
-                'feedback_data': feedback_summary,
-                'recommendations': improvement_result.strip(),
-                'implemented': False
+                "timestamp": datetime.now().isoformat(),
+                "performance_data": performance_summary,
+                "feedback_data": feedback_summary,
+                "recommendations": improvement_result.strip(),
+                "implemented": False,
             }
 
             self.learning_tasks.append(improvement_task)
 
             print("📈 Generated improvement recommendations")
-            print(f"   Performance data points: {performance_summary.get('data_points', 0)}")
+            print(
+                f"   Performance data points: {performance_summary.get('data_points', 0)}"
+            )
             print(f"   Feedback entries: {feedback_summary.get('total_feedback', 0)}")
 
             # Log the improvement task
@@ -371,46 +427,68 @@ class ContinuousLearningPipeline:
         """Log improvement task for tracking."""
         try:
             log_entry = {
-                'timestamp': task['timestamp'],
-                'type': 'improvement_suggestion',
-                'performance_metrics': task['performance_data'],
-                'feedback_summary': task['feedback_data'],
-                'recommendations': task['recommendations'][:500] + '...' if len(task['recommendations']) > 500 else task['recommendations']
+                "timestamp": task["timestamp"],
+                "type": "improvement_suggestion",
+                "performance_metrics": task["performance_data"],
+                "feedback_summary": task["feedback_data"],
+                "recommendations": (
+                    task["recommendations"][:500] + "..."
+                    if len(task["recommendations"]) > 500
+                    else task["recommendations"]
+                ),
             }
 
             # In a real implementation, this would be saved to a database or file
-            print(f"💡 New improvement task generated: {task['recommendations'][:100]}...")
+            print(
+                f"💡 New improvement task generated: {task['recommendations'][:100]}..."
+            )
 
         except Exception as e:
             print(f"❌ Error logging improvement task: {e}")
 
     def get_recent_improvements(self, limit: int = 5) -> List[Dict[str, Any]]:
         """Get recent improvement suggestions."""
-        return sorted(self.learning_tasks, key=lambda x: x['timestamp'], reverse=True)[:limit]
+        return sorted(self.learning_tasks, key=lambda x: x["timestamp"], reverse=True)[
+            :limit
+        ]
 
-    def mark_improvement_implemented(self, task_index: int, implementation_notes: str = ""):
+    def mark_improvement_implemented(
+        self, task_index: int, implementation_notes: str = ""
+    ):
         """Mark an improvement task as implemented."""
         if 0 <= task_index < len(self.learning_tasks):
-            self.learning_tasks[task_index]['implemented'] = True
-            self.learning_tasks[task_index]['implementation_notes'] = implementation_notes
-            self.learning_tasks[task_index]['implemented_at'] = datetime.now().isoformat()
+            self.learning_tasks[task_index]["implemented"] = True
+            self.learning_tasks[task_index][
+                "implementation_notes"
+            ] = implementation_notes
+            self.learning_tasks[task_index][
+                "implemented_at"
+            ] = datetime.now().isoformat()
             print(f"✅ Improvement task {task_index} marked as implemented")
 
     def get_system_health_report(self) -> Dict[str, Any]:
         """Generate a comprehensive system health report."""
-        performance_summary = self.performance_tracker.get_performance_summary(timedelta(hours=24))
+        performance_summary = self.performance_tracker.get_performance_summary(
+            timedelta(hours=24)
+        )
         feedback_summary = self.feedback_collector.get_feedback_summary()
 
         recent_improvements = self.get_recent_improvements(3)
 
         return {
-            'timestamp': datetime.now().isoformat(),
-            'overall_health': self._calculate_health_score(performance_summary, feedback_summary),
-            'performance_summary': performance_summary,
-            'feedback_summary': feedback_summary,
-            'recent_improvements': recent_improvements,
-            'active_learning_tasks': len([t for t in self.learning_tasks if not t.get('implemented', False)]),
-            'recommendations': self._generate_health_recommendations(performance_summary, feedback_summary)
+            "timestamp": datetime.now().isoformat(),
+            "overall_health": self._calculate_health_score(
+                performance_summary, feedback_summary
+            ),
+            "performance_summary": performance_summary,
+            "feedback_summary": feedback_summary,
+            "recent_improvements": recent_improvements,
+            "active_learning_tasks": len(
+                [t for t in self.learning_tasks if not t.get("implemented", False)]
+            ),
+            "recommendations": self._generate_health_recommendations(
+                performance_summary, feedback_summary
+            ),
         }
 
     def _calculate_health_score(self, performance: Dict, feedback: Dict) -> float:
@@ -418,8 +496,8 @@ class ContinuousLearningPipeline:
         score = 50  # Base score
 
         # Performance factors
-        if 'response_time_stats' in performance:
-            avg_response_time = performance['response_time_stats'].get('average', 5.0)
+        if "response_time_stats" in performance:
+            avg_response_time = performance["response_time_stats"].get("average", 5.0)
             # Faster response times increase score
             if avg_response_time < 2.0:
                 score += 20
@@ -429,13 +507,13 @@ class ContinuousLearningPipeline:
                 score -= 10
 
         # Feedback factors
-        if 'user_satisfaction' in feedback:
-            satisfaction_avg = feedback['user_satisfaction'].get('average', 3.0)
+        if "user_satisfaction" in feedback:
+            satisfaction_avg = feedback["user_satisfaction"].get("average", 3.0)
             # Higher satisfaction increases score
             score += (satisfaction_avg - 3.0) * 10
 
         # Error factors
-        error_rate = performance.get('error_analysis', {})
+        error_rate = performance.get("error_analysis", {})
         total_errors = sum(error_rate.values())
         if total_errors > 10:
             score -= 15
@@ -444,38 +522,52 @@ class ContinuousLearningPipeline:
 
         return max(0, min(100, score))
 
-    def _generate_health_recommendations(self, performance: Dict, feedback: Dict) -> List[str]:
+    def _generate_health_recommendations(
+        self, performance: Dict, feedback: Dict
+    ) -> List[str]:
         """Generate health improvement recommendations."""
         recommendations = []
 
         # Response time recommendations
-        if 'response_time_stats' in performance:
-            avg_time = performance['response_time_stats'].get('average', 5.0)
+        if "response_time_stats" in performance:
+            avg_time = performance["response_time_stats"].get("average", 5.0)
             if avg_time > 5.0:
-                recommendations.append("Optimize response times - consider caching or model optimization")
+                recommendations.append(
+                    "Optimize response times - consider caching or model optimization"
+                )
             elif avg_time > 10.0:
-                recommendations.append("Critical: Response times are too slow - investigate performance bottlenecks")
+                recommendations.append(
+                    "Critical: Response times are too slow - investigate performance bottlenecks"
+                )
 
         # Error rate recommendations
-        if 'error_analysis' in performance:
-            error_counts = performance['error_analysis']
+        if "error_analysis" in performance:
+            error_counts = performance["error_analysis"]
             if error_counts:
                 top_error = max(error_counts.items(), key=lambda x: x[1])
                 if top_error[1] > 5:
-                    recommendations.append(f"Address frequent {top_error[0]} errors ({top_error[1]} occurrences)")
+                    recommendations.append(
+                        f"Address frequent {top_error[0]} errors ({top_error[1]} occurrences)"
+                    )
 
         # Feedback recommendations
-        if 'common_issues' in feedback:
-            issues = feedback['common_issues']
+        if "common_issues" in feedback:
+            issues = feedback["common_issues"]
             if issues:
                 top_issue = max(issues.items(), key=lambda x: x[1])
-                recommendations.append(f"Address user feedback: {top_issue[0]} ({top_issue[1]} reports)")
+                recommendations.append(
+                    f"Address user feedback: {top_issue[0]} ({top_issue[1]} reports)"
+                )
 
         if not recommendations:
-            recommendations.append("System health is good - continue monitoring performance")
+            recommendations.append(
+                "System health is good - continue monitoring performance"
+            )
 
         return recommendations
 
 
 # Global continuous learning instance
-continuous_learning = ContinuousLearningPipeline() if CONTINUOUS_LEARNING_AVAILABLE else None
+continuous_learning = (
+    ContinuousLearningPipeline() if CONTINUOUS_LEARNING_AVAILABLE else None
+)

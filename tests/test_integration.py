@@ -2,10 +2,11 @@
 Integration tests for the complete chatbot system.
 """
 
-import pytest
 import json
-from unittest.mock import patch, Mock
 import time
+from unittest.mock import Mock, patch
+
+import pytest
 
 
 class TestSystemIntegration:
@@ -20,7 +21,7 @@ class TestSystemIntegration:
                 "agent_type": "professional",
                 "confidence": 0.9,
                 "actions": [],
-                "language": "en"
+                "language": "en",
             },
             {
                 "answer": "I have extensive experience in data science and AI, working at Gozem and Rintio.",
@@ -30,17 +31,17 @@ class TestSystemIntegration:
                     {
                         "text": "🎓 Learn about Education",
                         "type": "agent_switch",
-                        "agent": "education"
+                        "agent": "education",
                     }
                 ],
-                "language": "en"
-            }
+                "language": "en",
+            },
         ]
 
         # Test welcome endpoint
         welcome_data = {
             "session_id": "integration_test_001",
-            "browser_language": "en-US"
+            "browser_language": "en-US",
         }
 
         welcome_response = test_client.post("/welcome", json=welcome_data)
@@ -55,7 +56,7 @@ class TestSystemIntegration:
         chat_data = {
             "user_input": "What is your professional background?",
             "session_id": "integration_test_001",
-            "user_language": "en"
+            "user_language": "en",
         }
 
         chat_response = test_client.post("/chat", json=chat_data)
@@ -75,13 +76,13 @@ class TestSystemIntegration:
             ("fr-FR", "fr"),
             ("es-ES", "es"),
             ("de-DE", "de"),
-            ("zh-CN", "zh")
+            ("zh-CN", "zh"),
         ]
 
         for browser_lang, expected_lang in languages_to_test:
             welcome_data = {
                 "session_id": f"lang_test_{browser_lang}",
-                "browser_language": browser_lang
+                "browser_language": browser_lang,
             }
 
             response = test_client.post("/welcome", json=welcome_data)
@@ -100,7 +101,7 @@ class TestSystemIntegration:
         chat_data = {
             "user_input": "Test message",
             "session_id": "error_test_001",
-            "user_language": "en"
+            "user_language": "en",
         }
 
         response = test_client.post("/chat", json=chat_data)
@@ -116,7 +117,7 @@ class TestSystemIntegration:
         chat_data = {
             "user_input": "Test message",
             "session_id": "rate_limit_test",
-            "user_language": "en"
+            "user_language": "en",
         }
 
         # Make several requests quickly
@@ -140,7 +141,7 @@ class TestSystemIntegration:
             "agent_type": "professional",
             "confidence": 0.8,
             "actions": [],
-            "language": "en"
+            "language": "en",
         }
 
         # Make several chat requests with same session
@@ -148,7 +149,7 @@ class TestSystemIntegration:
             chat_data = {
                 "user_input": f"Test message {i}",
                 "session_id": session_id,
-                "user_language": "en"
+                "user_language": "en",
             }
             response = test_client.post("/chat", json=chat_data)
             assert response.status_code == 200
@@ -195,7 +196,7 @@ class TestSecurityIntegration:
         malicious_data = {
             "user_input": "<script>alert('xss')</script> UNION SELECT * FROM users;",
             "session_id": "security_test_001",
-            "user_language": "en"
+            "user_language": "en",
         }
 
         response = test_client.post("/chat", json=malicious_data)
@@ -205,7 +206,7 @@ class TestSecurityIntegration:
         invalid_session_data = {
             "user_input": "Hello",
             "session_id": "",  # Empty session ID
-            "user_language": "en"
+            "user_language": "en",
         }
 
         response = test_client.post("/chat", json=invalid_session_data)
@@ -232,13 +233,13 @@ class TestPerformanceIntegration:
             "agent_type": "professional",
             "confidence": 0.9,
             "actions": [],
-            "language": "en"
+            "language": "en",
         }
 
         chat_data = {
             "user_input": "Performance test",
             "session_id": "perf_test_001",
-            "user_language": "en"
+            "user_language": "en",
         }
 
         start_time = time.time()
@@ -259,6 +260,7 @@ class TestPerformanceIntegration:
     def test_concurrent_requests_performance(self, test_client, mock_orchestrator):
         """Test handling of concurrent requests."""
         import asyncio
+
         import aiohttp
 
         mock_orchestrator.process_query.return_value = {
@@ -266,7 +268,7 @@ class TestPerformanceIntegration:
             "agent_type": "professional",
             "confidence": 0.8,
             "actions": [],
-            "language": "en"
+            "language": "en",
         }
 
         # Test multiple concurrent requests
@@ -274,10 +276,12 @@ class TestPerformanceIntegration:
             chat_data = {
                 "user_input": f"Concurrent test {i}",
                 "session_id": f"concurrent_test_{i}",
-                "user_language": "en"
+                "user_language": "en",
             }
 
-            async with session.post("http://testserver/chat", json=chat_data) as response:
+            async with session.post(
+                "http://testserver/chat", json=chat_data
+            ) as response:
                 return response.status
 
         async def test_concurrent():

@@ -2,17 +2,18 @@
 API endpoint tests.
 """
 
-import pytest
-import sys
 import os
+import sys
 from unittest.mock import Mock, patch
+
+import pytest
 from fastapi.testclient import TestClient
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Mock the config validation before importing the app
-with patch('config.validate_config'):
+with patch("config.validate_config"):
     from app.main import app
 
 client = TestClient(app)
@@ -50,10 +51,7 @@ class TestWelcomeEndpoint:
 
     def test_welcome_success(self):
         """Test successful welcome message generation."""
-        payload = {
-            "session_id": "test_session_123",
-            "browser_language": "en-US"
-        }
+        payload = {"session_id": "test_session_123", "browser_language": "en-US"}
 
         response = client.post("/welcome", json=payload)
 
@@ -66,10 +64,7 @@ class TestWelcomeEndpoint:
 
     def test_welcome_french(self):
         """Test welcome message in French."""
-        payload = {
-            "session_id": "test_session_456",
-            "browser_language": "fr-FR"
-        }
+        payload = {"session_id": "test_session_456", "browser_language": "fr-FR"}
 
         response = client.post("/welcome", json=payload)
 
@@ -81,18 +76,13 @@ class TestWelcomeEndpoint:
     def test_welcome_validation_error(self):
         """Test welcome endpoint validation."""
         # Test empty session ID
-        payload = {
-            "session_id": "",
-            "browser_language": "en"
-        }
+        payload = {"session_id": "", "browser_language": "en"}
 
         response = client.post("/welcome", json=payload)
         assert response.status_code == 422  # Validation error
 
         # Test missing session ID
-        payload = {
-            "browser_language": "en"
-        }
+        payload = {"browser_language": "en"}
 
         response = client.post("/welcome", json=payload)
         assert response.status_code == 422
@@ -101,7 +91,7 @@ class TestWelcomeEndpoint:
 class TestChatEndpoint:
     """Test chat endpoint."""
 
-    @patch('app.main.orchestrator')
+    @patch("app.main.orchestrator")
     def test_chat_success(self, mock_orchestrator):
         """Test successful chat interaction."""
         # Mock the orchestrator response
@@ -110,13 +100,13 @@ class TestChatEndpoint:
             "agent_type": "professional",
             "confidence": 0.85,
             "actions": [],
-            "language": "en"
+            "language": "en",
         }
 
         payload = {
             "user_input": "What is your experience?",
             "session_id": "test_session_789",
-            "user_language": "en"
+            "user_language": "en",
         }
 
         response = client.post("/chat", json=payload)
@@ -134,7 +124,7 @@ class TestChatEndpoint:
         payload = {
             "user_input": "",
             "session_id": "test_session",
-            "user_language": "en"
+            "user_language": "en",
         }
 
         response = client.post("/chat", json=payload)
@@ -144,7 +134,7 @@ class TestChatEndpoint:
         payload = {
             "user_input": "x" * 2000,  # Exceeds 1000 character limit
             "session_id": "test_session",
-            "user_language": "en"
+            "user_language": "en",
         }
 
         response = client.post("/chat", json=payload)
@@ -154,7 +144,7 @@ class TestChatEndpoint:
         payload = {
             "user_input": "Hello",
             "session_id": "test@session!",  # Invalid characters
-            "user_language": "en"
+            "user_language": "en",
         }
 
         response = client.post("/chat", json=payload)
@@ -166,7 +156,7 @@ class TestChatEndpoint:
         payload = {
             "user_input": "<script>alert('xss')</script>Hello",
             "session_id": "test_session",
-            "user_language": "en"
+            "user_language": "en",
         }
 
         response = client.post("/chat", json=payload)
@@ -176,7 +166,7 @@ class TestChatEndpoint:
         payload = {
             "user_input": "Hello; DROP TABLE users;",
             "session_id": "test_session",
-            "user_language": "en"
+            "user_language": "en",
         }
 
         response = client.post("/chat", json=payload)
@@ -186,14 +176,14 @@ class TestChatEndpoint:
 class TestSessionEndpoints:
     """Test session management endpoints."""
 
-    @patch('app.main.orchestrator')
+    @patch("app.main.orchestrator")
     def test_session_stats_success(self, mock_orchestrator):
         """Test successful session stats retrieval."""
         mock_orchestrator.get_session_stats.return_value = {
             "redirect_count": 2,
             "last_agent": "professional",
             "language": "en",
-            "conversation_active": True
+            "conversation_active": True,
         }
 
         response = client.get("/session/test_session_123/stats")
@@ -211,7 +201,7 @@ class TestSessionEndpoints:
         response = client.get("/session/invalid@session!/stats")  # Invalid characters
         assert response.status_code == 400
 
-    @patch('app.main.orchestrator')
+    @patch("app.main.orchestrator")
     def test_session_reset_success(self, mock_orchestrator):
         """Test successful session reset."""
         mock_orchestrator.reset_session.return_value = None
@@ -232,7 +222,7 @@ class TestSessionEndpoints:
 class TestErrorHandling:
     """Test error handling across endpoints."""
 
-    @patch('app.main.orchestrator')
+    @patch("app.main.orchestrator")
     def test_chat_processing_error(self, mock_orchestrator):
         """Test error handling during chat processing."""
         mock_orchestrator.process_query.side_effect = Exception("Processing failed")
@@ -240,7 +230,7 @@ class TestErrorHandling:
         payload = {
             "user_input": "Hello",
             "session_id": "test_session",
-            "user_language": "en"
+            "user_language": "en",
         }
 
         response = client.post("/chat", json=payload)
@@ -251,7 +241,7 @@ class TestErrorHandling:
         assert "error" in data
         assert "technical difficulties" in data["error"].lower()
 
-    @patch('app.main.orchestrator')
+    @patch("app.main.orchestrator")
     def test_session_stats_error(self, mock_orchestrator):
         """Test error handling in session stats."""
         mock_orchestrator.get_session_stats.side_effect = Exception("Database error")
