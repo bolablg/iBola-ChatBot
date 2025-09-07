@@ -47,7 +47,11 @@ class TestCriticalIntegration:
     def test_health_check_works(self, test_client):
         """CRITICAL: Test that the health check endpoint works."""
         response = test_client.get("/health")
-        assert response.status_code in [200, 503]  # 503 is acceptable if services are down
+        assert response.status_code in [
+            200,
+            503,
+        ]  # 503 is acceptable if services are down
+
 
 # ===== END OF CRITICAL TESTS =====
 # All additional integration tests have been removed to focus on core functionality

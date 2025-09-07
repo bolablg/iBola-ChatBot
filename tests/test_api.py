@@ -65,5 +65,6 @@ class TestCriticalAPI:
             assert "answer" in result
             assert "agent_type" in result
 
+
 # ===== END OF CRITICAL API TESTS =====
 # All additional API tests have been removed to focus on core functionality
