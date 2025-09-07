@@ -94,16 +94,25 @@ class TestRedirectAgent:
         """Test redirect response generation."""
         with patch(
             "app.agents.redirect_agent.get_redirect_retriever"
-        ) as mock_retriever:
-            mock_retriever.return_value = Mock()
+        ) as mock_retriever, patch(
+            "app.agents.redirect_agent.ChatGoogleGenerativeAI"
+        ) as mock_llm, patch(
+            "app.agents.redirect_agent.ConversationalRetrievalChain"
+        ) as mock_chain:
 
-            agent = RedirectAgent()
+            # Set up proper mocks
+            mock_retriever.return_value = Mock()
+            mock_llm.return_value = Mock()
+            mock_chain_instance = Mock()
+            mock_chain.from_llm.return_value = mock_chain_instance
 
             # Mock the invoke method
             mock_result = {
                 "answer": "I specialize in questions about Bolaji's professional background."
             }
-            agent.agent.invoke = Mock(return_value=mock_result)
+            mock_chain_instance.invoke = Mock(return_value=mock_result)
+
+            agent = RedirectAgent()
 
             result = agent.generate_redirect_response(
                 "What's the weather like?", "", 0, "test_session"
