@@ -49,6 +49,9 @@ GCP_PROJECT_ID = os.getenv("GCP_PROJECT_ID", "your-gcp-project-id")
 # Vector Database Configuration
 DB_PATH = os.path.join(os.path.dirname(__file__), "chroma_db")
 
+# Data Directory Configuration
+DATA_PATH = os.path.join(os.path.dirname(__file__), "data")
+
 # Google Chat Integration (for contact alerts)
 # To get a webhook URL:
 # 1. Go to Google Chat
