@@ -26,30 +26,44 @@ class LanguageDetection:
 
         self.welcome_messages = {
             "en": [
-                "Hello! I'm iBola, your AI assistant for Bolaji's professional journey."
+                "Hello! I'm iBola, your AI assistant for Bolaji's professional journey.",
+                "Welcome! I'm here to help you learn about Bolaji's professional experience."
             ],
             "fr": [
-                "Bonjour ! Je suis iBola, votre assistant IA pour le parcours professionnel de Bolaji."
+                "Bonjour ! Je suis iBola, votre assistant IA pour le parcours professionnel de Bolaji.",
+                "Bienvenue ! Je suis là pour vous aider à découvrir l'expérience professionnelle de Bolaji."
             ],
             "es": [
-                "¡Hola! Soy iBola, tu asistente de IA para la trayectoria profesional de Bolaji."
+                "¡Hola! Soy iBola, tu asistente de IA para la trayectoria profesional de Bolaji.",
+                "¡Bienvenido! Estoy aquí para ayudarte a conocer la experiencia profesional de Bolaji."
             ],
             "de": [
-                "Hallo! Ich bin iBola, Ihr KI-Assistent für Bolajis berufliche Laufbahn."
+                "Hallo! Ich bin iBola, Ihr KI-Assistent für Bolajis berufliche Laufbahn.",
+                "Willkommen! Ich bin hier, um Ihnen bei der Entdeckung von Bolajis Berufserfahrung zu helfen."
             ],
             "it": [
-                "Ciao! Sono iBola, il tuo assistente IA per il percorso professionale di Bolaji."
+                "Ciao! Sono iBola, il tuo assistente IA per il percorso professionale di Bolaji.",
+                "Benvenuto! Sono qui per aiutarti a scoprire l'esperienza professionale di Bolaji."
             ],
             "pt": [
-                "Olá! Sou iBola, seu assistente de IA para a trajetória profissional de Bolaji."
+                "Olá! Sou iBola, seu assistente de IA para a trajetória profissional de Bolaji.",
+                "Bem-vindo! Estou aqui para ajudá-lo a conhecer a experiência profissional de Bolaji."
             ],
             "ru": [
-                "Привет! Я iBola, ваш ИИ-ассистент для профессионального пути Боладжи."
+                "Привет! Я iBola, ваш ИИ-ассистент для профессионального пути Боладжи.",
+                "Добро пожаловать! Я здесь, чтобы помочь вам узнать о профессиональном опыте Боладжи."
             ],
-            "zh": ["你好！我是iBola，Bolaji职业生涯的AI助手。"],
-            "ja": ["こんにちは！私はiBola、Bolajiの職業経歴のAIアシスタントです。"],
+            "zh": [
+                "你好！我是iBola，Bolaji职业生涯的AI助手。",
+                "欢迎！我是来帮助您了解Bolaji专业经验的。"
+            ],
+            "ja": [
+                "こんにちは！私はiBola、Bolajiの職業経歴のAIアシスタントです。",
+                "ようこそ！私はBolajiの職業経験について知っていただくお手伝いをいたします。"
+            ],
             "ko": [
-                "안녕하세요! 저는 iBola, Bolaji의 직업적 여정을 위한 AI 어시스턴트입니다."
+                "안녕하세요! 저는 iBola, Bolaji의 직업적 여정을 위한 AI 어시스턴트입니다.",
+                "환영합니다! 저는 Bolaji의 직업적 경험에 대해 알려드리기 위해 여기 있습니다."
             ],
         }
 
@@ -144,42 +158,49 @@ class LanguageDetection:
 
     def _analyze_message_language(self, message: str) -> str:
         """Analyze message content to detect language."""
-        # Simple language detection based on common words
+        import re
+
+        # Simple language detection based on common words/phrases
         message_lower = message.lower()
 
-        # French indicators
-        if any(
-            word in message_lower
-            for word in ["le", "la", "les", "et", "est", "je", "tu", "nous", "vous"]
-        ):
-            return "fr"
-
-        # Spanish indicators
-        if any(
-            word in message_lower
-            for word in ["el", "la", "los", "las", "y", "es", "soy", "eres", "somos"]
-        ):
+        # Spanish indicators (check first to avoid conflicts with French)
+        spanish_patterns = [
+            r'\bel\b', r'\bla\b', r'\blos\b', r'\blas\b', r'\by\b', r'\bes\b',
+            r'\bhola\b', r'\bsoy\b', r'\beres\b', r'\bsomos\b', r'\bgracias\b'
+        ]
+        if any(re.search(pattern, message_lower) for pattern in spanish_patterns):
             return "es"
 
+        # French indicators
+        french_patterns = [
+            r'\ble\b', r'\bla\b', r'\bles\b', r'\bet\b', r'\best\b',
+            r'\bje\b', r'\btu\b', r'\bnous\b', r'\bvous\b', r'\bsuis\b', r'\bêtes\b'
+        ]
+        if any(re.search(pattern, message_lower) for pattern in french_patterns):
+            return "fr"
+
         # German indicators
-        if any(
-            word in message_lower
-            for word in ["der", "die", "das", "und", "ist", "ich", "du", "wir", "ihr"]
-        ):
+        german_patterns = [
+            r'\bder\b', r'\bdie\b', r'\bdas\b', r'\bund\b', r'\bist\b',
+            r'\bich\b', r'\bdu\b', r'\bwir\b', r'\bihr\b'
+        ]
+        if any(re.search(pattern, message_lower) for pattern in german_patterns):
             return "de"
 
         # Italian indicators
-        if any(
-            word in message_lower
-            for word in ["il", "lo", "la", "i", "gli", "le", "e", "è", "sono"]
-        ):
+        italian_patterns = [
+            r'\bil\b', r'\blo\b', r'\bla\b', r'\bi\b', r'\bgli\b', r'\ble\b',
+            r'\be\b', r'\bè\b', r'\bsono\b', r'\bciao\b'
+        ]
+        if any(re.search(pattern, message_lower) for pattern in italian_patterns):
             return "it"
 
         # Portuguese indicators
-        if any(
-            word in message_lower
-            for word in ["o", "a", "os", "as", "e", "é", "sou", "és", "somos"]
-        ):
+        portuguese_patterns = [
+            r'\bo\b', r'\ba\b', r'\bos\b', r'\bas\b', r'\be\b', r'\bé\b',
+            r'\bsou\b', r'\bés\b', r'\bsomos\b', r'\bolá\b'
+        ]
+        if any(re.search(pattern, message_lower) for pattern in portuguese_patterns):
             return "pt"
 
         return None

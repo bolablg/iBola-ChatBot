@@ -80,7 +80,12 @@ class RedirectAgent:
         redirect_actions = []
 
         # Determine response and actions based on redirect count
-        if redirect_count == 1:
+        if redirect_count == 0:
+            # Initial redirect: Use the base response from the agent
+            answer = base_response.get("answer", "I specialize in questions about Bolaji's professional background.")
+            redirect_actions = []
+
+        elif redirect_count == 1:
             # First redirection: Ask for precise question about professional journey or education
             # No button needed - just the text response is sufficient
             answer = "I can only answer questions about Bolaji's professional journey or education. Please ask a precise question about these specific topics."
