@@ -107,7 +107,7 @@ _conf/*.json
 local/
 
 # Vector database (local data)
-chroma_db/
+# chroma_db/
 
 .DS_Store
 **/.DS_Store

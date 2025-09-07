@@ -108,7 +108,11 @@ class TestInputSecurity:
         # Should be rejected with validation error
         assert response.status_code == 422
         result = response.json()
-        assert "string_too_long" in str(result) or "too_long" in str(result) or "too long" in str(result).lower()
+        assert (
+            "string_too_long" in str(result)
+            or "too_long" in str(result)
+            or "too long" in str(result).lower()
+        )
 
     def test_null_byte_injection_prevention(self, test_client):
         """Test prevention of null byte injection."""
@@ -334,7 +338,9 @@ class TestDataExposurePrevention:
         assert "technical difficulties" in error_message.lower()
 
     @patch("app.main.orchestrator")
-    def test_stack_trace_exposure_prevention(self, mock_orchestrator_patch, test_client):
+    def test_stack_trace_exposure_prevention(
+        self, mock_orchestrator_patch, test_client
+    ):
         """Test that stack traces are not exposed to users."""
         # Mock orchestrator to raise an exception
         mock_orchestrator_patch.process_query.side_effect = ValueError("Test error")

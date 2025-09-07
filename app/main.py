@@ -414,7 +414,7 @@ async def chat_options():
             "Access-Control-Allow-Methods": "POST, OPTIONS",
             "Access-Control-Allow-Headers": "Content-Type, Authorization",
             "Access-Control-Max-Age": "86400",
-        }
+        },
     )
 
 

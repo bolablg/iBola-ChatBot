@@ -179,6 +179,7 @@ class TestPerformance:
     def test_rate_limiter_performance(self):
         """Test rate limiter performance under load."""
         import asyncio
+
         from app.services.rate_limiting import rate_limiter
 
         async def run_checks():

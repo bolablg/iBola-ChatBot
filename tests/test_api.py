@@ -196,10 +196,14 @@ class TestSessionEndpoints:
     def test_session_stats_invalid_id(self):
         """Test session stats with invalid session ID."""
         response = client.get("/session//stats")  # Empty session ID
-        assert response.status_code == 404  # FastAPI returns 404 for invalid path params
+        assert (
+            response.status_code == 404
+        )  # FastAPI returns 404 for invalid path params
 
         response = client.get("/session/invalid@session!/stats")  # Invalid characters
-        assert response.status_code == 404  # FastAPI returns 404 for invalid path params
+        assert (
+            response.status_code == 404
+        )  # FastAPI returns 404 for invalid path params
 
     @patch("app.main.orchestrator")
     def test_session_reset_success(self, mock_orchestrator):
@@ -216,7 +220,9 @@ class TestSessionEndpoints:
     def test_session_reset_invalid_id(self):
         """Test session reset with invalid session ID."""
         response = client.delete("/session/")  # Empty session ID
-        assert response.status_code == 404  # FastAPI returns 404 for invalid path params
+        assert (
+            response.status_code == 404
+        )  # FastAPI returns 404 for invalid path params
 
 
 class TestErrorHandling:
