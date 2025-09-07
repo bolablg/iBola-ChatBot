@@ -403,6 +403,21 @@ async def get_welcome_message(payload: WelcomeInput):
         )
 
 
+@app.options("/chat", tags=["Chat"])
+async def chat_options():
+    """Handle CORS preflight requests for /chat endpoint."""
+    return JSONResponse(
+        status_code=200,
+        content={"message": "CORS preflight successful"},
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+            "Access-Control-Max-Age": "86400",
+        }
+    )
+
+
 @app.post("/chat", tags=["Chat"], response_model=Dict[str, Any])
 async def chat(payload: ChatInput, request: Request):
     """Chat with the multi-agent system (async with caching)."""
