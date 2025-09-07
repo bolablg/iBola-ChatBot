@@ -3,14 +3,17 @@ Classification Agent - Advanced retriever that classifies user messages and rout
 This agent has internet access and uses advanced NLP techniques to understand user intent.
 """
 
-from langchain.prompts import PromptTemplate
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_community.tools import DuckDuckGoSearchRun
-from langchain.chains import LLMChain
-from .retrievers import get_classification_retriever
-import config
-from typing import Dict, Any, Tuple
 import re
+from typing import Any, Dict, Tuple
+
+from langchain.chains import LLMChain
+from langchain.prompts import PromptTemplate
+from langchain_community.tools import DuckDuckGoSearchRun
+from langchain_google_genai import ChatGoogleGenerativeAI
+
+import config
+
+from .retrievers import get_classification_retriever
 
 # Classification prompt - always the same query pattern
 CLASSIFICATION_PROMPT = """
@@ -62,36 +65,37 @@ CHAT_HISTORY: {chat_history}
 # Internet search tool
 search = DuckDuckGoSearchRun()
 
+
 class ClassificationAgent:
     """Advanced classification agent with internet access."""
 
     def __init__(self):
         # Legacy regex patterns for cross-checking
         self.professional_patterns = [
-            r'\b(what|which|where)\s+(do|did|does|is|are|was|were)\s+(you|i|he|bolaji)\s+(work|do)\b',
-            r'\b(your|his|bolaji.?s)\s+(job|role|position|career)\b',
-            r'\b(experience|background|resume|cv)\b',
-            r'\b(skill|technology|tool|expertise)\b',
-            r'\b(project|achievement|accomplishment)\b'
+            r"\b(what|which|where)\s+(do|did|does|is|are|was|were)\s+(you|i|he|bolaji)\s+(work|do)\b",
+            r"\b(your|his|bolaji.?s)\s+(job|role|position|career)\b",
+            r"\b(experience|background|resume|cv)\b",
+            r"\b(skill|technology|tool|expertise)\b",
+            r"\b(project|achievement|accomplishment)\b",
         ]
 
         self.education_patterns = [
-            r'\b(education|degree|university|college|school)\b',
-            r'\b(master|bachelor|diploma|transcript)\b',
-            r'\b(study|studied|studying)\b',
-            r'\b(statistics|econometrics|mathematics)\b'
+            r"\b(education|degree|university|college|school)\b",
+            r"\b(master|bachelor|diploma|transcript)\b",
+            r"\b(study|studied|studying)\b",
+            r"\b(statistics|econometrics|mathematics)\b",
         ]
 
         self.learning_patterns = [
-            r'\b(how|what|where)\s+(to|do|can|should)\s+(learn|study|start|begin|get)\b',
-            r'\b(learn|study|practice|improve)\s+(data|python|sql|ai|ml)\b',
-            r'\b(advice|guidance|recommendation|tips?)\b',
-            r'\b(course|tutorial|training|resource)\b'
+            r"\b(how|what|where)\s+(to|do|can|should)\s+(learn|study|start|begin|get)\b",
+            r"\b(learn|study|practice|improve)\s+(data|python|sql|ai|ml)\b",
+            r"\b(advice|guidance|recommendation|tips?)\b",
+            r"\b(course|tutorial|training|resource)\b",
         ]
         self.llm = ChatGoogleGenerativeAI(
             model="gemini-2.5-pro",
             temperature=0.7,  # Low temperature for consistent classification
-            google_api_key=config.GEMINI_API_KEY
+            google_api_key=config.GEMINI_API_KEY,
         )
 
         # Advanced retriever for classification
@@ -104,9 +108,7 @@ class ClassificationAgent:
 
         # Create LLM chain for classification
         self.classification_chain = LLMChain(
-            llm=self.llm,
-            prompt=self.classification_prompt,
-            verbose=False
+            llm=self.llm, prompt=self.classification_prompt, verbose=False
         )
 
         # For backward compatibility with orchestrator
@@ -144,7 +146,9 @@ class ClassificationAgent:
         except Exception as e:
             return f"Search failed: {str(e)}"
 
-    def classify_message(self, user_input: str, chat_history: str = "") -> Tuple[str, float, str]:
+    def classify_message(
+        self, user_input: str, chat_history: str = ""
+    ) -> Tuple[str, float, str]:
         """
         Classify the user message and return category, confidence, and reasoning.
 
@@ -153,16 +157,15 @@ class ClassificationAgent:
         """
         try:
             # Prepare input for the agent
-            inputs = {
-                "question": user_input,
-                "chat_history": chat_history
-            }
+            inputs = {"question": user_input, "chat_history": chat_history}
 
             # Run classification
             result = self.classification_chain.invoke(inputs)
 
             # Parse the result - LLMChain returns the output directly
-            response_text = str(result) if not isinstance(result, dict) else result.get("text", "")
+            response_text = (
+                str(result) if not isinstance(result, dict) else result.get("text", "")
+            )
 
             # Extract category from response
             category = self._extract_category(response_text)
@@ -215,7 +218,7 @@ class ClassificationAgent:
                     return parts[1].strip()[:200]  # Limit length
 
         # Return first line as reasoning
-        lines = response.strip().split('\n')
+        lines = response.strip().split("\n")
         return lines[0][:200] if lines else "Classification completed"
 
     def _fallback_classification(self, user_input: str) -> Tuple[str, float, str]:
@@ -223,17 +226,42 @@ class ClassificationAgent:
         text_lower = user_input.lower()
 
         # Professional keywords
-        prof_keywords = ['work', 'job', 'career', 'project', 'skill', 'experience', 'company', 'role']
+        prof_keywords = [
+            "work",
+            "job",
+            "career",
+            "project",
+            "skill",
+            "experience",
+            "company",
+            "role",
+        ]
         if any(keyword in text_lower for keyword in prof_keywords):
             return "professional", 0.7, "Contains professional keywords"
 
         # Education keywords
-        edu_keywords = ['degree', 'university', 'study', 'academic', 'school', 'course', 'education']
+        edu_keywords = [
+            "degree",
+            "university",
+            "study",
+            "academic",
+            "school",
+            "course",
+            "education",
+        ]
         if any(keyword in text_lower for keyword in edu_keywords):
             return "education", 0.7, "Contains education keywords"
 
         # Learning keywords
-        learn_keywords = ['learn', 'how to', 'tutorial', 'course', 'advice', 'teach', 'study']
+        learn_keywords = [
+            "learn",
+            "how to",
+            "tutorial",
+            "course",
+            "advice",
+            "teach",
+            "study",
+        ]
         if any(keyword in text_lower for keyword in learn_keywords):
             return "learning", 0.7, "Contains learning keywords"
 
@@ -244,7 +272,9 @@ class ClassificationAgent:
         """Return agent type identifier."""
         return "classification"
 
-    def get_routing_decision(self, user_input: str, chat_history: str = "", last_agent: str = None) -> Dict[str, Any]:
+    def get_routing_decision(
+        self, user_input: str, chat_history: str = "", last_agent: str = None
+    ) -> Dict[str, Any]:
         """
         Make complete routing decision including fallback logic and regex cross-check.
 
@@ -256,13 +286,17 @@ class ClassificationAgent:
         Returns:
             Dict with routing decision and metadata
         """
-        category, confidence, reasoning = self.classify_message(user_input, chat_history)
+        category, confidence, reasoning = self.classify_message(
+            user_input, chat_history
+        )
 
         # If classifier wants to redirect, cross-check with regex patterns
         if category == "redirect":
             regex_category = self._regex_cross_check(user_input)
             if regex_category:
-                print(f"🔄 Regex cross-check: {user_input[:50]}... -> {regex_category} (overriding redirect)")
+                print(
+                    f"🔄 Regex cross-check: {user_input[:50]}... -> {regex_category} (overriding redirect)"
+                )
                 category = regex_category
                 reasoning += f" | Regex override: {regex_category}"
 
@@ -282,5 +316,7 @@ class ClassificationAgent:
             "fallback_applied": fallback_reason is not None,
             "fallback_reason": fallback_reason,
             "classification_agent": "advanced_with_internet",
-            "regex_cross_check": regex_category if 'regex_category' in locals() else None
+            "regex_cross_check": (
+                regex_category if "regex_category" in locals() else None
+            ),
         }

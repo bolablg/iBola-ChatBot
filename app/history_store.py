@@ -62,4 +62,3 @@ def append_history(session_id: str, pair: Tuple[str, str]) -> None:
         _redis_client.rpush(_key(session_id), json.dumps(pair))
     else:
         _chat_histories.setdefault(session_id, []).append(pair)
-

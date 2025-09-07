@@ -2,27 +2,28 @@
 Unit tests for agent components.
 """
 
-import pytest
-import sys
 import os
+import sys
 from unittest.mock import Mock, patch
+
+import pytest
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.agents.professional_agent import ProfessionalAgent
 from app.agents.education_agent import EducationAgent
 from app.agents.learning_agent import LearningAgent
-from app.agents.redirect_agent import RedirectAgent
 from app.agents.orchestrator import AgentOrchestrator
+from app.agents.professional_agent import ProfessionalAgent
+from app.agents.redirect_agent import RedirectAgent
 
 
 class TestProfessionalAgent:
     """Test cases for Professional Agent."""
 
-    @patch('app.agents.professional_agent.get_professional_retriever')
-    @patch('app.agents.professional_agent.ChatGoogleGenerativeAI')
-    @patch('app.agents.professional_agent.ConversationalRetrievalChain')
+    @patch("app.agents.professional_agent.get_professional_retriever")
+    @patch("app.agents.professional_agent.ChatGoogleGenerativeAI")
+    @patch("app.agents.professional_agent.ConversationalRetrievalChain")
     def test_agent_initialization(self, mock_chain, mock_llm, mock_retriever):
         """Test professional agent initialization."""
         mock_retriever.return_value = Mock()
@@ -42,9 +43,9 @@ class TestProfessionalAgent:
 class TestEducationAgent:
     """Test cases for Education Agent."""
 
-    @patch('app.agents.education_agent.get_education_retriever')
-    @patch('app.agents.education_agent.ChatGoogleGenerativeAI')
-    @patch('app.agents.education_agent.ConversationalRetrievalChain')
+    @patch("app.agents.education_agent.get_education_retriever")
+    @patch("app.agents.education_agent.ChatGoogleGenerativeAI")
+    @patch("app.agents.education_agent.ConversationalRetrievalChain")
     def test_agent_initialization(self, mock_chain, mock_llm, mock_retriever):
         """Test education agent initialization."""
         mock_retriever.return_value = Mock()
@@ -59,9 +60,9 @@ class TestEducationAgent:
 class TestLearningAgent:
     """Test cases for Learning Agent."""
 
-    @patch('app.agents.learning_agent.get_learning_retriever')
-    @patch('app.agents.learning_agent.ChatGoogleGenerativeAI')
-    @patch('app.agents.learning_agent.ConversationalRetrievalChain')
+    @patch("app.agents.learning_agent.get_learning_retriever")
+    @patch("app.agents.learning_agent.ChatGoogleGenerativeAI")
+    @patch("app.agents.learning_agent.ConversationalRetrievalChain")
     def test_agent_initialization(self, mock_chain, mock_llm, mock_retriever):
         """Test learning agent initialization."""
         mock_retriever.return_value = Mock()
@@ -76,9 +77,9 @@ class TestLearningAgent:
 class TestRedirectAgent:
     """Test cases for Redirect Agent."""
 
-    @patch('app.agents.redirect_agent.get_redirect_retriever')
-    @patch('app.agents.redirect_agent.ChatGoogleGenerativeAI')
-    @patch('app.agents.redirect_agent.ConversationalRetrievalChain')
+    @patch("app.agents.redirect_agent.get_redirect_retriever")
+    @patch("app.agents.redirect_agent.ChatGoogleGenerativeAI")
+    @patch("app.agents.redirect_agent.ConversationalRetrievalChain")
     def test_agent_initialization(self, mock_chain, mock_llm, mock_retriever):
         """Test redirect agent initialization."""
         mock_retriever.return_value = Mock()
@@ -91,7 +92,9 @@ class TestRedirectAgent:
 
     def test_redirect_response_generation(self):
         """Test redirect response generation."""
-        with patch('app.agents.redirect_agent.get_redirect_retriever') as mock_retriever:
+        with patch(
+            "app.agents.redirect_agent.get_redirect_retriever"
+        ) as mock_retriever:
             mock_retriever.return_value = Mock()
 
             agent = RedirectAgent()
@@ -103,10 +106,7 @@ class TestRedirectAgent:
             agent.agent.invoke = Mock(return_value=mock_result)
 
             result = agent.generate_redirect_response(
-                "What's the weather like?",
-                "",
-                0,
-                "test_session"
+                "What's the weather like?", "", 0, "test_session"
             )
 
             assert "answer" in result
@@ -119,25 +119,27 @@ class TestAgentOrchestrator:
 
     def test_orchestrator_initialization(self):
         """Test orchestrator initialization."""
-        with patch('app.agents.orchestrator.ProfessionalAgent'), \
-             patch('app.agents.orchestrator.EducationAgent'), \
-             patch('app.agents.orchestrator.LearningAgent'), \
-             patch('app.agents.orchestrator.RedirectAgent'):
+        with patch("app.agents.orchestrator.ProfessionalAgent"), patch(
+            "app.agents.orchestrator.EducationAgent"
+        ), patch("app.agents.orchestrator.LearningAgent"), patch(
+            "app.agents.orchestrator.RedirectAgent"
+        ):
 
             orchestrator = AgentOrchestrator()
 
-            assert hasattr(orchestrator, 'professional_agent')
-            assert hasattr(orchestrator, 'education_agent')
-            assert hasattr(orchestrator, 'learning_agent')
-            assert hasattr(orchestrator, 'redirect_agent')
-            assert hasattr(orchestrator, 'session_data')
+            assert hasattr(orchestrator, "professional_agent")
+            assert hasattr(orchestrator, "education_agent")
+            assert hasattr(orchestrator, "learning_agent")
+            assert hasattr(orchestrator, "redirect_agent")
+            assert hasattr(orchestrator, "session_data")
 
     def test_greeting_detection(self):
         """Test greeting detection."""
-        with patch('app.agents.orchestrator.ProfessionalAgent'), \
-             patch('app.agents.orchestrator.EducationAgent'), \
-             patch('app.agents.orchestrator.LearningAgent'), \
-             patch('app.agents.orchestrator.RedirectAgent'):
+        with patch("app.agents.orchestrator.ProfessionalAgent"), patch(
+            "app.agents.orchestrator.EducationAgent"
+        ), patch("app.agents.orchestrator.LearningAgent"), patch(
+            "app.agents.orchestrator.RedirectAgent"
+        ):
 
             orchestrator = AgentOrchestrator()
 
@@ -147,10 +149,11 @@ class TestAgentOrchestrator:
 
     def test_contact_detection(self):
         """Test contact request detection."""
-        with patch('app.agents.orchestrator.ProfessionalAgent'), \
-             patch('app.agents.orchestrator.EducationAgent'), \
-             patch('app.agents.orchestrator.LearningAgent'), \
-             patch('app.agents.orchestrator.RedirectAgent'):
+        with patch("app.agents.orchestrator.ProfessionalAgent"), patch(
+            "app.agents.orchestrator.EducationAgent"
+        ), patch("app.agents.orchestrator.LearningAgent"), patch(
+            "app.agents.orchestrator.RedirectAgent"
+        ):
 
             orchestrator = AgentOrchestrator()
 
@@ -160,10 +163,11 @@ class TestAgentOrchestrator:
 
     def test_session_management(self):
         """Test session data management."""
-        with patch('app.agents.orchestrator.ProfessionalAgent'), \
-             patch('app.agents.orchestrator.EducationAgent'), \
-             patch('app.agents.orchestrator.LearningAgent'), \
-             patch('app.agents.orchestrator.RedirectAgent'):
+        with patch("app.agents.orchestrator.ProfessionalAgent"), patch(
+            "app.agents.orchestrator.EducationAgent"
+        ), patch("app.agents.orchestrator.LearningAgent"), patch(
+            "app.agents.orchestrator.RedirectAgent"
+        ):
 
             orchestrator = AgentOrchestrator()
 

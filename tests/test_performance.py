@@ -2,10 +2,11 @@
 Performance tests for the chatbot system.
 """
 
-import pytest
-import time
 import statistics
-from unittest.mock import patch, Mock
+import time
+from unittest.mock import Mock, patch
+
+import pytest
 
 
 class TestPerformance:
@@ -14,22 +15,26 @@ class TestPerformance:
     @pytest.fixture
     def mock_orchestrator(self):
         """Mock orchestrator for performance testing."""
-        with patch('app.agents.orchestrator.ProfessionalAgent'), \
-             patch('app.agents.orchestrator.EducationAgent'), \
-             patch('app.agents.orchestrator.LearningAgent'), \
-             patch('app.agents.orchestrator.RedirectAgent'):
+        with patch("app.agents.orchestrator.ProfessionalAgent"), patch(
+            "app.agents.orchestrator.EducationAgent"
+        ), patch("app.agents.orchestrator.LearningAgent"), patch(
+            "app.agents.orchestrator.RedirectAgent"
+        ):
 
             from app.agents.orchestrator import AgentOrchestrator
+
             orchestrator = AgentOrchestrator()
 
             # Mock the process_query method
-            orchestrator.process_query = Mock(return_value={
-                "answer": "Performance test response",
-                "agent_type": "professional",
-                "confidence": 0.9,
-                "actions": [],
-                "language": "en"
-            })
+            orchestrator.process_query = Mock(
+                return_value={
+                    "answer": "Performance test response",
+                    "agent_type": "professional",
+                    "confidence": 0.9,
+                    "actions": [],
+                    "language": "en",
+                }
+            )
 
             yield orchestrator
 
@@ -40,10 +45,7 @@ class TestPerformance:
         # Make multiple calls to measure performance
         for i in range(100):
             result = mock_orchestrator.process_query(
-                f"Test query {i}",
-                f"Previous message {i}",
-                f"session_{i}",
-                "en"
+                f"Test query {i}", f"Previous message {i}", f"session_{i}", "en"
             )
 
         end_time = time.time()
@@ -56,8 +58,9 @@ class TestPerformance:
 
     def test_memory_usage_stability(self):
         """Test memory usage stability under load."""
-        import psutil
         import os
+
+        import psutil
 
         process = psutil.Process(os.getpid())
         initial_memory = process.memory_info().rss
@@ -72,18 +75,21 @@ class TestPerformance:
 
         # Force garbage collection
         import gc
+
         gc.collect()
 
         final_memory = process.memory_info().rss
         memory_increase = final_memory - initial_memory
 
         # Memory should not increase significantly
-        assert memory_increase < 10 * 1024 * 1024, f"Memory leak detected: {memory_increase} bytes"
+        assert (
+            memory_increase < 10 * 1024 * 1024
+        ), f"Memory leak detected: {memory_increase} bytes"
 
     def test_concurrent_session_handling(self, mock_orchestrator):
         """Test handling multiple concurrent sessions."""
-        import threading
         import concurrent.futures
+        import threading
 
         results = []
         errors = []
@@ -92,23 +98,19 @@ class TestPerformance:
             try:
                 start_time = time.time()
                 result = mock_orchestrator.process_query(
-                    "Concurrent test query",
-                    "Previous context",
-                    session_id,
-                    "en"
+                    "Concurrent test query", "Previous context", session_id, "en"
                 )
                 end_time = time.time()
 
-                results.append({
-                    'session_id': session_id,
-                    'response_time': end_time - start_time,
-                    'success': True
-                })
+                results.append(
+                    {
+                        "session_id": session_id,
+                        "response_time": end_time - start_time,
+                        "success": True,
+                    }
+                )
             except Exception as e:
-                errors.append({
-                    'session_id': session_id,
-                    'error': str(e)
-                })
+                errors.append({"session_id": session_id, "error": str(e)})
 
         # Test with 50 concurrent sessions
         session_ids = [f"perf_session_{i}" for i in range(50)]
@@ -124,21 +126,29 @@ class TestPerformance:
         assert len(results) == 50, f"Expected 50 results, got {len(results)}"
         assert len(errors) == 0, f"Found errors: {errors}"
 
-        response_times = [r['response_time'] for r in results]
+        response_times = [r["response_time"] for r in results]
         avg_response_time = statistics.mean(response_times)
         max_response_time = max(response_times)
-        p95_response_time = statistics.quantiles(response_times, n=20)[18]  # 95th percentile
+        p95_response_time = statistics.quantiles(response_times, n=20)[
+            18
+        ]  # 95th percentile
 
-        assert avg_response_time < 0.2, f"Average response time too slow: {avg_response_time}s"
-        assert max_response_time < 1.0, f"Max response time too slow: {max_response_time}s"
-        assert p95_response_time < 0.5, f"95th percentile too slow: {p95_response_time}s"
+        assert (
+            avg_response_time < 0.2
+        ), f"Average response time too slow: {avg_response_time}s"
+        assert (
+            max_response_time < 1.0
+        ), f"Max response time too slow: {max_response_time}s"
+        assert (
+            p95_response_time < 0.5
+        ), f"95th percentile too slow: {p95_response_time}s"
 
     def test_cache_performance(self):
         """Test cache performance under load."""
         from app.services.cache_service import cache_service
 
         # Skip if cache is disabled
-        if not hasattr(cache_service, 'response_cache'):
+        if not hasattr(cache_service, "response_cache"):
             pytest.skip("Cache not available for testing")
 
         cache = cache_service.response_cache
@@ -190,9 +200,9 @@ class TestPerformance:
         start_time = time.time()
 
         # Test imports and service initialization
-        from app.services.language_detection import language_service
-        from app.services.dynamic_guardrails import dynamic_guardrails
         from app.services.cache_service import cache_service
+        from app.services.dynamic_guardrails import dynamic_guardrails
+        from app.services.language_detection import language_service
         from app.services.rate_limiting import rate_limiter
 
         end_time = time.time()
@@ -202,9 +212,9 @@ class TestPerformance:
         assert init_time < 2.0, f"Service initialization too slow: {init_time}s"
 
         # Test service availability
-        assert hasattr(language_service, 'supported_languages')
-        assert hasattr(dynamic_guardrails, 'professional_keywords')
-        assert hasattr(rate_limiter, 'check_rate_limit')
+        assert hasattr(language_service, "supported_languages")
+        assert hasattr(dynamic_guardrails, "professional_keywords")
+        assert hasattr(rate_limiter, "check_rate_limit")
 
     def test_large_payload_handling(self, test_client):
         """Test handling of large payloads."""
@@ -214,7 +224,7 @@ class TestPerformance:
         chat_data = {
             "user_input": large_message,
             "session_id": "large_payload_test",
-            "user_language": "en"
+            "user_language": "en",
         }
 
         start_time = time.time()
@@ -224,16 +234,22 @@ class TestPerformance:
         response_time = end_time - start_time
 
         # Should handle large payloads gracefully
-        assert response.status_code in [200, 422], "Should handle or reject large payloads"
-        assert response_time < 5.0, f"Large payload processing too slow: {response_time}s"
+        assert response.status_code in [
+            200,
+            422,
+        ], "Should handle or reject large payloads"
+        assert (
+            response_time < 5.0
+        ), f"Large payload processing too slow: {response_time}s"
 
     def test_database_connection_performance(self):
         """Test database connection performance."""
         # This would test actual database connections in a real environment
         # For now, we'll test the mock performance
 
-        with patch('app.history_store.get_history') as mock_get_history, \
-             patch('app.history_store.append_history') as mock_append_history:
+        with patch("app.history_store.get_history") as mock_get_history, patch(
+            "app.history_store.append_history"
+        ) as mock_append_history:
 
             mock_get_history.return_value = []
             mock_append_history.return_value = None
@@ -259,8 +275,9 @@ class TestScalability:
 
     def test_memory_growth_under_load(self):
         """Test memory growth under sustained load."""
-        import psutil
         import os
+
+        import psutil
 
         process = psutil.Process(os.getpid())
         initial_memory = process.memory_info().rss
@@ -280,8 +297,9 @@ class TestScalability:
 
     def test_cpu_usage_under_load(self):
         """Test CPU usage under load."""
-        import psutil
         import time
+
+        import psutil
 
         initial_cpu = psutil.cpu_percent(interval=1)
 

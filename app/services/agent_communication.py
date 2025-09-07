@@ -2,25 +2,30 @@
 Inter-agent Communication and Task Delegation System.
 """
 
-from typing import Dict, List, Any, Optional, Callable
-from datetime import datetime
 import asyncio
 import json
-from enum import Enum
-from dataclasses import dataclass
-import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+import sys
+from dataclasses import dataclass
+from datetime import datetime
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional
+
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 from config import GEMINI_API_KEY
 
 try:
-    from langchain_google_genai import ChatGoogleGenerativeAI
-    from langchain.prompts import PromptTemplate
     from langchain.chains import LLMChain
+    from langchain.prompts import PromptTemplate
+    from langchain_google_genai import ChatGoogleGenerativeAI
+
     COMMUNICATION_AVAILABLE = True
 except ImportError:
     COMMUNICATION_AVAILABLE = False
     print("Agent communication service requires langchain-google-genai")
+
 
 class TaskStatus(Enum):
     PENDING = "pending"
@@ -29,15 +34,18 @@ class TaskStatus(Enum):
     FAILED = "failed"
     DELEGATED = "delegated"
 
+
 class TaskPriority(Enum):
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
     CRITICAL = "critical"
 
+
 @dataclass
 class Task:
     """Represents a task that can be delegated between agents."""
+
     task_id: str
     description: str
     priority: TaskPriority
@@ -47,14 +55,22 @@ class Task:
     created_at: datetime
     deadline: Optional[datetime]
     dependencies: List[str]  # Task IDs this task depends on
-    subtasks: List[str]      # Subtask IDs
+    subtasks: List[str]  # Subtask IDs
     metadata: Dict[str, Any]
     result: Optional[Any]
 
+
 class AgentMessage:
     """Represents a message between agents."""
-    def __init__(self, sender: str, recipient: str, message_type: str,
-                 content: Any, metadata: Dict[str, Any] = None):
+
+    def __init__(
+        self,
+        sender: str,
+        recipient: str,
+        message_type: str,
+        content: Any,
+        metadata: Dict[str, Any] = None,
+    ):
         self.sender = sender
         self.recipient = recipient
         self.message_type = message_type
@@ -63,6 +79,7 @@ class AgentMessage:
         self.timestamp = datetime.now()
         self.message_id = f"{sender}_{recipient}_{int(self.timestamp.timestamp())}"
 
+
 class AgentCommunicationHub:
     """
     Central hub for inter-agent communication and task delegation.
@@ -70,20 +87,19 @@ class AgentCommunicationHub:
 
     def __init__(self):
         self.agents = {}  # {agent_name: agent_instance}
-        self.tasks = {}   # {task_id: Task}
+        self.tasks = {}  # {task_id: Task}
         self.messages = []  # List of AgentMessage objects
         self.task_queues = {}  # {agent_name: List[Task]}
         self.capabilities = {}  # {agent_name: List[str]}
 
         if COMMUNICATION_AVAILABLE:
             self.llm = ChatGoogleGenerativeAI(
-                model="gemini-2.5-pro",
-                temperature=0.2,
-                google_api_key=GEMINI_API_KEY
+                model="gemini-2.5-pro", temperature=0.2, google_api_key=GEMINI_API_KEY
             )
 
             # Task delegation analysis chain
-            self.delegation_prompt = PromptTemplate.from_template("""
+            self.delegation_prompt = PromptTemplate.from_template(
+                """
             Analyze if this task should be delegated to another agent.
 
             Current Agent: {current_agent}
@@ -107,15 +123,16 @@ class AgentCommunicationHub:
             Target_Agent: [agent_name or NONE]
             Reasoning: [brief explanation]
             Confidence: [HIGH/MEDIUM/LOW]
-            """)
-
-            self.delegation_chain = LLMChain(
-                llm=self.llm,
-                prompt=self.delegation_prompt,
-                verbose=False
+            """
             )
 
-    def register_agent(self, agent_name: str, agent_instance: Any, capabilities: List[str]):
+            self.delegation_chain = LLMChain(
+                llm=self.llm, prompt=self.delegation_prompt, verbose=False
+            )
+
+    def register_agent(
+        self, agent_name: str, agent_instance: Any, capabilities: List[str]
+    ):
         """Register an agent with the communication hub."""
         self.agents[agent_name] = agent_instance
         self.capabilities[agent_name] = capabilities
@@ -137,11 +154,15 @@ class AgentCommunicationHub:
         # If recipient exists, deliver the message
         if message.recipient in self.agents:
             recipient_agent = self.agents[message.recipient]
-            if hasattr(recipient_agent, 'receive_message'):
+            if hasattr(recipient_agent, "receive_message"):
                 # Use asyncio to handle async message delivery
-                asyncio.create_task(self._deliver_message_async(recipient_agent, message))
+                asyncio.create_task(
+                    self._deliver_message_async(recipient_agent, message)
+                )
 
-        print(f"📨 Message from {message.sender} to {message.recipient}: {message.message_type}")
+        print(
+            f"📨 Message from {message.sender} to {message.recipient}: {message.message_type}"
+        )
 
     async def _deliver_message_async(self, recipient_agent, message):
         """Asynchronously deliver message to recipient agent."""
@@ -150,9 +171,15 @@ class AgentCommunicationHub:
         except Exception as e:
             print(f"❌ Error delivering message to {message.recipient}: {e}")
 
-    def create_task(self, description: str, priority: TaskPriority = TaskPriority.MEDIUM,
-                   created_by: str = "system", deadline: Optional[datetime] = None,
-                   dependencies: List[str] = None, metadata: Dict[str, Any] = None) -> str:
+    def create_task(
+        self,
+        description: str,
+        priority: TaskPriority = TaskPriority.MEDIUM,
+        created_by: str = "system",
+        deadline: Optional[datetime] = None,
+        dependencies: List[str] = None,
+        metadata: Dict[str, Any] = None,
+    ) -> str:
         """Create a new task."""
         task_id = f"task_{int(datetime.now().timestamp())}_{len(self.tasks)}"
 
@@ -168,7 +195,7 @@ class AgentCommunicationHub:
             dependencies=dependencies or [],
             subtasks=[],
             metadata=metadata or {},
-            result=None
+            result=None,
         )
 
         self.tasks[task_id] = task
@@ -198,18 +225,22 @@ class AgentCommunicationHub:
             recipient=to_agent,
             message_type="task_delegation",
             content={"task_id": task_id, "task": task},
-            metadata={"delegated_from": from_agent}
+            metadata={"delegated_from": from_agent},
         )
         self.send_message(message)
 
         print(f"🔄 Delegated task {task_id} from {from_agent} to {to_agent}")
         return True
 
-    def analyze_delegation(self, current_agent: str, task_description: str,
-                          context: str = "") -> Dict[str, Any]:
+    def analyze_delegation(
+        self, current_agent: str, task_description: str, context: str = ""
+    ) -> Dict[str, Any]:
         """Analyze if a task should be delegated using AI."""
         if not COMMUNICATION_AVAILABLE:
-            return {"delegate": False, "reasoning": "Communication service not available"}
+            return {
+                "delegate": False,
+                "reasoning": "Communication service not available",
+            }
 
         # Get available agents and their capabilities
         available_agents = {}
@@ -225,29 +256,29 @@ class AgentCommunicationHub:
                 current_capabilities=", ".join(current_caps),
                 available_agents=json.dumps(available_agents, indent=2),
                 task_description=task_description,
-                context=context
+                context=context,
             )
 
             # Parse the result
-            lines = result.strip().split('\n')
+            lines = result.strip().split("\n")
             delegation_info = {}
 
             for line in lines:
-                if ':' in line:
-                    key, value = line.split(':', 1)
+                if ":" in line:
+                    key, value = line.split(":", 1)
                     delegation_info[key.strip().lower()] = value.strip()
 
-            delegate = delegation_info.get('delegate', 'NO').upper() == 'YES'
-            target_agent = delegation_info.get('target_agent', 'NONE')
+            delegate = delegation_info.get("delegate", "NO").upper() == "YES"
+            target_agent = delegation_info.get("target_agent", "NONE")
 
-            if target_agent == 'NONE':
+            if target_agent == "NONE":
                 target_agent = None
 
             return {
                 "delegate": delegate,
                 "target_agent": target_agent,
-                "reasoning": delegation_info.get('reasoning', ''),
-                "confidence": delegation_info.get('confidence', 'LOW')
+                "reasoning": delegation_info.get("reasoning", ""),
+                "confidence": delegation_info.get("confidence", "LOW"),
             }
 
         except Exception as e:
@@ -259,16 +290,20 @@ class AgentCommunicationHub:
         if agent_name not in self.task_queues:
             return 0
 
-        pending_tasks = [task for task in self.task_queues[agent_name]
-                        if task.status in [TaskStatus.PENDING, TaskStatus.IN_PROGRESS]]
+        pending_tasks = [
+            task
+            for task in self.task_queues[agent_name]
+            if task.status in [TaskStatus.PENDING, TaskStatus.IN_PROGRESS]
+        ]
         return len(pending_tasks)
 
     def get_agent_capabilities(self, agent_name: str) -> List[str]:
         """Get capabilities of a specific agent."""
         return self.capabilities.get(agent_name, [])
 
-    def find_best_agent_for_task(self, task_description: str,
-                                required_capabilities: List[str] = None) -> Optional[str]:
+    def find_best_agent_for_task(
+        self, task_description: str, required_capabilities: List[str] = None
+    ) -> Optional[str]:
         """Find the best agent for a specific task."""
         best_agent = None
         best_score = -1
@@ -297,8 +332,13 @@ class AgentCommunicationHub:
 
         return best_agent
 
-    def broadcast_message(self, sender: str, message_type: str, content: Any,
-                         metadata: Dict[str, Any] = None):
+    def broadcast_message(
+        self,
+        sender: str,
+        message_type: str,
+        content: Any,
+        metadata: Dict[str, Any] = None,
+    ):
         """Broadcast a message to all registered agents."""
         for agent_name in self.agents:
             if agent_name != sender:
@@ -307,7 +347,7 @@ class AgentCommunicationHub:
                     recipient=agent_name,
                     message_type=message_type,
                     content=content,
-                    metadata=metadata
+                    metadata=metadata,
                 )
                 self.send_message(message)
 
@@ -317,9 +357,12 @@ class AgentCommunicationHub:
             "total_agents": len(self.agents),
             "total_tasks": len(self.tasks),
             "total_messages": len(self.messages),
-            "agent_workloads": {agent: self.get_agent_workload(agent) for agent in self.agents},
-            "capabilities": self.capabilities
+            "agent_workloads": {
+                agent: self.get_agent_workload(agent) for agent in self.agents
+            },
+            "capabilities": self.capabilities,
         }
+
 
 # Global communication hub instance
 communication_hub = AgentCommunicationHub() if COMMUNICATION_AVAILABLE else None

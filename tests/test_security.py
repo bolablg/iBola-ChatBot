@@ -2,9 +2,10 @@
 Security tests for the chatbot system.
 """
 
-import pytest
 import json
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
+
+import pytest
 
 
 class TestInputSecurity:
@@ -17,14 +18,14 @@ class TestInputSecurity:
             "' UNION SELECT * FROM users; --",
             "admin'--",
             "1' OR '1'='1",
-            "'; EXEC xp_cmdshell('dir'); --"
+            "'; EXEC xp_cmdshell('dir'); --",
         ]
 
         for malicious_input in malicious_inputs:
             chat_data = {
                 "user_input": malicious_input,
                 "session_id": "security_test_sql",
-                "user_language": "en"
+                "user_language": "en",
             }
 
             response = test_client.post("/chat", json=chat_data)
@@ -41,14 +42,14 @@ class TestInputSecurity:
             "<img src=x onerror=alert('xss')>",
             "<svg onload=alert('xss')>",
             "javascript:alert('xss')",
-            "<iframe src='javascript:alert(\"xss\")'></iframe>"
+            "<iframe src='javascript:alert(\"xss\")'></iframe>",
         ]
 
         for xss_payload in xss_payloads:
             chat_data = {
                 "user_input": xss_payload,
                 "session_id": "security_test_xss",
-                "user_language": "en"
+                "user_language": "en",
             }
 
             response = test_client.post("/chat", json=chat_data)
@@ -65,14 +66,14 @@ class TestInputSecurity:
             "| cat /etc/passwd",
             "`whoami`",
             "$(rm -rf /)",
-            "; ls -la"
+            "; ls -la",
         ]
 
         for command in command_injections:
             chat_data = {
                 "user_input": f"Hello {command}",
                 "session_id": "security_test_cmd",
-                "user_language": "en"
+                "user_language": "en",
             }
 
             response = test_client.post("/chat", json=chat_data)
@@ -88,7 +89,7 @@ class TestInputSecurity:
         chat_data = {
             "user_input": long_input,
             "session_id": "security_test_buffer",
-            "user_language": "en"
+            "user_language": "en",
         }
 
         response = test_client.post("/chat", json=chat_data)
@@ -100,17 +101,13 @@ class TestInputSecurity:
 
     def test_null_byte_injection_prevention(self, test_client):
         """Test prevention of null byte injection."""
-        null_byte_inputs = [
-            "Hello\x00World",
-            "Test\x00\x00Input",
-            "\x00\x00\x00"
-        ]
+        null_byte_inputs = ["Hello\x00World", "Test\x00\x00Input", "\x00\x00\x00"]
 
         for null_input in null_byte_inputs:
             chat_data = {
                 "user_input": null_input,
                 "session_id": "security_test_null",
-                "user_language": "en"
+                "user_language": "en",
             }
 
             response = test_client.post("/chat", json=chat_data)
@@ -122,15 +119,15 @@ class TestInputSecurity:
         """Test prevention of unicode-based attacks."""
         unicode_attacks = [
             "Hello\u0000World",  # Null byte in unicode
-            "Test\u202E.txt",    # Right-to-left override
-            "\u200B\u200C\u200D", # Zero-width characters
+            "Test\u202E.txt",  # Right-to-left override
+            "\u200B\u200C\u200D",  # Zero-width characters
         ]
 
         for unicode_attack in unicode_attacks:
             chat_data = {
                 "user_input": unicode_attack,
                 "session_id": "security_test_unicode",
-                "user_language": "en"
+                "user_language": "en",
             }
 
             response = test_client.post("/chat", json=chat_data)
@@ -158,7 +155,7 @@ class TestSessionSecurity:
             chat_data = {
                 "user_input": "Hello",
                 "session_id": invalid_id,
-                "user_language": "en"
+                "user_language": "en",
             }
 
             response = test_client.post("/chat", json=chat_data)
@@ -171,7 +168,7 @@ class TestSessionSecurity:
         chat_data = {
             "user_input": "Hello",
             "session_id": short_id,
-            "user_language": "en"
+            "user_language": "en",
         }
         response = test_client.post("/chat", json=chat_data)
         assert response.status_code == 422
@@ -181,7 +178,7 @@ class TestSessionSecurity:
         chat_data = {
             "user_input": "Hello",
             "session_id": long_id,
-            "user_language": "en"
+            "user_language": "en",
         }
         response = test_client.post("/chat", json=chat_data)
         assert response.status_code == 422
@@ -191,7 +188,7 @@ class TestSessionSecurity:
         # Mock different responses for different sessions
         responses = {
             "session_1": "Response for session 1",
-            "session_2": "Response for session 2"
+            "session_2": "Response for session 2",
         }
 
         def mock_process_query(user_input, chat_history, session_id, user_language):
@@ -200,7 +197,7 @@ class TestSessionSecurity:
                 "agent_type": "professional",
                 "confidence": 0.8,
                 "actions": [],
-                "language": "en"
+                "language": "en",
             }
 
         mock_orchestrator.process_query.side_effect = mock_process_query
@@ -209,7 +206,7 @@ class TestSessionSecurity:
         chat_data_1 = {
             "user_input": "Hello",
             "session_id": "session_1",
-            "user_language": "en"
+            "user_language": "en",
         }
         response_1 = test_client.post("/chat", json=chat_data_1)
         assert response_1.status_code == 200
@@ -219,7 +216,7 @@ class TestSessionSecurity:
         chat_data_2 = {
             "user_input": "Hello",
             "session_id": "session_2",
-            "user_language": "en"
+            "user_language": "en",
         }
         response_2 = test_client.post("/chat", json=chat_data_2)
         assert response_2.status_code == 200
@@ -234,7 +231,7 @@ class TestRateLimitingSecurity:
         chat_data = {
             "user_input": "Test brute force",
             "session_id": "brute_force_test",
-            "user_language": "en"
+            "user_language": "en",
         }
 
         # Make many rapid requests
@@ -252,11 +249,13 @@ class TestRateLimitingSecurity:
         # Test with large payloads
         large_payloads = []
         for i in range(50):
-            large_payloads.append({
-                "user_input": f"Large message {i} " * 100,  # Large message
-                "session_id": f"dos_test_{i}",
-                "user_language": "en"
-            })
+            large_payloads.append(
+                {
+                    "user_input": f"Large message {i} " * 100,  # Large message
+                    "session_id": f"dos_test_{i}",
+                    "user_language": "en",
+                }
+            )
 
         responses = []
         for payload in large_payloads:
@@ -265,7 +264,9 @@ class TestRateLimitingSecurity:
 
         # Should handle gracefully without crashing
         successful_responses = [r for r in responses if r in [200, 422]]
-        assert len(successful_responses) > len(large_payloads) * 0.8  # At least 80% success rate
+        assert (
+            len(successful_responses) > len(large_payloads) * 0.8
+        )  # At least 80% success rate
 
     def test_abusive_pattern_detection(self, test_client):
         """Test detection of abusive patterns."""
@@ -280,7 +281,7 @@ class TestRateLimitingSecurity:
             chat_data = {
                 "user_input": pattern,
                 "session_id": "abusive_pattern_test",
-                "user_language": "en"
+                "user_language": "en",
             }
 
             response = test_client.post("/chat", json=chat_data)
@@ -295,12 +296,14 @@ class TestDataExposurePrevention:
     def test_error_message_safety(self, test_client, mock_orchestrator):
         """Test that error messages don't expose sensitive information."""
         # Mock orchestrator to raise an exception with sensitive info
-        mock_orchestrator.process_query.side_effect = Exception("Database connection failed: user=admin password=secret")
+        mock_orchestrator.process_query.side_effect = Exception(
+            "Database connection failed: user=admin password=secret"
+        )
 
         chat_data = {
             "user_input": "Test error handling",
             "session_id": "error_test",
-            "user_language": "en"
+            "user_language": "en",
         }
 
         response = test_client.post("/chat", json=chat_data)
@@ -325,7 +328,7 @@ class TestDataExposurePrevention:
         chat_data = {
             "user_input": "Test stack trace",
             "session_id": "stack_trace_test",
-            "user_language": "en"
+            "user_language": "en",
         }
 
         response = test_client.post("/chat", json=chat_data)
@@ -358,7 +361,7 @@ class TestAuthenticationSecurity:
         chat_data = {
             "user_input": html_input,
             "session_id": "sanitization_test",
-            "user_language": "en"
+            "user_language": "en",
         }
 
         response = test_client.post("/chat", json=chat_data)

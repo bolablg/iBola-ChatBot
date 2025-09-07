@@ -5,8 +5,10 @@ Redirect Agent - Handles off-topic questions and redirects users appropriately.
 from langchain.chains import ConversationalRetrievalChain
 from langchain.prompts import PromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
-from .retrievers import get_redirect_retriever
+
 import config
+
+from .retrievers import get_redirect_retriever
 
 # Specialized prompt for redirect agent
 REDIRECT_QA_TEMPLATE = """
@@ -36,11 +38,16 @@ Chat History:
 Follow Up Input: {question}
 Standalone redirect:"""
 
+
 class RedirectAgent:
     """Agent specialized in redirecting off-topic questions."""
 
     def __init__(self):
-        self.llm = ChatGoogleGenerativeAI(model="gemini-2.5-pro", temperature=0.6, google_api_key=config.GEMINI_API_KEY)
+        self.llm = ChatGoogleGenerativeAI(
+            model="gemini-2.5-pro",
+            temperature=0.6,
+            google_api_key=config.GEMINI_API_KEY,
+        )
         self.retriever = get_redirect_retriever()
         self.qa_prompt = PromptTemplate.from_template(REDIRECT_QA_TEMPLATE)
         self.condense_prompt = PromptTemplate.from_template(REDIRECT_CONDENSE_PROMPT)
@@ -50,7 +57,7 @@ class RedirectAgent:
             retriever=self.retriever,
             condense_question_prompt=self.condense_prompt,
             combine_docs_chain_kwargs={"prompt": self.qa_prompt},
-            return_source_documents=True
+            return_source_documents=True,
         )
 
     def invoke(self, inputs):
@@ -61,12 +68,13 @@ class RedirectAgent:
         """Return agent type identifier."""
         return "redirect"
 
-    def generate_redirect_response(self, user_input, chat_history="", redirect_count=0, session_id=""):
+    def generate_redirect_response(
+        self, user_input, chat_history="", redirect_count=0, session_id=""
+    ):
         """Generate a redirect response with enhanced progressive options."""
-        base_response = self.invoke({
-            "question": user_input,
-            "chat_history": chat_history
-        })
+        base_response = self.invoke(
+            {"question": user_input, "chat_history": chat_history}
+        )
 
         # Progressive redirect actions based on redirect count
         redirect_actions = []
@@ -81,54 +89,58 @@ class RedirectAgent:
         elif redirect_count == 2:
             # Second redirection: Explain it's not information you have, offer contact options, then end chat
             answer = "This is not information I have about Bolaji's professional journey or education. Please contact him directly for this information.\n\nChat ended. Thank you for your interest!"
-            redirect_actions.extend([
-                {
-                    "text": "📧 Send email",
-                    "type": "contact_email",
-                    "url": "mailto:hello@bolablg.com",
-                    "session_id": session_id,
-                    "chat_history": chat_history,
-                    "description": "Send an email to Bolaji",
-                    "primary": True,
-                    "end_chat": True  # This will end the chat but keep buttons clickable
-                },
-                {
-                    "text": "📅 Book appointment",
-                    "type": "contact_booking",
-                    "url": "https://calendar.app.google/Jg1r7af8Rk2jYqCV8",
-                    "session_id": session_id,
-                    "chat_history": chat_history,
-                    "description": "Schedule a meeting with Bolaji",
-                    "primary": True,
-                    "end_chat": True  # This will end the chat but keep buttons clickable
-                }
-            ])
+            redirect_actions.extend(
+                [
+                    {
+                        "text": "📧 Send email",
+                        "type": "contact_email",
+                        "url": "mailto:hello@bolablg.com",
+                        "session_id": session_id,
+                        "chat_history": chat_history,
+                        "description": "Send an email to Bolaji",
+                        "primary": True,
+                        "end_chat": True,  # This will end the chat but keep buttons clickable
+                    },
+                    {
+                        "text": "📅 Book appointment",
+                        "type": "contact_booking",
+                        "url": "https://calendar.app.google/Jg1r7af8Rk2jYqCV8",
+                        "session_id": session_id,
+                        "chat_history": chat_history,
+                        "description": "Schedule a meeting with Bolaji",
+                        "primary": True,
+                        "end_chat": True,  # This will end the chat but keep buttons clickable
+                    },
+                ]
+            )
 
         elif redirect_count >= 3:
             # Third or more redirections: Maintain contact options
             answer = "For questions outside Bolaji's professional journey or education, please contact him directly.\n\nChat ended. Thank you for your interest!"
-            redirect_actions.extend([
-                {
-                    "text": "📧 Send email",
-                    "type": "contact_email",
-                    "url": "mailto:hello@bolablg.com",
-                    "session_id": session_id,
-                    "chat_history": chat_history,
-                    "description": "Send an email to Bolaji",
-                    "primary": True,
-                    "end_chat": False
-                },
-                {
-                    "text": "📅 Book appointment",
-                    "type": "contact_booking",
-                    "url": "https://calendar.app.google/Jg1r7af8Rk2jYqCV8",
-                    "session_id": session_id,
-                    "chat_history": chat_history,
-                    "description": "Schedule a meeting with Bolaji",
-                    "primary": True,
-                    "end_chat": False
-                }
-            ])
+            redirect_actions.extend(
+                [
+                    {
+                        "text": "📧 Send email",
+                        "type": "contact_email",
+                        "url": "mailto:hello@bolablg.com",
+                        "session_id": session_id,
+                        "chat_history": chat_history,
+                        "description": "Send an email to Bolaji",
+                        "primary": True,
+                        "end_chat": False,
+                    },
+                    {
+                        "text": "📅 Book appointment",
+                        "type": "contact_booking",
+                        "url": "https://calendar.app.google/Jg1r7af8Rk2jYqCV8",
+                        "session_id": session_id,
+                        "chat_history": chat_history,
+                        "description": "Schedule a meeting with Bolaji",
+                        "primary": True,
+                        "end_chat": False,
+                    },
+                ]
+            )
 
         return {
             "answer": answer,
@@ -136,5 +148,6 @@ class RedirectAgent:
             "agent_type": "redirect",
             "redirect_count": redirect_count,
             "session_id": session_id,
-            "should_end_chat": redirect_count >= 2  # End chat after second redirect attempt
+            "should_end_chat": redirect_count
+            >= 2,  # End chat after second redirect attempt
         }

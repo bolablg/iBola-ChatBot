@@ -5,8 +5,10 @@ Professional Experience Agent - Handles questions about professional skills, exp
 from langchain.chains import ConversationalRetrievalChain
 from langchain.prompts import PromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
-from .retrievers import get_professional_retriever
+
 import config
+
+from .retrievers import get_professional_retriever
 
 # Specialized prompt for professional agent
 PROFESSIONAL_QA_TEMPLATE = """
@@ -65,21 +67,28 @@ Chat History:
 Follow Up Input: {question}
 Standalone question:"""
 
+
 class ProfessionalAgent:
     """Agent specialized in professional experience and skills."""
 
     def __init__(self):
-        self.llm = ChatGoogleGenerativeAI(model="gemini-2.5-pro", temperature=0.7, google_api_key=config.GEMINI_API_KEY)
+        self.llm = ChatGoogleGenerativeAI(
+            model="gemini-2.5-pro",
+            temperature=0.7,
+            google_api_key=config.GEMINI_API_KEY,
+        )
         self.retriever = get_professional_retriever()
         self.qa_prompt = PromptTemplate.from_template(PROFESSIONAL_QA_TEMPLATE)
-        self.condense_prompt = PromptTemplate.from_template(PROFESSIONAL_CONDENSE_PROMPT)
+        self.condense_prompt = PromptTemplate.from_template(
+            PROFESSIONAL_CONDENSE_PROMPT
+        )
 
         self.agent = ConversationalRetrievalChain.from_llm(
             llm=self.llm,
             retriever=self.retriever,
             condense_question_prompt=self.condense_prompt,
             combine_docs_chain_kwargs={"prompt": self.qa_prompt},
-            return_source_documents=True
+            return_source_documents=True,
         )
 
     def invoke(self, inputs):

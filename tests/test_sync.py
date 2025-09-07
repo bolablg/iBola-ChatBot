@@ -1,11 +1,10 @@
 import io
 import os
 import sys
-from types import SimpleNamespace, ModuleType
+from types import ModuleType, SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
-
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -61,4 +60,3 @@ def test_sync_folder_writes_files(tmp_path, monkeypatch):
     assert downloaded == b"content"
     assert sync_state[item["id"]] == item["modifiedTime"]
     assert updated == [f"New: {item['name']} (Modified: {item['modifiedTime']})"]
-

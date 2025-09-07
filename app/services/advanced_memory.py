@@ -2,24 +2,29 @@
 Advanced Conversation Memory Service with summarization and compression.
 """
 
-import json
 import hashlib
-from datetime import datetime, timedelta
-from typing import List, Dict, Any, Optional, Tuple
-from collections import deque
-import sys
+import json
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+import sys
+from collections import deque
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
+
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 from config import GEMINI_API_KEY
 
 try:
-    from langchain_google_genai import ChatGoogleGenerativeAI
-    from langchain.prompts import PromptTemplate
     from langchain.chains import LLMChain
+    from langchain.prompts import PromptTemplate
+    from langchain_google_genai import ChatGoogleGenerativeAI
+
     MEMORY_AVAILABLE = True
 except ImportError:
     MEMORY_AVAILABLE = False
     print("Advanced memory service requires langchain-google-genai")
+
 
 class AdvancedMemoryManager:
     """
@@ -34,13 +39,12 @@ class AdvancedMemoryManager:
 
         if MEMORY_AVAILABLE:
             self.llm = ChatGoogleGenerativeAI(
-                model="gemini-2.5-pro",
-                temperature=0.7,
-                google_api_key=GEMINI_API_KEY
+                model="gemini-2.5-pro", temperature=0.7, google_api_key=GEMINI_API_KEY
             )
 
             # Initialize summarization chain
-            self.summary_prompt = PromptTemplate.from_template("""
+            self.summary_prompt = PromptTemplate.from_template(
+                """
             Summarize the following conversation, focusing on:
             1. Key topics discussed
             2. User's main interests and questions
@@ -52,16 +56,16 @@ class AdvancedMemoryManager:
             Conversation:
             {conversation}
 
-            Summary:""")
+            Summary:"""
+            )
 
             self.summary_chain = LLMChain(
-                llm=self.llm,
-                prompt=self.summary_prompt,
-                verbose=False
+                llm=self.llm, prompt=self.summary_prompt, verbose=False
             )
 
             # Compression chain for old memories
-            self.compression_prompt = PromptTemplate.from_template("""
+            self.compression_prompt = PromptTemplate.from_template(
+                """
             Compress the following conversation summary into key facts and insights.
             Focus on the most important information that would be relevant for future conversations.
             Make it as concise as possible while preserving essential details.
@@ -69,31 +73,38 @@ class AdvancedMemoryManager:
             Original Summary:
             {summary}
 
-            Compressed Version:""")
-
-            self.compression_chain = LLMChain(
-                llm=self.llm,
-                prompt=self.compression_prompt,
-                verbose=False
+            Compressed Version:"""
             )
 
-    def get_memory(self, session_id: str) -> 'MemorySession':
+            self.compression_chain = LLMChain(
+                llm=self.llm, prompt=self.compression_prompt, verbose=False
+            )
+
+    def get_memory(self, session_id: str) -> "MemorySession":
         """Get or create memory session for user."""
         if session_id not in self.memory_store:
-            self.memory_store[session_id] = MemorySession(session_id, self.max_memory_items)
+            self.memory_store[session_id] = MemorySession(
+                session_id, self.max_memory_items
+            )
         return self.memory_store[session_id]
 
-    def add_interaction(self, session_id: str, user_message: str, agent_response: str,
-                       agent_type: str, metadata: Dict[str, Any] = None):
+    def add_interaction(
+        self,
+        session_id: str,
+        user_message: str,
+        agent_response: str,
+        agent_type: str,
+        metadata: Dict[str, Any] = None,
+    ):
         """Add a new interaction to memory."""
         memory_session = self.get_memory(session_id)
 
         interaction = {
-            'timestamp': datetime.now().isoformat(),
-            'user_message': user_message,
-            'agent_response': agent_response,
-            'agent_type': agent_type,
-            'metadata': metadata or {}
+            "timestamp": datetime.now().isoformat(),
+            "user_message": user_message,
+            "agent_response": agent_response,
+            "agent_type": agent_type,
+            "metadata": metadata or {},
         }
 
         memory_session.add_interaction(interaction)
@@ -118,11 +129,13 @@ class AdvancedMemoryManager:
         if memory_session.summaries:
             # Get the most recent summary
             recent_summary = memory_session.summaries[-1]
-            context.append({
-                'type': 'summary',
-                'content': recent_summary['summary'],
-                'timestamp': recent_summary['timestamp']
-            })
+            context.append(
+                {
+                    "type": "summary",
+                    "content": recent_summary["summary"],
+                    "timestamp": recent_summary["timestamp"],
+                }
+            )
 
         # Add recent interactions
         context.extend(recent)
@@ -134,11 +147,15 @@ class AdvancedMemoryManager:
         memory_session = self.get_memory(session_id)
 
         return {
-            'total_interactions': len(memory_session.interactions),
-            'total_summaries': len(memory_session.summaries),
-            'total_compressed': len(memory_session.compressed_memories),
-            'last_interaction': memory_session.interactions[-1]['timestamp'] if memory_session.interactions else None,
-            'memory_usage': len(memory_session.interactions) / self.max_memory_items
+            "total_interactions": len(memory_session.interactions),
+            "total_summaries": len(memory_session.summaries),
+            "total_compressed": len(memory_session.compressed_memories),
+            "last_interaction": (
+                memory_session.interactions[-1]["timestamp"]
+                if memory_session.interactions
+                else None
+            ),
+            "memory_usage": len(memory_session.interactions) / self.max_memory_items,
         }
 
     def _summarize_recent_interactions(self, session_id: str):
@@ -149,32 +166,38 @@ class AdvancedMemoryManager:
         memory_session = self.get_memory(session_id)
 
         # Get last N interactions to summarize
-        recent_interactions = memory_session.get_recent_interactions(self.summary_interval)
+        recent_interactions = memory_session.get_recent_interactions(
+            self.summary_interval
+        )
 
         if len(recent_interactions) < 3:  # Don't summarize if too few interactions
             return
 
         # Format conversation for summarization
-        conversation_text = "\n".join([
-            f"User: {interaction['user_message']}\nAssistant: {interaction['agent_response']}"
-            for interaction in recent_interactions
-        ])
+        conversation_text = "\n".join(
+            [
+                f"User: {interaction['user_message']}\nAssistant: {interaction['agent_response']}"
+                for interaction in recent_interactions
+            ]
+        )
 
         try:
             summary_result = self.summary_chain.run(conversation=conversation_text)
 
             summary = {
-                'timestamp': datetime.now().isoformat(),
-                'interactions_covered': len(recent_interactions),
-                'summary': summary_result.strip(),
-                'interaction_range': {
-                    'start': recent_interactions[0]['timestamp'],
-                    'end': recent_interactions[-1]['timestamp']
-                }
+                "timestamp": datetime.now().isoformat(),
+                "interactions_covered": len(recent_interactions),
+                "summary": summary_result.strip(),
+                "interaction_range": {
+                    "start": recent_interactions[0]["timestamp"],
+                    "end": recent_interactions[-1]["timestamp"],
+                },
             }
 
             memory_session.add_summary(summary)
-            print(f"📝 Summarized {len(recent_interactions)} interactions for session {session_id}")
+            print(
+                f"📝 Summarized {len(recent_interactions)} interactions for session {session_id}"
+            )
 
         except Exception as e:
             print(f"❌ Error summarizing interactions: {e}")
@@ -188,25 +211,31 @@ class AdvancedMemoryManager:
 
         # Compress oldest summaries if we have more than 5
         if len(memory_session.summaries) > 5:
-            oldest_summaries = memory_session.summaries[:-3]  # Keep last 3 summaries uncompressed
+            oldest_summaries = memory_session.summaries[
+                :-3
+            ]  # Keep last 3 summaries uncompressed
 
             for summary in oldest_summaries:
-                cache_key = hashlib.md5(summary['summary'].encode()).hexdigest()
+                cache_key = hashlib.md5(summary["summary"].encode()).hexdigest()
 
                 if cache_key not in self.compression_cache:
                     try:
-                        compressed = self.compression_chain.run(summary=summary['summary'])
+                        compressed = self.compression_chain.run(
+                            summary=summary["summary"]
+                        )
                         self.compression_cache[cache_key] = compressed.strip()
                     except Exception as e:
                         print(f"❌ Error compressing memory: {e}")
                         continue
 
                 # Replace summary with compressed version
-                summary['original_summary'] = summary['summary']
-                summary['summary'] = self.compression_cache[cache_key]
-                summary['compressed'] = True
+                summary["original_summary"] = summary["summary"]
+                summary["summary"] = self.compression_cache[cache_key]
+                summary["compressed"] = True
 
-            print(f"🗜️ Compressed {len(oldest_summaries)} old summaries for session {session_id}")
+            print(
+                f"🗜️ Compressed {len(oldest_summaries)} old summaries for session {session_id}"
+            )
 
     def search_memory(self, session_id: str, query: str, limit: int = 3) -> List[Dict]:
         """Search through conversation memory for relevant information."""
@@ -219,9 +248,13 @@ class AdvancedMemoryManager:
         relevant_interactions = []
         query_lower = query.lower()
 
-        for interaction in reversed(memory_session.interactions):  # Search most recent first
-            if (query_lower in interaction['user_message'].lower() or
-                query_lower in interaction['agent_response'].lower()):
+        for interaction in reversed(
+            memory_session.interactions
+        ):  # Search most recent first
+            if (
+                query_lower in interaction["user_message"].lower()
+                or query_lower in interaction["agent_response"].lower()
+            ):
                 relevant_interactions.append(interaction)
                 if len(relevant_interactions) >= limit:
                     break
@@ -267,8 +300,11 @@ class MemorySession:
 
     def get_interactions_by_agent(self, agent_type: str) -> List[Dict]:
         """Get all interactions with a specific agent type."""
-        return [interaction for interaction in self.interactions
-                if interaction['agent_type'] == agent_type]
+        return [
+            interaction
+            for interaction in self.interactions
+            if interaction["agent_type"] == agent_type
+        ]
 
 
 # Global memory manager instance

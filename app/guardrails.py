@@ -1,6 +1,8 @@
 # app/guardrails.py
-import re, unicodedata
+import re
+import unicodedata
 from typing import Tuple
+
 
 def _normalize(text: str) -> str:
     # lower, strip accents, collapse spaces
@@ -9,17 +11,67 @@ def _normalize(text: str) -> str:
     t = re.sub(r"\s+", " ", t)
     return t
 
+
 # Minimal multilingual coverage for your scope
 KEYWORDS = {
     # scope anchors
-    "bolaji","resume","cv","parcours","profil","career","carriere","work","travail","job","poste","project","projet",
-    "experience","experiences","skill","skills","competence","competences","gozem",
+    "bolaji",
+    "resume",
+    "cv",
+    "parcours",
+    "profil",
+    "career",
+    "carriere",
+    "work",
+    "travail",
+    "job",
+    "poste",
+    "project",
+    "projet",
+    "experience",
+    "experiences",
+    "skill",
+    "skills",
+    "competence",
+    "competences",
+    "gozem",
     # domains
-    "data","donnees","analytics","analytique","statistics","statistiques","ai","ia","machine learning",
-    "python","sql","google","bigquery","clickhouse","tableau","looker","dataform","chatbot",
+    "data",
+    "donnees",
+    "analytics",
+    "analytique",
+    "statistics",
+    "statistiques",
+    "ai",
+    "ia",
+    "machine learning",
+    "python",
+    "sql",
+    "google",
+    "bigquery",
+    "clickhouse",
+    "tableau",
+    "looker",
+    "dataform",
+    "chatbot",
     # education
-    "master","maitrise","maitrise","licence","bachelor","phd","doctorat","diplome","diploma",
-    "etudes","etude","formation","education","universite","ecole","school","university"
+    "master",
+    "maitrise",
+    "maitrise",
+    "licence",
+    "bachelor",
+    "phd",
+    "doctorat",
+    "diplome",
+    "diploma",
+    "etudes",
+    "etude",
+    "formation",
+    "education",
+    "universite",
+    "ecole",
+    "school",
+    "university",
 }
 
 # Targeted patterns (degrees, studies, roles)
@@ -30,6 +82,7 @@ PATTERNS = [
     r"\b(skill[s]?|competence[s]?|experience[s]?)\b",
     r"\b(projet[s]?|project[s]?)\b",
 ]
+
 
 def is_in_scope(message: str, chat_history: str = "") -> bool:
     """
@@ -53,6 +106,7 @@ def is_in_scope(message: str, chat_history: str = "") -> bool:
 
     # Threshold: 1+ is enough; continuity lets short follow-ups through
     return score >= 1
+
 
 # Example:
 # is_in_scope("as tu un master ?")  -> True
