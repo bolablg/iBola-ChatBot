@@ -40,9 +40,25 @@ def mock_external_services():
             "app.agents.redirect_agent.get_redirect_retriever"
         ) as mock_redirect_retriever,
         patch("app.agents.professional_agent.ChatGoogleGenerativeAI") as mock_llm,
+        patch("app.agents.education_agent.ChatGoogleGenerativeAI") as mock_llm_edu,
+        patch("app.agents.learning_agent.ChatGoogleGenerativeAI") as mock_llm_learn,
+        patch("app.agents.redirect_agent.ChatGoogleGenerativeAI") as mock_llm_redirect,
+        patch("app.agents.classification_agent.ChatGoogleGenerativeAI") as mock_llm_classification,
         patch(
             "app.agents.professional_agent.ConversationalRetrievalChain"
         ) as mock_chain,
+        patch(
+            "app.agents.education_agent.ConversationalRetrievalChain"
+        ) as mock_chain_edu,
+        patch(
+            "app.agents.learning_agent.ConversationalRetrievalChain"
+        ) as mock_chain_learn,
+        patch(
+            "app.agents.redirect_agent.ConversationalRetrievalChain"
+        ) as mock_chain_redirect,
+        patch("langchain_google_genai.chat_models._chat_with_retry") as mock_chat_retry,
+        patch("langchain_google_genai.chat_models.ChatGoogleGenerativeAI._chat_with_retry") as mock_chat_retry_instance,
+        patch("langchain.chains.llm.LLMChain") as mock_llm_chain,
     ):
 
         # Set up retriever mocks with proper BaseRetriever interface
@@ -64,21 +80,56 @@ def mock_external_services():
         mock_learn_retriever.return_value = MockRetriever()
         mock_redirect_retriever.return_value = MockRetriever()
 
-        # Set up LLM and chain mocks
-        mock_llm_instance = Mock()
-        mock_llm_instance.invoke = Mock(return_value="Mocked LLM response")
-        mock_llm_instance.generate = Mock(return_value=Mock(generations=[Mock(text="Mocked response")]))
-        mock_llm_instance.predict = Mock(return_value="Mocked response")
-        mock_llm.return_value = mock_llm_instance
+        # Create comprehensive LLM mock instances
+        def create_llm_mock():
+            mock_llm_instance = Mock()
+            mock_llm_instance.invoke = Mock(return_value="Mocked LLM response")
+            mock_llm_instance.generate = Mock(return_value=Mock(generations=[Mock(text="Mocked response")]))
+            mock_llm_instance.predict = Mock(return_value="Mocked response")
+            mock_llm_instance._generate = Mock(return_value=Mock(generations=[Mock(text="Mocked response")]))
+            mock_llm_instance.agenerate = Mock(return_value=Mock(generations=[Mock(text="Mocked response")]))
+            mock_llm_instance.generate_prompt = Mock(return_value=Mock(generations=[Mock(text="Mocked response")]))
+            mock_llm_instance.apredict = Mock(return_value="Mocked response")
+            return mock_llm_instance
 
-        mock_chain_instance = Mock()
-        mock_chain_instance.invoke = Mock(return_value={
-            "answer": "Mocked chain response",
-            "agent_type": "professional",
-            "confidence": 0.8,
+        # Set up all LLM mocks
+        for mock_llm in [mock_llm, mock_llm_edu, mock_llm_learn, mock_llm_redirect, mock_llm_classification]:
+            mock_llm.return_value = create_llm_mock()
+
+        # Create comprehensive chain mock instances
+        def create_chain_mock():
+            mock_chain_instance = Mock()
+            mock_chain_instance.invoke = Mock(return_value={
+                "answer": "Mocked chain response",
+                "agent_type": "professional",
+                "confidence": 0.8,
+            })
+            mock_chain_instance.run = Mock(return_value="Mocked chain response")
+            mock_chain_instance.predict = Mock(return_value="Mocked chain response")
+            mock_chain_instance._call = Mock(return_value={
+                "answer": "Mocked chain response",
+                "agent_type": "professional",
+                "confidence": 0.8,
+            })
+            return mock_chain_instance
+
+        # Set up all chain mocks
+        for mock_chain_obj in [mock_chain, mock_chain_edu, mock_chain_learn, mock_chain_redirect]:
+            mock_chain_obj.return_value = create_chain_mock()
+
+        # Mock the _chat_with_retry function
+        mock_chat_retry.return_value = Mock(generations=[Mock(text="Mocked response")])
+        mock_chat_retry_instance.return_value = Mock(generations=[Mock(text="Mocked response")])
+
+        # Mock LLMChain
+        mock_llm_chain_instance = Mock()
+        mock_llm_chain_instance.invoke = Mock(return_value={
+            "text": "Mocked classification response",
+            "agent_type": "professional"
         })
-        mock_chain_instance.run = Mock(return_value="Mocked chain response")
-        mock_chain.return_value = mock_chain_instance
+        mock_llm_chain_instance.run = Mock(return_value="professional")
+        mock_llm_chain_instance.predict = Mock(return_value="professional")
+        mock_llm_chain.return_value = mock_llm_chain_instance
 
         yield
 
