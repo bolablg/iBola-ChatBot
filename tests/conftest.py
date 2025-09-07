@@ -20,6 +20,35 @@ os.environ["LOG_LEVEL"] = "DEBUG"
 os.environ["DISABLE_RATE_LIMITING"] = "true"
 
 
+# Mock Google Generative AI services to prevent API calls
+@pytest.fixture(autouse=True)
+def mock_google_services():
+    """Mock Google AI services to prevent actual API calls during tests."""
+    with (
+        patch("langchain_google_genai.GoogleGenerativeAIEmbeddings") as mock_embeddings,
+        patch("langchain_google_genai.ChatGoogleGenerativeAI") as mock_chat,
+        patch("langchain_chroma.Chroma") as mock_chroma,
+    ):
+        # Mock embeddings
+        mock_embeddings_instance = Mock()
+        mock_embeddings_instance.embed_documents.return_value = [[0.1, 0.2, 0.3] * 100]  # Mock embedding vector
+        mock_embeddings_instance.embed_query.return_value = [0.1, 0.2, 0.3] * 100
+        mock_embeddings.return_value = mock_embeddings_instance
+
+        # Mock chat model
+        mock_chat_instance = Mock()
+        mock_chat_instance.invoke.return_value = Mock(content="Mock response", text="Mock response")
+        mock_chat.return_value = mock_chat_instance
+
+        # Mock Chroma vector store
+        mock_chroma_instance = Mock()
+        mock_chroma_instance.similarity_search.return_value = [Mock(page_content="Mock document", metadata={})]
+        mock_chroma_instance.max_marginal_relevance_search.return_value = [Mock(page_content="Mock document", metadata={})]
+        mock_chroma.return_value = mock_chroma_instance
+
+        yield
+
+
 # Mock external dependencies
 @pytest.fixture(autouse=True)
 def mock_external_services():
