@@ -178,15 +178,18 @@ class TestPerformance:
 
     def test_rate_limiter_performance(self):
         """Test rate limiter performance under load."""
+        import asyncio
         from app.services.rate_limiting import rate_limiter
 
-        start_time = time.time()
+        async def run_checks():
+            # Test rate limiting decisions for multiple clients
+            for i in range(1000):
+                client_ip = f"192.168.1.{i % 255}"
+                endpoint = "/chat"
+                allowed, info = await rate_limiter.check_rate_limit(client_ip, endpoint)
 
-        # Test rate limiting decisions for multiple clients
-        for i in range(1000):
-            client_ip = f"192.168.1.{i % 255}"
-            endpoint = "/chat"
-            allowed, info = rate_limiter.check_rate_limit(client_ip, endpoint)
+        start_time = time.time()
+        asyncio.run(run_checks())
 
         end_time = time.time()
         total_time = end_time - start_time

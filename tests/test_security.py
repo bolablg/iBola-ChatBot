@@ -183,7 +183,8 @@ class TestSessionSecurity:
         response = test_client.post("/chat", json=chat_data)
         assert response.status_code == 422
 
-    def test_session_isolation(self, test_client, mock_orchestrator):
+    @patch("app.main.orchestrator")
+    def test_session_isolation(self, mock_orchestrator_patch, test_client):
         """Test that sessions are properly isolated."""
         # Mock different responses for different sessions
         responses = {
@@ -200,7 +201,7 @@ class TestSessionSecurity:
                 "language": "en",
             }
 
-        mock_orchestrator.process_query.side_effect = mock_process_query
+        mock_orchestrator_patch.process_query.side_effect = mock_process_query
 
         # Test session 1
         chat_data_1 = {
@@ -293,10 +294,11 @@ class TestRateLimitingSecurity:
 class TestDataExposurePrevention:
     """Test prevention of data exposure."""
 
-    def test_error_message_safety(self, test_client, mock_orchestrator):
+    @patch("app.main.orchestrator")
+    def test_error_message_safety(self, mock_orchestrator_patch, test_client):
         """Test that error messages don't expose sensitive information."""
         # Mock orchestrator to raise an exception with sensitive info
-        mock_orchestrator.process_query.side_effect = Exception(
+        mock_orchestrator_patch.process_query.side_effect = Exception(
             "Database connection failed: user=admin password=secret"
         )
 
@@ -320,10 +322,11 @@ class TestDataExposurePrevention:
         # Should contain user-friendly message
         assert "technical difficulties" in error_message.lower()
 
-    def test_stack_trace_exposure_prevention(self, test_client, mock_orchestrator):
+    @patch("app.main.orchestrator")
+    def test_stack_trace_exposure_prevention(self, mock_orchestrator_patch, test_client):
         """Test that stack traces are not exposed to users."""
         # Mock orchestrator to raise an exception
-        mock_orchestrator.process_query.side_effect = ValueError("Test error")
+        mock_orchestrator_patch.process_query.side_effect = ValueError("Test error")
 
         chat_data = {
             "user_input": "Test stack trace",
