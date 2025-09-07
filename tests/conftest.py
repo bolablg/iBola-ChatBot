@@ -81,15 +81,35 @@ def mock_external_services():
 
         # Create comprehensive LLM mock instances
         def create_llm_mock():
-            mock_llm_instance = Mock()
-            mock_llm_instance.invoke = Mock(return_value="Mocked LLM response")
-            mock_llm_instance.generate = Mock(return_value=Mock(generations=[Mock(text="Mocked response")]))
-            mock_llm_instance.predict = Mock(return_value="Mocked response")
-            mock_llm_instance._generate = Mock(return_value=Mock(generations=[Mock(text="Mocked response")]))
-            mock_llm_instance.agenerate = Mock(return_value=Mock(generations=[Mock(text="Mocked response")]))
-            mock_llm_instance.generate_prompt = Mock(return_value=Mock(generations=[Mock(text="Mocked response")]))
-            mock_llm_instance.apredict = Mock(return_value="Mocked response")
-            return mock_llm_instance
+            from langchain_core.runnables import Runnable
+
+            # Create a mock that inherits from Runnable
+            class MockLLM(Runnable):
+                def __init__(self):
+                    super().__init__()
+
+                def invoke(self, *args, **kwargs):
+                    return "Mocked LLM response"
+
+                def generate(self, *args, **kwargs):
+                    return Mock(generations=[Mock(text="Mocked response")])
+
+                def predict(self, *args, **kwargs):
+                    return "Mocked response"
+
+                def _generate(self, *args, **kwargs):
+                    return Mock(generations=[Mock(text="Mocked response")])
+
+                def agenerate(self, *args, **kwargs):
+                    return Mock(generations=[Mock(text="Mocked response")])
+
+                def generate_prompt(self, *args, **kwargs):
+                    return Mock(generations=[Mock(text="Mocked response")])
+
+                def apredict(self, *args, **kwargs):
+                    return "Mocked response"
+
+            return MockLLM()
 
         # Set up all LLM mocks
         for mock_llm in [mock_llm, mock_llm_edu, mock_llm_learn, mock_llm_redirect, mock_llm_classification]:
@@ -127,6 +147,10 @@ def mock_external_services():
         })
         mock_llm_chain_instance.run = Mock(return_value="professional")
         mock_llm_chain_instance.predict = Mock(return_value="professional")
+        mock_llm_chain_instance.__call__ = Mock(return_value={
+            "text": "Mocked classification response",
+            "agent_type": "professional"
+        })
         mock_llm_chain.return_value = mock_llm_chain_instance
 
         yield
