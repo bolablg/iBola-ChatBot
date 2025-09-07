@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iBola Chatbot</title>
+    <title>iBola Minimal Test</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
@@ -13,7 +13,7 @@
                 <h1 class="ibola-title">
                     <span class="ibola-icon">🤖</span>
                     <span class="ibola-text">iBola</span>
-                    <span class="ibola-subtitle">AI Assistant</span>
+                    <span class="ibola-subtitle">Minimal Test</span>
                 </h1>
             </div>
             <div class="header-controls">
@@ -28,33 +28,19 @@
                 </div>
             </div>
         </div>
+
         <div class="chat-box" id="chat-box">
             <div class="typing-indicator" id="typing-indicator" style="display: none;">
                 <span></span><span></span><span></span>
             </div>
         </div>
+
         <form class="chat-input-form" id="chat-form">
             <input type="text" id="user-input" placeholder="">
-            <button type="submit">&#x2191;</button>
+            <button type="submit">↑</button>
         </form>
-        <!-- Quick actions hidden for unified user experience -->
-        <div class="quick-actions" id="quick-actions" style="display: none;">
-            <!-- Hidden to maintain single system appearance -->
-        </div>
-    </div>
-    <script src="/static/script.js"></script>
-
-    <!-- The Modal -->
-    <div id="appointment-modal" class="modal">
-        <div class="modal-content">
-            <span class="modal-close-btn">&times;</span>
-            <iframe id="modal-iframe" src="" frameborder="0"></iframe>
-        </div>
     </div>
 
-    <!-- Agent Transition Modal - Hidden for unified user experience -->
-    <div id="agent-transition-modal" class="agent-transition-modal" style="display: none;">
-        <!-- Hidden to maintain single system appearance -->
-    </div>
+    <script src="/static/script_minimal.js"></script>
 </body>
 </html>

@@ -28,7 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const sessionId = `web-session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     let lastUserQuestion = "";
     let currentAgentType = 'redirect';
-    let chatEnded = false; // Track if chat has ended
     let agentTransitionTimeout = null;
     let userLanguage = 'en';
     let redirectCount = 0;
@@ -136,197 +135,6 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('✅ Message added to chat box');
     };
 
-    const addActionButtons = (actions) => {
-        console.log('🎯 addActionButtons called with:', actions);
-
-        const buttonContainer = document.createElement('div');
-        buttonContainer.classList.add('message', 'bot-message', 'action-buttons-container');
-
-        // Separate primary and secondary actions
-        const primaryActions = actions.filter(action => action.primary === true);
-        const secondaryActions = actions.filter(action => action.primary !== true);
-
-        // Add primary actions first (if any)
-        if (primaryActions.length > 0) {
-            const primaryContainer = document.createElement('div');
-            primaryContainer.classList.add('primary-actions');
-
-            primaryActions.forEach(action => {
-                const button = createActionButton(action);
-                button.classList.add('primary-action');
-                primaryContainer.appendChild(button);
-
-                // Set up auto-timeout for primary actions
-                if (action.auto_timeout) {
-                    setTimeout(() => {
-                        if (!button.clicked) {
-                            showSecondaryActions(secondaryActions, buttonContainer);
-                        }
-                    }, action.auto_timeout);
-                }
-            });
-            buttonContainer.appendChild(primaryContainer);
-        }
-
-        // Add secondary actions
-        if (secondaryActions.length > 0) {
-            const secondaryContainer = document.createElement('div');
-            secondaryContainer.classList.add('secondary-actions');
-            secondaryContainer.style.display = primaryActions.length > 0 ? 'none' : 'flex';
-
-            secondaryActions.forEach(action => {
-                const button = createActionButton(action);
-                button.classList.add('secondary-action');
-                secondaryContainer.appendChild(button);
-            });
-            buttonContainer.appendChild(secondaryContainer);
-        }
-
-        chatBox.insertBefore(buttonContainer, typingIndicator);
-        chatBox.scrollTop = chatBox.scrollHeight;
-    };
-
-    const createActionButton = (action) => {
-        const button = document.createElement('button');
-        button.textContent = action.text;
-        button.classList.add('action-button');
-        button.title = action.description;
-
-        button.addEventListener('click', () => {
-            button.clicked = true;
-            console.log('🔘 Action button clicked:', action.type);
-
-                switch (action.type) {
-                    case 'readjust_prompt':
-                        // Show a prompt to help rephrase the question
-                        const newMessage = prompt('Please ask a precise question about Bolaji\'s professional journey or education:');
-                        if (newMessage && newMessage.trim()) {
-                            userInput.value = newMessage.trim();
-                            chatForm.dispatchEvent(new Event('submit'));
-                        }
-                        break;
-
-                    case 'contact_booking':
-                        // Open booking calendar in popup
-                        const bookingWindow = window.open(action.url, 'bookingPopup', 'width=600,height=600,scrollbars=yes,resizable=yes');
-                        if (bookingWindow) {
-                            bookingWindow.focus();
-                        }
-                        // Send alert to Google Chat
-                        sendContactAlert('booking_request', action.session_id, action.chat_history);
-
-                        // Note: Chat ending is now handled immediately when the message is displayed
-                        // No need to end chat again when buttons are clicked
-                        break;
-
-                    case 'contact_email':
-                        // Open email client
-                        window.open(action.url, '_blank');
-                        // Send alert to Google Chat
-                        sendContactAlert('email_request', action.session_id, action.chat_history);
-
-                        // Note: Chat ending is now handled immediately when the message is displayed
-                        // No need to end chat again when buttons are clicked
-                        break;
-
-                    case 'end_chat':
-                        // End the conversation
-                        typeMessage('Thank you for your interest! Feel free to reach out via email or book a call if you\'d like to discuss further.', 'bot');
-                        break;
-
-                    default:
-                        console.log('Unknown action type:', action.type);
-                }
-        });
-
-        return button;
-    };
-
-    const showSecondaryActions = (secondaryActions, container) => {
-        const secondaryContainer = container.querySelector('.secondary-actions');
-        if (secondaryContainer) {
-            secondaryContainer.style.display = 'flex';
-            // Add a message about secondary options
-            typeMessage("Here are some additional options:", 'bot');
-        }
-    };
-
-    const sendContactAlert = async (contactType, sessionId, chatHistory) => {
-        console.log(`📤 Sending ${contactType} alert for session ${sessionId}`);
-
-        try {
-            // Send alert to backend which will forward to Google Chat
-            const response = await fetch('/contact-alert', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    contact_type: contactType,
-                    session_id: sessionId,
-                    chat_history: chatHistory,
-                    timestamp: new Date().toISOString()
-                })
-            });
-
-            if (response.ok) {
-                console.log('✅ Contact alert sent successfully to Google Chat');
-            } else {
-                console.error('❌ Failed to send contact alert:', response.status);
-            }
-        } catch (error) {
-            console.error('❌ Error sending contact alert:', error);
-        }
-    };
-
-    // Disable user input after chat ends
-    const disableUserInput = () => {
-        console.log('🚫 Disabling user input after chat ended');
-        console.log('userInput element:', userInput);
-        console.log('sendButton element:', sendButton);
-        console.log('chatForm element:', chatForm);
-
-        if (userInput) {
-            userInput.disabled = true;
-            userInput.placeholder = 'Chat ended. Use the buttons above to contact Bolaji directly.';
-            userInput.classList.add('chat-disabled');
-            console.log('✅ User input disabled and placeholder updated');
-            console.log('User input current state:', {
-                disabled: userInput.disabled,
-                placeholder: userInput.placeholder,
-                classList: userInput.classList.toString()
-            });
-        } else {
-            console.error('❌ userInput element not found!');
-        }
-
-        if (sendButton) {
-            sendButton.disabled = true;
-            sendButton.classList.add('chat-disabled');
-            console.log('✅ Send button disabled');
-            console.log('Send button current state:', {
-                disabled: sendButton.disabled,
-                classList: sendButton.classList.toString()
-            });
-        } else {
-            console.error('❌ sendButton element not found!');
-        }
-
-        // Also disable form submission completely
-        if (chatForm) {
-            chatForm.style.pointerEvents = 'none';
-            chatForm.onsubmit = (e) => {
-                e.preventDefault();
-                return false;
-            };
-            console.log('✅ Form submission disabled');
-        } else {
-            console.error('❌ chatForm element not found!');
-        }
-
-        console.log('✅ User input fully disabled - no more messages can be sent');
-    };
-
     const typeMessage = (text, sender = 'bot', question = null, speed = 40) => {
         console.log('📝 typeMessage called with:', { text, sender, speed });
         return new Promise(resolve => {
@@ -380,10 +188,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Agent transition hidden from user for unified experience
-        // if (showTransition) {
-        //     showAgentTransition(newAgentType);
-        // }
+        // Show transition modal if requested
+        if (showTransition) {
+            showAgentTransition(newAgentType);
+        }
 
         // Update quick actions visibility
         if (quickActions) {
@@ -393,33 +201,32 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(`🔄 Switched from ${oldAgentType} to ${newAgentType} agent`);
     };
 
-    // Agent transition functionality disabled for unified user experience
-    // const showAgentTransition = (agentType) => {
-    //     const transitionIcon = document.getElementById('transition-icon');
-    //     const transitionTitle = document.getElementById('transition-title');
-    //     const transitionMessage = document.getElementById('transition-message');
-    //
-    //     if (transitionIcon && transitionTitle && transitionMessage) {
-    //         const config = agentConfigs[agentType];
-    //         if (config) {
-    //             transitionIcon.textContent = config.icon;
-    //             transitionTitle.textContent = config.name;
-    //             transitionMessage.textContent = `Switching to ${config.name.toLowerCase()}...`;
-    //         }
-    //
-    //         if (agentTransitionModal) {
-    //             agentTransitionModal.style.display = 'flex';
-    //
-    //             if (agentTransitionTimeout) {
-    //                 clearTimeout(agentTransitionTimeout);
-    //             }
-    //
-    //             agentTransitionTimeout = setTimeout(() => {
-    //                 agentTransitionModal.style.display = 'none';
-    //             }, 1500);
-    //         }
-    //     }
-    // };
+    const showAgentTransition = (agentType) => {
+        const transitionIcon = document.getElementById('transition-icon');
+        const transitionTitle = document.getElementById('transition-title');
+        const transitionMessage = document.getElementById('transition-message');
+
+        if (transitionIcon && transitionTitle && transitionMessage) {
+            const config = agentConfigs[agentType];
+            if (config) {
+                transitionIcon.textContent = config.icon;
+                transitionTitle.textContent = config.name;
+                transitionMessage.textContent = `Switching to ${config.name.toLowerCase()}...`;
+            }
+
+            if (agentTransitionModal) {
+                agentTransitionModal.style.display = 'flex';
+
+                if (agentTransitionTimeout) {
+                    clearTimeout(agentTransitionTimeout);
+                }
+
+                agentTransitionTimeout = setTimeout(() => {
+                    agentTransitionModal.style.display = 'none';
+                }, 1500);
+            }
+        }
+    };
 
     // === FORM SUBMISSION ===
     if (chatForm) {
@@ -429,17 +236,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const messageText = userInput.value.trim();
             if (!messageText) return;
-
-            // Prevent sending messages if chat has ended
-            if (chatEnded) {
-                console.log('🚫 Chat has ended, preventing message send');
-                // Provide visual feedback that the action was blocked
-                userInput.style.animation = 'shake 0.5s';
-                setTimeout(() => {
-                    userInput.style.animation = '';
-                }, 500);
-                return;
-            }
 
             // Handle special commands
             if (["no", "non", "nein"].includes(messageText.toLowerCase())) {
@@ -466,7 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        user_input: messageText,
+                        message: messageText,
                         session_id: sessionId,
                         language: userLanguage,
                         agent_type: currentAgentType
@@ -483,24 +279,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     // Display bot response
-                    if (data.answer) {
-                        await typeMessage(data.answer, 'bot');
-                    } else if (data.response) {
+                    if (data.response) {
                         await typeMessage(data.response, 'bot');
                     }
 
                     // Handle actions if present
                     if (data.actions && data.actions.length > 0) {
-                        addActionButtons(data.actions);
-                    }
-
-                    // Handle chat ending if specified
-                    if (data.should_end_chat && !chatEnded) {
-                        console.log('🎯 Chat ending detected! should_end_chat:', data.should_end_chat, 'chatEnded:', chatEnded);
-                        chatEnded = true;
-                        // Disable user input immediately after displaying the message and buttons
-                        // The chat ended message is now included in the backend response
-                        disableUserInput();
+                        // addActionButtons(data.actions); // Would need to implement this
                     }
                 } else {
                     console.error('❌ Backend error:', response.status);
