@@ -102,3 +102,6 @@ _conf/*.json
 
 .DS_Store
 **/.DS_Store
+.env.backup_before_fix
+original_env.txt
+.env.example

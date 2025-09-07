@@ -59,6 +59,10 @@ class GoogleCloudHandler(logging.Handler):
             return
 
         try:
+            # Only log WARNING, ERROR, and DEBUG to GCP (filter out INFO and below)
+            if record.levelno not in [logging.WARNING, logging.ERROR, logging.DEBUG]:
+                return
+
             # Format log entry
             log_entry = self.format(record)
 
@@ -79,14 +83,18 @@ class GoogleCloudHandler(logging.Handler):
             if record.exc_info:
                 json_payload['exception'] = self.formatException(record.exc_info)
 
-            # Log to Google Cloud
+            # Add additional context for important logs
+            if hasattr(record, 'user_input'):
+                json_payload['user_input'] = record.user_input
+            if hasattr(record, 'response_time'):
+                json_payload['response_time'] = record.response_time
+
+            # Log to Google Cloud with appropriate severity
             if record.levelno >= logging.ERROR:
                 self.logger.log_struct(json_payload, severity='ERROR')
             elif record.levelno >= logging.WARNING:
                 self.logger.log_struct(json_payload, severity='WARNING')
-            elif record.levelno >= logging.INFO:
-                self.logger.log_struct(json_payload, severity='INFO')
-            else:
+            else:  # DEBUG
                 self.logger.log_struct(json_payload, severity='DEBUG')
 
         except Exception as e:

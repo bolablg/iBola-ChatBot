@@ -49,6 +49,7 @@ jobs:
           GEMINI_API_KEY: test_key_placeholder
           GCHAT_WEBHOOK_URL: https://test-webhook.com
           GCP_PROJECT_ID: test-project
+          REDIRECT_LOG_SHEET_ID: test_sheet_id_placeholder
         run: |
           pytest tests/test_agents.py tests/test_services.py -v --cov=app --cov-report=xml --cov-report=term
 
@@ -57,6 +58,7 @@ jobs:
           GEMINI_API_KEY: test_key_placeholder
           GCHAT_WEBHOOK_URL: https://test-webhook.com
           GCP_PROJECT_ID: test-project
+          REDIRECT_LOG_SHEET_ID: test_sheet_id_placeholder
         run: |
           pytest tests/test_integration.py -v --cov-append --cov-report=xml
 
@@ -65,6 +67,7 @@ jobs:
           GEMINI_API_KEY: test_key_placeholder
           GCHAT_WEBHOOK_URL: https://test-webhook.com
           GCP_PROJECT_ID: test-project
+          REDIRECT_LOG_SHEET_ID: test_sheet_id_placeholder
         run: |
           pytest tests/test_security.py -v --cov-append --cov-report=xml
 
@@ -73,6 +76,7 @@ jobs:
           GEMINI_API_KEY: test_key_placeholder
           GCHAT_WEBHOOK_URL: https://test-webhook.com
           GCP_PROJECT_ID: test-project
+          REDIRECT_LOG_SHEET_ID: test_sheet_id_placeholder
         run: |
           pytest tests/test_performance.py -v --cov-append --cov-report=xml
 
@@ -113,8 +117,13 @@ jobs:
 
       - name: Create OAuth credentials file
         run: |
-          echo "${{ secrets.GOOGLE_OAUTH_KEY }}" > _conf/ibola_agent_oauth.json
-          echo "GOOGLE_OAUTH_CREDENTIALS_PATH=$(pwd)/_conf/ibola_agent_oauth.json" >> $GITHUB_ENV
+          echo "${{ secrets.GOOGLE_OAUTH_KEY }}" > ${{ secrets.GOOGLE_OAUTH_KEY_PATH }}
+          echo "GOOGLE_OAUTH_CREDENTIALS_PATH=${{ secrets.GOOGLE_OAUTH_KEY_PATH }}" >> $GITHUB_ENV
+
+      - name: Create GCP SA credentials file
+        run: |
+          echo "${{ secrets.GCP_SA_KEY }}" > ${{ secrets.GCP_SA_KEY_PATH }}
+          echo "GCP_SA_CREDENTIALS_PATH=${{ secrets.GCP_SA_KEY_PATH }}" >> $GITHUB_ENV
 
       - name: Authenticate to Google Cloud
         id: auth
@@ -129,7 +138,7 @@ jobs:
 
       - name: Create GOOGLE OAUTH Token
         run: |
-          echo "${{ secrets.GOOGLE_OAUTH_TOKEN }}" > _conf/token.json
+          echo "${{ secrets.GOOGLE_OAUTH_TOKEN }}" > ${{ secrets.GOOGLE_OAUTH_TOKEN_PATH }}
 
       - name: Build and push Docker image
         run: |
@@ -148,7 +157,9 @@ jobs:
             --set-env-vars "GDRIVE_FOLDER_ID=${{ secrets.GDRIVE_FOLDER_ID }}" \
             --set-env-vars "GCHAT_WEBHOOK_URL=${{ secrets.GCHAT_WEBHOOK_URL }}" \
             --set-env-vars "DATA_PATH=${{ secrets.DATA_PATH }}" \
-            --set-env-vars "DB_PATH=${{ secrets.DB_PATH }}"
+            --set-env-vars "DB_PATH=${{ secrets.DB_PATH }}" \
+            --set-env-vars "REDIRECT_LOG_SHEET_ID=${{ secrets.REDIRECT_LOG_SHEET_ID }}" \
+            --set-env-vars "GCP_SA_CREDENTIALS_PATH=${{ env.GCP_SA_CREDENTIALS_PATH }}"
 
       - name: Install beta component
         run: |

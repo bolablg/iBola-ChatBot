@@ -51,6 +51,12 @@ DB_PATH = os.path.join(os.path.dirname(__file__), "chroma_db")
 # 4. Create a new webhook and copy the URL
 GCHAT_WEBHOOK_URL = os.getenv("GCHAT_WEBHOOK_URL")
 
+# Google Sheets Integration (for redirect logging)
+# To get a spreadsheet ID:
+# 1. Create a new Google Sheet
+# 2. The ID is in the URL: https://docs.google.com/spreadsheets/d/[SPREADSHEET_ID]/edit
+REDIRECT_LOG_SHEET_ID = os.getenv("REDIRECT_LOG_SHEET_ID")
+
 # Server Configuration
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", "8000"))
