@@ -40,7 +40,7 @@ class RedirectAgent:
     """Agent specialized in redirecting off-topic questions."""
 
     def __init__(self):
-        self.llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.6, google_api_key=config.GEMINI_API_KEY)
+        self.llm = ChatGoogleGenerativeAI(model="gemini-2.5-pro", temperature=0.6, google_api_key=config.GEMINI_API_KEY)
         self.retriever = get_redirect_retriever()
         self.qa_prompt = PromptTemplate.from_template(REDIRECT_QA_TEMPLATE)
         self.condense_prompt = PromptTemplate.from_template(REDIRECT_CONDENSE_PROMPT)

@@ -48,7 +48,7 @@ class LearningAgent:
     """Agent specialized in providing learning advice."""
 
     def __init__(self):
-        self.llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.8, google_api_key=config.GEMINI_API_KEY)  # Slightly higher temperature for creative advice
+        self.llm = ChatGoogleGenerativeAI(model="gemini-2.5-pro", temperature=0.8, google_api_key=config.GEMINI_API_KEY)  # Slightly higher temperature for creative advice
         self.retriever = get_learning_retriever()
         self.qa_prompt = PromptTemplate.from_template(LEARNING_QA_TEMPLATE)
         self.condense_prompt = PromptTemplate.from_template(LEARNING_CONDENSE_PROMPT)

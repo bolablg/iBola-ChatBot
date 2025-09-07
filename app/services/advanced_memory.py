@@ -34,8 +34,8 @@ class AdvancedMemoryManager:
 
         if MEMORY_AVAILABLE:
             self.llm = ChatGoogleGenerativeAI(
-                model="gemini-1.5-flash",
-                temperature=0.1,
+                model="gemini-2.5-pro",
+                temperature=0.7,
                 google_api_key=GEMINI_API_KEY
             )
 
