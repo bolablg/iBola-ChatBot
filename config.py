@@ -6,6 +6,7 @@ import os
 from typing import Optional
 from pathlib import Path
 
+
 # Load environment variables from .env files
 def load_env_files():
     """Load environment variables from .env files in order of priority."""
@@ -14,13 +15,14 @@ def load_env_files():
 
     # List of .env files to load in order of priority (later files override earlier ones)
     env_files = [
-        project_root / '.env.local',  # Local overrides (highest priority)
-        project_root / '.env',        # Default environment file
+        project_root / ".env.local",  # Local overrides (highest priority)
+        project_root / ".env",  # Default environment file
     ]
 
     # Load .env files if they exist
     try:
         from dotenv import load_dotenv
+
         for env_file in env_files:
             if env_file.exists():
                 print(f"Loading environment variables from {env_file}")
@@ -30,6 +32,7 @@ def load_env_files():
     except Exception as e:
         print(f"Warning: Error loading .env files: {e}")
 
+
 # Load environment variables from .env files first
 load_env_files()
 
@@ -37,7 +40,10 @@ load_env_files()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 # Google Cloud Configuration
-GCP_SA_CREDENTIALS_PATH = os.getenv("GCP_SA_CREDENTIALS_PATH", os.path.join(os.path.dirname(__file__), "_conf", "ibola_agent_sa.json"))
+GCP_SA_CREDENTIALS_PATH = os.getenv(
+    "GCP_SA_CREDENTIALS_PATH",
+    os.path.join(os.path.dirname(__file__), "_conf", "ibola_agent_sa.json"),
+)
 GCP_PROJECT_ID = os.getenv("GCP_PROJECT_ID", "your-gcp-project-id")
 
 # Vector Database Configuration
@@ -76,16 +82,16 @@ FEEDBACK_HISTORY_FILE = os.path.join(GUARDRAILS_DATA_DIR, "conversation_feedback
 
 # Language Support
 SUPPORTED_LANGUAGES = [
-    'en',  # English
-    'fr',  # French
-    'es',  # Spanish
-    'de',  # German
-    'it',  # Italian
-    'pt',  # Portuguese
-    'ru',  # Russian
-    'zh',  # Chinese
-    'ja',  # Japanese
-    'ko',  # Korean
+    "en",  # English
+    "fr",  # French
+    "es",  # Spanish
+    "de",  # German
+    "it",  # Italian
+    "pt",  # Portuguese
+    "ru",  # Russian
+    "zh",  # Chinese
+    "ja",  # Japanese
+    "ko",  # Korean
 ]
 
 # Contact Information
@@ -93,16 +99,17 @@ CONTACT_EMAIL = "hello@bolablg.com"
 CALENDAR_BOOKING_URL = "https://calendar.google.com/calendar/appointments/schedules/AcZssZ3YeidR5Og4YSGZIlxUIlDAf0AiRA6N8-MAzr-Sy55BtbKhBLXkfa8M_P_92eokXRnayLVlEXiW?gv=true"
 LINKEDIN_URL = "https://linkedin.com/in/bolablg"
 
+
 # Validation
 def validate_config():
     """Validate that all required configuration is present."""
-    required_vars = ['GEMINI_API_KEY']
+    required_vars = ["GEMINI_API_KEY"]
     missing_vars = [var for var in required_vars if not globals().get(var)]
 
     if missing_vars:
         project_root = Path(__file__).parent
-        env_file = project_root / '.env'
-        env_example = project_root / 'sample.env'
+        env_file = project_root / ".env"
+        env_example = project_root / "sample.env"
 
         error_msg = f"Missing required environment variables: {', '.join(missing_vars)}"
         error_msg += "\n\nTo fix this:"
@@ -116,7 +123,10 @@ def validate_config():
 
     # Optional but recommended
     if not GCHAT_WEBHOOK_URL:
-        print("Warning: GCHAT_WEBHOOK_URL not set. Contact alerts will not be sent to Google Chat.")
+        print(
+            "Warning: GCHAT_WEBHOOK_URL not set. Contact alerts will not be sent to Google Chat."
+        )
+
 
 # Call validation on import
 validate_config()
