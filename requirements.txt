@@ -29,3 +29,8 @@ pytest-mock
 requests
 duckduckgo-search
 langchain-community
+sentence-transformers
+faiss-cpu
+asyncio-mqtt
+google-api-python-client
+google-auth

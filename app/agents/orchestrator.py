@@ -12,6 +12,7 @@ from .classification_agent import ClassificationAgent
 from app.services.dynamic_guardrails import dynamic_guardrails
 from app.services.google_chat_alert import google_chat_alert
 from app.services.language_detection import language_service
+from app.services.google_sheets_logger import google_sheets_logger
 
 class AgentOrchestrator:
     """Routes queries to appropriate specialized agents."""
@@ -205,7 +206,7 @@ class AgentOrchestrator:
             # Fallback to legacy dynamic guardrails routing
             return self.route_query(user_input, chat_history, session_id)
 
-    def process_query(self, user_input: str, chat_history: List[Tuple[str, str]] = None, session_id: str = "", user_language: str = "en") -> Dict[str, Any]:
+    def process_query(self, user_input: str, chat_history: List[Tuple[str, str]] = None, session_id: str = "", user_language: str = "en", request_info: Dict[str, Any] = None) -> Dict[str, Any]:
         if chat_history is None:
             chat_history = []
         """
@@ -254,6 +255,18 @@ class AgentOrchestrator:
             )
 
             result['redirect_count'] = redirect_count
+
+            # Log redirect event to Google Sheets for classifier analysis
+            self._log_redirect_event(
+                user_input=user_input,
+                chat_history=chat_history,
+                session_id=session_id,
+                redirect_count=redirect_count,
+                agent_type=agent_type,
+                confidence=routing_result.get('confidence', 0.0),
+                routing_result=routing_result,
+                request_info=request_info
+            )
 
             return result
 
@@ -327,7 +340,77 @@ class AgentOrchestrator:
             'conversation_active': session_id in self.session_data
         }
 
+    def _log_redirect_event(self, user_input: str, chat_history: List[Tuple[str, str]],
+                           session_id: str, redirect_count: int, agent_type: str,
+                           confidence: float, routing_result: Dict[str, Any], request_info: Dict[str, Any] = None):
+        """Log redirect event to Google Sheets for classifier analysis."""
+        if not google_sheets_logger:
+            return
+
+        try:
+            from datetime import datetime
+
+            # Create chat history summary
+            chat_history_summary = ""
+            if chat_history:
+                # Take last 3 exchanges for summary
+                recent_history = chat_history[-3:]
+                chat_history_summary = " | ".join([
+                    f"User: {h[0][:50]}... -> AI: {h[1][:50]}..."
+                    for h in recent_history
+                ])
+
+            # Extract device type from user agent
+            device_type = "unknown"
+            if request_info and request_info.get('user_agent'):
+                user_agent = request_info['user_agent'].lower()
+                if 'mobile' in user_agent or 'android' in user_agent or 'iphone' in user_agent:
+                    device_type = "mobile"
+                elif 'tablet' in user_agent or 'ipad' in user_agent:
+                    device_type = "tablet"
+                else:
+                    device_type = "desktop"
+
+            # Prepare redirect data
+            redirect_data = {
+                'timestamp': datetime.now().isoformat(),
+                'session_id': session_id,
+                'ip_address': request_info.get('ip_address', 'unknown') if request_info else 'unknown',
+                'user_agent': request_info.get('user_agent', 'unknown') if request_info else 'unknown',
+                'browser_language': request_info.get('accept_language', 'unknown') if request_info else 'unknown',
+                'user_language': self.session_data.get(session_id, {}).get('language', 'en'),
+                'user_input': user_input,
+                'redirect_count': redirect_count,
+                'agent_type': agent_type,
+                'confidence': confidence,
+                'redirect_reason': routing_result.get('reasoning', 'Classification routing'),
+                'chat_history_summary': chat_history_summary,
+                'response_time': 0,  # Will be updated later if available
+                'source_documents_count': 0,  # Not applicable for redirects
+                'cache_hit': False,  # Not applicable for redirects
+                'device_type': device_type,
+                'referrer': request_info.get('referrer', 'unknown') if request_info else 'unknown',
+                'classification_agent_used': routing_result.get('classification_agent_used', False),
+                'fallback_applied': routing_result.get('fallback_applied', False),
+                'fallback_reason': routing_result.get('fallback_reason', '')
+            }
+
+            # Log to Google Sheets
+            success = google_sheets_logger.log_redirect_event(redirect_data)
+
+            if success:
+                print(f"📊 Redirect logged to Google Sheets: {user_input[:50]}...")
+            else:
+                print("⚠️  Failed to log redirect to Google Sheets")
+
+        except Exception as e:
+            print(f"❌ Error logging redirect event: {e}")
+
     def reset_session(self, session_id: str):
         """Reset session data."""
         if session_id in self.session_data:
             del self.session_data[session_id]
+
+
+# Global orchestrator instance
+orchestrator = AgentOrchestrator()

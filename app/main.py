@@ -388,12 +388,21 @@ async def chat(payload: ChatInput, request: Request):
         # Convert history format for ConversationalRetrievalChain (expects list of tuples)
         chat_history_tuples = [(h[0], h[1]) for h in history]
 
+        # Collect request information for logging
+        request_info = {
+            'ip_address': request.client.host if request.client else 'unknown',
+            'user_agent': request.headers.get('user-agent', 'unknown'),
+            'referrer': request.headers.get('referer', 'unknown'),
+            'accept_language': request.headers.get('accept-language', 'unknown')
+        }
+
         # Get the full response from the orchestrator with enhanced features
         result = orchestrator.process_query(
             user_input,
             chat_history_tuples,
             session_id,
-            user_language
+            user_language,
+            request_info
         )
 
         # Calculate response time
