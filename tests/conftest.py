@@ -17,6 +17,7 @@ os.environ["GEMINI_API_KEY"] = "test_gemini_key"
 os.environ["GCHAT_WEBHOOK_URL"] = "https://test-webhook.com"
 os.environ["GCP_PROJECT_ID"] = "test-project"
 os.environ["LOG_LEVEL"] = "DEBUG"
+os.environ["DISABLE_RATE_LIMITING"] = "true"
 
 
 # Mock external dependencies

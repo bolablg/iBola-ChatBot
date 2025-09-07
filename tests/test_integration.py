@@ -14,29 +14,32 @@ class TestSystemIntegration:
 
     def test_full_chat_flow(self, test_client, mock_orchestrator):
         """Test complete chat interaction flow."""
-        # Mock the orchestrator to return different responses
-        mock_orchestrator.process_query.side_effect = [
-            {
-                "answer": "Hello! I'm iBola, your AI assistant specialized in professional backgrounds.",
-                "agent_type": "professional",
-                "confidence": 0.9,
-                "actions": [],
-                "language": "en",
-            },
-            {
-                "answer": "I have extensive experience in data science and AI, working at Gozem and Rintio.",
-                "agent_type": "professional",
-                "confidence": 0.95,
-                "actions": [
-                    {
-                        "text": "🎓 Learn about Education",
-                        "type": "agent_switch",
-                        "agent": "education",
-                    }
-                ],
-                "language": "en",
-            },
-        ]
+        from unittest.mock import patch
+
+        # Mock the orchestrator's process_query method
+        with patch.object(mock_orchestrator, 'process_query') as mock_process:
+            mock_process.side_effect = [
+                {
+                    "answer": "Hello! I'm iBola, your AI assistant specialized in professional backgrounds.",
+                    "agent_type": "professional",
+                    "confidence": 0.9,
+                    "actions": [],
+                    "language": "en",
+                },
+                {
+                    "answer": "I have extensive experience in data science and AI, working at Gozem and Rintio.",
+                    "agent_type": "professional",
+                    "confidence": 0.95,
+                    "actions": [
+                        {
+                            "text": "🎓 Learn about Education",
+                            "type": "agent_switch",
+                            "agent": "education",
+                        }
+                    ],
+                    "language": "en",
+                },
+            ]
 
         # Test welcome endpoint
         welcome_data = {
@@ -95,8 +98,11 @@ class TestSystemIntegration:
 
     def test_error_handling_integration(self, test_client, mock_orchestrator):
         """Test error handling across the system."""
+        from unittest.mock import patch
+
         # Mock orchestrator to raise an exception
-        mock_orchestrator.process_query.side_effect = Exception("Test error")
+        with patch.object(mock_orchestrator, 'process_query') as mock_process:
+            mock_process.side_effect = Exception("Test error")
 
         chat_data = {
             "user_input": "Test message",
@@ -133,16 +139,19 @@ class TestSystemIntegration:
 
     def test_session_management_integration(self, test_client, mock_orchestrator):
         """Test session management across endpoints."""
+        from unittest.mock import patch
+
         session_id = "session_mgmt_test_001"
 
         # Mock orchestrator for consistent responses
-        mock_orchestrator.process_query.return_value = {
-            "answer": "Test response",
-            "agent_type": "professional",
-            "confidence": 0.8,
-            "actions": [],
-            "language": "en",
-        }
+        with patch.object(mock_orchestrator, 'process_query') as mock_process:
+            mock_process.return_value = {
+                "answer": "Test response",
+                "agent_type": "professional",
+                "confidence": 0.8,
+                "actions": [],
+                "language": "en",
+            }
 
         # Make several chat requests with same session
         for i in range(3):
@@ -228,13 +237,16 @@ class TestPerformanceIntegration:
 
     def test_response_time_performance(self, test_client, mock_orchestrator):
         """Test response time performance."""
-        mock_orchestrator.process_query.return_value = {
-            "answer": "Performance test response",
-            "agent_type": "professional",
-            "confidence": 0.9,
-            "actions": [],
-            "language": "en",
-        }
+        from unittest.mock import patch
+
+        with patch.object(mock_orchestrator, 'process_query') as mock_process:
+            mock_process.return_value = {
+                "answer": "Performance test response",
+                "agent_type": "professional",
+                "confidence": 0.9,
+                "actions": [],
+                "language": "en",
+            }
 
         chat_data = {
             "user_input": "Performance test",
@@ -259,17 +271,19 @@ class TestPerformanceIntegration:
 
     def test_concurrent_requests_performance(self, test_client, mock_orchestrator):
         """Test handling of concurrent requests."""
+        from unittest.mock import patch
         import asyncio
 
         import aiohttp
 
-        mock_orchestrator.process_query.return_value = {
-            "answer": "Concurrent test response",
-            "agent_type": "professional",
-            "confidence": 0.8,
-            "actions": [],
-            "language": "en",
-        }
+        with patch.object(mock_orchestrator, 'process_query') as mock_process:
+            mock_process.return_value = {
+                "answer": "Concurrent test response",
+                "agent_type": "professional",
+                "confidence": 0.8,
+                "actions": [],
+                "language": "en",
+            }
 
         # Test multiple concurrent requests
         async def make_request(session, i):
