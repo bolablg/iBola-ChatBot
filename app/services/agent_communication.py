@@ -77,7 +77,7 @@ class AgentCommunicationHub:
 
         if COMMUNICATION_AVAILABLE:
             self.llm = ChatGoogleGenerativeAI(
-                model="gemini-1.5-flash",
+                model="gemini-2.5-pro",
                 temperature=0.2,
                 google_api_key=GEMINI_API_KEY
             )

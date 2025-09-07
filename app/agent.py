@@ -82,7 +82,7 @@ QA_PROMPT = PromptTemplate.from_template(qa_template)
 
 def get_agent():
     """Initialize and return the conversational RAG agent."""
-    llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.7, google_api_key=config.GEMINI_API_KEY)
+    llm = ChatGoogleGenerativeAI(model="gemini-2.5-pro", temperature=0.7, google_api_key=config.GEMINI_API_KEY)
     retriever = get_retriever()
     
     agent = ConversationalRetrievalChain.from_llm(

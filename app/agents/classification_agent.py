@@ -89,8 +89,8 @@ class ClassificationAgent:
             r'\b(course|tutorial|training|resource)\b'
         ]
         self.llm = ChatGoogleGenerativeAI(
-            model="gemini-1.5-flash",
-            temperature=0.1,  # Low temperature for consistent classification
+            model="gemini-2.5-pro",
+            temperature=0.7,  # Low temperature for consistent classification
             google_api_key=config.GEMINI_API_KEY
         )
 

@@ -48,7 +48,7 @@ class EducationAgent:
     """Agent specialized in educational background."""
 
     def __init__(self):
-        self.llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.7, google_api_key=config.GEMINI_API_KEY)
+        self.llm = ChatGoogleGenerativeAI(model="gemini-2.5-pro", temperature=0.7, google_api_key=config.GEMINI_API_KEY)
         self.retriever = get_education_retriever()
         self.qa_prompt = PromptTemplate.from_template(EDUCATION_QA_TEMPLATE)
         self.condense_prompt = PromptTemplate.from_template(EDUCATION_CONDENSE_PROMPT)
