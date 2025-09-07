@@ -26,6 +26,9 @@ class RateLimiter:
     """Advanced rate limiting with multiple strategies."""
 
     def __init__(self):
+        # Check if rate limiting is disabled (useful for testing)
+        self.disabled = os.getenv("DISABLE_RATE_LIMITING", "false").lower() == "true"
+
         # Rate limit configurations
         self.global_limits = {
             "requests_per_minute": 60,
@@ -93,6 +96,15 @@ class RateLimiter:
         Returns:
             Tuple[bool, Dict]: (allowed, metadata)
         """
+        # Skip rate limiting if disabled (useful for testing)
+        if self.disabled:
+            return True, {
+                "rate_limited": False,
+                "remaining_requests": 999,
+                "reset_time": int(time.time()) + 3600,
+                "disabled": True,
+            }
+
         if self._is_blocked(client_ip):
             return False, {
                 "blocked": True,
