@@ -119,10 +119,11 @@ class TestAgentOrchestrator:
 
     def test_orchestrator_initialization(self):
         """Test orchestrator initialization."""
-        with patch("app.agents.orchestrator.ProfessionalAgent"), patch(
-            "app.agents.orchestrator.EducationAgent"
-        ), patch("app.agents.orchestrator.LearningAgent"), patch(
-            "app.agents.orchestrator.RedirectAgent"
+        with (
+            patch("app.agents.orchestrator.ProfessionalAgent"),
+            patch("app.agents.orchestrator.EducationAgent"),
+            patch("app.agents.orchestrator.LearningAgent"),
+            patch("app.agents.orchestrator.RedirectAgent"),
         ):
 
             orchestrator = AgentOrchestrator()
@@ -135,10 +136,11 @@ class TestAgentOrchestrator:
 
     def test_greeting_detection(self):
         """Test greeting detection."""
-        with patch("app.agents.orchestrator.ProfessionalAgent"), patch(
-            "app.agents.orchestrator.EducationAgent"
-        ), patch("app.agents.orchestrator.LearningAgent"), patch(
-            "app.agents.orchestrator.RedirectAgent"
+        with (
+            patch("app.agents.orchestrator.ProfessionalAgent"),
+            patch("app.agents.orchestrator.EducationAgent"),
+            patch("app.agents.orchestrator.LearningAgent"),
+            patch("app.agents.orchestrator.RedirectAgent"),
         ):
 
             orchestrator = AgentOrchestrator()
@@ -149,10 +151,11 @@ class TestAgentOrchestrator:
 
     def test_contact_detection(self):
         """Test contact request detection."""
-        with patch("app.agents.orchestrator.ProfessionalAgent"), patch(
-            "app.agents.orchestrator.EducationAgent"
-        ), patch("app.agents.orchestrator.LearningAgent"), patch(
-            "app.agents.orchestrator.RedirectAgent"
+        with (
+            patch("app.agents.orchestrator.ProfessionalAgent"),
+            patch("app.agents.orchestrator.EducationAgent"),
+            patch("app.agents.orchestrator.LearningAgent"),
+            patch("app.agents.orchestrator.RedirectAgent"),
         ):
 
             orchestrator = AgentOrchestrator()
@@ -163,10 +166,11 @@ class TestAgentOrchestrator:
 
     def test_session_management(self):
         """Test session data management."""
-        with patch("app.agents.orchestrator.ProfessionalAgent"), patch(
-            "app.agents.orchestrator.EducationAgent"
-        ), patch("app.agents.orchestrator.LearningAgent"), patch(
-            "app.agents.orchestrator.RedirectAgent"
+        with (
+            patch("app.agents.orchestrator.ProfessionalAgent"),
+            patch("app.agents.orchestrator.EducationAgent"),
+            patch("app.agents.orchestrator.LearningAgent"),
+            patch("app.agents.orchestrator.RedirectAgent"),
         ):
 
             orchestrator = AgentOrchestrator()

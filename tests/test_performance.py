@@ -15,10 +15,11 @@ class TestPerformance:
     @pytest.fixture
     def mock_orchestrator(self):
         """Mock orchestrator for performance testing."""
-        with patch("app.agents.orchestrator.ProfessionalAgent"), patch(
-            "app.agents.orchestrator.EducationAgent"
-        ), patch("app.agents.orchestrator.LearningAgent"), patch(
-            "app.agents.orchestrator.RedirectAgent"
+        with (
+            patch("app.agents.orchestrator.ProfessionalAgent"),
+            patch("app.agents.orchestrator.EducationAgent"),
+            patch("app.agents.orchestrator.LearningAgent"),
+            patch("app.agents.orchestrator.RedirectAgent"),
         ):
 
             from app.agents.orchestrator import AgentOrchestrator
@@ -247,9 +248,10 @@ class TestPerformance:
         # This would test actual database connections in a real environment
         # For now, we'll test the mock performance
 
-        with patch("app.history_store.get_history") as mock_get_history, patch(
-            "app.history_store.append_history"
-        ) as mock_append_history:
+        with (
+            patch("app.history_store.get_history") as mock_get_history,
+            patch("app.history_store.append_history") as mock_append_history,
+        ):
 
             mock_get_history.return_value = []
             mock_append_history.return_value = None
