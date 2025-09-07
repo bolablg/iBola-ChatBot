@@ -82,7 +82,10 @@ class RedirectAgent:
         # Determine response and actions based on redirect count
         if redirect_count == 0:
             # Initial redirect: Use the base response from the agent
-            answer = base_response.get("answer", "I specialize in questions about Bolaji's professional background.")
+            answer = base_response.get(
+                "answer",
+                "I specialize in questions about Bolaji's professional background.",
+            )
             redirect_actions = []
 
         elif redirect_count == 1:

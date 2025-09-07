@@ -92,13 +92,13 @@ class TestRedirectAgent:
 
     def test_redirect_response_generation(self):
         """Test redirect response generation."""
-        with patch(
-            "app.agents.redirect_agent.get_redirect_retriever"
-        ) as mock_retriever, patch(
-            "app.agents.redirect_agent.ChatGoogleGenerativeAI"
-        ) as mock_llm, patch(
-            "app.agents.redirect_agent.ConversationalRetrievalChain"
-        ) as mock_chain:
+        with (
+            patch("app.agents.redirect_agent.get_redirect_retriever") as mock_retriever,
+            patch("app.agents.redirect_agent.ChatGoogleGenerativeAI") as mock_llm,
+            patch(
+                "app.agents.redirect_agent.ConversationalRetrievalChain"
+            ) as mock_chain,
+        ):
 
             # Set up proper mocks
             mock_retriever.return_value = Mock()
