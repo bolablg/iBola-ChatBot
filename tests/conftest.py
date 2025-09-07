@@ -57,7 +57,6 @@ def mock_external_services():
             "app.agents.redirect_agent.ConversationalRetrievalChain"
         ) as mock_chain_redirect,
         patch("langchain_google_genai.chat_models._chat_with_retry") as mock_chat_retry,
-        patch("langchain_google_genai.chat_models.ChatGoogleGenerativeAI._chat_with_retry") as mock_chat_retry_instance,
         patch("langchain.chains.llm.LLMChain") as mock_llm_chain,
     ):
 
@@ -119,7 +118,6 @@ def mock_external_services():
 
         # Mock the _chat_with_retry function
         mock_chat_retry.return_value = Mock(generations=[Mock(text="Mocked response")])
-        mock_chat_retry_instance.return_value = Mock(generations=[Mock(text="Mocked response")])
 
         # Mock LLMChain
         mock_llm_chain_instance = Mock()
