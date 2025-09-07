@@ -28,6 +28,7 @@ pytest-asyncio
 pytest-mock
 requests
 duckduckgo-search
+ddgs
 langchain-community
 sentence-transformers
 faiss-cpu
