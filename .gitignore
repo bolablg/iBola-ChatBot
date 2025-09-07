@@ -113,3 +113,4 @@ chroma_db/
 **/.DS_Store
 .env.backup_before_fix
 .env.example
+deploy_error.txt
