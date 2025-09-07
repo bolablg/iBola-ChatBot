@@ -44,11 +44,25 @@ def mock_external_services():
         ) as mock_chain,
     ):
 
-        # Set up retriever mocks
-        mock_prof_retriever.return_value = Mock()
-        mock_edu_retriever.return_value = Mock()
-        mock_learn_retriever.return_value = Mock()
-        mock_redirect_retriever.return_value = Mock()
+        # Set up retriever mocks with proper BaseRetriever interface
+        from langchain_core.retrievers import BaseRetriever
+
+        # Create mock retrievers that pass Pydantic validation
+        mock_prof_retriever_obj = Mock(spec=BaseRetriever)
+        mock_prof_retriever_obj.get_relevant_documents = Mock(return_value=[])
+        mock_prof_retriever.return_value = mock_prof_retriever_obj
+
+        mock_edu_retriever_obj = Mock(spec=BaseRetriever)
+        mock_edu_retriever_obj.get_relevant_documents = Mock(return_value=[])
+        mock_edu_retriever.return_value = mock_edu_retriever_obj
+
+        mock_learn_retriever_obj = Mock(spec=BaseRetriever)
+        mock_learn_retriever_obj.get_relevant_documents = Mock(return_value=[])
+        mock_learn_retriever.return_value = mock_learn_retriever_obj
+
+        mock_redirect_retriever_obj = Mock(spec=BaseRetriever)
+        mock_redirect_retriever_obj.get_relevant_documents = Mock(return_value=[])
+        mock_redirect_retriever.return_value = mock_redirect_retriever_obj
 
         # Set up LLM and chain mocks
         mock_llm_instance = Mock()
