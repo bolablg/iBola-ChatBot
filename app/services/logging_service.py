@@ -152,7 +152,7 @@ class LoggingService:
 
         # Add file handler (only if directory exists or can be created)
         try:
-            log_dir = 'logs'
+            log_dir = 'local/logs'
             if not os.path.exists(log_dir):
                 os.makedirs(log_dir, exist_ok=True)
 
@@ -181,8 +181,8 @@ class LoggingService:
         else:
             self.logger.info("Google Cloud Logging not configured or credentials not found")
 
-        # Create logs directory if it doesn't exist
-        os.makedirs('logs', exist_ok=True)
+        # Create local logs directory if it doesn't exist
+        os.makedirs('local/logs', exist_ok=True)
 
         self.logger.info("Logging service initialized")
 

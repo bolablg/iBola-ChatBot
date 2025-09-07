@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -20,12 +20,12 @@ jobs:
 
       - name: Authenticate to Google Cloud
         id: auth
-        uses: google-github-actions/auth@v1
+        uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v1
+        uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ secrets.GCP_PROJECT }}
 
@@ -92,14 +92,14 @@ jobs:
           echo "- **Performance Tests**: $(pytest tests/test_performance.py --collect-only -q | wc -l) tests" >> $GITHUB_STEP_SUMMARY
 
       - name: Upload coverage reports
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           file: ./coverage.xml
           flags: unittests
           name: codecov-umbrella
 
       - name: Upload test artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: |
@@ -113,7 +113,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Create OAuth credentials file
         run: |
@@ -127,12 +127,12 @@ jobs:
 
       - name: Authenticate to Google Cloud
         id: auth
-        uses: google-github-actions/auth@v1
+        uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v1
+        uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ secrets.GCP_PROJECT }}
 
@@ -159,7 +159,7 @@ jobs:
             --set-env-vars "DATA_PATH=${{ secrets.DATA_PATH }}" \
             --set-env-vars "DB_PATH=${{ secrets.DB_PATH }}" \
             --set-env-vars "REDIRECT_LOG_SHEET_ID=${{ secrets.REDIRECT_LOG_SHEET_ID }}" \
-            --set-env-vars "GCP_SA_CREDENTIALS_PATH=${{ env.GCP_SA_CREDENTIALS_PATH }}"
+            --set-env-vars "GCP_SA_CRENDIALS_PATH=${{ env.GCP_SA_CREDENTIALS_PATH }}"
 
       - name: Install beta component
         run: |
