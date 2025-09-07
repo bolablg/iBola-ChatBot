@@ -49,24 +49,37 @@ def mock_external_services():
         from langchain_core.retrievers import BaseRetriever
 
         # Create mock retrievers that pass Pydantic validation and support len()
-        mock_prof_retriever_obj = Mock(spec=BaseRetriever)
+        mock_prof_retriever_obj = Mock()
         mock_prof_retriever_obj.get_relevant_documents = Mock(return_value=[])
         mock_prof_retriever_obj.__len__ = Mock(return_value=0)
+        # Add BaseRetriever methods to pass Pydantic validation
+        for method in ['aget_relevant_documents', 'invoke', 'ainvoke']:
+            if hasattr(BaseRetriever, method):
+                setattr(mock_prof_retriever_obj, method, Mock())
         mock_prof_retriever.return_value = mock_prof_retriever_obj
 
-        mock_edu_retriever_obj = Mock(spec=BaseRetriever)
+        mock_edu_retriever_obj = Mock()
         mock_edu_retriever_obj.get_relevant_documents = Mock(return_value=[])
         mock_edu_retriever_obj.__len__ = Mock(return_value=0)
+        for method in ['aget_relevant_documents', 'invoke', 'ainvoke']:
+            if hasattr(BaseRetriever, method):
+                setattr(mock_edu_retriever_obj, method, Mock())
         mock_edu_retriever.return_value = mock_edu_retriever_obj
 
-        mock_learn_retriever_obj = Mock(spec=BaseRetriever)
+        mock_learn_retriever_obj = Mock()
         mock_learn_retriever_obj.get_relevant_documents = Mock(return_value=[])
         mock_learn_retriever_obj.__len__ = Mock(return_value=0)
+        for method in ['aget_relevant_documents', 'invoke', 'ainvoke']:
+            if hasattr(BaseRetriever, method):
+                setattr(mock_learn_retriever_obj, method, Mock())
         mock_learn_retriever.return_value = mock_learn_retriever_obj
 
-        mock_redirect_retriever_obj = Mock(spec=BaseRetriever)
+        mock_redirect_retriever_obj = Mock()
         mock_redirect_retriever_obj.get_relevant_documents = Mock(return_value=[])
         mock_redirect_retriever_obj.__len__ = Mock(return_value=0)
+        for method in ['aget_relevant_documents', 'invoke', 'ainvoke']:
+            if hasattr(BaseRetriever, method):
+                setattr(mock_redirect_retriever_obj, method, Mock())
         mock_redirect_retriever.return_value = mock_redirect_retriever_obj
 
         # Set up LLM and chain mocks
