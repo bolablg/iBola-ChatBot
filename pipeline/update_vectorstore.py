@@ -37,7 +37,7 @@ def update_vectorstore():
     print("Scanning for new or modified files...")
     vectorstore_state = get_vectorstore_state()
     updated = False
-    for root, _, files in os.walk(config.DATA_PATH):
+    for root, _, files in os.walk(config.GUARDRAILS_DATA_DIR):
         for file in files:
             file_path = os.path.join(root, file)
             

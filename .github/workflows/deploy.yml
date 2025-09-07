@@ -33,13 +33,75 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest
+          pip install -r requirements-dev.txt
 
-      - name: Run tests
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      - name: Run linting
         run: |
-          pytest
+          # Check code formatting
+          black --check --diff app/ tests/
+          # Check import sorting
+          isort --check-only --diff app/ tests/
+          # Run static analysis
+          flake8 app/ tests/ --max-line-length=100 --extend-ignore=E203,W503
+
+      - name: Run unit tests
+        env:
+          GEMINI_API_KEY: test_key_placeholder
+          GCHAT_WEBHOOK_URL: https://test-webhook.com
+          GCP_PROJECT_ID: test-project
+        run: |
+          pytest tests/test_agents.py tests/test_services.py -v --cov=app --cov-report=xml --cov-report=term
+
+      - name: Run integration tests
+        env:
+          GEMINI_API_KEY: test_key_placeholder
+          GCHAT_WEBHOOK_URL: https://test-webhook.com
+          GCP_PROJECT_ID: test-project
+        run: |
+          pytest tests/test_integration.py -v --cov-append --cov-report=xml
+
+      - name: Run security tests
+        env:
+          GEMINI_API_KEY: test_key_placeholder
+          GCHAT_WEBHOOK_URL: https://test-webhook.com
+          GCP_PROJECT_ID: test-project
+        run: |
+          pytest tests/test_security.py -v --cov-append --cov-report=xml
+
+      - name: Run performance tests
+        env:
+          GEMINI_API_KEY: test_key_placeholder
+          GCHAT_WEBHOOK_URL: https://test-webhook.com
+          GCP_PROJECT_ID: test-project
+        run: |
+          pytest tests/test_performance.py -v --cov-append --cov-report=xml
+
+      - name: Generate test reports
+        run: |
+          # Generate HTML coverage report
+          coverage html
+          # Generate test results summary
+          echo "## Test Results Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Unit Tests**: $(pytest tests/test_agents.py tests/test_services.py --collect-only -q | wc -l) tests" >> $GITHUB_STEP_SUMMARY
+          echo "- **Integration Tests**: $(pytest tests/test_integration.py --collect-only -q | wc -l) tests" >> $GITHUB_STEP_SUMMARY
+          echo "- **Security Tests**: $(pytest tests/test_security.py --collect-only -q | wc -l) tests" >> $GITHUB_STEP_SUMMARY
+          echo "- **Performance Tests**: $(pytest tests/test_performance.py --collect-only -q | wc -l) tests" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: |
+            htmlcov/
+            .coverage
+          retention-days: 30
 
   deploy:
     needs: test
