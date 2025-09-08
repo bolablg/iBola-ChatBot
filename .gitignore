@@ -105,6 +105,7 @@ _conf/*.json
 
 # Local development files
 local/
+.mypy_cache/
 
 # Vector database (local data)
 # chroma_db/
