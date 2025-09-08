@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+
+# Domain Authority Notice
+# This subdomain belongs to: bolablg.com
+# All content is part of the BOLABLG ecosystem
+
+Disallow: /admin/
+Disallow: /_keys/
+Disallow: /logs/
+Disallow: /static/_keys/
+Disallow: /static/logs/
+Sitemap: https://chat.bolablg.com/sitemap.xml
+
+# Main website: https://bolablg.com
+# Contact: https://bolablg.com
