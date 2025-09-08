@@ -70,6 +70,18 @@ app.add_middleware(
 # Mount the static directory to serve frontend files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+
+@app.get("/robots.txt", include_in_schema=False)
+async def robots_txt():
+    """Serve robots.txt file for SEO."""
+    return FileResponse("robots.txt", media_type="text/plain")
+
+
+@app.get("/sitemap.xml", include_in_schema=False)
+async def sitemap_xml():
+    """Serve sitemap.xml file for SEO."""
+    return FileResponse("sitemap.xml", media_type="application/xml")
+
 # Initialize the multi-agent orchestrator
 orchestrator = AgentOrchestrator()
 
