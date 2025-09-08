@@ -82,6 +82,7 @@ async def sitemap_xml():
     """Serve sitemap.xml file for SEO."""
     return FileResponse("sitemap.xml", media_type="application/xml")
 
+
 # Initialize the multi-agent orchestrator
 orchestrator = AgentOrchestrator()
 
