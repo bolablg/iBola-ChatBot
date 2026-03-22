@@ -288,6 +288,7 @@ jobs:
             --image "gcr.io/${GCP_PROJECT}/ibola-chatbot" \
             --platform managed \
             --region us-central1 \
+            --memory 1Gi \
             --allow-unauthenticated \
             --set-env-vars "GOOGLE_OAUTH_CREDENTIALS_PATH=${GOOGLE_OAUTH_CREDENTIALS_PATH}" \
             --set-env-vars "GEMINI_API_KEY=${GEMINI_API_KEY}" \
