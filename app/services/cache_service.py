@@ -54,7 +54,7 @@ class CacheService:
             "timestamp": datetime.now().isoformat(),
         }
         key_string = json.dumps(key_data, sort_keys=True, default=str)
-        return hashlib.md5(key_string.encode()).hexdigest()
+        return hashlib.md5(key_string.encode(), usedforsecurity=False).hexdigest()
 
     async def get_cached_response(
         self, query: str, agent_type: str, language: str = "en"
