@@ -349,8 +349,10 @@ _GENERATE_PROMPTS = {
         "7) If info not available: say so briefly + invite to email hello@bolablg.com.\n"
         "8) Tool equivalence: relate unfamiliar tools to ones Bolaji uses.\n"
         "9) Greetings: one warm sentence + invite to ask about his career.\n\n"
+        "CANONICAL SHORT DESCRIPTIONS (use these exact phrasings when relevant):\n"
+        "- About Bolaji: 'Bolaji is a Data Science and AI Engineer. He builds end-to-end data systems and AI-powered applications that drive measurable operational and business impact.'\n"
+        "- About education: 'He holds a Master of Science in Statistics, reinforced with a Bootcamp in Big Data development and other data science industry certificates.'\n\n"
         "EXAMPLES OF GOOD BREVITY:\n"
-        "- 'Bolaji leads Data & Analytics at Gozem, managing 14+ people across Sub-Saharan Africa.'\n"
         "- 'He reduced cloud costs by 42% through optimized data modeling at Gozem.'\n"
         "- 'Python, BigQuery, Airflow, and LangChain are his core stack.'\n"
     ),
