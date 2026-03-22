@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import time
@@ -10,8 +11,11 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, validator
 
+from app.agents.collector_agent import collector_agent
 from app.agents.orchestrator import AgentOrchestrator
 from app.history_store import append_history, get_history
+from app.routes.feedback import router as feedback_router
+from app.routes.streaming import router as streaming_router
 from app.services.cache_service import cache_service
 from app.services.google_chat_alert import google_chat_alert
 from app.services.language_detection import language_service
@@ -52,7 +56,10 @@ app = FastAPI(
 # Configure CORS
 # It's recommended to use an environment variable for the regex to allow for more flexibility
 # across different environments (e.g., development, staging, production).
-ALLOWED_ORIGIN_REGEX = os.getenv("ALLOWED_ORIGIN_REGEX", r"https://(.+\.)?bolablg\.com")
+ALLOWED_ORIGIN_REGEX = os.getenv(
+    "ALLOWED_ORIGIN_REGEX",
+    r"https://(.+\.)?bolablg\.com|https://ibola-chatbot-.*\.run\.app",
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -66,6 +73,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+# Mount new API routes (streaming, feedback)
+app.include_router(streaming_router)
+app.include_router(feedback_router)
 
 # Mount the static directory to serve frontend files
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -345,7 +356,7 @@ def read_root():
     # For more complex interactions between the parent page and the iframe,
     # you can use the `postMessage` API to send messages securely between them.
     headers = {
-        "Content-Security-Policy": "frame-ancestors 'self' https://bolablg.com https://*.bolablg.com"
+        "Content-Security-Policy": "frame-ancestors 'self' https://bolablg.com https://*.bolablg.com https://ibola-chatbot-1055950842890.us-central1.run.app"
     }
     return FileResponse("static/index.html", headers=headers)
 
@@ -371,9 +382,7 @@ async def get_welcome_message(payload: WelcomeInput):
         if cached_content:
             logger.info(f"Welcome cache hit for session {session_id}")
             return {
-                "welcome_messages": eval(
-                    cached_content
-                ),  # Safe since we control the content
+                "welcome_messages": json.loads(cached_content),
                 "detected_language": browser_language.split("-")[0],
                 "session_id": session_id,
                 "cached": True,
@@ -387,7 +396,7 @@ async def get_welcome_message(payload: WelcomeInput):
 
         # Cache the localized content
         await cache_service.set_localized_content(
-            cache_key, "welcome", str(welcome_messages)
+            cache_key, "welcome", json.dumps(welcome_messages)
         )
 
         response = {
@@ -526,8 +535,26 @@ async def chat(payload: ChatInput, request: Request):
             ),  # Add the missing field
         }
 
+        # Run collector agent — detects opportunity intent and asks follow-up questions
+        try:
+            collector_result = collector_agent.check_and_respond(
+                user_input=user_input,
+                session_id=session_id,
+                chat_history=chat_history_tuples,
+                user_language=user_language,
+                agent_response=result.get("answer", ""),
+            )
+            if collector_result and collector_result.get("follow_up_question"):
+                response_for_frontend["answer"] += (
+                    "\n\n" + collector_result["follow_up_question"]
+                )
+        except Exception as collector_err:
+            logger.debug(f"Collector agent error (non-blocking): {collector_err}")
+
         # Update the history in the store
-        append_history(session_id, (user_input, result.get("answer", "")))
+        append_history(
+            session_id, (user_input, response_for_frontend.get("answer", ""))
+        )
 
         return response_for_frontend
 

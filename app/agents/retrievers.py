@@ -98,7 +98,7 @@ def get_professional_retriever():
             base_retriever = vectorstore.as_retriever(
                 search_type="mmr", search_kwargs={"k": 8, "fetch_k": 20}
             )
-            docs = base_retriever.get_relevant_documents(query)
+            docs = base_retriever.invoke(query)
 
             # Filter the documents
             filtered_docs = [doc for doc in docs if filter_professional_docs(doc)]
@@ -191,7 +191,7 @@ def get_education_retriever():
             base_retriever = vectorstore.as_retriever(
                 search_type="mmr", search_kwargs={"k": 12, "fetch_k": 30}
             )
-            docs = base_retriever.get_relevant_documents(query)
+            docs = base_retriever.invoke(query)
 
             # Filter the documents
             filtered_docs = [doc for doc in docs if filter_education_docs(doc)]
@@ -304,7 +304,7 @@ def get_classification_retriever():
             base_retriever = vectorstore.as_retriever(
                 search_type="mmr", search_kwargs={"k": 15, "fetch_k": 40}
             )
-            docs = base_retriever.get_relevant_documents(query)
+            docs = base_retriever.invoke(query)
 
             # Filter documents for classification relevance
             filtered_docs = [doc for doc in docs if filter_classification_docs(doc)]
@@ -437,7 +437,7 @@ def get_learning_retriever():
             base_retriever = vectorstore.as_retriever(
                 search_type="mmr", search_kwargs={"k": 8, "fetch_k": 20}
             )
-            docs = base_retriever.get_relevant_documents(query)
+            docs = base_retriever.invoke(query)
 
             # Filter the documents
             filtered_docs = [doc for doc in docs if filter_learning_docs(doc)]
@@ -509,7 +509,7 @@ def get_redirect_retriever():
             base_retriever = vectorstore.as_retriever(
                 search_type="mmr", search_kwargs={"k": 6, "fetch_k": 15}
             )
-            docs = base_retriever.get_relevant_documents(query)
+            docs = base_retriever.invoke(query)
 
             # Filter the documents
             filtered_docs = [doc for doc in docs if filter_general_docs(doc)]
