@@ -16,8 +16,8 @@ sys.path.append(
 from config import GEMINI_API_KEY
 
 try:
-    from langchain.chains import LLMChain
-    from langchain.prompts import PromptTemplate
+    from langchain_classic.chains import LLMChain
+    from langchain_core.prompts import PromptTemplate
     from langchain_google_genai import ChatGoogleGenerativeAI
 
     MEMORY_AVAILABLE = True
@@ -43,8 +43,7 @@ class AdvancedMemoryManager:
             )
 
             # Initialize summarization chain
-            self.summary_prompt = PromptTemplate.from_template(
-                """
+            self.summary_prompt = PromptTemplate.from_template("""
             Summarize the following conversation, focusing on:
             1. Key topics discussed
             2. User's main interests and questions
@@ -56,16 +55,14 @@ class AdvancedMemoryManager:
             Conversation:
             {conversation}
 
-            Summary:"""
-            )
+            Summary:""")
 
             self.summary_chain = LLMChain(
                 llm=self.llm, prompt=self.summary_prompt, verbose=False
             )
 
             # Compression chain for old memories
-            self.compression_prompt = PromptTemplate.from_template(
-                """
+            self.compression_prompt = PromptTemplate.from_template("""
             Compress the following conversation summary into key facts and insights.
             Focus on the most important information that would be relevant for future conversations.
             Make it as concise as possible while preserving essential details.
@@ -73,8 +70,7 @@ class AdvancedMemoryManager:
             Original Summary:
             {summary}
 
-            Compressed Version:"""
-            )
+            Compressed Version:""")
 
             self.compression_chain = LLMChain(
                 llm=self.llm, prompt=self.compression_prompt, verbose=False
@@ -216,7 +212,9 @@ class AdvancedMemoryManager:
             ]  # Keep last 3 summaries uncompressed
 
             for summary in oldest_summaries:
-                cache_key = hashlib.md5(summary["summary"].encode()).hexdigest()
+                cache_key = hashlib.md5(
+                    summary["summary"].encode(), usedforsecurity=False
+                ).hexdigest()
 
                 if cache_key not in self.compression_cache:
                     try:

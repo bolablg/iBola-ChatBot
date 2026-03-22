@@ -1,0 +1,40 @@
+BOLAJI BALOGOUN — APPS & SIDE PROJECTS
+Portfolio URL: app.bolablg.com
+
+---
+
+uDOWNLOADER
+A tool to download videos and audio from YouTube, Instagram, TikTok, Twitter, and other platforms. Features a modern graphical interface (GUI) and a command-line (CLI) mode for power users.
+Technologies: Python, Bash, Git.
+Available on GitHub and PyPI (installable via pip).
+
+---
+
+CONVERTISSEUR SALAIRE BENIN (Salary Converter Benin)
+A web application to calculate net or gross salary in Benin according to the 2025 finance law. Provides a detailed breakdown of employee and employer contributions, taxes, and net take-home pay.
+Technologies: Python, Flask, HTML, CSS.
+Live application available for public use.
+
+---
+
+AUTOMATISATION: GOOGLE SHEETS + PYTHON
+A tool and tutorial to automatically create and share Google Sheets data reports from any server using Python. Designed for teams that need automated daily or weekly reports.
+Technologies: Python, Google Drive API, MongoDB, Automation (cron).
+Accompanied by a blog article and GitHub repository.
+
+---
+
+iBOLA — AI-POWERED CHATBOT
+A multi-agent RAG (Retrieval-Augmented Generation) chatbot serving as Bolaji's professional portfolio assistant. Uses specialized agents for professional experience, education, and learning advice.
+Technologies: LangChain, LangGraph, Google Gemini, ChromaDB, FastAPI, Python.
+Live at chat.bolablg.com.
+
+---
+
+DATA QUALITY OBSERVABILITY SYSTEM
+An internal system built at Gozem for monitoring data quality across the data platform. Uses Asana for ticketing data quality issues, Looker Studio dashboards for monitoring, and Apache Airflow for orchestrating automated checks.
+
+---
+
+DATA STACK MIGRATION (Gozem)
+Led the migration of Gozem's data infrastructure from on-premises systems to Google Cloud Platform. The new stack includes Google Cloud Storage (GCS), BigQuery for analytics, Vertex AI for ML, and Dataform for SQL-based transformations.

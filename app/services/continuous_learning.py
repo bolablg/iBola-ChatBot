@@ -18,8 +18,8 @@ sys.path.append(
 from config import GEMINI_API_KEY
 
 try:
-    from langchain.chains import LLMChain
-    from langchain.prompts import PromptTemplate
+    from langchain_classic.chains import LLMChain
+    from langchain_core.prompts import PromptTemplate
     from langchain_google_genai import ChatGoogleGenerativeAI
 
     CONTINUOUS_LEARNING_AVAILABLE = True
@@ -313,8 +313,7 @@ class ContinuousLearningPipeline:
             )
 
             # Improvement analysis chain
-            self.improvement_prompt = PromptTemplate.from_template(
-                """
+            self.improvement_prompt = PromptTemplate.from_template("""
             Analyze the following performance data and feedback to identify areas for improvement.
 
             Performance Metrics:
@@ -335,8 +334,7 @@ class ContinuousLearningPipeline:
             5. **Performance Optimizations**: Speed and efficiency improvements
 
             Provide actionable recommendations:
-            """
-            )
+            """)
 
             self.improvement_chain = LLMChain(
                 llm=self.llm, prompt=self.improvement_prompt, verbose=False
