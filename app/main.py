@@ -10,6 +10,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, validator
 
+from app.agents.collector_agent import collector_agent
 from app.agents.orchestrator import AgentOrchestrator
 from app.history_store import append_history, get_history
 from app.routes.feedback import router as feedback_router
@@ -532,8 +533,24 @@ async def chat(payload: ChatInput, request: Request):
             ),  # Add the missing field
         }
 
+        # Run collector agent — detects opportunity intent and asks follow-up questions
+        try:
+            collector_result = collector_agent.check_and_respond(
+                user_input=user_input,
+                session_id=session_id,
+                chat_history=chat_history_tuples,
+                user_language=user_language,
+                agent_response=result.get("answer", ""),
+            )
+            if collector_result and collector_result.get("follow_up_question"):
+                response_for_frontend["answer"] += (
+                    "\n\n" + collector_result["follow_up_question"]
+                )
+        except Exception as collector_err:
+            logger.debug(f"Collector agent error (non-blocking): {collector_err}")
+
         # Update the history in the store
-        append_history(session_id, (user_input, result.get("answer", "")))
+        append_history(session_id, (user_input, response_for_frontend.get("answer", "")))
 
         return response_for_frontend
 
