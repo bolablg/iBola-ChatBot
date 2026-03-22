@@ -2,8 +2,8 @@
 Professional Experience Agent - Handles questions about professional skills, experiences, and projects.
 """
 
-from langchain.chains import ConversationalRetrievalChain
-from langchain.prompts import PromptTemplate
+from langchain_classic.chains import ConversationalRetrievalChain
+from langchain_core.prompts import PromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 import config
