@@ -177,7 +177,7 @@ def retrieve_node(state: dict) -> dict:
 
     try:
         retriever = _get_retriever_for_category(category)
-        docs: List[Document] = retriever.get_relevant_documents(query)
+        docs: List[Document] = retriever.invoke(query)
 
         return {
             "documents": docs,

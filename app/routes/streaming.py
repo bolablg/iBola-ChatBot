@@ -216,7 +216,7 @@ async def ask_simple(payload: AskInput, request: Request):
 
     try:
         retriever = get_professional_retriever()
-        docs = retriever.get_relevant_documents(user_input)
+        docs = retriever.invoke(user_input)
         context = "\n\n".join(doc.page_content for doc in docs[:5])
 
         llm = ChatGoogleGenerativeAI(
