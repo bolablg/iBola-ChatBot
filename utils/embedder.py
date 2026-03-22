@@ -1,5 +1,7 @@
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
+
 import config
+
 
 def get_embeddings():
     return GoogleGenerativeAIEmbeddings(

@@ -38,14 +38,81 @@ except ImportError:
 # Stopwords — English + French basics
 _STOPWORDS = frozenset(
     {
-        "the", "a", "an", "is", "are", "was", "were", "be", "been", "being",
-        "have", "has", "had", "do", "does", "did", "will", "would", "could",
-        "should", "may", "might", "shall", "can", "to", "of", "in", "for",
-        "on", "with", "at", "by", "from", "as", "into", "through", "during",
-        "before", "after", "and", "but", "or", "not", "no", "nor", "so",
-        "le", "la", "les", "un", "une", "des", "de", "du", "et", "est",
-        "en", "dans", "pour", "sur", "avec", "par", "que", "qui", "ce",
-        "this", "that", "it", "its", "he", "she", "they", "we", "i", "you",
+        "the",
+        "a",
+        "an",
+        "is",
+        "are",
+        "was",
+        "were",
+        "be",
+        "been",
+        "being",
+        "have",
+        "has",
+        "had",
+        "do",
+        "does",
+        "did",
+        "will",
+        "would",
+        "could",
+        "should",
+        "may",
+        "might",
+        "shall",
+        "can",
+        "to",
+        "of",
+        "in",
+        "for",
+        "on",
+        "with",
+        "at",
+        "by",
+        "from",
+        "as",
+        "into",
+        "through",
+        "during",
+        "before",
+        "after",
+        "and",
+        "but",
+        "or",
+        "not",
+        "no",
+        "nor",
+        "so",
+        "le",
+        "la",
+        "les",
+        "un",
+        "une",
+        "des",
+        "de",
+        "du",
+        "et",
+        "est",
+        "en",
+        "dans",
+        "pour",
+        "sur",
+        "avec",
+        "par",
+        "que",
+        "qui",
+        "ce",
+        "this",
+        "that",
+        "it",
+        "its",
+        "he",
+        "she",
+        "they",
+        "we",
+        "i",
+        "you",
     }
 )
 
@@ -78,11 +145,7 @@ class BM25Index:
             return []
         scores = self.bm25.get_scores(_tokenize(query))
         top_idx = np.argsort(scores)[::-1][:top_k]
-        return [
-            (self.documents[i], float(scores[i]))
-            for i in top_idx
-            if scores[i] > 0
-        ]
+        return [(self.documents[i], float(scores[i])) for i in top_idx if scores[i] > 0]
 
 
 # ---------------------------------------------------------------------------
@@ -135,7 +198,10 @@ class CrossEncoderReranker:
                 logger.warning("Reranker init failed: %s", exc)
 
     def rerank(
-        self, query: str, documents: List[Document], top_k: int = 5,
+        self,
+        query: str,
+        documents: List[Document],
+        top_k: int = 5,
     ) -> List[Tuple[Document, float]]:
         if not self.model or not documents:
             return [(doc, 1.0) for doc in documents[:top_k]]
@@ -177,7 +243,9 @@ class HybridSearchService:
             )
             self._build_bm25()
             self._initialized = True
-            logger.info("HybridSearchService initialised (BM25=%s)", self.bm25_index.is_built)
+            logger.info(
+                "HybridSearchService initialised (BM25=%s)", self.bm25_index.is_built
+            )
         except Exception as exc:
             logger.error("HybridSearchService init failed: %s", exc)
 
@@ -214,7 +282,9 @@ class HybridSearchService:
 
             # 1. Vector search (MMR)
             vector_docs = self.vectorstore.max_marginal_relevance_search(
-                query, k=top_k, fetch_k=top_k * 3,
+                query,
+                k=top_k,
+                fetch_k=top_k * 3,
             )
             ranked_lists.append(
                 [(doc, 1.0 / (i + 1)) for i, doc in enumerate(vector_docs)]
@@ -229,7 +299,7 @@ class HybridSearchService:
             # 3. Fuse
             if len(ranked_lists) > 1:
                 fused = reciprocal_rank_fusion(ranked_lists, rank_constant=60)
-                results = [doc for doc, _ in fused[:top_k * 2]]
+                results = [doc for doc, _ in fused[: top_k * 2]]
             else:
                 results = vector_docs[:top_k]
 
@@ -243,7 +313,8 @@ class HybridSearchService:
             # 5. Category filter
             if category_filter:
                 filtered = [
-                    d for d in results
+                    d
+                    for d in results
                     if d.metadata.get("category", "").lower() == category_filter.lower()
                 ]
                 results = filtered if filtered else results
@@ -269,7 +340,12 @@ class HybridSearchService:
             "bm25_indexed": self.bm25_index.is_built,
             "bm25_doc_count": len(self.bm25_index.documents),
             "reranker_available": self.reranker.model is not None,
-            "capabilities": ["vector_mmr", "bm25", "rrf_fusion", "cross_encoder_rerank"],
+            "capabilities": [
+                "vector_mmr",
+                "bm25",
+                "rrf_fusion",
+                "cross_encoder_rerank",
+            ],
         }
 
 

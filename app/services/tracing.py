@@ -94,9 +94,7 @@ class RAGTracer:
             if span_obj is not None:
                 try:
                     elapsed_ms = (time.time() - start) * 1000
-                    span_obj.end(
-                        metadata={"duration_ms": round(elapsed_ms, 1)}
-                    )
+                    span_obj.end(metadata={"duration_ms": round(elapsed_ms, 1)})
                 except Exception:
                     pass
 

@@ -76,7 +76,9 @@ async def ask_agentic(payload: AskInput, request: Request):
     user_language = payload.user_language
 
     # Check cache
-    cached = await cache_service.get_cached_response(user_input, "agentic", user_language)
+    cached = await cache_service.get_cached_response(
+        user_input, "agentic", user_language
+    )
     if cached and not payload.stream:
         cached["cached"] = True
         cached["session_id"] = session_id
@@ -94,7 +96,14 @@ async def ask_agentic(payload: AskInput, request: Request):
 
     if payload.stream:
         return StreamingResponse(
-            _stream_agentic(service, user_input, chat_history, session_id, user_language, request_info),
+            _stream_agentic(
+                service,
+                user_input,
+                chat_history,
+                session_id,
+                user_language,
+                request_info,
+            ),
             media_type="text/event-stream",
             headers={
                 "Cache-Control": "no-cache",
@@ -126,7 +135,9 @@ async def ask_agentic(payload: AskInput, request: Request):
     except Exception:
         pass
 
-    await cache_service.set_cached_response(user_input, "agentic", user_language, result)
+    await cache_service.set_cached_response(
+        user_input, "agentic", user_language, result
+    )
     append_history(session_id, (user_input, result.get("answer", "")))
 
     logging_service.log_chat_interaction(
@@ -172,7 +183,11 @@ async def _stream_agentic(
             )
         elif isinstance(step, dict):
             yield _sse_event(
-                {"status": "processing", "node": step.get("node", ""), "action": step.get("action", "")},
+                {
+                    "status": "processing",
+                    "node": step.get("node", ""),
+                    "action": step.get("action", ""),
+                },
                 "progress",
             )
 
@@ -212,17 +227,20 @@ async def ask_simple(payload: AskInput, request: Request):
     Simple RAG: direct retrieval + generation without agent routing.
     Faster (2-5 sec) but no guardrails, grading, or query rewriting.
     """
-    from app.agents.retrievers import get_professional_retriever
-    from langchain_google_genai import ChatGoogleGenerativeAI
     from langchain_core.prompts import ChatPromptTemplate
+    from langchain_google_genai import ChatGoogleGenerativeAI
+
     import config
+    from app.agents.retrievers import get_professional_retriever
 
     user_input = payload.user_input
     session_id = payload.session_id
     user_language = payload.user_language
 
     # Check cache
-    cached = await cache_service.get_cached_response(user_input, "simple", user_language)
+    cached = await cache_service.get_cached_response(
+        user_input, "simple", user_language
+    )
     if cached:
         cached["cached"] = True
         cached["session_id"] = session_id
@@ -241,13 +259,17 @@ async def ask_simple(payload: AskInput, request: Request):
             google_api_key=config.GEMINI_API_KEY,
         )
 
-        prompt = ChatPromptTemplate.from_messages([
-            ("system",
-             "You are iBola, an AI assistant for Bolaji BALOGOUN's portfolio. "
-             "Answer concisely (≤5 sentences). Match the user's language. "
-             "Never mention documents or RAG."),
-            ("human", "Context:\n{context}\n\nQuestion: {query}"),
-        ])
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                (
+                    "system",
+                    "You are iBola, an AI assistant for Bolaji BALOGOUN's portfolio. "
+                    "Answer concisely (≤5 sentences). Match the user's language. "
+                    "Never mention documents or RAG.",
+                ),
+                ("human", "Context:\n{context}\n\nQuestion: {query}"),
+            ]
+        )
 
         response = llm.invoke(prompt.format_messages(context=context, query=user_input))
         answer = response.content

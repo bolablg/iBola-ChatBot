@@ -93,13 +93,18 @@ class AppSettings(BaseSettings):
 
     # --- Integrations ---
     gchat_webhook_url: Optional[str] = Field(default=None, alias="GCHAT_WEBHOOK_URL")
-    redirect_log_sheet_id: Optional[str] = Field(default=None, alias="REDIRECT_LOG_SHEET_ID")
+    redirect_log_sheet_id: Optional[str] = Field(
+        default=None, alias="REDIRECT_LOG_SHEET_ID"
+    )
     google_oauth_credentials_path: Optional[str] = Field(
         default=None, alias="GOOGLE_OAUTH_CREDENTIALS_PATH"
     )
 
     # --- Server ---
-    host: str = Field(default="0.0.0.0", alias="HOST")
+    host: str = Field(
+        default="0.0.0.0",  # nosec B104 - required for Docker/Cloud Run
+        alias="HOST",
+    )
     port: int = Field(default=8000, alias="PORT")
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
 

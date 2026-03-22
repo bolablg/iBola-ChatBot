@@ -59,7 +59,8 @@ class ConversationAnalysis(BaseModel):
         )
     )
     lead_score: int = Field(
-        ge=0, le=100,
+        ge=0,
+        le=100,
         description=(
             "Lead qualification score 0-100. "
             "80-100: hot lead (recruiter with specific role, collaborator with project). "
@@ -79,8 +80,12 @@ class LeadExtraction(BaseModel):
 
     name: str = Field(default="", description="User's name if mentioned")
     company: str = Field(default="", description="Company or organization if mentioned")
-    role_details: str = Field(default="", description="Role, project, or opportunity described")
-    contact: str = Field(default="", description="Email, phone, LinkedIn, or other contact info")
+    role_details: str = Field(
+        default="", description="Role, project, or opportunity described"
+    )
+    contact: str = Field(
+        default="", description="Email, phone, LinkedIn, or other contact info"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -108,7 +113,10 @@ ANALYSIS_PROMPT = ChatPromptTemplate.from_messages(
                 "Set should_collect=true ONLY when lead_score >= 50."
             ),
         ),
-        ("human", "Conversation so far:\n{conversation}\n\nLatest message: {latest_message}"),
+        (
+            "human",
+            "Conversation so far:\n{conversation}\n\nLatest message: {latest_message}",
+        ),
     ]
 )
 
@@ -230,15 +238,21 @@ class CollectorAgent:
 
         logger.info(
             "Session %s analysis: type=%s engagement=%s intent=%s score=%d collect=%s",
-            session_id, analysis.user_type, analysis.engagement_level,
-            analysis.primary_intent, analysis.lead_score, analysis.should_collect,
+            session_id,
+            analysis.user_type,
+            analysis.engagement_level,
+            analysis.primary_intent,
+            analysis.lead_score,
+            analysis.should_collect,
         )
 
         # Step 2: If not worth collecting, return analysis only (no follow-up)
         if not analysis.should_collect:
             if session["active"] and session["collected"]:
                 # Was collecting but score dropped — send what we have
-                self._send_summary(session_id, session, chat_history, user_language, analysis)
+                self._send_summary(
+                    session_id, session, chat_history, user_language, analysis
+                )
                 session["active"] = False
             return None
 
@@ -254,7 +268,9 @@ class CollectorAgent:
 
         # Step 5: Check if we have enough info or too many turns
         if self._has_enough_info(session) or session["turn"] >= 5:
-            self._send_summary(session_id, session, chat_history, user_language, analysis)
+            self._send_summary(
+                session_id, session, chat_history, user_language, analysis
+            )
             session["active"] = False
             return None
 
@@ -311,7 +327,13 @@ class CollectorAgent:
             )
             for field in _COLLECTION_FIELDS:
                 value = getattr(result, field, "").strip()
-                if value and value.lower() not in ("", "n/a", "none", "unknown", "not mentioned"):
+                if value and value.lower() not in (
+                    "",
+                    "n/a",
+                    "none",
+                    "unknown",
+                    "not mentioned",
+                ):
                     session["collected"][field] = value
 
         except Exception as exc:
@@ -340,7 +362,9 @@ class CollectorAgent:
         collected = session["collected"]
         # Need name + at least one other field
         has_name = bool(collected.get("name"))
-        other_fields = sum(1 for f in ["company", "role_details", "contact"] if collected.get(f))
+        other_fields = sum(
+            1 for f in ["company", "role_details", "contact"] if collected.get(f)
+        )
         return has_name and other_fields >= 1
 
     def _next_follow_up(
@@ -413,9 +437,19 @@ class CollectorAgent:
         info_block = "\n".join(info_lines) if info_lines else "_(no details collected)_"
 
         # Build analysis block
-        user_type = last_analysis.get("user_type", "unknown") if last_analysis else "unknown"
-        engagement = last_analysis.get("engagement_level", "unknown") if last_analysis else "unknown"
-        intent = last_analysis.get("primary_intent", "unknown") if last_analysis else "unknown"
+        user_type = (
+            last_analysis.get("user_type", "unknown") if last_analysis else "unknown"
+        )
+        engagement = (
+            last_analysis.get("engagement_level", "unknown")
+            if last_analysis
+            else "unknown"
+        )
+        intent = (
+            last_analysis.get("primary_intent", "unknown")
+            if last_analysis
+            else "unknown"
+        )
         lead_score = last_analysis.get("lead_score", 0) if last_analysis else 0
 
         # Score emoji
@@ -465,10 +499,14 @@ class CollectorAgent:
             if response.status_code == 200:
                 logger.info(
                     "Lead summary sent: session=%s type=%s score=%d",
-                    session_id, user_type, lead_score,
+                    session_id,
+                    user_type,
+                    lead_score,
                 )
             else:
-                logger.warning("Google Chat lead alert failed: %s", response.status_code)
+                logger.warning(
+                    "Google Chat lead alert failed: %s", response.status_code
+                )
         except Exception as exc:
             logger.error("Failed to send lead summary: %s", exc)
 
