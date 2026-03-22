@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import time
@@ -55,7 +56,10 @@ app = FastAPI(
 # Configure CORS
 # It's recommended to use an environment variable for the regex to allow for more flexibility
 # across different environments (e.g., development, staging, production).
-ALLOWED_ORIGIN_REGEX = os.getenv("ALLOWED_ORIGIN_REGEX", r"https://(.+\.)?bolablg\.com")
+ALLOWED_ORIGIN_REGEX = os.getenv(
+    "ALLOWED_ORIGIN_REGEX",
+    r"https://(.+\.)?bolablg\.com|https://ibola-chatbot-.*\.run\.app",
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -352,7 +356,7 @@ def read_root():
     # For more complex interactions between the parent page and the iframe,
     # you can use the `postMessage` API to send messages securely between them.
     headers = {
-        "Content-Security-Policy": "frame-ancestors 'self' https://bolablg.com https://*.bolablg.com"
+        "Content-Security-Policy": "frame-ancestors 'self' https://bolablg.com https://*.bolablg.com https://ibola-chatbot-1055950842890.us-central1.run.app"
     }
     return FileResponse("static/index.html", headers=headers)
 
@@ -378,9 +382,7 @@ async def get_welcome_message(payload: WelcomeInput):
         if cached_content:
             logger.info(f"Welcome cache hit for session {session_id}")
             return {
-                "welcome_messages": eval(
-                    cached_content
-                ),  # Safe since we control the content
+                "welcome_messages": json.loads(cached_content),
                 "detected_language": browser_language.split("-")[0],
                 "session_id": session_id,
                 "cached": True,
@@ -394,7 +396,7 @@ async def get_welcome_message(payload: WelcomeInput):
 
         # Cache the localized content
         await cache_service.set_localized_content(
-            cache_key, "welcome", str(welcome_messages)
+            cache_key, "welcome", json.dumps(welcome_messages)
         )
 
         response = {
@@ -550,7 +552,9 @@ async def chat(payload: ChatInput, request: Request):
             logger.debug(f"Collector agent error (non-blocking): {collector_err}")
 
         # Update the history in the store
-        append_history(session_id, (user_input, response_for_frontend.get("answer", "")))
+        append_history(
+            session_id, (user_input, response_for_frontend.get("answer", ""))
+        )
 
         return response_for_frontend
 

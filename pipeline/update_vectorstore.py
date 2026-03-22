@@ -38,7 +38,7 @@ def save_vectorstore_state(state):
 
 def get_file_hash(file_path):
     """Calculate the MD5 hash of a file."""
-    hasher = hashlib.md5()
+    hasher = hashlib.md5(usedforsecurity=False)
     with open(file_path, "rb") as f:
         hasher.update(f.read())
     return hasher.hexdigest()
@@ -103,9 +103,7 @@ def update_vectorstore():
                     )
                     vectorstore_state[file_path] = file_hash
                     updated = True
-                    print(
-                        f"  Processed {len(all_chunks)} chunks from {file_path}"
-                    )
+                    print(f"  Processed {len(all_chunks)} chunks from {file_path}")
                 else:
                     print(f"  No chunks generated from {file_path}")
 

@@ -22,8 +22,12 @@ router = APIRouter(tags=["Feedback"])
 
 class FeedbackInput(BaseModel):
     session_id: str = Field(..., min_length=1, max_length=100)
-    message_index: int = Field(default=0, ge=0, description="Index of the message being rated")
-    score: float = Field(..., ge=0.0, le=1.0, description="Rating 0.0 (bad) to 1.0 (good)")
+    message_index: int = Field(
+        default=0, ge=0, description="Index of the message being rated"
+    )
+    score: float = Field(
+        ..., ge=0.0, le=1.0, description="Rating 0.0 (bad) to 1.0 (good)"
+    )
     comment: Optional[str] = Field(default=None, max_length=500)
 
 
@@ -42,7 +46,9 @@ async def submit_feedback(payload: FeedbackInput):
             "comment": payload.comment or "",
         },
     )
-    tracer.score(trace, name="user_rating", value=payload.score, comment=payload.comment or "")
+    tracer.score(
+        trace, name="user_rating", value=payload.score, comment=payload.comment or ""
+    )
     tracer.flush()
 
     # Always log locally

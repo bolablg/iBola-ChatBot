@@ -106,9 +106,14 @@ class AgenticRAGService:
                 )
             # Log redirect to Sheets
             self._log_redirect(
-                user_input, chat_history, session_id, redirect_count,
-                agent_type, final_state.get("confidence", 0.0),
-                final_state, request_info,
+                user_input,
+                chat_history,
+                session_id,
+                redirect_count,
+                agent_type,
+                final_state.get("confidence", 0.0),
+                final_state,
+                request_info,
             )
         else:
             session["redirect_count"] = 0
@@ -126,7 +131,12 @@ class AgenticRAGService:
             if isinstance(step, ReasoningStep):
                 logger.debug("  [%s] %s: %s", step.node, step.action, step.detail)
             elif isinstance(step, dict):
-                logger.debug("  [%s] %s: %s", step.get("node"), step.get("action"), step.get("detail"))
+                logger.debug(
+                    "  [%s] %s: %s",
+                    step.get("node"),
+                    step.get("action"),
+                    step.get("detail"),
+                )
 
         return {
             "answer": final_state.get("answer", ""),
@@ -171,7 +181,15 @@ class AgenticRAGService:
 
     @staticmethod
     def _is_contact_request(message: str) -> bool:
-        keywords = ["contact", "email", "meeting", "appointment", "book", "schedule", "call"]
+        keywords = [
+            "contact",
+            "email",
+            "meeting",
+            "appointment",
+            "book",
+            "schedule",
+            "call",
+        ]
         lower = message.lower()
         return any(k in lower for k in keywords)
 
@@ -180,13 +198,22 @@ class AgenticRAGService:
         lower = message.lower()
         if any(w in lower for w in ["email", "mail", "write"]):
             return "email"
-        if any(w in lower for w in ["meeting", "appointment", "book", "schedule", "call"]):
+        if any(
+            w in lower for w in ["meeting", "appointment", "book", "schedule", "call"]
+        ):
             return "booking"
         return None
 
     def _log_redirect(
-        self, user_input, chat_history, session_id, redirect_count,
-        agent_type, confidence, state, request_info,
+        self,
+        user_input,
+        chat_history,
+        session_id,
+        redirect_count,
+        agent_type,
+        confidence,
+        state,
+        request_info,
     ):
         if not google_sheets_logger:
             return
@@ -210,27 +237,33 @@ class AgenticRAGService:
                 else:
                     device_type = "desktop"
 
-            google_sheets_logger.log_redirect_event({
-                "timestamp": datetime.now().isoformat(),
-                "session_id": session_id,
-                "ip_address": (request_info or {}).get("ip_address", "unknown"),
-                "user_agent": (request_info or {}).get("user_agent", "unknown"),
-                "browser_language": (request_info or {}).get("accept_language", "unknown"),
-                "user_language": self.session_data.get(session_id, {}).get("language", "en"),
-                "user_input": user_input,
-                "redirect_count": redirect_count,
-                "agent_type": agent_type,
-                "confidence": confidence,
-                "redirect_reason": "LangGraph guardrail routing",
-                "chat_history_summary": history_summary,
-                "response_time": 0,
-                "source_documents_count": len(state.get("graded_documents", [])),
-                "cache_hit": False,
-                "device_type": device_type,
-                "referrer": (request_info or {}).get("referrer", "unknown"),
-                "classification_agent_used": False,
-                "fallback_applied": False,
-                "fallback_reason": "",
-            })
+            google_sheets_logger.log_redirect_event(
+                {
+                    "timestamp": datetime.now().isoformat(),
+                    "session_id": session_id,
+                    "ip_address": (request_info or {}).get("ip_address", "unknown"),
+                    "user_agent": (request_info or {}).get("user_agent", "unknown"),
+                    "browser_language": (request_info or {}).get(
+                        "accept_language", "unknown"
+                    ),
+                    "user_language": self.session_data.get(session_id, {}).get(
+                        "language", "en"
+                    ),
+                    "user_input": user_input,
+                    "redirect_count": redirect_count,
+                    "agent_type": agent_type,
+                    "confidence": confidence,
+                    "redirect_reason": "LangGraph guardrail routing",
+                    "chat_history_summary": history_summary,
+                    "response_time": 0,
+                    "source_documents_count": len(state.get("graded_documents", [])),
+                    "cache_hit": False,
+                    "device_type": device_type,
+                    "referrer": (request_info or {}).get("referrer", "unknown"),
+                    "classification_agent_used": False,
+                    "fallback_applied": False,
+                    "fallback_reason": "",
+                }
+            )
         except Exception as exc:
             logger.warning("Redirect logging error: %s", exc)

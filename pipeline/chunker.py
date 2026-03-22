@@ -19,29 +19,81 @@ from typing import Any, Dict, List, Optional
 
 from langchain_core.documents import Document
 
-
 # Category detection keywords
 _CATEGORY_KEYWORDS = {
     "professional": [
-        "gozem", "rintio", "experience", "project", "skill", "technology",
-        "head of data", "global data analyst", "data scientist", "consultant",
-        "automation", "pipeline", "bigquery", "airflow", "cloud", "team",
-        "leadership", "gda", "hod", "data hub",
+        "gozem",
+        "rintio",
+        "experience",
+        "project",
+        "skill",
+        "technology",
+        "head of data",
+        "global data analyst",
+        "data scientist",
+        "consultant",
+        "automation",
+        "pipeline",
+        "bigquery",
+        "airflow",
+        "cloud",
+        "team",
+        "leadership",
+        "gda",
+        "hod",
+        "data hub",
     ],
     "education": [
-        "master", "bachelor", "degree", "university", "diploma", "icmpa",
-        "unesco", "abomey", "calavi", "gpa", "statistics", "econometrics",
-        "dissertation", "thesis", "academic", "school", "college",
+        "master",
+        "bachelor",
+        "degree",
+        "university",
+        "diploma",
+        "icmpa",
+        "unesco",
+        "abomey",
+        "calavi",
+        "gpa",
+        "statistics",
+        "econometrics",
+        "dissertation",
+        "thesis",
+        "academic",
+        "school",
+        "college",
     ],
     "community": [
-        "isheero", "takwimu", "zindi", "nlp", "translation", "fongbe",
-        "community", "co-founder", "chair", "vice-chair", "workshop",
-        "mentorship", "ai4d", "african language",
+        "isheero",
+        "takwimu",
+        "zindi",
+        "nlp",
+        "translation",
+        "fongbe",
+        "community",
+        "co-founder",
+        "chair",
+        "vice-chair",
+        "workshop",
+        "mentorship",
+        "ai4d",
+        "african language",
     ],
     "learning": [
-        "blog", "article", "tutorial", "course", "guide", "learn",
-        "resource", "advice", "free your data", "newsletter", "substack",
-        "app", "udownloader", "salary", "portfolio",
+        "blog",
+        "article",
+        "tutorial",
+        "course",
+        "guide",
+        "learn",
+        "resource",
+        "advice",
+        "free your data",
+        "newsletter",
+        "substack",
+        "app",
+        "udownloader",
+        "salary",
+        "portfolio",
     ],
 }
 
@@ -80,12 +132,16 @@ class IntelligentChunker:
 
             if word_count <= self.max_words:
                 # Section fits — create one chunk
-                chunks.append(self._make_chunk(text, title, filename, section, metadata))
+                chunks.append(
+                    self._make_chunk(text, title, filename, section, metadata)
+                )
             else:
                 # Split long section with overlap
                 sub_chunks = self._split_long_section(text, section.get("header", ""))
                 for sub_text in sub_chunks:
-                    chunks.append(self._make_chunk(sub_text, title, filename, section, metadata))
+                    chunks.append(
+                        self._make_chunk(sub_text, title, filename, section, metadata)
+                    )
 
         return chunks
 
@@ -134,7 +190,11 @@ class IntelligentChunker:
 
         sections = []
         for i, part in enumerate(parts):
-            header = headers[i - 1].strip().strip("#").strip("-").strip() if i > 0 and i - 1 < len(headers) else ""
+            header = (
+                headers[i - 1].strip().strip("#").strip("-").strip()
+                if i > 0 and i - 1 < len(headers)
+                else ""
+            )
             text = part.strip()
             if text:
                 sections.append({"header": header, "text": text})

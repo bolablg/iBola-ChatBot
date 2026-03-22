@@ -7,8 +7,8 @@ import re
 from typing import Any, Dict, Tuple
 
 from langchain_classic.chains import LLMChain
-from langchain_core.prompts import PromptTemplate
 from langchain_community.tools import DuckDuckGoSearchRun
+from langchain_core.prompts import PromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 import config

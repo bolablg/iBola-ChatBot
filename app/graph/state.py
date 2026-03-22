@@ -12,10 +12,10 @@ from typing import Any, Dict, List, Optional, Tuple
 from langchain_core.documents import Document
 from pydantic import BaseModel, Field
 
-
 # ---------------------------------------------------------------------------
 # Enums
 # ---------------------------------------------------------------------------
+
 
 class AgentCategory(str, Enum):
     PROFESSIONAL = "professional"
@@ -35,32 +35,45 @@ class RoutingDestination(str, Enum):
 # Structured LLM output models
 # ---------------------------------------------------------------------------
 
+
 class GuardrailScoring(BaseModel):
     """Structured output for guardrail evaluation — temperature 0.0."""
 
-    score: int = Field(ge=0, le=100, description="Relevance score 0-100. High = on-topic about Bolaji's professional life, education, or learning advice.")
-    category: str = Field(description="One of: professional, education, learning, out_of_scope")
+    score: int = Field(
+        ge=0,
+        le=100,
+        description="Relevance score 0-100. High = on-topic about Bolaji's professional life, education, or learning advice.",
+    )
+    category: str = Field(
+        description="One of: professional, education, learning, out_of_scope"
+    )
     reasoning: str = Field(description="One-sentence explanation of the score.")
 
 
 class GradeDocuments(BaseModel):
     """Binary relevance grading for a retrieved document — temperature 0.0."""
 
-    is_relevant: bool = Field(description="True if the document helps answer the query.")
+    is_relevant: bool = Field(
+        description="True if the document helps answer the query."
+    )
     reasoning: str = Field(default="", description="Brief explanation.")
 
 
 class QueryRewrite(BaseModel):
     """Structured output for query rewriting — temperature 0.3."""
 
-    rewritten_query: str = Field(description="Improved, more specific query for better retrieval.")
+    rewritten_query: str = Field(
+        description="Improved, more specific query for better retrieval."
+    )
 
 
 class GeneratedAnswer(BaseModel):
     """Structured generation output."""
 
     answer: str = Field(description="The answer to the user's question.")
-    confidence: float = Field(ge=0.0, le=1.0, default=0.8, description="Confidence in the answer.")
+    confidence: float = Field(
+        ge=0.0, le=1.0, default=0.8, description="Confidence in the answer."
+    )
 
 
 class ReasoningStep(BaseModel):
@@ -74,6 +87,7 @@ class ReasoningStep(BaseModel):
 # ---------------------------------------------------------------------------
 # Graph State — passed through every node
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class GraphState:

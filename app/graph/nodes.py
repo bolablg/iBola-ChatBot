@@ -124,7 +124,11 @@ def guardrail_node(state: dict) -> dict:
         try:
             category = AgentCategory(raw_category)
         except ValueError:
-            category = AgentCategory.OUT_OF_SCOPE if result.score < 50 else AgentCategory.PROFESSIONAL
+            category = (
+                AgentCategory.OUT_OF_SCOPE
+                if result.score < 50
+                else AgentCategory.PROFESSIONAL
+            )
 
         if result.score >= 60:
             destination = RoutingDestination.RETRIEVE
@@ -135,7 +139,9 @@ def guardrail_node(state: dict) -> dict:
             "guardrail_score": result.score,
             "category": category,
             "routing_destination": destination,
-            "agent_type": category.value if category != AgentCategory.OUT_OF_SCOPE else "redirect",
+            "agent_type": (
+                category.value if category != AgentCategory.OUT_OF_SCOPE else "redirect"
+            ),
             "reasoning_steps": state.get("reasoning_steps", [])
             + [
                 ReasoningStep(
@@ -198,11 +204,7 @@ def retrieve_node(state: dict) -> dict:
             "documents": [],
             "retrieval_attempts": attempts + 1,
             "reasoning_steps": state.get("reasoning_steps", [])
-            + [
-                ReasoningStep(
-                    node="retrieve", action="error", detail=str(exc)[:80]
-                )
-            ],
+            + [ReasoningStep(node="retrieve", action="error", detail=str(exc)[:80])],
         }
 
 
@@ -238,7 +240,9 @@ def grade_documents_node(state: dict) -> dict:
 
     if not documents:
         steps.append(
-            ReasoningStep(node="grade_documents", action="empty", detail="no docs to grade")
+            ReasoningStep(
+                node="grade_documents", action="empty", detail="no docs to grade"
+            )
         )
         return {"graded_documents": [], "reasoning_steps": steps}
 
@@ -477,9 +481,7 @@ def out_of_scope_node(state: dict) -> dict:
     if redirect_count <= 1:
         try:
             llm = _get_llm(temperature=0.6)
-            response = llm.invoke(
-                OUT_OF_SCOPE_PROMPT.format_messages(query=query)
-            )
+            response = llm.invoke(OUT_OF_SCOPE_PROMPT.format_messages(query=query))
             answer = response.content
         except Exception:
             answer = (
