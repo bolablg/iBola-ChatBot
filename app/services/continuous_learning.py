@@ -313,8 +313,7 @@ class ContinuousLearningPipeline:
             )
 
             # Improvement analysis chain
-            self.improvement_prompt = PromptTemplate.from_template(
-                """
+            self.improvement_prompt = PromptTemplate.from_template("""
             Analyze the following performance data and feedback to identify areas for improvement.
 
             Performance Metrics:
@@ -335,8 +334,7 @@ class ContinuousLearningPipeline:
             5. **Performance Optimizations**: Speed and efficiency improvements
 
             Provide actionable recommendations:
-            """
-            )
+            """)
 
             self.improvement_chain = LLMChain(
                 llm=self.llm, prompt=self.improvement_prompt, verbose=False
