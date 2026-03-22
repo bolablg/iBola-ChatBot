@@ -1,6 +1,16 @@
 # iBola — Production Agentic RAG Chatbot
 
+![Version](https://img.shields.io/badge/version-1.0.1-blue)
+![Python](https://img.shields.io/badge/python-3.12-yellow)
+![LangGraph](https://img.shields.io/badge/LangGraph-0.2+-green)
+![Gemini](https://img.shields.io/badge/Gemini-2.5_Pro-orange)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-teal)
+![License](https://img.shields.io/badge/license-proprietary-lightgrey)
+![Deploy](https://img.shields.io/badge/deploy-Cloud_Run-4285F4?logo=googlecloud&logoColor=white)
+
 A production-grade, multi-agent Retrieval-Augmented Generation chatbot powering [chat.bolablg.com](https://chat.bolablg.com). Built with LangGraph, Google Gemini 2.5 Pro, hybrid search (BM25 + vector + RRF), and deployed on Google Cloud Run.
+
+---
 
 ## Architecture
 
@@ -22,6 +32,8 @@ User Query
 
 **LangGraph workflow** with 6 nodes: `guardrail` → `retrieve` → `grade_documents` → `generate` / `rewrite_query` / `out_of_scope`. All parsing-critical LLM calls use **Pydantic structured outputs** at temperature 0.0. Every node has graceful fallbacks.
 
+---
+
 ## Key Features
 
 | Feature | Implementation |
@@ -36,6 +48,96 @@ User Query
 | **Observability** | Langfuse tracing, Google Cloud Logging, feedback endpoint |
 | **Caching** | Multi-level TTL cache (response, session, language) |
 | **Security** | Input validation, rate limiting, CORS, XSS/SQL injection guards |
+
+---
+
+## Tech Stack
+
+### Core
+
+| Component | Technology | Version / Details |
+|-----------|-----------|-------------------|
+| **Language** | Python | 3.12+ |
+| **LLM** | Google Gemini | 2.5 Pro |
+| **Agent Framework** | LangGraph | 0.2+ — stateful workflow graph |
+| **Chain Framework** | LangChain | 0.3+ — LCEL, retrievers, prompts |
+| **Embeddings** | Google Generative AI | `models/embedding-001` |
+| **Structured Outputs** | Pydantic | v2 — `GuardrailScoring`, `GradeDocuments`, `QueryRewrite` |
+
+### Search & Retrieval
+
+| Component | Technology | Details |
+|-----------|-----------|---------|
+| **Vector Store** | ChromaDB | SQLite backend, MMR search |
+| **Keyword Search** | rank-bm25 | BM25Okapi with EN+FR stopwords |
+| **Score Fusion** | Reciprocal Rank Fusion | `rank_constant=60` |
+| **Reranker** | sentence-transformers | `cross-encoder/ms-marco-MiniLM-L-6-v2` |
+| **Chunking** | Custom `IntelligentChunker` | Section-based, metadata-enriched, category-tagged |
+
+### API & Web
+
+| Component | Technology | Details |
+|-----------|-----------|---------|
+| **Framework** | FastAPI | 0.115+ with async support |
+| **Server** | Uvicorn | ASGI, HTTP/1.1 |
+| **Streaming** | SSE (Server-Sent Events) | Via `sse-starlette` |
+| **Validation** | Pydantic | Request/response models |
+| **Config** | pydantic-settings | Type-safe, hierarchical, `.env` support |
+
+### Infrastructure & DevOps
+
+| Component | Technology | Details |
+|-----------|-----------|---------|
+| **Containerization** | Docker | Python 3.12-slim base |
+| **Deployment** | Google Cloud Run | us-central1, public |
+| **Container Registry** | Google Container Registry | `gcr.io` |
+| **CI/CD** | GitHub Actions | GitFlow: feature → staging → main |
+| **Domain** | `chat.bolablg.com` | Cloud Run domain mapping |
+
+### Observability & Monitoring
+
+| Component | Technology | Details |
+|-----------|-----------|---------|
+| **Tracing** | Langfuse | Per-span pipeline tracing (opt-in) |
+| **Logging** | Google Cloud Logging | Structured JSON, severity filtering |
+| **Feedback** | Custom endpoint | `POST /feedback` → Langfuse scores |
+| **Metrics** | psutil + custom | CPU, memory, cache stats, rate limits |
+| **Alerts** | Google Chat webhook | Contact requests, redirect limits |
+| **Analytics** | Google Sheets | Redirect event logging |
+
+### Caching & Storage
+
+| Component | Technology | Details |
+|-----------|-----------|---------|
+| **Response Cache** | TTLCache | 30-minute TTL |
+| **Session Cache** | TTLCache | 1-hour TTL |
+| **Language Cache** | TTLCache | 2-hour TTL |
+| **Redis** | Optional | Production cache backend |
+| **Chat History** | Redis / in-memory | Per-session storage |
+
+### Security
+
+| Component | Technology | Details |
+|-----------|-----------|---------|
+| **Rate Limiting** | Sliding window | Per-IP, per-endpoint + global |
+| **Input Validation** | Pydantic + custom | XSS, SQL injection, length checks |
+| **CORS** | FastAPI middleware | Regex-based origin matching |
+| **Dependency Scanning** | pip-audit, safety | CVE detection in CI |
+| **Static Analysis** | Bandit | Python security linting |
+| **Container Scanning** | Trivy | CRITICAL + HIGH severity |
+
+### Code Quality
+
+| Tool | Purpose |
+|------|---------|
+| **Black** | Code formatting (line length 88) |
+| **isort** | Import sorting (Black-compatible) |
+| **Flake8** | Static analysis (max line 100) |
+| **mypy** | Type checking |
+| **pre-commit** | Git hook automation |
+| **pytest** | Testing (80% coverage target) |
+
+---
 
 ## Project Structure
 
@@ -65,9 +167,13 @@ User Query
 ├── data/                   # Knowledge base (14 documents)
 ├── chroma_db/              # ChromaDB vector store
 ├── tests/
-├── docs/                   # Additional documentation
-└── static/                 # Frontend
+├── docs/                   # Documentation
+├── static/                 # Frontend
+├── VERSION                 # Release version (drives git tags)
+└── CLAUDE.md               # Claude Code project context
 ```
+
+---
 
 ## API Endpoints
 
@@ -85,6 +191,8 @@ User Query
 | `DELETE` | `/session/{id}` | Reset session. |
 
 Interactive docs at `/docs` (Swagger) and `/redoc`.
+
+---
 
 ## Quick Start
 
@@ -133,17 +241,23 @@ docker-compose build && docker-compose up -d
 | `LANGFUSE_PUBLIC_KEY` | No | Langfuse public key |
 | `LANGFUSE_SECRET_KEY` | No | Langfuse secret key |
 
+Full configuration reference: [docs/CONFIGURATION.md](docs/CONFIGURATION.md)
+
+---
+
 ## CI/CD Pipeline
 
-GitFlow with automated promotion:
+GitFlow with automated promotion and version tagging:
 
 ```
 Feature branch ─── lint + format + test ───▶ Auto-merge to staging
                                                      │
 Staging ─────── pip-audit, bandit, safety, trivy ───▶ Auto-create PR to main
                                                      │
-Main ──────────────── merge PR ─────────────────────▶ Deploy to Cloud Run
+Main ──────────────── merge PR ─────────────────────▶ Deploy to Cloud Run + tag vX.Y.Z
 ```
+
+Version is read from the `VERSION` file at project root. Update it before merging to main.
 
 | Stage | Tools |
 |-------|-------|
@@ -151,6 +265,9 @@ Main ──────────────── merge PR ─────�
 | **Test** | pytest with coverage |
 | **Security** | pip-audit, safety, Bandit, Trivy |
 | **Deploy** | Docker → GCR → Cloud Run |
+| **Tag** | Annotated git tag from `VERSION` file |
+
+---
 
 ## Development
 
@@ -168,22 +285,7 @@ black app/ tests/ pipeline/ && isort app/ tests/ pipeline/ && flake8 app/ tests/
 python pipeline/update_vectorstore.py
 ```
 
-## Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| **LLM** | Google Gemini 2.5 Pro |
-| **Agent Framework** | LangGraph + LangChain |
-| **Embeddings** | Google Generative AI (`embedding-001`) |
-| **Vector Store** | ChromaDB |
-| **Keyword Search** | rank-bm25 (BM25Okapi) |
-| **Reranker** | sentence-transformers cross-encoder |
-| **API** | FastAPI + Uvicorn |
-| **Config** | pydantic-settings |
-| **Tracing** | Langfuse |
-| **Caching** | Redis / in-memory TTLCache |
-| **Deployment** | Docker → Google Cloud Run |
-| **CI/CD** | GitHub Actions (GitFlow) |
+---
 
 ## Documentation
 
@@ -194,10 +296,12 @@ python pipeline/update_vectorstore.py
 | [Data Pipeline](docs/DATA_PIPELINE.md) | Knowledge base, intelligent chunking, vectorstore updates |
 | [API Reference](docs/API_REFERENCE.md) | All endpoints with request/response examples |
 | [Configuration](docs/CONFIGURATION.md) | Environment variables, pydantic-settings, legacy config |
-| [CI/CD Pipeline](docs/CI_CD.md) | GitFlow, security scanning, deployment |
+| [CI/CD Pipeline](docs/CI_CD.md) | GitFlow, security scanning, deployment, tagging |
 | [Observability](docs/OBSERVABILITY.md) | Langfuse tracing, logging, rate limiting, feedback |
 | [Architecture Assessment](docs/ARCHITECTURE_ASSESSMENT.md) | Original architecture review |
 | [Release Notes](docs/RELEASE_NOTES.md) | Version history |
+
+---
 
 ## License
 
