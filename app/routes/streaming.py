@@ -110,6 +110,22 @@ async def ask_agentic(payload: AskInput, request: Request):
     )
     elapsed = time.time() - start
 
+    # Run collector agent for lead detection
+    try:
+        from app.agents.collector_agent import collector_agent
+
+        collector_result = collector_agent.check_and_respond(
+            user_input=user_input,
+            session_id=session_id,
+            chat_history=chat_history,
+            user_language=user_language,
+            agent_response=result.get("answer", ""),
+        )
+        if collector_result and collector_result.get("follow_up_question"):
+            result["answer"] += "\n\n" + collector_result["follow_up_question"]
+    except Exception:
+        pass
+
     await cache_service.set_cached_response(user_input, "agentic", user_language, result)
     append_history(session_id, (user_input, result.get("answer", "")))
 
