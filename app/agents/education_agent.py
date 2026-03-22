@@ -2,8 +2,8 @@
 Education Agent - Handles questions about educational background, degrees, and academic achievements.
 """
 
-from langchain.chains import ConversationalRetrievalChain
-from langchain.prompts import PromptTemplate
+from langchain_classic.chains import ConversationalRetrievalChain
+from langchain_core.prompts import PromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 import config

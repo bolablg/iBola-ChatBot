@@ -20,6 +20,8 @@ This is a **production-grade agentic multi-agent RAG chatbot** built with:
 - `pipeline/` — Data ingestion (chunker, vectorstore update, Google Drive sync)
 - `data/` — Knowledge base documents
 - `tests/` — Test suite
+- `scripts/` — Lint, format, security scripts
+- `docs/` — Full documentation
 
 ## API Endpoints
 
@@ -37,6 +39,24 @@ Legacy config in `config.py` still works for backward compatibility.
 ## CI/CD
 
 GitFlow: feature → staging (lint+test+auto-merge) → main (security scan → deploy)
+Version from `VERSION` file drives git tags on deploy.
+
+## Quality Scripts
+
+All scripts lint/format **changed files only** (vs main) for speed.
+
+```bash
+bash scripts/format.sh    # Auto-format changed .py files (Black + isort)
+bash scripts/lint.sh      # Lint changed .py files (Flake8)
+bash scripts/security.sh  # Dependency audit (pip-audit) + Bandit on changed files
+bash scripts/check.sh     # Run all three above in sequence
+```
+
+## Before Completing Any Task
+
+**Always run `bash scripts/check.sh` before marking a task as done.**
+This ensures formatting, linting, and security checks pass before commit.
+If any check fails, fix the issues before proceeding.
 
 ## Commands
 
@@ -44,12 +64,17 @@ GitFlow: feature → staging (lint+test+auto-merge) → main (security scan → 
 # Run locally
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
+# Run with Docker
+docker compose up -d
+
 # Update vector store
 python pipeline/update_vectorstore.py
 
 # Run tests
 pytest tests/ -v --cov=app
-
-# Lint
-black app/ tests/ pipeline/ && isort app/ tests/ pipeline/ && flake8 app/ tests/ pipeline/
 ```
+
+## Commit Rules
+
+- Never include `Co-Authored-By` lines in commit messages
+- Never move CLAUDE.md out of the project root

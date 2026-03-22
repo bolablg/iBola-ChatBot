@@ -16,8 +16,8 @@ sys.path.append(
 from config import GEMINI_API_KEY
 
 try:
-    from langchain.chains import LLMChain
-    from langchain.prompts import PromptTemplate
+    from langchain_classic.chains import LLMChain
+    from langchain_core.prompts import PromptTemplate
     from langchain_core.documents import Document
     from langchain_google_genai import ChatGoogleGenerativeAI
 

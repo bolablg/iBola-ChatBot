@@ -31,6 +31,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
@@ -43,14 +45,43 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
 
+      - name: Get changed Python files
+        id: changed
+        run: |
+          CHANGED=$(git diff --name-only --diff-filter=d origin/main...HEAD -- '*.py' || echo "")
+          if [ -z "$CHANGED" ]; then
+            echo "files=app/ tests/ pipeline/" >> "$GITHUB_OUTPUT"
+            echo "mode=full" >> "$GITHUB_OUTPUT"
+          else
+            echo "files<<EOF" >> "$GITHUB_OUTPUT"
+            echo "$CHANGED" >> "$GITHUB_OUTPUT"
+            echo "EOF" >> "$GITHUB_OUTPUT"
+            echo "mode=changed" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Check formatting (Black)
-        run: black --check --diff app/ tests/ pipeline/
+        run: |
+          if [ "${{ steps.changed.outputs.mode }}" = "changed" ]; then
+            echo "${{ steps.changed.outputs.files }}" | xargs black --check --diff
+          else
+            black --check --diff app/ tests/ pipeline/
+          fi
 
       - name: Check import sorting (isort)
-        run: isort --check-only --diff app/ tests/ pipeline/
+        run: |
+          if [ "${{ steps.changed.outputs.mode }}" = "changed" ]; then
+            echo "${{ steps.changed.outputs.files }}" | xargs isort --check-only --diff
+          else
+            isort --check-only --diff app/ tests/ pipeline/
+          fi
 
       - name: Static analysis (Flake8)
-        run: flake8 app/ tests/ pipeline/
+        run: |
+          if [ "${{ steps.changed.outputs.mode }}" = "changed" ]; then
+            echo "${{ steps.changed.outputs.files }}" | xargs flake8
+          else
+            flake8 app/ tests/ pipeline/
+          fi
 
       - name: Run tests
         env:

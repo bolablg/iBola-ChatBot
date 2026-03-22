@@ -47,6 +47,7 @@ numpy
 
 # Classification / web search
 duckduckgo-search
+ddgs
 
 # Document processing
 streamlit
