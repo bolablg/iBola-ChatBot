@@ -1,0 +1,58 @@
+BOLAJI BALOGOUN — CERTIFICATIONS, BOOTCAMPS & PROFESSIONAL DEVELOPMENT
+
+---
+
+BOOTCAMP IN BIG DATA DEVELOPMENT — RINTIO
+Period: March – June 2018
+Bolaji transitioned from Statistics to Data Science through this intensive Big Data Bootcamp at Rintio. He gained hands-on experience in Data Engineering and Machine Learning, working with Apache Spark, Hive, Python, SQL, Hadoop, ElasticSearch, Kibana, Apache Superset, and GitLab. The bootcamp included a real-world project called "Duniya Data", leveraging data insights to enhance agricultural practices.
+
+---
+
+PROFESSIONAL CERTIFICATIONS
+
+Google Professional Data Engineer — Google (November 2025, expires November 2027)
+Credential ID: a81932fee73d448ba64a13eb713d85da
+Skills: Google BigQuery, Data Warehousing, Cloud Storage, SQL, Data Security, Google Cloud Platform (GCP), Data Lake, Data Engineering, Data Pipelines, Data Processing, Data Migration.
+
+McKinsey.org Forward Program — McKinsey & Company (July 2025)
+Credential ID: f95e7545-bb5e-414c-918a-2af9b1d7c603
+Skills: Problem Solving, Communicating for Impact, Adaptability & Resilience.
+
+Apache Airflow | A Real-Time & Hands-On Course on Airflow — Udemy (February 2024)
+Credential ID: UC-2d4e8045-bdae-40e0-9de1-5f474b46c165
+Skills: Automation, Apache Airflow, Data Pipelines, Extract Transform Load (ETL).
+
+Twelve Myths About Data Science — LinkedIn (November 2019)
+
+Applied Data Science with Python - Level 2 — IBM (September 2019)
+Credential ID: 429fa1fa-5eee-40ec-b710-4b18a81ef07c
+Skills: Python.
+
+Machine Learning with Python - Level 1 — IBM (September 2019)
+Credential ID: 0801af44-8410-477c-a294-0622a3b92354
+Skills: Python.
+
+Python for Data Science — IBM (August 2019)
+Credential ID: fb9717a1-cc94-46ca-b6f1-08855498490f
+Skills: Python.
+
+Statistics 101 — IBM (August 2019)
+Credential ID: d9ef2c98-4cb0-4ce7-af5a-62cfbeec7a52
+Skills: R, Survey Design.
+
+Data Science Foundations - Level 1 — IBM (July 2019)
+Credential ID: 76a7d443-dfe5-491d-b13d-7d5fa5164991
+Skills: Python.
+
+Data Science Foundations - Level 2 (V2) — IBM (July 2019)
+Credential ID: ea2aad34-2f56-46d9-a138-1ae1cf050e6f
+Skills: SQL, Python.
+
+---
+
+CONTINUOUS PROFESSIONAL DEVELOPMENT
+Bolaji proactively enrolls in specialized courses to acquire new skills as challenges arise. Key areas of self-directed learning include:
+- Google Cloud Platform (BigQuery, Cloud Storage, Dataflow, Vertex AI) — learned during cloud migration at Gozem
+- Data governance and quality management frameworks
+- LLM and AI engineering (LangChain, LangGraph, RAG pipelines)
+- Product analytics, A/B testing, and experimentation
