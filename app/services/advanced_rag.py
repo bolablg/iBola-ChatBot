@@ -1,332 +1,277 @@
 """
-Advanced RAG Techniques: Query Expansion, Reranking, and Hybrid Search.
+Production Hybrid Search: BM25 + Vector + Reciprocal Rank Fusion (RRF).
+
+Replaces the legacy naive hybrid search with a proper implementation using
+rank_bm25 for keyword search, ChromaDB MMR for vector search, and RRF for
+score fusion.  Falls back gracefully when dependencies are missing.
 """
 
-import os
+from __future__ import annotations
+
+import logging
 import re
-import sys
-from collections import Counter
-from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
+from langchain_chroma import Chroma
+from langchain_core.documents import Document
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import config
+
+logger = logging.getLogger("ibola.search")
+
+# Optional dependency — graceful degradation
+try:
+    from rank_bm25 import BM25Okapi
+
+    BM25_AVAILABLE = True
+except ImportError:
+    BM25_AVAILABLE = False
+    logger.info("rank_bm25 not installed — hybrid search will use vector-only mode")
+
+
+# ---------------------------------------------------------------------------
+# BM25 keyword index
+# ---------------------------------------------------------------------------
+
+# Stopwords — English + French basics
+_STOPWORDS = frozenset(
+    {
+        "the", "a", "an", "is", "are", "was", "were", "be", "been", "being",
+        "have", "has", "had", "do", "does", "did", "will", "would", "could",
+        "should", "may", "might", "shall", "can", "to", "of", "in", "for",
+        "on", "with", "at", "by", "from", "as", "into", "through", "during",
+        "before", "after", "and", "but", "or", "not", "no", "nor", "so",
+        "le", "la", "les", "un", "une", "des", "de", "du", "et", "est",
+        "en", "dans", "pour", "sur", "avec", "par", "que", "qui", "ce",
+        "this", "that", "it", "its", "he", "she", "they", "we", "i", "you",
+    }
 )
-from config import GEMINI_API_KEY
+
+
+def _tokenize(text: str) -> List[str]:
+    """Lowercase, strip punctuation, drop stopwords and short tokens."""
+    text = re.sub(r"[^\w\s]", " ", text.lower())
+    return [w for w in text.split() if len(w) > 1 and w not in _STOPWORDS]
+
+
+class BM25Index:
+    """BM25 keyword search index over a document corpus."""
+
+    def __init__(self) -> None:
+        self.documents: List[Document] = []
+        self.bm25: Optional[Any] = None  # BM25Okapi or None
+        self.is_built = False
+
+    def build(self, documents: List[Document]) -> None:
+        if not BM25_AVAILABLE or not documents:
+            return
+        self.documents = documents
+        tokenized = [_tokenize(doc.page_content) for doc in documents]
+        self.bm25 = BM25Okapi(tokenized)
+        self.is_built = True
+        logger.info("BM25 index built with %d documents", len(documents))
+
+    def search(self, query: str, top_k: int = 10) -> List[Tuple[Document, float]]:
+        if not self.is_built or self.bm25 is None:
+            return []
+        scores = self.bm25.get_scores(_tokenize(query))
+        top_idx = np.argsort(scores)[::-1][:top_k]
+        return [
+            (self.documents[i], float(scores[i]))
+            for i in top_idx
+            if scores[i] > 0
+        ]
+
+
+# ---------------------------------------------------------------------------
+# Reciprocal Rank Fusion
+# ---------------------------------------------------------------------------
+
+
+def reciprocal_rank_fusion(
+    ranked_lists: List[List[Tuple[Document, float]]],
+    rank_constant: int = 60,
+) -> List[Tuple[Document, float]]:
+    """Fuse multiple ranked lists using RRF.  rank_constant=60 is standard."""
+    doc_scores: Dict[int, Tuple[Document, float]] = {}
+
+    for ranked_list in ranked_lists:
+        for rank, (doc, _score) in enumerate(ranked_list):
+            doc_id = hash(doc.page_content)
+            rrf = 1.0 / (rank_constant + rank + 1)
+            if doc_id in doc_scores:
+                existing_doc, existing_score = doc_scores[doc_id]
+                doc_scores[doc_id] = (existing_doc, existing_score + rrf)
+            else:
+                doc_scores[doc_id] = (doc, rrf)
+
+    return sorted(doc_scores.values(), key=lambda x: x[1], reverse=True)
+
+
+# ---------------------------------------------------------------------------
+# Cross-encoder reranker (optional)
+# ---------------------------------------------------------------------------
 
 try:
-    import faiss
-    from langchain.chains import LLMChain
-    from langchain.prompts import PromptTemplate
-    from langchain_chroma import Chroma
-    from langchain_core.callbacks import CallbackManagerForRetrieverRun
-    from langchain_core.documents import Document
-    from langchain_core.retrievers import BaseRetriever
-    from langchain_google_genai import (
-        ChatGoogleGenerativeAI,
-        GoogleGenerativeAIEmbeddings,
-    )
-    from sentence_transformers import SentenceTransformer, util
+    from sentence_transformers import CrossEncoder as _CrossEncoder
 
-    RAG_AVAILABLE = True
-except ImportError as e:
-    RAG_AVAILABLE = False
-    print(f"Advanced RAG service requires additional dependencies: {e}")
+    RERANKER_AVAILABLE = True
+except ImportError:
+    RERANKER_AVAILABLE = False
 
 
-class QueryExpander:
-    """Expands user queries to improve retrieval."""
+class CrossEncoderReranker:
+    """Post-retrieval reranker using a cross-encoder model."""
 
-    def __init__(self):
-        if not RAG_AVAILABLE:
-            return
+    def __init__(self, model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"):
+        self.model = None
+        if RERANKER_AVAILABLE:
+            try:
+                self.model = _CrossEncoder(model_name)
+                logger.info("Cross-encoder reranker loaded: %s", model_name)
+            except Exception as exc:
+                logger.warning("Reranker init failed: %s", exc)
 
-        self.llm = ChatGoogleGenerativeAI(
-            model="gemini-2.5-pro", temperature=0.7, google_api_key=GEMINI_API_KEY
-        )
-
-        self.expansion_prompt = PromptTemplate.from_template(
-            """
-        Expand the following user query to improve information retrieval.
-        Generate 3-5 related queries or search terms that would help find more comprehensive information.
-
-        Original Query: {query}
-
-        Consider:
-        - Synonyms and related terms
-        - Different ways to phrase the same question
-        - Related concepts or topics
-        - Specific terminology that might be used
-
-        Provide expanded queries as a comma-separated list:
-        """
-        )
-
-        self.expansion_chain = LLMChain(
-            llm=self.llm, prompt=self.expansion_prompt, verbose=False
-        )
-
-    def expand_query(self, query: str) -> List[str]:
-        """Expand a query into multiple related queries."""
-        if not RAG_AVAILABLE:
-            return [query]
-
-        try:
-            result = self.expansion_chain.run(query=query)
-            # Split by comma and clean up
-            expanded_queries = [q.strip() for q in result.split(",") if q.strip()]
-            # Always include original query
-            expanded_queries.insert(0, query)
-            return expanded_queries[:6]  # Limit to 6 queries total
-        except Exception as e:
-            print(f"❌ Error expanding query: {e}")
-            return [query]
-
-
-class Reranker:
-    """Reranks retrieved documents based on relevance to query."""
-
-    def __init__(self):
-        if not RAG_AVAILABLE:
-            return
-
-        # Use sentence transformers for semantic similarity
-        try:
-            self.model = SentenceTransformer("all-MiniLM-L6-v2")
-        except Exception as e:
-            print(f"❌ Error loading sentence transformer: {e}")
-            self.model = None
-
-    def rerank_documents(
-        self, query: str, documents: List[Document], top_k: int = 5
+    def rerank(
+        self, query: str, documents: List[Document], top_k: int = 5,
     ) -> List[Tuple[Document, float]]:
-        """Rerank documents based on semantic similarity to query."""
-        if not RAG_AVAILABLE or not self.model:
-            # Return documents with dummy scores if model not available
+        if not self.model or not documents:
             return [(doc, 1.0) for doc in documents[:top_k]]
-
         try:
-            # Encode query
-            query_embedding = self.model.encode(query, convert_to_tensor=True)
-
-            # Encode documents
-            doc_texts = [doc.page_content for doc in documents]
-            doc_embeddings = self.model.encode(doc_texts, convert_to_tensor=True)
-
-            # Calculate similarities
-            similarities = util.cos_sim(query_embedding, doc_embeddings)[0]
-
-            # Create list of (document, score) pairs
-            doc_scores = list(zip(documents, similarities.tolist()))
-
-            # Sort by score (descending) and return top_k
-            doc_scores.sort(key=lambda x: x[1], reverse=True)
-
-            return doc_scores[:top_k]
-
-        except Exception as e:
-            print(f"❌ Error reranking documents: {e}")
+            pairs = [(query, doc.page_content[:512]) for doc in documents]
+            scores = self.model.predict(pairs)
+            scored = sorted(zip(documents, scores), key=lambda x: x[1], reverse=True)
+            return [(doc, float(s)) for doc, s in scored[:top_k]]
+        except Exception:
             return [(doc, 1.0) for doc in documents[:top_k]]
 
 
-class HybridRetriever(BaseRetriever):
-    """Combines multiple retrieval methods for better results."""
+# ---------------------------------------------------------------------------
+# Hybrid Search Service
+# ---------------------------------------------------------------------------
 
-    def __init__(
-        self, vectorstore_path: str, embedding_model: str = "models/embedding-001"
-    ):
-        if not RAG_AVAILABLE:
-            return
 
-        super().__init__()
-        self.vectorstore_path = vectorstore_path
+class HybridSearchService:
+    """BM25 + ChromaDB MMR + RRF fusion.  Drop-in replacement for the old AdvancedRAGService."""
 
-        # Initialize embeddings
-        self.embeddings = GoogleGenerativeAIEmbeddings(
-            model=embedding_model, google_api_key=GEMINI_API_KEY
-        )
+    def __init__(self, vectorstore_path: str | None = None):
+        self.vectorstore_path = vectorstore_path or config.DB_PATH
+        self.bm25_index = BM25Index()
+        self.reranker = CrossEncoderReranker()
+        self.vectorstore: Optional[Chroma] = None
+        self.embeddings = None
+        self._initialized = False
+        self._initialize()
 
-        # Initialize vectorstore
-        self.vectorstore = Chroma(
-            persist_directory=vectorstore_path, embedding_function=self.embeddings
-        )
-
-        # Initialize components
-        self.query_expander = QueryExpander()
-        self.reranker = Reranker()
-
-        # BM25-like term frequency index for keyword matching
-        self.term_index = {}
-        self._build_term_index()
-
-    def _build_term_index(self):
-        """Build a simple term frequency index for keyword-based retrieval."""
+    def _initialize(self) -> None:
         try:
-            all_docs = self.vectorstore.get()
-            for i, doc_content in enumerate(all_docs.get("documents", [])):
-                doc_id = (
-                    all_docs.get("ids", [])[i]
-                    if i < len(all_docs.get("ids", []))
-                    else str(i)
-                )
-                terms = self._tokenize(doc_content.lower())
-                for term in terms:
-                    if term not in self.term_index:
-                        self.term_index[term] = []
-                    self.term_index[term].append(doc_id)
-        except Exception as e:
-            print(f"❌ Error building term index: {e}")
+            self.embeddings = GoogleGenerativeAIEmbeddings(
+                model="models/embedding-001",
+                google_api_key=config.GEMINI_API_KEY,
+            )
+            self.vectorstore = Chroma(
+                persist_directory=self.vectorstore_path,
+                embedding_function=self.embeddings,
+            )
+            self._build_bm25()
+            self._initialized = True
+            logger.info("HybridSearchService initialised (BM25=%s)", self.bm25_index.is_built)
+        except Exception as exc:
+            logger.error("HybridSearchService init failed: %s", exc)
 
-    def _tokenize(self, text: str) -> List[str]:
-        """Simple tokenization for keyword matching."""
-        # Remove punctuation and split
-        text = re.sub(r"[^\w\s]", " ", text)
-        return [word for word in text.split() if len(word) > 2]
+    def _build_bm25(self) -> None:
+        try:
+            data = self.vectorstore.get()
+            docs = []
+            for i, content in enumerate(data.get("documents", [])):
+                meta = {}
+                if data.get("metadatas") and i < len(data["metadatas"]):
+                    meta = data["metadatas"][i] or {}
+                docs.append(Document(page_content=content, metadata=meta))
+            if docs:
+                self.bm25_index.build(docs)
+        except Exception as exc:
+            logger.warning("BM25 build error: %s", exc)
 
-    def _keyword_search(self, query: str, top_k: int = 10) -> List[Tuple[str, float]]:
-        """Perform keyword-based search using term frequency."""
-        query_terms = self._tokenize(query.lower())
-        doc_scores = Counter()
+    # ------------------------------------------------------------------
 
-        # Score documents based on term frequency
-        for term in query_terms:
-            if term in self.term_index:
-                for doc_id in self.term_index[term]:
-                    doc_scores[doc_id] += 1
-
-        # Return top scoring documents
-        return doc_scores.most_common(top_k)
-
-    def _get_relevant_documents(
-        self, query: str, *, run_manager=None
+    def search(
+        self,
+        query: str,
+        top_k: int = 8,
+        use_hybrid: bool = True,
+        use_reranker: bool = True,
+        category_filter: Optional[str] = None,
     ) -> List[Document]:
-        """Main retrieval method combining multiple techniques."""
-        if not RAG_AVAILABLE:
+        """Unified search: vector MMR + BM25 + RRF + optional reranking."""
+        if not self._initialized:
             return []
 
         try:
-            # 1. Query Expansion
-            expanded_queries = self.query_expander.expand_query(query)
-            print(f"🔍 Expanded query into {len(expanded_queries)} variations")
+            ranked_lists: List[List[Tuple[Document, float]]] = []
 
-            # 2. Multi-query retrieval
-            all_docs = []
-            seen_ids = set()
+            # 1. Vector search (MMR)
+            vector_docs = self.vectorstore.max_marginal_relevance_search(
+                query, k=top_k, fetch_k=top_k * 3,
+            )
+            ranked_lists.append(
+                [(doc, 1.0 / (i + 1)) for i, doc in enumerate(vector_docs)]
+            )
 
-            for expanded_query in expanded_queries:
-                # Vector search
-                vector_results = self.vectorstore.similarity_search(expanded_query, k=5)
+            # 2. BM25
+            if use_hybrid and self.bm25_index.is_built:
+                bm25_results = self.bm25_index.search(query, top_k=top_k)
+                if bm25_results:
+                    ranked_lists.append(bm25_results)
 
-                # Keyword search
-                keyword_results = self._keyword_search(expanded_query, top_k=5)
-                keyword_docs = []
-                for doc_id, score in keyword_results:
-                    try:
-                        doc = self.vectorstore.get([doc_id])
-                        if doc.get("documents"):
-                            keyword_docs.append(
-                                Document(
-                                    page_content=doc["documents"][0],
-                                    metadata=(
-                                        doc.get("metadatas", [{}])[0]
-                                        if doc.get("metadatas")
-                                        else {}
-                                    ),
-                                )
-                            )
-                    except Exception:
-                        continue
-
-                # Combine and deduplicate
-                for doc in vector_results + keyword_docs:
-                    doc_id = hash(doc.page_content)
-                    if doc_id not in seen_ids:
-                        all_docs.append(doc)
-                        seen_ids.add(doc_id)
-
-            # 3. Reranking
-            if len(all_docs) > 5:
-                reranked_results = self.reranker.rerank_documents(
-                    query, all_docs, top_k=5
-                )
-                final_docs = [doc for doc, score in reranked_results]
+            # 3. Fuse
+            if len(ranked_lists) > 1:
+                fused = reciprocal_rank_fusion(ranked_lists, rank_constant=60)
+                results = [doc for doc, _ in fused[:top_k * 2]]
             else:
-                final_docs = all_docs[:5]
+                results = vector_docs[:top_k]
 
-            print(f"🎯 Retrieved {len(final_docs)} documents using hybrid search")
-            return final_docs
+            # 4. Optional rerank
+            if use_reranker and len(results) > top_k:
+                reranked = self.reranker.rerank(query, results, top_k=top_k)
+                results = [doc for doc, _ in reranked]
+            else:
+                results = results[:top_k]
 
-        except Exception as e:
-            print(f"❌ Error in hybrid retrieval: {e}")
-            # Fallback to simple vector search
+            # 5. Category filter
+            if category_filter:
+                filtered = [
+                    d for d in results
+                    if d.metadata.get("category", "").lower() == category_filter.lower()
+                ]
+                results = filtered if filtered else results
+
+            return results
+
+        except Exception as exc:
+            logger.error("Hybrid search error: %s", exc)
             try:
-                return self.vectorstore.similarity_search(query, k=3)
+                return self.vectorstore.similarity_search(query, k=min(top_k, 3))
             except Exception:
                 return []
 
+    def rebuild_bm25(self) -> None:
+        """Rebuild BM25 index (call after vectorstore updates)."""
+        self._build_bm25()
 
-class AdvancedRAGService:
-    """
-    Main service for advanced RAG techniques.
-    """
-
-    def __init__(self, vectorstore_path: str = "chroma_db"):
-        self.vectorstore_path = vectorstore_path
-        self.hybrid_retriever = None
-
-        if RAG_AVAILABLE:
-            try:
-                self.hybrid_retriever = HybridRetriever(vectorstore_path)
-                print("✅ Advanced RAG service initialized with hybrid retrieval")
-            except Exception as e:
-                print(f"❌ Error initializing advanced RAG: {e}")
-
-    def retrieve_documents(self, query: str, top_k: int = 5) -> List[Document]:
-        """Retrieve documents using advanced RAG techniques."""
-        if not self.hybrid_retriever:
-            print("⚠️  Advanced RAG not available, using basic retrieval")
-            return []
-
-        return self.hybrid_retriever.get_relevant_documents(query)[:top_k]
-
-    def expand_query(self, query: str) -> List[str]:
-        """Expand a query for better retrieval."""
-        if not self.hybrid_retriever:
-            return [query]
-
-        return self.hybrid_retriever.query_expander.expand_query(query)
-
-    def rerank_documents(
-        self, query: str, documents: List[Document], top_k: int = 5
-    ) -> List[Document]:
-        """Rerank documents based on relevance."""
-        if not self.hybrid_retriever:
-            return documents[:top_k]
-
-        reranked = self.hybrid_retriever.reranker.rerank_documents(
-            query, documents, top_k
-        )
-        return [doc for doc, score in reranked]
-
-    def get_retrieval_stats(self) -> Dict[str, Any]:
-        """Get statistics about the retrieval system."""
-        if not self.hybrid_retriever:
-            return {"status": "unavailable"}
-
+    def get_stats(self) -> Dict[str, Any]:
         return {
-            "status": "available",
+            "initialized": self._initialized,
             "vectorstore_path": self.vectorstore_path,
-            "term_index_size": len(self.hybrid_retriever.term_index),
-            "capabilities": [
-                "query_expansion",
-                "reranking",
-                "hybrid_search",
-                "keyword_search",
-            ],
+            "bm25_available": BM25_AVAILABLE,
+            "bm25_indexed": self.bm25_index.is_built,
+            "bm25_doc_count": len(self.bm25_index.documents),
+            "reranker_available": self.reranker.model is not None,
+            "capabilities": ["vector_mmr", "bm25", "rrf_fusion", "cross_encoder_rerank"],
         }
 
 
-# Global advanced RAG service instance
-advanced_rag = AdvancedRAGService() if RAG_AVAILABLE else None
+# Module-level singleton
+hybrid_search = HybridSearchService()
