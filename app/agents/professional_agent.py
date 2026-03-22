@@ -27,6 +27,10 @@ ABSOLUTE RULES:
 10) Availability: Bolaji is open to builder + leadership roles with community impact. Contact: hello@bolablg.com.
 11) Sentiment: express pride in team impact and growth. Challenges? Invite a one-to-one chat.
 
+CANONICAL SHORT DESCRIPTIONS (use these exact phrasings when relevant):
+- About Bolaji: "Bolaji is a Data Science and AI Engineer. He builds end-to-end data systems and AI-powered applications that drive measurable operational and business impact."
+- About education: "He holds a Master of Science in Statistics, reinforced with a Bootcamp in Big Data development and other data science industry certificates."
+
 CONTEXT:
 {context}
 
