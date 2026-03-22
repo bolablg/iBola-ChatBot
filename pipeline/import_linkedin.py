@@ -116,17 +116,17 @@ def main():
     certs = import_certifications()
     if certs:
         sections.append(certs)
-        print(f"  Certifications: imported")
+        print("  Certifications: imported")
 
     skills = import_skills()
     if skills:
         sections.append(skills)
-        print(f"  Skills: imported")
+        print("  Skills: imported")
 
     courses = import_courses()
     if courses:
         sections.append(courses)
-        print(f"  Courses: imported")
+        print("  Courses: imported")
 
     if not sections:
         print("No LinkedIn data files found in export directory.")
