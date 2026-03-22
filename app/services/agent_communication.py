@@ -17,8 +17,8 @@ sys.path.append(
 from config import GEMINI_API_KEY
 
 try:
-    from langchain.chains import LLMChain
-    from langchain.prompts import PromptTemplate
+    from langchain_classic.chains import LLMChain
+    from langchain_core.prompts import PromptTemplate
     from langchain_google_genai import ChatGoogleGenerativeAI
 
     COMMUNICATION_AVAILABLE = True
@@ -98,8 +98,7 @@ class AgentCommunicationHub:
             )
 
             # Task delegation analysis chain
-            self.delegation_prompt = PromptTemplate.from_template(
-                """
+            self.delegation_prompt = PromptTemplate.from_template("""
             Analyze if this task should be delegated to another agent.
 
             Current Agent: {current_agent}
@@ -123,8 +122,7 @@ class AgentCommunicationHub:
             Target_Agent: [agent_name or NONE]
             Reasoning: [brief explanation]
             Confidence: [HIGH/MEDIUM/LOW]
-            """
-            )
+            """)
 
             self.delegation_chain = LLMChain(
                 llm=self.llm, prompt=self.delegation_prompt, verbose=False

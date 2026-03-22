@@ -1,650 +1,591 @@
-// === MAIN IBOLA CHATBOT APPLICATION ===
+// ============================================================
+// iBola Chatbot — ChatGPT-Style Frontend
+// Vanilla JS, markdown rendering, suggestions, SSE, feedback
+// ============================================================
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 iBola Chatbot Application Starting...');
-
-    // DOM Elements
-    const chatBox = document.getElementById('chat-box');
+    // --- DOM ---
+    const chatMain = document.getElementById('chat-main');
+    const chatMessages = document.getElementById('chat-messages');
     const chatForm = document.getElementById('chat-form');
     const userInput = document.getElementById('user-input');
     const typingIndicator = document.getElementById('typing-indicator');
-    const sendButton = chatForm.querySelector('button');
-    const modeToggle = document.getElementById('mode-toggle');
-
-    // Multi-agent elements
-    const agentIndicator = document.getElementById('agent-indicator');
-    const agentIcon = document.getElementById('agent-icon');
-    const agentName = document.getElementById('agent-name');
-    const agentStatus = document.getElementById('agent-status');
-    const quickActions = document.getElementById('quick-actions');
-
-    // Modal elements
-    const modal = document.getElementById('appointment-modal');
+    const sendBtn = chatForm.querySelector('.send-btn');
+    const themeToggle = document.getElementById('theme-toggle');
+    const chatApp = document.getElementById('chat-app');
+    const welcomeScreen = document.getElementById('welcome-screen');
+    const suggestionsGrid = document.getElementById('suggestions-grid');
+    const modalOverlay = document.getElementById('modal-overlay');
     const modalIframe = document.getElementById('modal-iframe');
-    const closeModalBtn = document.querySelector('.modal-close-btn');
-    const agentTransitionModal = document.getElementById('agent-transition-modal');
+    const modalClose = document.getElementById('modal-close');
 
-    // Session and state management
-    const sessionId = `web-session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    let lastUserQuestion = "";
-    let currentAgentType = 'redirect';
-    let chatEnded = false; // Track if chat has ended
-    let agentTransitionTimeout = null;
+    // --- State ---
+    const sessionId = `web-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    const isEmbedMode = document.documentElement.classList.contains('minimal');
     let userLanguage = 'en';
-    let redirectCount = 0;
+    let chatEnded = false;
+    let msgIndex = 0;
+    let hasUserSent = false;
 
-    // Agent configurations
-    const agentConfigs = {
-        professional: {
-            icon: '💼',
-            name: 'Professional Expert',
-            status: 'Specialized in career & projects',
-            color: '#007aff'
-        },
-        education: {
-            icon: '🎓',
-            name: 'Education Specialist',
-            status: 'Focused on academic background',
-            color: '#34c759'
-        },
-        learning: {
-            icon: '📚',
-            name: 'Learning Advisor',
-            status: 'Guides skill development',
-            color: '#ff9500'
-        },
-        redirect: {
-            icon: '🔄',
-            name: 'Smart Redirect',
-            status: 'Routes to appropriate agent',
-            color: '#ff3b30'
-        }
-    };
-
-    console.log('📋 Elements loaded:', {
-        chatBox: !!chatBox,
-        chatForm: !!chatForm,
-        userInput: !!userInput,
-        modeToggle: !!modeToggle,
-        sessionId: sessionId
-    });
-
-    // === THEME TOGGLE FUNCTIONALITY ===
+    // --- Theme ---
     const applyTheme = (theme) => {
-        console.log('🎨 applyTheme called with:', theme);
         const isDark = theme === 'dark';
         document.body.classList.toggle('dark-mode', isDark);
-
-        // Update toggle visual elements
-        const toggleIcon = modeToggle?.querySelector('.toggle-icon');
-        const toggleText = modeToggle?.querySelector('.toggle-text');
-        const toggleHandle = modeToggle?.querySelector('.toggle-handle');
-        const toggleSlider = modeToggle?.querySelector('.toggle-slider');
-
-        if (isDark) {
-            if (toggleIcon) toggleIcon.textContent = '☀️';
-            if (toggleText) toggleText.textContent = 'Light';
-            if (toggleHandle) toggleHandle.style.left = '22px';
-            if (toggleSlider) toggleSlider.style.background = 'linear-gradient(135deg, #63b3ed, #4299e1)';
-            console.log('🌙 Switched to DARK mode');
-        } else {
-            if (toggleIcon) toggleIcon.textContent = '🌙';
-            if (toggleText) toggleText.textContent = 'Dark';
-            if (toggleHandle) toggleHandle.style.left = '2px';
-            if (toggleSlider) toggleSlider.style.background = 'linear-gradient(135deg, #e9ecef, #dee2e6)';
-            console.log('☀️ Switched to LIGHT mode');
+        if (themeToggle) {
+            themeToggle.querySelector('.icon-sun').style.display = isDark ? 'block' : 'none';
+            themeToggle.querySelector('.icon-moon').style.display = isDark ? 'none' : 'block';
         }
-
         localStorage.setItem('theme', theme);
     };
 
-    // Theme toggle event listener
-    if (modeToggle) {
-        modeToggle.addEventListener('click', () => {
-            console.log('🖱️ Toggle clicked!');
-            const newTheme = document.body.classList.contains('dark-mode') ? 'light' : 'dark';
-            console.log('🎨 Switching to theme:', newTheme);
-            applyTheme(newTheme);
-
-            // Add click animation
-            modeToggle.style.animation = 'none';
-            setTimeout(() => {
-                modeToggle.style.animation = '';
-            }, 100);
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            applyTheme(document.body.classList.contains('dark-mode') ? 'light' : 'dark');
         });
-        console.log('✅ Theme toggle event listener attached');
     }
 
-    // === MESSAGE HANDLING ===
-    const addMessage = (text, sender, question = null) => {
-        console.log('📝 addMessage called:', { text, sender });
+    applyTheme(localStorage.getItem('theme') || 'light');
 
-        // Create message wrapper for proper positioning
-        const wrapper = document.createElement('div');
-        wrapper.classList.add('message-wrapper', `${sender}-message-wrapper`);
-
-        // Create message element
-        const messageElement = document.createElement('div');
-        messageElement.classList.add('message', `${sender}-message`);
-        messageElement.textContent = text;
-
-        // Add to DOM
-        wrapper.appendChild(messageElement);
-        chatBox.insertBefore(wrapper, typingIndicator);
-        chatBox.scrollTop = chatBox.scrollHeight;
-
-        console.log('✅ Message added to chat box');
+    // --- Helpers ---
+    const scrollToBottom = () => {
+        requestAnimationFrame(() => { chatMain.scrollTop = chatMain.scrollHeight; });
     };
 
-    const addActionButtons = (actions) => {
-        console.log('🎯 addActionButtons called with:', actions);
+    const showTyping = () => { typingIndicator.classList.add('visible'); scrollToBottom(); };
+    const hideTyping = () => { typingIndicator.classList.remove('visible'); };
 
-        const buttonContainer = document.createElement('div');
-        buttonContainer.classList.add('message', 'bot-message', 'action-buttons-container');
-
-        // Separate primary and secondary actions
-        const primaryActions = actions.filter(action => action.primary === true);
-        const secondaryActions = actions.filter(action => action.primary !== true);
-
-        // Add primary actions first (if any)
-        if (primaryActions.length > 0) {
-            const primaryContainer = document.createElement('div');
-            primaryContainer.classList.add('primary-actions');
-
-            primaryActions.forEach(action => {
-                const button = createActionButton(action);
-                button.classList.add('primary-action');
-                primaryContainer.appendChild(button);
-
-                // Set up auto-timeout for primary actions
-                if (action.auto_timeout) {
-                    setTimeout(() => {
-                        if (!button.clicked) {
-                            showSecondaryActions(secondaryActions, buttonContainer);
-                        }
-                    }, action.auto_timeout);
-                }
-            });
-            buttonContainer.appendChild(primaryContainer);
-        }
-
-        // Add secondary actions
-        if (secondaryActions.length > 0) {
-            const secondaryContainer = document.createElement('div');
-            secondaryContainer.classList.add('secondary-actions');
-            secondaryContainer.style.display = primaryActions.length > 0 ? 'none' : 'flex';
-
-            secondaryActions.forEach(action => {
-                const button = createActionButton(action);
-                button.classList.add('secondary-action');
-                secondaryContainer.appendChild(button);
-            });
-            buttonContainer.appendChild(secondaryContainer);
-        }
-
-        chatBox.insertBefore(buttonContainer, typingIndicator);
-        chatBox.scrollTop = chatBox.scrollHeight;
+    // --- SVG icon builders (safe DOM, no innerHTML) ---
+    const createSvg = (paths, size = 14) => {
+        const NS = 'http://www.w3.org/2000/svg';
+        const svg = document.createElementNS(NS, 'svg');
+        svg.setAttribute('width', size);
+        svg.setAttribute('height', size);
+        svg.setAttribute('viewBox', '0 0 24 24');
+        svg.setAttribute('fill', 'none');
+        svg.setAttribute('stroke', 'currentColor');
+        svg.setAttribute('stroke-width', '2');
+        svg.setAttribute('stroke-linecap', 'round');
+        svg.setAttribute('stroke-linejoin', 'round');
+        svg.setAttribute('aria-hidden', 'true');
+        paths.forEach(d => {
+            const path = document.createElementNS(NS, 'path');
+            path.setAttribute('d', d);
+            svg.appendChild(path);
+        });
+        return svg;
     };
 
-    const createActionButton = (action) => {
-        const button = document.createElement('button');
-        button.textContent = action.text;
-        button.classList.add('action-button');
-        button.title = action.description;
+    const thumbUpIcon = () => createSvg([
+        'M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z',
+        'M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3',
+    ]);
 
-        button.addEventListener('click', () => {
-            button.clicked = true;
-            console.log('🔘 Action button clicked:', action.type);
+    const thumbDownIcon = () => createSvg([
+        'M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z',
+        'M17 2h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3',
+    ]);
 
-                switch (action.type) {
-                    case 'readjust_prompt':
-                        // Show a prompt to help rephrase the question
-                        const newMessage = prompt('Please ask a precise question about Bolaji\'s professional journey or education:');
-                        if (newMessage && newMessage.trim()) {
-                            userInput.value = newMessage.trim();
-                            chatForm.dispatchEvent(new Event('submit'));
-                        }
-                        break;
+    const userIcon = () => createSvg([
+        'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2',
+        'M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z',
+    ], 16);
 
-                    case 'contact_booking':
-                        // Open booking calendar in popup
-                        const bookingWindow = window.open(action.url, 'bookingPopup', 'width=600,height=600,scrollbars=yes,resizable=yes');
-                        if (bookingWindow) {
-                            bookingWindow.focus();
-                        }
-                        // Send alert to Google Chat
-                        sendContactAlert('booking_request', action.session_id, action.chat_history);
+    // --- Safe Markdown Renderer (DOM-based, no innerHTML) ---
+    const appendInlineMarkdown = (parent, text) => {
+        const pattern = /(\*\*(.+?)\*\*|\*(.+?)\*|`(.+?)`|\[(.+?)\]\((.+?)\))/g;
+        let lastIndex = 0;
+        let match;
 
-                        // Note: Chat ending is now handled immediately when the message is displayed
-                        // No need to end chat again when buttons are clicked
-                        break;
+        while ((match = pattern.exec(text)) !== null) {
+            if (match.index > lastIndex) {
+                parent.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+            }
 
-                    case 'contact_email':
-                        // Open email client
-                        window.open(action.url, '_blank');
-                        // Send alert to Google Chat
-                        sendContactAlert('email_request', action.session_id, action.chat_history);
+            if (match[2]) {
+                const strong = document.createElement('strong');
+                strong.textContent = match[2];
+                parent.appendChild(strong);
+            } else if (match[3]) {
+                const em = document.createElement('em');
+                em.textContent = match[3];
+                parent.appendChild(em);
+            } else if (match[4]) {
+                const code = document.createElement('code');
+                code.textContent = match[4];
+                parent.appendChild(code);
+            } else if (match[5] && match[6]) {
+                const a = document.createElement('a');
+                a.textContent = match[5];
+                a.href = match[6];
+                a.target = '_blank';
+                a.rel = 'noopener noreferrer';
+                parent.appendChild(a);
+            }
 
-                        // Note: Chat ending is now handled immediately when the message is displayed
-                        // No need to end chat again when buttons are clicked
-                        break;
+            lastIndex = match.index + match[0].length;
+        }
 
-                    case 'end_chat':
-                        // End the conversation
-                        typeMessage('Thank you for your interest! Feel free to reach out via email or book a call if you\'d like to discuss further.', 'bot');
-                        break;
+        if (lastIndex < text.length) {
+            parent.appendChild(document.createTextNode(text.slice(lastIndex)));
+        }
+    };
 
-                    default:
-                        console.log('Unknown action type:', action.type);
-                }
+    const renderMarkdown = (text) => {
+        const container = document.createElement('div');
+        const blocks = text.split(/\n{2,}/);
+
+        blocks.forEach(block => {
+            block = block.trim();
+            if (!block) return;
+
+            // Code block
+            if (block.startsWith('```')) {
+                const pre = document.createElement('pre');
+                const code = document.createElement('code');
+                code.textContent = block.replace(/^```\w*\n?/, '').replace(/\n?```$/, '');
+                pre.appendChild(code);
+                container.appendChild(pre);
+                return;
+            }
+
+            // Unordered list
+            if (/^[-*] /.test(block)) {
+                const ul = document.createElement('ul');
+                block.split('\n').forEach(line => {
+                    if (/^[-*]\s+/.test(line)) {
+                        const li = document.createElement('li');
+                        appendInlineMarkdown(li, line.replace(/^[-*]\s+/, ''));
+                        ul.appendChild(li);
+                    }
+                });
+                container.appendChild(ul);
+                return;
+            }
+
+            // Ordered list
+            if (/^\d+\.\s/.test(block)) {
+                const ol = document.createElement('ol');
+                block.split('\n').forEach(line => {
+                    if (/^\d+\.\s+/.test(line)) {
+                        const li = document.createElement('li');
+                        appendInlineMarkdown(li, line.replace(/^\d+\.\s+/, ''));
+                        ol.appendChild(li);
+                    }
+                });
+                container.appendChild(ol);
+                return;
+            }
+
+            // Paragraph (handle single newlines within block)
+            block.split('\n').forEach(line => {
+                const p = document.createElement('p');
+                appendInlineMarkdown(p, line);
+                container.appendChild(p);
+            });
         });
 
-        return button;
+        return container;
     };
 
-    const showSecondaryActions = (secondaryActions, container) => {
-        const secondaryContainer = container.querySelector('.secondary-actions');
-        if (secondaryContainer) {
-            secondaryContainer.style.display = 'flex';
-            // Add a message about secondary options
-            typeMessage("Here are some additional options:", 'bot');
-        }
+    // --- Build feedback row (safe DOM) ---
+    const createFeedbackRow = (idx) => {
+        const fb = document.createElement('div');
+        fb.classList.add('msg-feedback');
+
+        const upBtn = document.createElement('button');
+        upBtn.classList.add('feedback-btn');
+        upBtn.dataset.score = '1';
+        upBtn.dataset.idx = idx;
+        upBtn.setAttribute('aria-label', 'Good response');
+        upBtn.title = 'Good response';
+        upBtn.appendChild(thumbUpIcon());
+
+        const downBtn = document.createElement('button');
+        downBtn.classList.add('feedback-btn');
+        downBtn.dataset.score = '0';
+        downBtn.dataset.idx = idx;
+        downBtn.setAttribute('aria-label', 'Bad response');
+        downBtn.title = 'Bad response';
+        downBtn.appendChild(thumbDownIcon());
+
+        [upBtn, downBtn].forEach(btn => {
+            btn.addEventListener('click', () => handleFeedback(btn, fb));
+        });
+
+        fb.appendChild(upBtn);
+        fb.appendChild(downBtn);
+        return fb;
     };
 
-    const sendContactAlert = async (contactType, sessionId, chatHistory) => {
-        console.log(`📤 Sending ${contactType} alert for session ${sessionId}`);
+    // --- Create message row with avatar ---
+    const createMessageRow = (sender) => {
+        const row = document.createElement('div');
+        row.classList.add('msg-row', `msg-row--${sender}`);
 
-        try {
-            // Send alert to backend which will forward to Google Chat
-            const response = await fetch('/contact-alert', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    contact_type: contactType,
-                    session_id: sessionId,
-                    chat_history: chatHistory,
-                    timestamp: new Date().toISOString()
-                })
-            });
+        const avatar = document.createElement('div');
+        avatar.classList.add('msg-avatar');
 
-            if (response.ok) {
-                console.log('✅ Contact alert sent successfully to Google Chat');
-            } else {
-                console.error('❌ Failed to send contact alert:', response.status);
-            }
-        } catch (error) {
-            console.error('❌ Error sending contact alert:', error);
-        }
-    };
-
-    // Disable user input after chat ends
-    const disableUserInput = () => {
-        console.log('🚫 Disabling user input after chat ended');
-        console.log('userInput element:', userInput);
-        console.log('sendButton element:', sendButton);
-        console.log('chatForm element:', chatForm);
-
-        if (userInput) {
-            userInput.disabled = true;
-            userInput.placeholder = 'Chat ended. Use the buttons above to contact Bolaji directly.';
-            userInput.classList.add('chat-disabled');
-            console.log('✅ User input disabled and placeholder updated');
-            console.log('User input current state:', {
-                disabled: userInput.disabled,
-                placeholder: userInput.placeholder,
-                classList: userInput.classList.toString()
-            });
+        if (sender === 'bot') {
+            const img = document.createElement('img');
+            img.src = 'https://files.bolablg.com/images/ji_fav_192.png';
+            img.alt = 'iBola';
+            img.width = 28;
+            img.height = 28;
+            avatar.appendChild(img);
         } else {
-            console.error('❌ userInput element not found!');
+            avatar.classList.add('msg-avatar--user');
+            avatar.appendChild(userIcon());
         }
+        row.appendChild(avatar);
 
-        if (sendButton) {
-            sendButton.disabled = true;
-            sendButton.classList.add('chat-disabled');
-            console.log('✅ Send button disabled');
-            console.log('Send button current state:', {
-                disabled: sendButton.disabled,
-                classList: sendButton.classList.toString()
-            });
-        } else {
-            console.error('❌ sendButton element not found!');
-        }
+        const content = document.createElement('div');
+        content.classList.add('msg-content');
+        row.appendChild(content);
 
-        // Also disable form submission completely
-        if (chatForm) {
-            chatForm.style.pointerEvents = 'none';
-            chatForm.onsubmit = (e) => {
-                e.preventDefault();
-                return false;
-            };
-            console.log('✅ Form submission disabled');
-        } else {
-            console.error('❌ chatForm element not found!');
-        }
-
-        console.log('✅ User input fully disabled - no more messages can be sent');
+        return { row, content };
     };
 
-    const typeMessage = (text, sender = 'bot', question = null, speed = 40) => {
-        console.log('📝 typeMessage called with:', { text, sender, speed });
+    // --- Hide welcome screen ---
+    const hideWelcomeScreen = () => {
+        if (welcomeScreen) {
+            welcomeScreen.style.display = 'none';
+        }
+    };
+
+    // --- Message Rendering ---
+    const addMessage = (text, sender, opts = {}) => {
+        if (sender === 'user' && !hasUserSent) {
+            hasUserSent = true;
+            hideWelcomeScreen();
+        }
+
+        const { row, content } = createMessageRow(sender);
+
+        if (sender === 'bot' && !opts.plain) {
+            content.appendChild(renderMarkdown(text));
+        } else {
+            content.textContent = text;
+        }
+
+        if (sender === 'bot' && !opts.noFeedback) {
+            content.appendChild(createFeedbackRow(msgIndex++));
+        }
+
+        chatMessages.insertBefore(row, typingIndicator);
+        scrollToBottom();
+        return content;
+    };
+
+    // --- Typing Animation ---
+    const typeMessage = (text, sender = 'bot', opts = {}) => {
         return new Promise(resolve => {
-            typingIndicator.style.display = 'flex';
+            if (sender === 'user' && !hasUserSent) {
+                hasUserSent = true;
+                hideWelcomeScreen();
+            }
 
-            // Create message wrapper for proper positioning
-            const wrapper = document.createElement('div');
-            wrapper.classList.add('message-wrapper', `${sender}-message-wrapper`);
+            showTyping();
 
-            // Create message element
-            const messageElement = document.createElement('div');
-            messageElement.classList.add('message', `${sender}-message`);
-            wrapper.appendChild(messageElement);
+            const { row, content } = createMessageRow(sender);
+            content.classList.add('msg-content--plain', 'msg-content--streaming');
 
-            chatBox.insertBefore(wrapper, typingIndicator);
-            chatBox.scrollTop = chatBox.scrollHeight;
+            chatMessages.insertBefore(row, typingIndicator);
+            hideTyping();
 
-            let index = 0;
-            const interval = setInterval(() => {
-                messageElement.textContent += text.charAt(index);
-                index++;
-                chatBox.scrollTop = chatBox.scrollHeight;
-                if (index >= text.length) {
-                    clearInterval(interval);
-                    typingIndicator.style.display = 'none';
+            let i = 0;
+            const speed = opts.speed || 20;
+            const tick = () => {
+                content.textContent = text.slice(0, ++i);
+                scrollToBottom();
+                if (i < text.length) {
+                    setTimeout(tick, speed);
+                } else {
+                    // Replace with rendered markdown
+                    content.classList.remove('msg-content--plain', 'msg-content--streaming');
+                    content.textContent = '';
+                    content.appendChild(renderMarkdown(text));
+
+                    if (sender === 'bot' && !opts.noFeedback) {
+                        content.appendChild(createFeedbackRow(msgIndex++));
+                    }
                     resolve();
                 }
-            }, speed);
+            };
+            tick();
         });
     };
 
-    // === AGENT MANAGEMENT ===
-    const switchAgent = (newAgentType, showTransition = true) => {
-        if (currentAgentType === newAgentType) return;
+    // --- Feedback ---
+    const handleFeedback = async (btn, container) => {
+        const score = parseFloat(btn.dataset.score);
+        const idx = parseInt(btn.dataset.idx);
 
-        const oldAgentType = currentAgentType;
-        currentAgentType = newAgentType;
+        container.querySelectorAll('.feedback-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
 
-        // Update UI classes for theming
-        document.body.classList.remove(`agent-${oldAgentType}`);
-        document.body.classList.add(`agent-${newAgentType}`);
-
-        // Update agent indicator (if exists)
-        if (agentIcon && agentName && agentStatus) {
-            const config = agentConfigs[newAgentType];
-            if (config) {
-                agentIcon.textContent = config.icon;
-                agentName.textContent = config.name;
-                agentStatus.textContent = config.status;
-                agentIndicator.style.borderColor = config.color;
-            }
-        }
-
-        // Agent transition hidden from user for unified experience
-        // if (showTransition) {
-        //     showAgentTransition(newAgentType);
-        // }
-
-        // Update quick actions visibility
-        if (quickActions) {
-            quickActions.style.display = newAgentType === 'redirect' ? 'flex' : 'none';
-        }
-
-        console.log(`🔄 Switched from ${oldAgentType} to ${newAgentType} agent`);
-    };
-
-    // Agent transition functionality disabled for unified user experience
-    // const showAgentTransition = (agentType) => {
-    //     const transitionIcon = document.getElementById('transition-icon');
-    //     const transitionTitle = document.getElementById('transition-title');
-    //     const transitionMessage = document.getElementById('transition-message');
-    //
-    //     if (transitionIcon && transitionTitle && transitionMessage) {
-    //         const config = agentConfigs[agentType];
-    //         if (config) {
-    //             transitionIcon.textContent = config.icon;
-    //             transitionTitle.textContent = config.name;
-    //             transitionMessage.textContent = `Switching to ${config.name.toLowerCase()}...`;
-    //         }
-    //
-    //         if (agentTransitionModal) {
-    //             agentTransitionModal.style.display = 'flex';
-    //
-    //             if (agentTransitionTimeout) {
-    //                 clearTimeout(agentTransitionTimeout);
-    //             }
-    //
-    //             agentTransitionTimeout = setTimeout(() => {
-    //                 agentTransitionModal.style.display = 'none';
-    //             }, 1500);
-    //         }
-    //     }
-    // };
-
-    // === FORM SUBMISSION ===
-    if (chatForm) {
-        chatForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            console.log('📝 Form submitted!');
-
-            const messageText = userInput.value.trim();
-            if (!messageText) return;
-
-            // Prevent sending messages if chat has ended
-            if (chatEnded) {
-                console.log('🚫 Chat has ended, preventing message send');
-                // Provide visual feedback that the action was blocked
-                userInput.style.animation = 'shake 0.5s';
-                setTimeout(() => {
-                    userInput.style.animation = '';
-                }, 500);
-                return;
-            }
-
-            // Handle special commands
-            if (["no", "non", "nein"].includes(messageText.toLowerCase())) {
-                userInput.value = '';
-                // endChat(); // Would need to implement this
-                return;
-            }
-
-            lastUserQuestion = messageText;
-
-            // Add user message
-            addMessage(messageText, 'user');
-            userInput.value = '';
-            typingIndicator.style.display = 'flex';
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            console.log('📤 Sending message to backend...');
-
-            try {
-                // Send to backend
-                const response = await fetch('/chat', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        user_input: messageText,
-                        session_id: sessionId,
-                        language: userLanguage,
-                        agent_type: currentAgentType
-                    })
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('📥 Received response:', data);
-
-                    // Switch agent if needed
-                    if (data.agent_type && data.agent_type !== currentAgentType) {
-                        switchAgent(data.agent_type, true);
-                    }
-
-                    // Display bot response
-                    if (data.answer) {
-                        await typeMessage(data.answer, 'bot');
-                    } else if (data.response) {
-                        await typeMessage(data.response, 'bot');
-                    }
-
-                    // Handle actions if present
-                    if (data.actions && data.actions.length > 0) {
-                        addActionButtons(data.actions);
-                    }
-
-                    // Handle chat ending if specified
-                    if (data.should_end_chat && !chatEnded) {
-                        console.log('🎯 Chat ending detected! should_end_chat:', data.should_end_chat, 'chatEnded:', chatEnded);
-                        chatEnded = true;
-                        // Disable user input immediately after displaying the message and buttons
-                        // The chat ended message is now included in the backend response
-                        disableUserInput();
-                    }
-                } else {
-                    console.error('❌ Backend error:', response.status);
-                    await typeMessage('Sorry, I encountered an error. Please try again.', 'bot');
-                }
-            } catch (error) {
-                console.error('❌ Network error:', error);
-                await typeMessage('Sorry, I\'m having trouble connecting. Please check your internet connection and try again.', 'bot');
-            }
-
-            typingIndicator.style.display = 'none';
-        });
-        console.log('✅ Form submission handler attached');
-    }
-
-    // === INITIALIZATION ===
-    const initializeChatbot = async () => {
-        console.log('🚀 Starting chatbot initialization...');
+        setTimeout(() => {
+            while (container.firstChild) container.removeChild(container.firstChild);
+            const thanks = document.createElement('span');
+            thanks.classList.add('feedback-thanks');
+            thanks.textContent = 'Thanks for your feedback';
+            container.appendChild(thanks);
+        }, 600);
 
         try {
-            // Get browser language and fetch localized welcome messages
-            const browserLanguage = navigator.language || 'en';
-            console.log('🌐 Browser language detected:', browserLanguage);
+            await fetch('/feedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ session_id: sessionId, message_index: idx, score }),
+            });
+        } catch (e) { /* silent */ }
+    };
 
-            const response = await fetch('/welcome', {
+    // --- Action Buttons ---
+    const addActionButtons = (actions) => {
+        const group = document.createElement('div');
+        group.classList.add('action-group');
+
+        actions.forEach(action => {
+            const btn = document.createElement('button');
+            btn.classList.add('action-btn');
+            if (action.primary) btn.classList.add('action-btn--primary');
+            btn.textContent = action.text;
+            btn.title = action.description || '';
+
+            btn.addEventListener('click', () => {
+                if (action.type === 'contact_booking') {
+                    window.open(action.url, 'booking', 'width=600,height=700,scrollbars=yes');
+                    sendContactAlert('booking_request', action.session_id, action.chat_history);
+                } else if (action.type === 'contact_email') {
+                    window.open(action.url, '_blank');
+                    sendContactAlert('email_request', action.session_id, action.chat_history);
+                }
+            });
+
+            group.appendChild(btn);
+        });
+
+        chatMessages.insertBefore(group, typingIndicator);
+        scrollToBottom();
+    };
+
+    // --- Contact Alert ---
+    const sendContactAlert = async (type, sid, history) => {
+        try {
+            await fetch('/contact-alert', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    session_id: sessionId,
-                    browser_language: browserLanguage
-                })
+                    contact_type: type,
+                    session_id: sid || sessionId,
+                    chat_history: history || [],
+                    timestamp: new Date().toISOString(),
+                }),
             });
-
-            console.log('📡 Welcome API response status:', response.status);
-
-            if (response.ok) {
-                const data = await response.json();
-                userLanguage = data.detected_language;
-                const messages = data.welcome_messages || [];
-
-                console.log('✅ Welcome data received:', data);
-
-                if (messages.length > 0) {
-                    console.log('💬 Welcome message:', messages[0]);
-                    console.log('📝 Displaying welcome message...');
-                    await new Promise(res => setTimeout(res, 500));
-                    await typeMessage(messages[0], 'bot');
-                }
-
-                // Update placeholder text based on detected language
-                updatePlaceholderText(userLanguage);
-            } else {
-                console.log('⚠️ Welcome API failed, using fallback');
-                const fallbackMessage = "Hello! I'm iBola, your AI assistant for Bolaji's professional journey.";
-                await new Promise(res => setTimeout(res, 500));
-                await typeMessage(fallbackMessage, 'bot');
-                updatePlaceholderText('en');
-            }
-
-        } catch (error) {
-            console.error('❌ Initialization error:', error);
-            const fallbackMessage = "Hello! I'm iBola, your AI assistant for Bolaji's professional journey.";
-            await new Promise(res => setTimeout(res, 500));
-            await typeMessage(fallbackMessage, 'bot');
-            updatePlaceholderText('en');
-        }
+        } catch (e) { /* silent */ }
     };
 
-    // Function to update placeholder text based on language
-    const updatePlaceholderText = (language) => {
-        console.log('🔤 updatePlaceholderText called with language:', language);
-
-        const placeholders = {
-            'en': "What's up?",
-            'fr': "Quoi de neuf ?",
-            'es': "¿Qué pasa?",
-            'de': "Was ist los?",
-            'it': "Che succede?",
-            'pt': "E aí?",
-            'ru': "Что нового?",
-            'zh': "有什么新鲜事吗？",
-            'ja': "どうしたの？",
-            'ko': "무슨 일이야?"
-        };
-
-        const placeholder = placeholders[language] || placeholders['en'];
-        console.log('📝 Setting placeholder to:', placeholder);
-        if (userInput) {
-            userInput.placeholder = placeholder;
-        }
+    // --- End Chat ---
+    const endChat = () => {
+        chatEnded = true;
+        chatApp.classList.add('chat-ended');
+        userInput.disabled = true;
+        userInput.placeholder = 'Chat ended';
+        sendBtn.disabled = true;
     };
 
-    // === MODAL HANDLERS ===
-    if (closeModalBtn) {
-        closeModalBtn.onclick = () => {
-            if (modal) modal.style.display = "none";
-            if (modalIframe) modalIframe.src = "";
-        };
-    }
-
-    if (window) {
-        window.onclick = (event) => {
-            if (event.target == modal || event.target == agentTransitionModal) {
-                if (modal) modal.style.display = "none";
-                if (modalIframe) modalIframe.src = "";
-            }
-        };
-    }
-
-    // === QUICK ACTIONS ===
-    document.querySelectorAll('.quick-action-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const agentType = btn.dataset.agent;
-            console.log('🎯 Quick action clicked:', agentType);
-            switchAgent(agentType, true);
-
-            const simulatedQuery = getAgentQuery(agentType);
-            if (simulatedQuery && userInput) {
-                userInput.value = simulatedQuery;
-                if (chatForm) {
-                    chatForm.dispatchEvent(new Event('submit'));
-                }
-            }
-        });
+    // --- Textarea Auto-Grow ---
+    userInput.addEventListener('input', () => {
+        userInput.style.height = 'auto';
+        userInput.style.height = Math.min(userInput.scrollHeight, 200) + 'px';
     });
 
-    const getAgentQuery = (agentType) => {
-        const queries = {
-            professional: "Tell me about your professional experience",
-            education: "What is your educational background?",
-            learning: "How can I learn the skills you have?"
-        };
-        return queries[agentType] || "";
+    userInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            chatForm.dispatchEvent(new Event('submit', { cancelable: true }));
+        }
+    });
+
+    // --- Form Submit ---
+    chatForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const text = userInput.value.trim();
+        if (!text || chatEnded) return;
+
+        addMessage(text, 'user', { plain: true });
+        userInput.value = '';
+        userInput.style.height = 'auto';
+        showTyping();
+
+        try {
+            const res = await fetch('/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_input: text,
+                    session_id: sessionId,
+                    user_language: userLanguage,
+                }),
+            });
+
+            hideTyping();
+
+            if (res.ok) {
+                const data = await res.json();
+                if (data.answer) await typeMessage(data.answer, 'bot');
+                if (data.actions && data.actions.length > 0) addActionButtons(data.actions);
+                if (data.should_end_chat && !chatEnded) endChat();
+            } else {
+                addMessage('Something went wrong. Please try again.', 'bot', { noFeedback: true });
+            }
+        } catch (err) {
+            hideTyping();
+            addMessage('Connection error. Please check your internet and try again.', 'bot', { noFeedback: true });
+        }
+    });
+
+    // --- Modal ---
+    if (modalClose) {
+        modalClose.addEventListener('click', () => {
+            modalOverlay.classList.remove('visible');
+            modalIframe.src = '';
+        });
+    }
+    if (modalOverlay) {
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                modalOverlay.classList.remove('visible');
+                modalIframe.src = '';
+            }
+        });
+    }
+
+    // --- Suggestion Cards ---
+    const suggestions = {
+        en: [
+            "What are Bolaji's key skills?",
+            "Tell me about his work experience",
+            "What is his educational background?",
+            "How can I contact Bolaji?",
+        ],
+        fr: [
+            "Quelles sont les comp\u00e9tences de Bolaji ?",
+            "Parlez-moi de son exp\u00e9rience professionnelle",
+            "Quelle est sa formation ?",
+            "Comment contacter Bolaji ?",
+        ],
+        es: [
+            "\u00bfCu\u00e1les son las habilidades de Bolaji?",
+            "Cu\u00e9ntame sobre su experiencia laboral",
+            "\u00bfCu\u00e1l es su formaci\u00f3n acad\u00e9mica?",
+            "\u00bfC\u00f3mo puedo contactar a Bolaji?",
+        ],
+        de: [
+            "Was sind Bolajis wichtigste F\u00e4higkeiten?",
+            "Erz\u00e4hlen Sie mir von seiner Berufserfahrung",
+            "Welche Ausbildung hat er?",
+            "Wie kann ich Bolaji kontaktieren?",
+        ],
+        pt: [
+            "Quais s\u00e3o as habilidades de Bolaji?",
+            "Fale sobre sua experi\u00eancia profissional",
+            "Qual \u00e9 sua forma\u00e7\u00e3o?",
+            "Como posso contactar Bolaji?",
+        ],
     };
 
-    // === STARTUP ===
-    console.log('🎯 All event listeners attached, starting initialization...');
+    const welcomeTexts = {
+        en: { title: "How can I help you?", subtitle: "Ask me anything about Bolaji's professional life" },
+        fr: { title: "Comment puis-je vous aider ?", subtitle: "Posez-moi une question sur la vie professionnelle de Bolaji" },
+        es: { title: "\u00bfC\u00f3mo puedo ayudarte?", subtitle: "Preg\u00fantame sobre la vida profesional de Bolaji" },
+        de: { title: "Wie kann ich Ihnen helfen?", subtitle: "Fragen Sie mich \u00fcber Bolajis Berufsleben" },
+        pt: { title: "Como posso ajudar?", subtitle: "Pergunte-me sobre a vida profissional de Bolaji" },
+    };
 
-    // Initialize theme
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    applyTheme(savedTheme);
+    const renderSuggestions = (lang) => {
+        if (!suggestionsGrid) return;
+        while (suggestionsGrid.firstChild) suggestionsGrid.removeChild(suggestionsGrid.firstChild);
 
-    // Start chatbot
-    initializeChatbot();
+        const items = suggestions[lang] || suggestions.en;
+        items.forEach(text => {
+            const btn = document.createElement('button');
+            btn.classList.add('suggestion-card');
+            btn.textContent = text;
+            btn.addEventListener('click', () => {
+                userInput.value = text;
+                chatForm.dispatchEvent(new Event('submit', { cancelable: true }));
+            });
+            suggestionsGrid.appendChild(btn);
+        });
 
-    console.log('✅ iBola Chatbot Application Ready!');
+        // Update welcome text
+        const texts = welcomeTexts[lang] || welcomeTexts.en;
+        const titleEl = document.getElementById('welcome-title');
+        const subtitleEl = document.getElementById('welcome-subtitle');
+        if (titleEl) titleEl.textContent = texts.title;
+        if (subtitleEl) subtitleEl.textContent = texts.subtitle;
+    };
+
+    // --- Placeholder per language ---
+    const placeholders = {
+        en: "Ask about Bolaji\u2019s professional life\u2026",
+        fr: "Posez une question sur la vie pro de Bolaji\u2026",
+        es: "\u00bfPreguntas sobre la vida profesional de Bolaji?",
+        de: "Fragen \u00fcber Bolajis Berufsleben\u2026",
+        pt: "Pergunte sobre a vida profissional de Bolaji\u2026",
+        it: "Chiedi della vita professionale di Bolaji\u2026",
+        ru: "\u0421\u043f\u0440\u043e\u0441\u0438\u0442\u0435 \u043e \u043f\u0440\u043e\u0444\u0435\u0441\u0441\u0438\u043e\u043d\u0430\u043b\u044c\u043d\u043e\u0439 \u0436\u0438\u0437\u043d\u0438 Bolaji\u2026",
+        zh: "\u95ee\u5173\u4e8eBolaji\u7684\u804c\u4e1a\u751f\u6daf\u2026",
+        ja: "Bolaji\u306e\u8077\u696d\u751f\u6d3b\u306b\u3064\u3044\u3066\u8cea\u554f\u2026",
+        ko: "Bolaji\uc758 \uc9c1\uc5c5 \uc0dd\ud65c\uc5d0 \ub300\ud574 \ubb3c\uc5b4\ubcf4\uc138\uc694\u2026",
+    };
+
+    // --- Init ---
+    const init = async () => {
+        const browserLang = navigator.language || 'en';
+
+        try {
+            const res = await fetch('/welcome', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ session_id: sessionId, browser_language: browserLang }),
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                userLanguage = data.detected_language || 'en';
+                const msgs = data.welcome_messages || [];
+                userInput.placeholder = placeholders[userLanguage] || placeholders.en;
+
+                if (isEmbedMode) {
+                    // Embed: type welcome as a bubble, no suggestions
+                    if (msgs.length > 0) {
+                        await new Promise(r => setTimeout(r, 400));
+                        await typeMessage(msgs[0], 'bot', { noFeedback: true });
+                    }
+                } else {
+                    // Standalone: show suggestion cards
+                    renderSuggestions(userLanguage);
+                }
+            } else {
+                throw new Error('Welcome failed');
+            }
+        } catch (e) {
+            userInput.placeholder = placeholders.en;
+            if (isEmbedMode) {
+                await new Promise(r => setTimeout(r, 400));
+                await typeMessage(
+                    "Hello! I\u2019m iBola, Bolaji\u2019s AI assistant. Ask me about his professional life.",
+                    'bot', { noFeedback: true }
+                );
+            } else {
+                renderSuggestions('en');
+            }
+        }
+
+        userInput.focus();
+    };
+
+    init();
 });

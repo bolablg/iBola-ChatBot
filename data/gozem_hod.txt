@@ -1,4 +1,8 @@
-As head of Data for the Group Gozem from October 2022 till now, Bolaji has been Responsible for designing and maintaining the data governance framework, planning and executing the effective use of data and Artificial intelligence across all the group's businesses and products in Singapore, Togo, Benin, Cameroon, Congo, and Gabon.
+As Head of Data & Analytics for the Group Gozem (Singapore-headquartered) from October 2022 to present, Bolaji leads the Data & Analytics function across Gozem's operations in Singapore, Togo, Benin, Cameroon, Congo, and Gabon. Gozem is French-speaking Africa's leading super app serving millions across ride-hailing, e-commerce, delivery, and financial services. Bolaji manages a team of 14+ data professionals across Sub-Saharan Africa.
+
+He designed and built the Gozem Data Hub from scratch as the company's centralized platform for data products, AI tools, and automation, serving hundreds of employees daily. He led a cross-functional team to deliver core Data Hub modules: real-time dashboards, automated reporting pipelines, and ML-powered features.
+
+He is responsible for designing and maintaining the data governance framework, planning and executing the effective use of data and Artificial Intelligence across all the group's businesses and products.
 
 - Improved overall data asset reliability by strengthening data observability and data product quality; established audit frameworks across business units and implemented a robust quality management system with automated testing to detect and alert discrepancies for proactive resolution.
 - Enhanced analytics capabilities and fostered a data-driven culture by developing and maintaining a streamlined, domain-oriented data governance strategy across the group.

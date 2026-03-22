@@ -5,16 +5,15 @@ FROM python:3.12-slim
 # Set the working directory in the container
 WORKDIR /app
 
-# Install cron
-RUN apt-get update && apt-get -y install cron
+# Install system dependencies
+RUN apt-get update && apt-get -y install --no-install-recommends cron && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Copy the requirements file into the container at /app
+# Copy and install requirements first (Docker layer caching)
 COPY requirements.txt .
-
-# Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application's code into the container at /app
+# Copy the rest of the application
 COPY . .
 
 # Add the cron job
