@@ -113,13 +113,33 @@ deploy_error.txt
 .agents
 
 # =============================================================
-# Data / Pipeline state (tracked separately)
+# Vector store (generated — rebuild with pipeline/update_vectorstore.py)
+# =============================================================
+chroma_db/
+
+# =============================================================
+# Pipeline state files
 # =============================================================
 data/.sync_state.json
 data/.DS_Store
-chroma_db/.vectorstore_state.json
+data/**/.DS_Store
 
-# Security scan reports (generated in CI, not committed)
+# =============================================================
+# Generated reports (CI artifacts, not committed)
+# =============================================================
 pip-audit-report.txt
 safety-report.txt
 bandit-report.txt
+coverage.xml
+htmlcov/
+
+# =============================================================
+# Runtime / temp files
+# =============================================================
+*.pyc
+*.pyo
+*.egg-info/
+*.eggs/
+__pycache__/
+.hypothesis/
+.benchmarks/
