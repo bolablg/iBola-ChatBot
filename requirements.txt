@@ -1,14 +1,25 @@
-langchain
+# Core LangChain + LLM
+langchain>=0.3.0
+langchain-core>=0.3.0
 langchain-google-genai
 langchain-chroma
+langchain-community
 chromadb
 google-generativeai
+
+# LangGraph (agentic RAG workflow)
+langgraph>=0.2.0
+
+# Configuration
 python-dotenv
-streamlit
-watchdog
-schedule
+pydantic-settings>=2.0
+
+# Web framework
 fastapi
-uvicorn
+uvicorn[standard]
+sse-starlette
+
+# Caching
 redis
 
 # Google Cloud Services
@@ -16,22 +27,27 @@ google-cloud-logging
 google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
+google-auth
 functions-framework
-apache-airflow-providers-google
+
+# Search & retrieval
+rank-bm25
+sentence-transformers
+faiss-cpu
+
+# Observability
+langfuse>=3.0
 
 # Additional utilities
 httpx
 docx2txt
 psutil
-pytest
-pytest-asyncio
-pytest-mock
 requests
+numpy
+
+# Classification / web search
 duckduckgo-search
 ddgs
-langchain-community
-sentence-transformers
-faiss-cpu
-asyncio-mqtt
-google-api-python-client
-google-auth
+
+# Document processing
+streamlit
