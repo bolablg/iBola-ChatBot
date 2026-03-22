@@ -1,323 +1,208 @@
-# iBola Multi-Agent ChatBot 🤖
+# iBola — Production Agentic RAG Chatbot
 
-An advanced Gemini-powered multi-agent RAG chatbot that helps people learn about Bolaji's professional background, education, and provides learning advice. The system features intelligent agent routing, dynamic guardrails, automatic language detection, and Google Chat integration.
+A production-grade, multi-agent Retrieval-Augmented Generation chatbot powering [chat.bolablg.com](https://chat.bolablg.com). Built with LangGraph, Google Gemini 2.5 Pro, hybrid search (BM25 + vector + RRF), and deployed on Google Cloud Run.
 
-## 🏗️ System Architecture
-
-### Core Architecture Components
-
-#### 🤖 **Multi-Agent Orchestration System**
-The system uses a sophisticated agent-based architecture with intelligent routing:
+## Architecture
 
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Orchestrator  │───▶│ Classification  │───▶│   Specialized   │
-│                 │    │     Agent       │    │     Agents      │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                        │                    │
-         └────────────────────────┼────────────────────┘
-                                  ▼
-                    ┌─────────────────┐
-                    │  Dynamic        │
-                    │  Guardrails     │
-                    └─────────────────┘
+User Query
+    │
+    ▼
+┌────────────┐   score ≥ 60   ┌──────────┐   relevant?   ┌──────────┐
+│ Guardrail  │ ──────────────▶ │ Retrieve │ ────────────▶ │ Generate │ ──▶ Answer
+│ (0-100)    │                 │ BM25+Vec │               │          │
+└────────────┘                 │ +RRF     │               └──────────┘
+    │ score < 60               └──────────┘                    ▲
+    ▼                               │ not relevant             │
+┌────────────┐               ┌──────────────┐                  │
+│ Out of     │               │ Rewrite      │──── retry ───────┘
+│ Scope      │               │ Query        │  (max 2 attempts)
+└────────────┘               └──────────────┘
 ```
 
-- **Orchestrator**: Central routing component that analyzes user queries and routes them to appropriate agents
-- **Classification Agent**: Uses advanced pattern matching and context analysis to determine query intent
-- **Specialized Agents**: Domain-specific agents for professional, education, learning, and redirect scenarios
-- **Dynamic Guardrails**: Machine learning-powered system that learns from conversations to improve routing accuracy
+**LangGraph workflow** with 6 nodes: `guardrail` → `retrieve` → `grade_documents` → `generate` / `rewrite_query` / `out_of_scope`. All parsing-critical LLM calls use **Pydantic structured outputs** at temperature 0.0. Every node has graceful fallbacks.
 
-#### 🧠 **Advanced AI Services Layer**
+## Key Features
+
+| Feature | Implementation |
+|---------|---------------|
+| **Agentic RAG** | LangGraph state machine with document grading, query rewriting, and retry logic |
+| **Hybrid Search** | BM25 (rank-bm25) + ChromaDB vector MMR + Reciprocal Rank Fusion |
+| **Cross-Encoder Reranking** | `ms-marco-MiniLM-L-6-v2` post-retrieval reranker |
+| **Multi-Agent** | Professional, Education, Learning, Redirect — domain-specific prompts and retrievers |
+| **Guardrails** | Structured LLM scoring (0-100) with configurable threshold |
+| **SSE Streaming** | Real-time token delivery via Server-Sent Events |
+| **Multilingual** | 10+ languages with automatic detection |
+| **Observability** | Langfuse tracing, Google Cloud Logging, feedback endpoint |
+| **Caching** | Multi-level TTL cache (response, session, language) |
+| **Security** | Input validation, rate limiting, CORS, XSS/SQL injection guards |
+
+## Project Structure
+
 ```
-┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
-│  Advanced RAG   │ │  Memory Mgmt    │ │  Knowledge      │
-│                 │ │                 │ │  Graph          │
-└─────────────────┘ └─────────────────┘ └─────────────────┘
-         │                 │                 │
-         └─────────────────┼─────────────────┘
-                          ▼
-                ┌─────────────────┐
-                │  Continuous     │
-                │  Learning       │
-                └─────────────────┘
+├── app/
+│   ├── graph/              # LangGraph agentic workflow
+│   │   ├── state.py        #   GraphState + Pydantic structured outputs
+│   │   ├── nodes.py        #   Guardrail, retrieve, grade, rewrite, generate, out_of_scope
+│   │   ├── workflow.py     #   StateGraph definition with conditional edges
+│   │   └── service.py      #   AgenticRAGService (production wrapper)
+│   ├── agents/             # Legacy multi-agent system (backward compatible)
+│   ├── routes/             # API routes
+│   │   ├── streaming.py    #   /ask-agentic (SSE), /ask (simple RAG)
+│   │   └── feedback.py     #   POST /feedback
+│   ├── services/           # Shared services
+│   │   ├── advanced_rag.py #   Hybrid search: BM25 + Vector + RRF + reranker
+│   │   ├── tracing.py      #   Langfuse integration
+│   │   ├── cache_service.py
+│   │   ├── rate_limiting.py
+│   │   └── logging_service.py
+│   ├── settings.py         # pydantic-settings configuration
+│   └── main.py             # FastAPI app
+├── pipeline/
+│   ├── chunker.py          # Intelligent section-based chunking
+│   ├── update_vectorstore.py
+│   └── sync.py             # Google Drive sync
+├── data/                   # Knowledge base (14 documents)
+├── chroma_db/              # ChromaDB vector store
+├── tests/
+├── docs/                   # Additional documentation
+└── static/                 # Frontend
 ```
 
-- **Advanced RAG**: Query expansion, semantic reranking, hybrid search (vector + keyword + TF)
-- **Memory Management**: Summarization and compression for long-term conversation context
-- **Knowledge Graph**: Entity extraction and dynamic graph construction for enhanced reasoning
-- **Continuous Learning**: Automated model updates and performance tracking
+## API Endpoints
 
-#### 📊 **Data Processing Pipeline**
-```
-Google Drive ──▶ Local Sync ──▶ Vector Store ──▶ FAISS Index
-     │                │              │              │
-     └──────▶ Document Processing ───┘              │
-                    │                              │
-                    └─────────────▶ Reranking ──────┘
-```
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/ask-agentic` | Full agentic RAG pipeline (LangGraph). Supports `stream=true` for SSE. |
+| `POST` | `/ask` | Simple RAG — direct retrieval + generation, no agent routing. Fast (2-5s). |
+| `POST` | `/chat` | Legacy chat endpoint (orchestrator-based routing). |
+| `POST` | `/welcome` | Localized welcome messages based on browser language. |
+| `POST` | `/feedback` | Submit user quality ratings (feeds into Langfuse). |
+| `POST` | `/contact-alert` | Forward contact requests to Google Chat. |
+| `GET` | `/health` | System health check with resource metrics. |
+| `GET` | `/performance/metrics` | CPU, memory, cache, rate limit stats. |
+| `GET` | `/session/{id}/stats` | Session analytics. |
+| `DELETE` | `/session/{id}` | Reset session. |
 
-### Key Architectural Patterns
+Interactive docs at `/docs` (Swagger) and `/redoc`.
 
-#### **1. Agent-Based Architecture**
-- **Separation of Concerns**: Each agent specializes in a specific domain
-- **Intelligent Routing**: Classification agent determines optimal agent selection
-- **Fallback Mechanisms**: Graceful degradation when primary agents are unavailable
-
-#### **2. Event-Driven Communication**
-- **Inter-Agent Communication**: Task delegation and message passing between agents
-- **Asynchronous Processing**: Non-blocking operations for better performance
-- **Event Streaming**: Real-time updates and status notifications
-
-#### **3. Multi-Level Caching Strategy**
-- **Response Cache**: TTLCache for chat responses (30-minute TTL)
-- **Session Cache**: User session data (1-hour TTL)
-- **Language Cache**: Localized content (2-hour TTL)
-- **Vector Cache**: Pre-computed embeddings and search indices
-
-#### **4. Security-First Design**
-- **Input Validation**: Multi-layer validation with security checks
-- **Rate Limiting**: Sliding window protection against abuse
-- **Session Security**: Secure session management and validation
-- **Error Isolation**: Global exception handling with detailed logging
-
-## ✨ Key Features
-
-### 🤖 **Multi-Agent System**
-- **Professional Agent**: Career, skills, projects, and work experience
-- **Education Agent**: Academic background and qualifications
-- **Learning Agent**: Data science & AI learning advice
-- **Redirect Agent**: Off-topic handling with helpful alternatives
-
-### 🧠 **Intelligent Features**
-- **Dynamic Guardrails**: ML-powered routing accuracy improvement
-- **Automatic Language Detection**: 10+ language support
-- **Smart Query Routing**: Advanced pattern matching and context analysis
-- **Session Analytics**: Redirect count monitoring and user behavior tracking
-
-### ⚡ **Performance & Scalability**
-- **Async Processing**: Concurrent operations for optimal performance
-- **Intelligent Caching**: Multi-level TTLCache system
-- **Advanced Rate Limiting**: Sliding windows with burst protection
-- **Google Cloud Logging**: Structured logging and monitoring
-
-### 🔒 **Security & Reliability**
-- **Input Validation**: Comprehensive security checks
-- **Error Handling**: Global exception handling with logging
-- **Rate Limiting**: Protection against abuse and DoS attacks
-- **Session Security**: Secure session management and validation
-
-## 🚀 Setup
+## Quick Start
 
 ### Prerequisites
+
 - Python 3.12+
 - Google Gemini API key
-- Google Cloud Project (optional, for cloud features)
 
-### Installation
-
-1. **Clone and Install Dependencies:**
-   ```bash
-   git clone <repository-url>
-   cd ibola-chatbot
-   pip install -r requirements.txt
-   ```
-
-2. **Environment Configuration:**
-
-   Create a `.env` file in the project root with your configuration:
-
-   ```bash
-   # Required: AI API Key
-   GEMINI_API_KEY=your_gemini_api_key_here
-
-   # Optional: Google Cloud Integration
-   GCHAT_WEBHOOK_URL=https://chat.googleapis.com/v1/spaces/.../messages?key=...&token=...
-   GCP_SA_CREDENTIALS_PATH=_conf/ibola_agent_sa.json
-   GCP_PROJECT_ID=your_project_id
-
-   # Optional: Server Configuration
-   HOST=0.0.0.0
-   PORT=8000
-   LOG_LEVEL=INFO
-   SESSION_TIMEOUT_MINUTES=30
-   MAX_REDIRECT_COUNT=3
-   ```
-
-3. **Google Cloud Setup (Optional):**
-
-   For cloud features like logging and Google Drive integration:
-
-   - Enable required Google Cloud APIs (Cloud Logging, Drive API)
-   - Create service account with appropriate permissions
-   - Download service account key to the path specified in `GCP_SA_CREDENTIALS_PATH`
-
-### Docker Deployment
+### Install & Run
 
 ```bash
-# Build and run with Docker Compose
-docker-compose build
-docker-compose up -d
+# Clone
+git clone https://github.com/bolablg/agentic-rag-chatbot.git
+cd agentic-rag-chatbot
 
-# Or run with Docker directly
-docker build -t ibola-chatbot .
-docker run -p 8000:8000 --env-file .env ibola-chatbot
+# Install
+pip install -r requirements.txt
+
+# Configure
+cp sample.env .env
+# Edit .env and set GEMINI_API_KEY
+
+# Update vector store with knowledge base
+python pipeline/update_vectorstore.py
+
+# Run
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-## 🧪 Testing & Development
+### Docker
 
-### Running the Application
-
-#### Development Mode
 ```bash
-# Install development dependencies
+docker-compose build && docker-compose up -d
+```
+
+### Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `GEMINI_API_KEY` | Yes | Google Gemini API key |
+| `GCP_PROJECT_ID` | No | Google Cloud project ID |
+| `GCP_SA_CREDENTIALS_PATH` | No | Path to service account JSON |
+| `GCHAT_WEBHOOK_URL` | No | Google Chat webhook for alerts |
+| `REDIRECT_LOG_SHEET_ID` | No | Google Sheets ID for redirect logging |
+| `LANGFUSE_ENABLED` | No | Enable Langfuse tracing (`true`/`false`) |
+| `LANGFUSE_PUBLIC_KEY` | No | Langfuse public key |
+| `LANGFUSE_SECRET_KEY` | No | Langfuse secret key |
+
+## CI/CD Pipeline
+
+GitFlow with automated promotion:
+
+```
+Feature branch ─── lint + format + test ───▶ Auto-merge to staging
+                                                     │
+Staging ─────── pip-audit, bandit, safety, trivy ───▶ Auto-create PR to main
+                                                     │
+Main ──────────────── merge PR ─────────────────────▶ Deploy to Cloud Run
+```
+
+| Stage | Tools |
+|-------|-------|
+| **Lint & Format** | Black, isort, Flake8 |
+| **Test** | pytest with coverage |
+| **Security** | pip-audit, safety, Bandit, Trivy |
+| **Deploy** | Docker → GCR → Cloud Run |
+
+## Development
+
+```bash
+# Install dev dependencies
 pip install -r requirements-dev.txt
 
-# Run with auto-reload
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+# Run tests
+pytest tests/ -v --cov=app
+
+# Lint & format
+black app/ tests/ pipeline/ && isort app/ tests/ pipeline/ && flake8 app/ tests/ pipeline/
+
+# Update knowledge base
+python pipeline/update_vectorstore.py
 ```
 
-#### Production Mode
-```bash
-# Run with production settings
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
-```
+## Tech Stack
 
-Once running, the API documentation is available at `http://127.0.0.1:8000/docs`.
+| Layer | Technology |
+|-------|-----------|
+| **LLM** | Google Gemini 2.5 Pro |
+| **Agent Framework** | LangGraph + LangChain |
+| **Embeddings** | Google Generative AI (`embedding-001`) |
+| **Vector Store** | ChromaDB |
+| **Keyword Search** | rank-bm25 (BM25Okapi) |
+| **Reranker** | sentence-transformers cross-encoder |
+| **API** | FastAPI + Uvicorn |
+| **Config** | pydantic-settings |
+| **Tracing** | Langfuse |
+| **Caching** | Redis / in-memory TTLCache |
+| **Deployment** | Docker → Google Cloud Run |
+| **CI/CD** | GitHub Actions (GitFlow) |
 
-### Test Suites
+## Documentation
 
-- **Unit Tests**: Individual component testing
-- **Integration Tests**: End-to-end system testing
-- **Security Tests**: Vulnerability and input validation
-- **Performance Tests**: Load and scalability testing
+| Document | Description |
+|----------|-------------|
+| [Agentic RAG Pipeline](docs/AGENTIC_RAG_PIPELINE.md) | LangGraph workflow, nodes, structured outputs, state machine |
+| [Hybrid Search](docs/HYBRID_SEARCH.md) | BM25 + Vector + RRF fusion, cross-encoder reranking |
+| [Data Pipeline](docs/DATA_PIPELINE.md) | Knowledge base, intelligent chunking, vectorstore updates |
+| [API Reference](docs/API_REFERENCE.md) | All endpoints with request/response examples |
+| [Configuration](docs/CONFIGURATION.md) | Environment variables, pydantic-settings, legacy config |
+| [CI/CD Pipeline](docs/CI_CD.md) | GitFlow, security scanning, deployment |
+| [Observability](docs/OBSERVABILITY.md) | Langfuse tracing, logging, rate limiting, feedback |
+| [Architecture Assessment](docs/ARCHITECTURE_ASSESSMENT.md) | Original architecture review |
+| [Release Notes](docs/RELEASE_NOTES.md) | Version history |
 
-#### Running Tests
-```bash
-# Run all tests with coverage
-pytest tests/ -v --cov=app --cov-report=html
+## License
 
-# Run specific test categories
-pytest tests/test_agents.py tests/test_services.py -v
-pytest tests/test_integration.py -v
-pytest tests/test_security.py -v
-```
-
-## 🔧 API Endpoints
-
-### Core Chat Endpoints
-- `POST /welcome` - Localized welcome messages based on browser language
-- `POST /chat` - Main chat endpoint with multi-agent routing and caching
-- `GET /health` - Comprehensive system health check
-
-### Session Management
-- `GET /session/{session_id}/stats` - Session statistics and analytics
-- `DELETE /session/{session_id}` - Reset user session data
-
-### Monitoring & Analytics
-- `GET /cache/stats` - Cache performance statistics
-- `GET /rate-limit/stats` - Rate limiting statistics
-- `GET /performance/metrics` - System performance metrics
-- `POST /cache/clear` - Clear all cache data (admin)
-
-## 🚀 CI/CD & Deployment
-
-### GitHub Actions Configuration
-
-The project uses GitHub Actions for automated testing and deployment. Configure the following repository secrets:
-
-#### Required Secrets
-- `GCP_SA_KEY` - Google Cloud Service Account JSON key
-- `GCP_PROJECT` - Google Cloud Project ID
-- `GOOGLE_OAUTH_KEY` - OAuth client credentials JSON
-- `GOOGLE_OAUTH_TOKEN` - OAuth refresh token JSON
-- `GEMINI_API_KEY` - Google AI Gemini API key
-- `GCHAT_WEBHOOK_URL` - Google Chat webhook URL
-- `GDRIVE_FOLDER_ID` - Google Drive folder ID
-- `REDIRECT_LOG_SHEET_ID` - Google Sheets ID for analytics
-
-#### Optional Secrets
-- `GOOGLE_OAUTH_KEY_PATH` - Path for OAuth credentials (default: `_conf/ibola_agent_oauth.json`)
-- `GOOGLE_OAUTH_TOKEN_PATH` - Path for OAuth token (default: `_conf/token.json`)
-- `DATA_PATH` - Path to data directory
-- `DB_PATH` - Path to database/vector store
-
-### Deployment to Google Cloud
-
-```bash
-# Build Docker image
-gcloud builds submit --tag gcr.io/YOUR_PROJECT/ibola-chatbot
-
-# Deploy to Cloud Run
-gcloud run deploy ibola-chatbot \
-  --image gcr.io/YOUR_PROJECT/ibola-chatbot \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated
-```
-
-### GitHub Actions Updates
-
-The CI/CD pipeline uses the latest stable versions of all actions:
-
-| Action | Version | Status |
-|--------|---------|--------|
-| `actions/checkout` | `v4` | ✅ Updated |
-| `actions/upload-artifact` | `v4` | ✅ Updated |
-| `codecov/codecov-action` | `v4` | ✅ Updated |
-| `google-github-actions/auth` | `v2` | ✅ Updated |
-| `google-github-actions/setup-gcloud` | `v2` | ✅ Updated |
-
-## 🔍 Monitoring & Observability
-
-### Health Monitoring
-- **System Health**: CPU, memory, disk usage monitoring
-- **Service Status**: Orchestrator, cache, rate limiter, logging status
-- **Performance Metrics**: Request duration, cache hit rates, error rates
-- **Session Analytics**: Active sessions, redirect patterns, user behavior
-
-### Logging & Analytics
-- **Structured Logging**: JSON-formatted logs with context
-- **Google Cloud Logging**: Automatic cloud logging integration
-- **Security Events**: Rate limiting violations, validation failures
-- **Chat Analytics**: Agent usage, response times, language preferences
-
-### Cache & Performance
-- **Multi-Level Caching**: Response, session, language, and vector caching
-- **Rate Limiting**: Sliding window protection with burst control
-- **Resource Monitoring**: Real-time system resource tracking
-
-## 🛡️ Security & Reliability
-
-### Input Security
-- **Validation**: Comprehensive input sanitization and validation
-- **Injection Protection**: SQL injection and XSS prevention
-- **Content Filtering**: Harmful content pattern detection
-- **Session Security**: Secure session management and validation
-
-### System Reliability
-- **Error Handling**: Global exception handlers with graceful degradation
-- **Rate Limiting**: Per-endpoint and global rate limiting
-- **Health Monitoring**: Automated health checks and alerts
-- **Fallback Mechanisms**: Graceful degradation when services fail
-
-## 📊 Data Pipeline
-
-### Vector Store Management
-```bash
-# Update vector store from Google Drive
-python pipeline/sync.py
-```
-
-### Automated Updates
-The system supports automated vector store updates via cron jobs or scheduled tasks for keeping the knowledge base current.
+This project is a professional portfolio chatbot for [Bolaji BALOGOUN](https://bolablg.com).
 
 ---
 
-## 📄 License & Contributing
-
-This project demonstrates advanced AI chatbot architecture with multi-agent systems, RAG, and cloud integration. For contributions or questions, please refer to the project documentation.
-
----
-
-*Built with ❤️ using FastAPI, LangChain, Google Gemini, and modern AI practices.*
+*Built with LangGraph, Google Gemini, and modern agentic RAG patterns.*
