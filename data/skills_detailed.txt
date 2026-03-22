@@ -1,0 +1,84 @@
+BOLAJI BALOGOUN — DETAILED SKILLS & TECHNOLOGIES
+
+---
+
+CORE EXPERTISE AREAS:
+Data engineering, data modeling, statistical analysis, data visualization, machine learning, automation, cloud computing, data product management, team leadership, problem-solving, cross-functional communication.
+
+---
+
+CLOUD & DATA PLATFORMS:
+- Google Cloud Platform (GCP): BigQuery, Cloud Storage (GCS), DataForm, Vertex AI, DataFlow, Cloud Run, Artifact Registry, Cloud Logging, Cloud Build.
+- Amazon Web Services (AWS): EC2.
+- Data warehousing concepts: partitioning, clustering, cost optimization, incremental loading, MPP SQL engines.
+
+---
+
+DATA VISUALIZATION & BI:
+- Looker and Looker Studio (formerly Google Data Studio)
+- Metabase
+- Plotly (Python)
+- Kibana (ElasticSearch dashboards)
+- Apache Superset
+
+---
+
+PROGRAMMING LANGUAGES:
+- Python (primary language — 10+ years): pandas, numpy, scikit-learn, Flask, FastAPI, LangChain, LangGraph.
+- R: statistical analysis, ggplot2.
+- JavaScript: web development, Dataform templates.
+- Bash/Shell scripting: automation, CI/CD, server management.
+- SQL (advanced): BigQuery SQL, PostgreSQL, MySQL, SQLite, MariaDB.
+
+---
+
+DATABASES:
+- Relational: BigQuery, PostgreSQL, MySQL, SQLite, MariaDB.
+- NoSQL: MongoDB.
+- Vector: ChromaDB.
+
+---
+
+DEVOPS & TOOLS:
+- Apache Airflow: workflow orchestration, scheduling, DAG development.
+- Docker: containerization, Docker Compose, multi-service deployments.
+- Git/GitHub/GitLab: version control, CI/CD pipelines, code review.
+- Google Artifact Registry: container image management.
+- Pre-commit hooks, Black, isort, Flake8: code quality automation.
+
+---
+
+AI & MACHINE LEARNING:
+- Large Language Models (LLMs): Google Gemini, prompt engineering, RAG pipelines.
+- LangChain and LangGraph: agentic AI, multi-agent systems, retrieval-augmented generation.
+- Scikit-learn: classification, regression, clustering.
+- Natural Language Processing: neural machine translation, text classification, language detection.
+- Vertex AI: managed ML platform.
+
+---
+
+BIG DATA:
+- Apache Hadoop: distributed storage (HDFS).
+- Apache Spark: distributed computing, PySpark.
+- Apache Hive: SQL-on-Hadoop, data warehousing.
+- ElasticSearch: full-text search, analytics.
+
+---
+
+PROJECT MANAGEMENT:
+- Asana: task management, project tracking, data quality ticketing.
+- Jira: agile project management, sprint planning.
+
+---
+
+SPOKEN LANGUAGES:
+- French: Native proficiency.
+- English: Professional working proficiency.
+
+---
+
+TOOL EQUIVALENCES (transferable skills):
+- dbt ↔ Dataform: SQL-based modeling, DAGs, tests, documentation, CI/CD for data warehouses.
+- Power BI ↔ Looker Studio / Tableau: BI dashboards, data modeling layers, visual storytelling, sharing, governance.
+- Snowflake / Redshift ↔ BigQuery / ClickHouse: cloud data warehouses, MPP SQL, partitioning, clustering, cost/performance tuning.
+- Airflow ↔ Dagster: workflow orchestration, scheduling, monitoring, data pipeline management.

@@ -1,0 +1,32 @@
+BOLAJI BALOGOUN — COMMUNITY LEADERSHIP & RESEARCH
+
+---
+
+VICE-CHAIR — iSHEERO
+Period: December 2021 – Present
+Website: isheero.com
+
+iSheero is an initiative promoting data science and artificial intelligence in Benin and Francophone Africa. Bolaji serves as Vice-Chair.
+
+Three pillars of iSheero:
+1. Empower, Guide, Inspire — Equipping young Beninese talent with AI and data science skills through workshops, mentorship, and hands-on projects.
+2. Build a local ecosystem — Positioning Benin as a data science and AI hub in West Africa by fostering a community of practitioners and enthusiasts.
+3. Champion AI adoption — Encouraging Beninese businesses and organizations to adopt AI-driven solutions for growth and efficiency.
+
+---
+
+CHAIR & CO-FOUNDER — TAKWIMU LAB
+Period: 2019 – 2022
+
+Bolaji co-founded Takwimu LAB, a community for AI and Data Science enthusiasts focused on research and practical applications in African contexts.
+
+Key achievements:
+- Promoted research on low-resource African languages for Natural Language Processing (NLP).
+- Collected, labeled, and published parallel text datasets for Neural Machine Translation: French–Fongbe and French–Ewe language pairs.
+- Built a prototype English–Fongbe Neural Machine Translation app with support from AI4D-Africa Network and UNESCO.
+- Won the Zindi Africa Award for the AI4D-African Dataset Challenge in 2020.
+- Co-organized a machine translation challenge on Zindi Africa.
+- Published dataset on Zenodo (zenodo.org/record/4266935, November 2020).
+- Paper: "AI4D African Language Program", April 2021, presented at the AfricaNLP Workshop at EACL2021 Conference (arXiv:2104.02516).
+
+This work positioned Bolaji at the intersection of AI research and African language preservation, contributing to multilingual NLP for underrepresented languages.

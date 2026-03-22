@@ -12,6 +12,8 @@ from pydantic import BaseModel, Field, validator
 
 from app.agents.orchestrator import AgentOrchestrator
 from app.history_store import append_history, get_history
+from app.routes.feedback import router as feedback_router
+from app.routes.streaming import router as streaming_router
 from app.services.cache_service import cache_service
 from app.services.google_chat_alert import google_chat_alert
 from app.services.language_detection import language_service
@@ -66,6 +68,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+# Mount new API routes (streaming, feedback)
+app.include_router(streaming_router)
+app.include_router(feedback_router)
 
 # Mount the static directory to serve frontend files
 app.mount("/static", StaticFiles(directory="static"), name="static")
