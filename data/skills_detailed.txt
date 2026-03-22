@@ -82,3 +82,36 @@ TOOL EQUIVALENCES (transferable skills):
 - Power BI ↔ Looker Studio / Tableau: BI dashboards, data modeling layers, visual storytelling, sharing, governance.
 - Snowflake / Redshift ↔ BigQuery / ClickHouse: cloud data warehouses, MPP SQL, partitioning, clustering, cost/performance tuning.
 - Airflow ↔ Dagster: workflow orchestration, scheduling, monitoring, data pipeline management.
+
+---
+
+ADDITIONAL SKILLS (from LinkedIn):
+
+Data & Analytics:
+- Data Pipelines, ETL (Extract, Transform, Load)
+- Data Warehousing, Data lake, Data Processing
+- Data Mining, Data Collection, Data Entry
+- Data Management, Data Migration, Data Governance, Data Security, Data Strategies
+- Strategic Data Analysis, Customer Analysis, Predictive Analytics
+- Business Intelligence (BI), Web Analytics
+- A/B Testing, Survey Design
+- IBM SPSS
+
+Statistics & Mathematics:
+- Statistical Inference, Statistical Modeling
+- Scala
+
+AI & ML (additional):
+- Deep Learning, Apache Spark ML
+
+Leadership & Soft Skills:
+- Team Leadership, Team Management
+- Product Development, Product Design
+- Problem Solving, Adaptability & Resilience
+- Communicating for Impact, Presentations
+- Training Delivery
+- Research and Development (R&D), Scientific Writing
+
+Digital Marketing:
+- Search Engine Optimization (SEO)
+- Social Media Optimization (SMO)
