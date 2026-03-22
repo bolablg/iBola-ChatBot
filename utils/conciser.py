@@ -1,8 +1,9 @@
 import re
 
+
 def _enforce_succinctness(text: str, max_sent=5, max_words=20):
     # Split on sentence enders while keeping order
-    parts = re.split(r'(?<=[.!?])\s+', text.strip())
+    parts = re.split(r"(?<=[.!?])\s+", text.strip())
     clean = []
     for s in parts:
         if not s:

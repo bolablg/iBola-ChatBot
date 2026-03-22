@@ -118,8 +118,7 @@ A user wants to {contact_action} with you!
 
         formatted_history = self._format_chat_history(chat_history)
 
-        message = {
-            "text": f"""
+        message = {"text": f"""
 ⚠️ *High Redirect Count Alert*
 
 A user has been redirected {redirect_count} times and may need direct assistance.
@@ -134,8 +133,7 @@ A user has been redirected {redirect_count} times and may need direct assistance
 ```
 
 *Recommendation:* Consider reaching out to this user directly.
-            """
-        }
+            """}
 
         try:
             response = requests.post(
