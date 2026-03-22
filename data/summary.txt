@@ -18,7 +18,12 @@ CONTACT:
 - Substack: substack.com/@bolablg
 
 PERSONAL INTERESTS: Community building, continuous learning, exploring cultures, jogging, soccer, music, coffee, Real Madrid.
-AVAILABILITY: Bolaji is open to impactful or well-paid opportunities. Contact hello@bolablg.com for inquiries.
+AVAILABILITY & CAREER INTERESTS:
+Bolaji is open to ambitious, well-paid professional opportunities that impact communities.
+He is interested in both builder roles and leadership roles — ideally with at least 40% hands-on building tasks (coding, architecting, shipping products).
+He thrives in roles that combine technical depth with strategic influence.
+Target roles: Head of Data/AI, Senior AI/Data Engineer, Staff Engineer, Technical Lead — in organizations with ambitious projects that create lasting impact for communities.
+Contact hello@bolablg.com to discuss opportunities.
 
 A dynamic and visionary Data Science professional, Bolaji BALOGOUN blends deep statistical expertise with a passion for innovation to drive business growth and societal impact across transportation, e-commerce, and fintech. With a strong foundation in Statistics, Big data engineering and Advanced analytics, Bolaji thrives at the intersection of technology and problem-solving, designing scalable architectures and operationalizing Data and AI strategies that empower organizations to become truly data-driven. He has a decade of experience transforming data into powerful business assets, fueling innovation, and delivering measurable impact.
 
