@@ -48,7 +48,8 @@ class KnowledgeGraph:
             )
 
             # Initialize extraction chain
-            self.extraction_prompt = PromptTemplate.from_template("""
+            self.extraction_prompt = PromptTemplate.from_template(
+                """
             Extract key concepts, entities, and relationships from the following text.
             Focus on technical skills, projects, experiences, and educational background.
 
@@ -60,7 +61,8 @@ class KnowledgeGraph:
             CATEGORIES: [entity1:category1, entity2:category2]
 
             Be specific and technical:
-            """)
+            """
+            )
 
             self.extraction_chain = LLMChain(
                 llm=self.llm, prompt=self.extraction_prompt, verbose=False
@@ -374,7 +376,8 @@ class KnowledgeGraphReasoner:
             )
 
             # Reasoning chain
-            self.reasoning_prompt = PromptTemplate.from_template("""
+            self.reasoning_prompt = PromptTemplate.from_template(
+                """
             Use the following context from the knowledge graph to answer the question.
             Consider relationships, concepts, and connections between entities.
 
@@ -383,7 +386,8 @@ class KnowledgeGraphReasoner:
             Knowledge Context: {context}
 
             Provide a comprehensive answer based on the available knowledge:
-            """)
+            """
+            )
 
             self.reasoning_chain = LLMChain(
                 llm=self.llm, prompt=self.reasoning_prompt, verbose=False
