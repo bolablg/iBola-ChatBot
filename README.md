@@ -1,12 +1,14 @@
 # iBola — Production Agentic RAG Chatbot
 
-![Version](https://img.shields.io/badge/version-1.0.1-blue)
-![Python](https://img.shields.io/badge/python-3.12-yellow)
-![LangGraph](https://img.shields.io/badge/LangGraph-0.2+-green)
-![Gemini](https://img.shields.io/badge/Gemini-2.5_Pro-orange)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-teal)
-![License](https://img.shields.io/badge/license-proprietary-lightgrey)
-![Deploy](https://img.shields.io/badge/deploy-Cloud_Run-4285F4?logo=googlecloud&logoColor=white)
+[![Version](https://img.shields.io/badge/version-1.0.1-005AF0?style=for-the-badge)](https://github.com/bolablg/agentic-rag-chatbot/releases)
+[![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![LangGraph](https://img.shields.io/badge/LangGraph-0.2+-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)](https://langchain-ai.github.io/langgraph/)
+[![Gemini](https://img.shields.io/badge/Gemini-2.5_Pro-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white)](https://ai.google.dev/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Cloud Run](https://img.shields.io/badge/Cloud_Run-deployed-4285F4?style=for-the-badge&logo=googlecloud&logoColor=white)](https://chat.bolablg.com)
+[![ChromaDB](https://img.shields.io/badge/ChromaDB-vector_store-FF6F00?style=for-the-badge)](https://www.truma.com/chromadb)
+[![Docker](https://img.shields.io/badge/Docker-container-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![License](https://img.shields.io/badge/license-proprietary-grey?style=for-the-badge)]()
 
 A production-grade, multi-agent Retrieval-Augmented Generation chatbot powering [chat.bolablg.com](https://chat.bolablg.com). Built with LangGraph, Google Gemini 2.5 Pro, hybrid search (BM25 + vector + RRF), and deployed on Google Cloud Run.
 
