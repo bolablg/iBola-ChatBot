@@ -20,7 +20,7 @@ This is a **production-grade agentic multi-agent RAG chatbot** built with:
 - `pipeline/` — Data ingestion (chunker, vectorstore update, Google Drive sync)
 - `data/` — Knowledge base documents
 - `tests/` — Test suite
-- `scripts/` — Lint, format, security scripts
+- `scripts/` — Lint, format, test, security, CI scripts
 - `docs/` — Full documentation
 
 ## API Endpoints
@@ -48,15 +48,19 @@ All scripts lint/format **changed files only** (vs main) for speed.
 ```bash
 bash scripts/format.sh    # Auto-format changed .py files (Black + isort)
 bash scripts/lint.sh      # Lint changed .py files (Flake8)
+bash scripts/test.sh      # Run full test suite with coverage
 bash scripts/security.sh  # Dependency audit (pip-audit) + Bandit on changed files
-bash scripts/check.sh     # Run all three above in sequence
+bash scripts/check.sh     # Format + lint + security (quick pre-commit check)
+bash scripts/ci-local.sh  # Full CI pipeline: format + lint + test + security
 ```
 
 ## Before Completing Any Task
 
-**Always run `bash scripts/check.sh` before marking a task as done.**
-This ensures formatting, linting, and security checks pass before commit.
-If any check fails, fix the issues before proceeding.
+**Always run `bash scripts/ci-local.sh` before marking a task as done.**
+This runs the full local CI pipeline (format → lint → test → security) — same checks as GitHub Actions.
+If any step fails, fix the issues before proceeding.
+
+At minimum, run `bash scripts/check.sh` for a quick pre-commit check (skips tests for speed).
 
 ## Commands
 
@@ -65,13 +69,22 @@ If any check fails, fix the issues before proceeding.
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 # Run with Docker
-docker compose up -d
+docker compose build && docker compose up -d
 
-# Update vector store
-python pipeline/update_vectorstore.py
+# Update vector store (inside Docker)
+docker compose run --rm app python pipeline/update_vectorstore.py
 
-# Run tests
-pytest tests/ -v --cov=app
+# Run full local CI (format + lint + test + security)
+bash scripts/ci-local.sh
+
+# Run tests only
+bash scripts/test.sh
+
+# Run a single test
+bash scripts/test.sh -k test_health
+
+# Run tests without coverage
+bash scripts/test.sh --no-cov
 ```
 
 ## Commit Rules

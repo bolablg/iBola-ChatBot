@@ -95,8 +95,12 @@ def mock_external_services():
         patch(
             "app.agents.redirect_agent.ConversationalRetrievalChain"
         ) as mock_chain_redirect,
-        patch("langchain_google_genai.chat_models._chat_with_retry") as mock_chat_retry,
-        patch("langchain.chains.llm.LLMChain") as mock_llm_chain,
+        patch(
+            "langchain_classic.chains.llm.LLMChain"
+        ) as mock_llm_chain,
+        patch(
+            "langchain_google_genai.chat_models._chat_with_retry", create=True
+        ) as mock_chat_retry,
     ):
 
         # Set up retriever mocks with proper BaseRetriever interface
