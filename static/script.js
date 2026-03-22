@@ -1,650 +1,348 @@
-// === MAIN IBOLA CHATBOT APPLICATION ===
+// ============================================================
+// iBola Chatbot — Frontend Application
+// Vanilla JS, SSE streaming, feedback, dark mode, embeddable
+// ============================================================
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 iBola Chatbot Application Starting...');
-
-    // DOM Elements
-    const chatBox = document.getElementById('chat-box');
+    // --- DOM ---
+    const chatMessages = document.getElementById('chat-messages');
     const chatForm = document.getElementById('chat-form');
     const userInput = document.getElementById('user-input');
     const typingIndicator = document.getElementById('typing-indicator');
-    const sendButton = chatForm.querySelector('button');
-    const modeToggle = document.getElementById('mode-toggle');
-
-    // Multi-agent elements
-    const agentIndicator = document.getElementById('agent-indicator');
-    const agentIcon = document.getElementById('agent-icon');
-    const agentName = document.getElementById('agent-name');
-    const agentStatus = document.getElementById('agent-status');
-    const quickActions = document.getElementById('quick-actions');
-
-    // Modal elements
-    const modal = document.getElementById('appointment-modal');
+    const sendBtn = chatForm.querySelector('.send-btn');
+    const themeToggle = document.getElementById('theme-toggle');
+    const chatContainer = document.getElementById('chat-container');
+    const modalOverlay = document.getElementById('modal-overlay');
     const modalIframe = document.getElementById('modal-iframe');
-    const closeModalBtn = document.querySelector('.modal-close-btn');
-    const agentTransitionModal = document.getElementById('agent-transition-modal');
+    const modalClose = document.getElementById('modal-close');
 
-    // Session and state management
-    const sessionId = `web-session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    let lastUserQuestion = "";
-    let currentAgentType = 'redirect';
-    let chatEnded = false; // Track if chat has ended
-    let agentTransitionTimeout = null;
+    // --- State ---
+    const sessionId = `web-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
     let userLanguage = 'en';
-    let redirectCount = 0;
+    let chatEnded = false;
+    let msgIndex = 0;
 
-    // Agent configurations
-    const agentConfigs = {
-        professional: {
-            icon: '💼',
-            name: 'Professional Expert',
-            status: 'Specialized in career & projects',
-            color: '#007aff'
-        },
-        education: {
-            icon: '🎓',
-            name: 'Education Specialist',
-            status: 'Focused on academic background',
-            color: '#34c759'
-        },
-        learning: {
-            icon: '📚',
-            name: 'Learning Advisor',
-            status: 'Guides skill development',
-            color: '#ff9500'
-        },
-        redirect: {
-            icon: '🔄',
-            name: 'Smart Redirect',
-            status: 'Routes to appropriate agent',
-            color: '#ff3b30'
-        }
-    };
-
-    console.log('📋 Elements loaded:', {
-        chatBox: !!chatBox,
-        chatForm: !!chatForm,
-        userInput: !!userInput,
-        modeToggle: !!modeToggle,
-        sessionId: sessionId
-    });
-
-    // === THEME TOGGLE FUNCTIONALITY ===
+    // --- Theme ---
     const applyTheme = (theme) => {
-        console.log('🎨 applyTheme called with:', theme);
         const isDark = theme === 'dark';
         document.body.classList.toggle('dark-mode', isDark);
-
-        // Update toggle visual elements
-        const toggleIcon = modeToggle?.querySelector('.toggle-icon');
-        const toggleText = modeToggle?.querySelector('.toggle-text');
-        const toggleHandle = modeToggle?.querySelector('.toggle-handle');
-        const toggleSlider = modeToggle?.querySelector('.toggle-slider');
-
-        if (isDark) {
-            if (toggleIcon) toggleIcon.textContent = '☀️';
-            if (toggleText) toggleText.textContent = 'Light';
-            if (toggleHandle) toggleHandle.style.left = '22px';
-            if (toggleSlider) toggleSlider.style.background = 'linear-gradient(135deg, #63b3ed, #4299e1)';
-            console.log('🌙 Switched to DARK mode');
-        } else {
-            if (toggleIcon) toggleIcon.textContent = '🌙';
-            if (toggleText) toggleText.textContent = 'Dark';
-            if (toggleHandle) toggleHandle.style.left = '2px';
-            if (toggleSlider) toggleSlider.style.background = 'linear-gradient(135deg, #e9ecef, #dee2e6)';
-            console.log('☀️ Switched to LIGHT mode');
+        if (themeToggle) {
+            themeToggle.querySelector('.icon-sun').style.display = isDark ? 'block' : 'none';
+            themeToggle.querySelector('.icon-moon').style.display = isDark ? 'none' : 'block';
         }
-
         localStorage.setItem('theme', theme);
     };
 
-    // Theme toggle event listener
-    if (modeToggle) {
-        modeToggle.addEventListener('click', () => {
-            console.log('🖱️ Toggle clicked!');
-            const newTheme = document.body.classList.contains('dark-mode') ? 'light' : 'dark';
-            console.log('🎨 Switching to theme:', newTheme);
-            applyTheme(newTheme);
-
-            // Add click animation
-            modeToggle.style.animation = 'none';
-            setTimeout(() => {
-                modeToggle.style.animation = '';
-            }, 100);
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            applyTheme(document.body.classList.contains('dark-mode') ? 'light' : 'dark');
         });
-        console.log('✅ Theme toggle event listener attached');
     }
 
-    // === MESSAGE HANDLING ===
-    const addMessage = (text, sender, question = null) => {
-        console.log('📝 addMessage called:', { text, sender });
+    applyTheme(localStorage.getItem('theme') || 'light');
 
-        // Create message wrapper for proper positioning
-        const wrapper = document.createElement('div');
-        wrapper.classList.add('message-wrapper', `${sender}-message-wrapper`);
-
-        // Create message element
-        const messageElement = document.createElement('div');
-        messageElement.classList.add('message', `${sender}-message`);
-        messageElement.textContent = text;
-
-        // Add to DOM
-        wrapper.appendChild(messageElement);
-        chatBox.insertBefore(wrapper, typingIndicator);
-        chatBox.scrollTop = chatBox.scrollHeight;
-
-        console.log('✅ Message added to chat box');
+    // --- Helpers ---
+    const scrollToBottom = () => {
+        requestAnimationFrame(() => { chatMessages.scrollTop = chatMessages.scrollHeight; });
     };
 
-    const addActionButtons = (actions) => {
-        console.log('🎯 addActionButtons called with:', actions);
+    const showTyping = () => { typingIndicator.classList.add('visible'); scrollToBottom(); };
+    const hideTyping = () => { typingIndicator.classList.remove('visible'); };
 
-        const buttonContainer = document.createElement('div');
-        buttonContainer.classList.add('message', 'bot-message', 'action-buttons-container');
-
-        // Separate primary and secondary actions
-        const primaryActions = actions.filter(action => action.primary === true);
-        const secondaryActions = actions.filter(action => action.primary !== true);
-
-        // Add primary actions first (if any)
-        if (primaryActions.length > 0) {
-            const primaryContainer = document.createElement('div');
-            primaryContainer.classList.add('primary-actions');
-
-            primaryActions.forEach(action => {
-                const button = createActionButton(action);
-                button.classList.add('primary-action');
-                primaryContainer.appendChild(button);
-
-                // Set up auto-timeout for primary actions
-                if (action.auto_timeout) {
-                    setTimeout(() => {
-                        if (!button.clicked) {
-                            showSecondaryActions(secondaryActions, buttonContainer);
-                        }
-                    }, action.auto_timeout);
-                }
-            });
-            buttonContainer.appendChild(primaryContainer);
-        }
-
-        // Add secondary actions
-        if (secondaryActions.length > 0) {
-            const secondaryContainer = document.createElement('div');
-            secondaryContainer.classList.add('secondary-actions');
-            secondaryContainer.style.display = primaryActions.length > 0 ? 'none' : 'flex';
-
-            secondaryActions.forEach(action => {
-                const button = createActionButton(action);
-                button.classList.add('secondary-action');
-                secondaryContainer.appendChild(button);
-            });
-            buttonContainer.appendChild(secondaryContainer);
-        }
-
-        chatBox.insertBefore(buttonContainer, typingIndicator);
-        chatBox.scrollTop = chatBox.scrollHeight;
+    // --- SVG icon builders (safe DOM, no innerHTML) ---
+    const createSvg = (paths, size = 14) => {
+        const NS = 'http://www.w3.org/2000/svg';
+        const svg = document.createElementNS(NS, 'svg');
+        svg.setAttribute('width', size);
+        svg.setAttribute('height', size);
+        svg.setAttribute('viewBox', '0 0 24 24');
+        svg.setAttribute('fill', 'none');
+        svg.setAttribute('stroke', 'currentColor');
+        svg.setAttribute('stroke-width', '2');
+        svg.setAttribute('stroke-linecap', 'round');
+        svg.setAttribute('stroke-linejoin', 'round');
+        svg.setAttribute('aria-hidden', 'true');
+        paths.forEach(d => {
+            const path = document.createElementNS(NS, 'path');
+            path.setAttribute('d', d);
+            svg.appendChild(path);
+        });
+        return svg;
     };
 
-    const createActionButton = (action) => {
-        const button = document.createElement('button');
-        button.textContent = action.text;
-        button.classList.add('action-button');
-        button.title = action.description;
+    const thumbUpIcon = () => createSvg([
+        'M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z',
+        'M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3',
+    ]);
 
-        button.addEventListener('click', () => {
-            button.clicked = true;
-            console.log('🔘 Action button clicked:', action.type);
+    const thumbDownIcon = () => createSvg([
+        'M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z',
+        'M17 2h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3',
+    ]);
 
-                switch (action.type) {
-                    case 'readjust_prompt':
-                        // Show a prompt to help rephrase the question
-                        const newMessage = prompt('Please ask a precise question about Bolaji\'s professional journey or education:');
-                        if (newMessage && newMessage.trim()) {
-                            userInput.value = newMessage.trim();
-                            chatForm.dispatchEvent(new Event('submit'));
-                        }
-                        break;
+    // --- Build feedback row (safe DOM) ---
+    const createFeedbackRow = (idx) => {
+        const fb = document.createElement('div');
+        fb.classList.add('msg-feedback');
 
-                    case 'contact_booking':
-                        // Open booking calendar in popup
-                        const bookingWindow = window.open(action.url, 'bookingPopup', 'width=600,height=600,scrollbars=yes,resizable=yes');
-                        if (bookingWindow) {
-                            bookingWindow.focus();
-                        }
-                        // Send alert to Google Chat
-                        sendContactAlert('booking_request', action.session_id, action.chat_history);
+        const upBtn = document.createElement('button');
+        upBtn.classList.add('feedback-btn');
+        upBtn.dataset.score = '1';
+        upBtn.dataset.idx = idx;
+        upBtn.setAttribute('aria-label', 'Good response');
+        upBtn.title = 'Good response';
+        upBtn.appendChild(thumbUpIcon());
 
-                        // Note: Chat ending is now handled immediately when the message is displayed
-                        // No need to end chat again when buttons are clicked
-                        break;
+        const downBtn = document.createElement('button');
+        downBtn.classList.add('feedback-btn');
+        downBtn.dataset.score = '0';
+        downBtn.dataset.idx = idx;
+        downBtn.setAttribute('aria-label', 'Bad response');
+        downBtn.title = 'Bad response';
+        downBtn.appendChild(thumbDownIcon());
 
-                    case 'contact_email':
-                        // Open email client
-                        window.open(action.url, '_blank');
-                        // Send alert to Google Chat
-                        sendContactAlert('email_request', action.session_id, action.chat_history);
-
-                        // Note: Chat ending is now handled immediately when the message is displayed
-                        // No need to end chat again when buttons are clicked
-                        break;
-
-                    case 'end_chat':
-                        // End the conversation
-                        typeMessage('Thank you for your interest! Feel free to reach out via email or book a call if you\'d like to discuss further.', 'bot');
-                        break;
-
-                    default:
-                        console.log('Unknown action type:', action.type);
-                }
+        [upBtn, downBtn].forEach(btn => {
+            btn.addEventListener('click', () => handleFeedback(btn, fb));
         });
 
-        return button;
+        fb.appendChild(upBtn);
+        fb.appendChild(downBtn);
+        return fb;
     };
 
-    const showSecondaryActions = (secondaryActions, container) => {
-        const secondaryContainer = container.querySelector('.secondary-actions');
-        if (secondaryContainer) {
-            secondaryContainer.style.display = 'flex';
-            // Add a message about secondary options
-            typeMessage("Here are some additional options:", 'bot');
+    // --- Message Rendering ---
+    const addMessage = (text, sender, opts = {}) => {
+        const row = document.createElement('div');
+        row.classList.add('msg-row', `msg-row--${sender}`);
+
+        const bubble = document.createElement('div');
+        bubble.classList.add('msg', `msg--${sender}`);
+        bubble.textContent = text;
+        row.appendChild(bubble);
+
+        if (sender === 'bot' && !opts.noFeedback) {
+            row.appendChild(createFeedbackRow(msgIndex++));
         }
+
+        chatMessages.insertBefore(row, typingIndicator);
+        scrollToBottom();
+        return bubble;
     };
 
-    const sendContactAlert = async (contactType, sessionId, chatHistory) => {
-        console.log(`📤 Sending ${contactType} alert for session ${sessionId}`);
-
-        try {
-            // Send alert to backend which will forward to Google Chat
-            const response = await fetch('/contact-alert', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    contact_type: contactType,
-                    session_id: sessionId,
-                    chat_history: chatHistory,
-                    timestamp: new Date().toISOString()
-                })
-            });
-
-            if (response.ok) {
-                console.log('✅ Contact alert sent successfully to Google Chat');
-            } else {
-                console.error('❌ Failed to send contact alert:', response.status);
-            }
-        } catch (error) {
-            console.error('❌ Error sending contact alert:', error);
-        }
-    };
-
-    // Disable user input after chat ends
-    const disableUserInput = () => {
-        console.log('🚫 Disabling user input after chat ended');
-        console.log('userInput element:', userInput);
-        console.log('sendButton element:', sendButton);
-        console.log('chatForm element:', chatForm);
-
-        if (userInput) {
-            userInput.disabled = true;
-            userInput.placeholder = 'Chat ended. Use the buttons above to contact Bolaji directly.';
-            userInput.classList.add('chat-disabled');
-            console.log('✅ User input disabled and placeholder updated');
-            console.log('User input current state:', {
-                disabled: userInput.disabled,
-                placeholder: userInput.placeholder,
-                classList: userInput.classList.toString()
-            });
-        } else {
-            console.error('❌ userInput element not found!');
-        }
-
-        if (sendButton) {
-            sendButton.disabled = true;
-            sendButton.classList.add('chat-disabled');
-            console.log('✅ Send button disabled');
-            console.log('Send button current state:', {
-                disabled: sendButton.disabled,
-                classList: sendButton.classList.toString()
-            });
-        } else {
-            console.error('❌ sendButton element not found!');
-        }
-
-        // Also disable form submission completely
-        if (chatForm) {
-            chatForm.style.pointerEvents = 'none';
-            chatForm.onsubmit = (e) => {
-                e.preventDefault();
-                return false;
-            };
-            console.log('✅ Form submission disabled');
-        } else {
-            console.error('❌ chatForm element not found!');
-        }
-
-        console.log('✅ User input fully disabled - no more messages can be sent');
-    };
-
-    const typeMessage = (text, sender = 'bot', question = null, speed = 40) => {
-        console.log('📝 typeMessage called with:', { text, sender, speed });
+    // --- Typing Animation ---
+    const typeMessage = (text, sender = 'bot', opts = {}) => {
         return new Promise(resolve => {
-            typingIndicator.style.display = 'flex';
+            showTyping();
+            const row = document.createElement('div');
+            row.classList.add('msg-row', `msg-row--${sender}`);
 
-            // Create message wrapper for proper positioning
-            const wrapper = document.createElement('div');
-            wrapper.classList.add('message-wrapper', `${sender}-message-wrapper`);
+            const bubble = document.createElement('div');
+            bubble.classList.add('msg', `msg--${sender}`);
+            row.appendChild(bubble);
 
-            // Create message element
-            const messageElement = document.createElement('div');
-            messageElement.classList.add('message', `${sender}-message`);
-            wrapper.appendChild(messageElement);
+            chatMessages.insertBefore(row, typingIndicator);
+            hideTyping();
 
-            chatBox.insertBefore(wrapper, typingIndicator);
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            let index = 0;
-            const interval = setInterval(() => {
-                messageElement.textContent += text.charAt(index);
-                index++;
-                chatBox.scrollTop = chatBox.scrollHeight;
-                if (index >= text.length) {
-                    clearInterval(interval);
-                    typingIndicator.style.display = 'none';
+            let i = 0;
+            const speed = opts.speed || 25;
+            const tick = () => {
+                bubble.textContent += text.charAt(i);
+                i++;
+                scrollToBottom();
+                if (i < text.length) {
+                    setTimeout(tick, speed);
+                } else {
+                    if (sender === 'bot' && !opts.noFeedback) {
+                        row.appendChild(createFeedbackRow(msgIndex++));
+                    }
                     resolve();
                 }
-            }, speed);
+            };
+            tick();
         });
     };
 
-    // === AGENT MANAGEMENT ===
-    const switchAgent = (newAgentType, showTransition = true) => {
-        if (currentAgentType === newAgentType) return;
+    // --- Feedback ---
+    const handleFeedback = async (btn, container) => {
+        const score = parseFloat(btn.dataset.score);
+        const idx = parseInt(btn.dataset.idx);
 
-        const oldAgentType = currentAgentType;
-        currentAgentType = newAgentType;
+        container.querySelectorAll('.feedback-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
 
-        // Update UI classes for theming
-        document.body.classList.remove(`agent-${oldAgentType}`);
-        document.body.classList.add(`agent-${newAgentType}`);
-
-        // Update agent indicator (if exists)
-        if (agentIcon && agentName && agentStatus) {
-            const config = agentConfigs[newAgentType];
-            if (config) {
-                agentIcon.textContent = config.icon;
-                agentName.textContent = config.name;
-                agentStatus.textContent = config.status;
-                agentIndicator.style.borderColor = config.color;
-            }
-        }
-
-        // Agent transition hidden from user for unified experience
-        // if (showTransition) {
-        //     showAgentTransition(newAgentType);
-        // }
-
-        // Update quick actions visibility
-        if (quickActions) {
-            quickActions.style.display = newAgentType === 'redirect' ? 'flex' : 'none';
-        }
-
-        console.log(`🔄 Switched from ${oldAgentType} to ${newAgentType} agent`);
-    };
-
-    // Agent transition functionality disabled for unified user experience
-    // const showAgentTransition = (agentType) => {
-    //     const transitionIcon = document.getElementById('transition-icon');
-    //     const transitionTitle = document.getElementById('transition-title');
-    //     const transitionMessage = document.getElementById('transition-message');
-    //
-    //     if (transitionIcon && transitionTitle && transitionMessage) {
-    //         const config = agentConfigs[agentType];
-    //         if (config) {
-    //             transitionIcon.textContent = config.icon;
-    //             transitionTitle.textContent = config.name;
-    //             transitionMessage.textContent = `Switching to ${config.name.toLowerCase()}...`;
-    //         }
-    //
-    //         if (agentTransitionModal) {
-    //             agentTransitionModal.style.display = 'flex';
-    //
-    //             if (agentTransitionTimeout) {
-    //                 clearTimeout(agentTransitionTimeout);
-    //             }
-    //
-    //             agentTransitionTimeout = setTimeout(() => {
-    //                 agentTransitionModal.style.display = 'none';
-    //             }, 1500);
-    //         }
-    //     }
-    // };
-
-    // === FORM SUBMISSION ===
-    if (chatForm) {
-        chatForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            console.log('📝 Form submitted!');
-
-            const messageText = userInput.value.trim();
-            if (!messageText) return;
-
-            // Prevent sending messages if chat has ended
-            if (chatEnded) {
-                console.log('🚫 Chat has ended, preventing message send');
-                // Provide visual feedback that the action was blocked
-                userInput.style.animation = 'shake 0.5s';
-                setTimeout(() => {
-                    userInput.style.animation = '';
-                }, 500);
-                return;
-            }
-
-            // Handle special commands
-            if (["no", "non", "nein"].includes(messageText.toLowerCase())) {
-                userInput.value = '';
-                // endChat(); // Would need to implement this
-                return;
-            }
-
-            lastUserQuestion = messageText;
-
-            // Add user message
-            addMessage(messageText, 'user');
-            userInput.value = '';
-            typingIndicator.style.display = 'flex';
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            console.log('📤 Sending message to backend...');
-
-            try {
-                // Send to backend
-                const response = await fetch('/chat', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        user_input: messageText,
-                        session_id: sessionId,
-                        language: userLanguage,
-                        agent_type: currentAgentType
-                    })
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('📥 Received response:', data);
-
-                    // Switch agent if needed
-                    if (data.agent_type && data.agent_type !== currentAgentType) {
-                        switchAgent(data.agent_type, true);
-                    }
-
-                    // Display bot response
-                    if (data.answer) {
-                        await typeMessage(data.answer, 'bot');
-                    } else if (data.response) {
-                        await typeMessage(data.response, 'bot');
-                    }
-
-                    // Handle actions if present
-                    if (data.actions && data.actions.length > 0) {
-                        addActionButtons(data.actions);
-                    }
-
-                    // Handle chat ending if specified
-                    if (data.should_end_chat && !chatEnded) {
-                        console.log('🎯 Chat ending detected! should_end_chat:', data.should_end_chat, 'chatEnded:', chatEnded);
-                        chatEnded = true;
-                        // Disable user input immediately after displaying the message and buttons
-                        // The chat ended message is now included in the backend response
-                        disableUserInput();
-                    }
-                } else {
-                    console.error('❌ Backend error:', response.status);
-                    await typeMessage('Sorry, I encountered an error. Please try again.', 'bot');
-                }
-            } catch (error) {
-                console.error('❌ Network error:', error);
-                await typeMessage('Sorry, I\'m having trouble connecting. Please check your internet connection and try again.', 'bot');
-            }
-
-            typingIndicator.style.display = 'none';
-        });
-        console.log('✅ Form submission handler attached');
-    }
-
-    // === INITIALIZATION ===
-    const initializeChatbot = async () => {
-        console.log('🚀 Starting chatbot initialization...');
+        setTimeout(() => {
+            while (container.firstChild) container.removeChild(container.firstChild);
+            const thanks = document.createElement('span');
+            thanks.classList.add('feedback-thanks');
+            thanks.textContent = 'Thanks for your feedback';
+            container.appendChild(thanks);
+        }, 600);
 
         try {
-            // Get browser language and fetch localized welcome messages
-            const browserLanguage = navigator.language || 'en';
-            console.log('🌐 Browser language detected:', browserLanguage);
+            await fetch('/feedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ session_id: sessionId, message_index: idx, score }),
+            });
+        } catch (e) { /* silent */ }
+    };
 
-            const response = await fetch('/welcome', {
+    // --- Action Buttons ---
+    const addActionButtons = (actions) => {
+        const group = document.createElement('div');
+        group.classList.add('action-group');
+
+        actions.forEach(action => {
+            const btn = document.createElement('button');
+            btn.classList.add('action-btn');
+            if (action.primary) btn.classList.add('action-btn--primary');
+            btn.textContent = action.text;
+            btn.title = action.description || '';
+
+            btn.addEventListener('click', () => {
+                if (action.type === 'contact_booking') {
+                    window.open(action.url, 'booking', 'width=600,height=700,scrollbars=yes');
+                    sendContactAlert('booking_request', action.session_id, action.chat_history);
+                } else if (action.type === 'contact_email') {
+                    window.open(action.url, '_blank');
+                    sendContactAlert('email_request', action.session_id, action.chat_history);
+                }
+            });
+
+            group.appendChild(btn);
+        });
+
+        chatMessages.insertBefore(group, typingIndicator);
+        scrollToBottom();
+    };
+
+    // --- Contact Alert ---
+    const sendContactAlert = async (type, sid, history) => {
+        try {
+            await fetch('/contact-alert', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    contact_type: type,
+                    session_id: sid || sessionId,
+                    chat_history: history || [],
+                    timestamp: new Date().toISOString(),
+                }),
+            });
+        } catch (e) { /* silent */ }
+    };
+
+    // --- End Chat ---
+    const endChat = () => {
+        chatEnded = true;
+        chatContainer.classList.add('chat-ended');
+        userInput.disabled = true;
+        userInput.placeholder = 'Chat ended';
+        sendBtn.disabled = true;
+    };
+
+    // --- Form Submit ---
+    chatForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const text = userInput.value.trim();
+        if (!text || chatEnded) return;
+
+        addMessage(text, 'user');
+        userInput.value = '';
+        showTyping();
+
+        try {
+            const res = await fetch('/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_input: text,
                     session_id: sessionId,
-                    browser_language: browserLanguage
-                })
+                    user_language: userLanguage,
+                }),
             });
 
-            console.log('📡 Welcome API response status:', response.status);
+            hideTyping();
 
-            if (response.ok) {
-                const data = await response.json();
-                userLanguage = data.detected_language;
-                const messages = data.welcome_messages || [];
-
-                console.log('✅ Welcome data received:', data);
-
-                if (messages.length > 0) {
-                    console.log('💬 Welcome message:', messages[0]);
-                    console.log('📝 Displaying welcome message...');
-                    await new Promise(res => setTimeout(res, 500));
-                    await typeMessage(messages[0], 'bot');
-                }
-
-                // Update placeholder text based on detected language
-                updatePlaceholderText(userLanguage);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.answer) await typeMessage(data.answer, 'bot');
+                if (data.actions && data.actions.length > 0) addActionButtons(data.actions);
+                if (data.should_end_chat && !chatEnded) endChat();
             } else {
-                console.log('⚠️ Welcome API failed, using fallback');
-                const fallbackMessage = "Hello! I'm iBola, your AI assistant for Bolaji's professional journey.";
-                await new Promise(res => setTimeout(res, 500));
-                await typeMessage(fallbackMessage, 'bot');
-                updatePlaceholderText('en');
+                addMessage('Something went wrong. Please try again.', 'bot', { noFeedback: true });
             }
-
-        } catch (error) {
-            console.error('❌ Initialization error:', error);
-            const fallbackMessage = "Hello! I'm iBola, your AI assistant for Bolaji's professional journey.";
-            await new Promise(res => setTimeout(res, 500));
-            await typeMessage(fallbackMessage, 'bot');
-            updatePlaceholderText('en');
+        } catch (err) {
+            hideTyping();
+            addMessage('Connection error. Please check your internet and try again.', 'bot', { noFeedback: true });
         }
-    };
-
-    // Function to update placeholder text based on language
-    const updatePlaceholderText = (language) => {
-        console.log('🔤 updatePlaceholderText called with language:', language);
-
-        const placeholders = {
-            'en': "What's up?",
-            'fr': "Quoi de neuf ?",
-            'es': "¿Qué pasa?",
-            'de': "Was ist los?",
-            'it': "Che succede?",
-            'pt': "E aí?",
-            'ru': "Что нового?",
-            'zh': "有什么新鲜事吗？",
-            'ja': "どうしたの？",
-            'ko': "무슨 일이야?"
-        };
-
-        const placeholder = placeholders[language] || placeholders['en'];
-        console.log('📝 Setting placeholder to:', placeholder);
-        if (userInput) {
-            userInput.placeholder = placeholder;
-        }
-    };
-
-    // === MODAL HANDLERS ===
-    if (closeModalBtn) {
-        closeModalBtn.onclick = () => {
-            if (modal) modal.style.display = "none";
-            if (modalIframe) modalIframe.src = "";
-        };
-    }
-
-    if (window) {
-        window.onclick = (event) => {
-            if (event.target == modal || event.target == agentTransitionModal) {
-                if (modal) modal.style.display = "none";
-                if (modalIframe) modalIframe.src = "";
-            }
-        };
-    }
-
-    // === QUICK ACTIONS ===
-    document.querySelectorAll('.quick-action-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const agentType = btn.dataset.agent;
-            console.log('🎯 Quick action clicked:', agentType);
-            switchAgent(agentType, true);
-
-            const simulatedQuery = getAgentQuery(agentType);
-            if (simulatedQuery && userInput) {
-                userInput.value = simulatedQuery;
-                if (chatForm) {
-                    chatForm.dispatchEvent(new Event('submit'));
-                }
-            }
-        });
     });
 
-    const getAgentQuery = (agentType) => {
-        const queries = {
-            professional: "Tell me about your professional experience",
-            education: "What is your educational background?",
-            learning: "How can I learn the skills you have?"
-        };
-        return queries[agentType] || "";
+    // --- Modal ---
+    if (modalClose) {
+        modalClose.addEventListener('click', () => {
+            modalOverlay.classList.remove('visible');
+            modalIframe.src = '';
+        });
+    }
+    if (modalOverlay) {
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                modalOverlay.classList.remove('visible');
+                modalIframe.src = '';
+            }
+        });
+    }
+
+    // --- Placeholder per language ---
+    const placeholders = {
+        en: "Ask about Bolaji\u2019s experience\u2026",
+        fr: "Posez une question sur Bolaji\u2026",
+        es: "\u00bfPreguntas sobre Bolaji?",
+        de: "Fragen \u00fcber Bolaji\u2026",
+        pt: "Pergunte sobre Bolaji\u2026",
+        it: "Chiedi di Bolaji\u2026",
+        ru: "\u0421\u043f\u0440\u043e\u0441\u0438\u0442\u0435 \u043e Bolaji\u2026",
+        zh: "\u95ee\u5173\u4e8eBolaji\u7684\u95ee\u9898\u2026",
+        ja: "Bolaji\u306b\u3064\u3044\u3066\u8cea\u554f\u2026",
+        ko: "Bolaji\uc5d0 \ub300\ud574 \ubb3c\uc5b4\ubcf4\uc138\uc694\u2026",
     };
 
-    // === STARTUP ===
-    console.log('🎯 All event listeners attached, starting initialization...');
+    // --- Init ---
+    const init = async () => {
+        const browserLang = navigator.language || 'en';
 
-    // Initialize theme
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    applyTheme(savedTheme);
+        try {
+            const res = await fetch('/welcome', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ session_id: sessionId, browser_language: browserLang }),
+            });
 
-    // Start chatbot
-    initializeChatbot();
+            if (res.ok) {
+                const data = await res.json();
+                userLanguage = data.detected_language || 'en';
+                const msgs = data.welcome_messages || [];
+                userInput.placeholder = placeholders[userLanguage] || placeholders.en;
 
-    console.log('✅ iBola Chatbot Application Ready!');
+                if (msgs.length > 0) {
+                    await new Promise(r => setTimeout(r, 400));
+                    await typeMessage(msgs[0], 'bot', { noFeedback: true });
+                }
+            } else {
+                throw new Error('Welcome failed');
+            }
+        } catch (e) {
+            userInput.placeholder = placeholders.en;
+            await new Promise(r => setTimeout(r, 400));
+            await typeMessage(
+                "Hello! I\u2019m iBola, Bolaji\u2019s AI assistant. Ask me about his experience, education, or skills.",
+                'bot', { noFeedback: true }
+            );
+        }
+
+        userInput.focus();
+    };
+
+    init();
 });

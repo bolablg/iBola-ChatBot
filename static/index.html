@@ -13,7 +13,6 @@
     <link rel="canonical" href="https://chat.bolablg.com/">
     <link rel="home" href="https://bolablg.com">
 
-    <!-- Additional SEO and Technical Meta Tags -->
     <meta name="language" content="fr-FR">
     <meta name="geo.region" content="BJ">
     <meta name="geo.country" content="Benin">
@@ -21,15 +20,12 @@
     <meta name="rating" content="general">
     <meta name="revisit-after" content="7 days">
     <meta name="category" content="technology, artificial intelligence, data science">
-    <meta name="coverage" content="Worldwide">
-    <meta name="target" content="all">
     <meta name="HandheldFriendly" content="True">
     <meta name="MobileOptimized" content="width">
-    <meta name="format-detection" content="telephone=no">
 
-    <!-- Theme color for mobile browsers -->
-    <meta name="theme-color" content="#1e40af">
-    <meta name="msapplication-TileColor" content="#1e40af">
+    <!-- Theme color -->
+    <meta name="theme-color" content="#2563EB">
+    <meta name="msapplication-TileColor" content="#2563EB">
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
@@ -43,8 +39,6 @@
     <meta property="og:url" content="https://chat.bolablg.com/">
     <meta property="og:locale" content="fr_FR">
     <meta property="og:locale:alternate" content="en_US">
-    <meta property="fb:admins" content="bolablg">
-    <meta property="business:contact_data:website" content="https://bolablg.com">
 
     <!-- Twitter Cards -->
     <meta name="twitter:card" content="summary_large_image">
@@ -53,30 +47,14 @@
     <meta name="twitter:title" content="iBola Chatbot - AI Assistant by Bolaji BALOGOUN">
     <meta name="twitter:description" content="Experience interactive conversation about Bolaji BALOGOUN professional journey. Powered by cutting-edge AI technology.">
     <meta name="twitter:image" content="https://app.bolablg.com/images/app_bolablg.png">
-    <meta name="twitter:image:alt" content="iBola Chatbot - AI Assistant Interface">
 
-    <!-- Favicon - Comprehensive browser support -->
-    <!-- Primary favicon for modern browsers -->
+    <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
-
-    <!-- Traditional favicon for older browsers -->
     <link rel="shortcut icon" type="image/x-icon" href="/static/favicon.ico">
-
-    <!-- Apple touch icons for iOS -->
     <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
-
-    <!-- Android Chrome icons -->
     <link rel="icon" type="image/png" sizes="192x192" href="/static/android-chrome-192x192.png">
-
-    <!-- Windows tile icon -->
     <meta name="msapplication-TileImage" content="/static/fav.png">
-
-    <!-- Additional favicon sizes -->
-    <link rel="icon" type="image/png" sizes="96x96" href="/static/fav.png">
-
-    <!-- Fallback for browsers that don't support PNG -->
-    <link rel="alternate icon" href="/static/favicon.ico">
 
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">
@@ -97,91 +75,85 @@
         "sameAs": [
           "https://x.com/bolablg",
           "https://github.com/bolablg",
-          "https://linkedin.com/in/bolablg",
-          "https://facebook.com/bolablg"
+          "https://linkedin.com/in/bolablg"
         ]
       },
-      "publisher": {
-        "@type": "Person",
-        "name": "Bolaji BALOGOUN",
-        "url": "https://bolablg.com"
-      },
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD",
-        "description": "Free AI chatbot service"
-      },
-      "featureList": [
-        "AI-powered conversations",
-        "Data science assistance",
-        "Product development support",
-        "Artificial intelligence solutions",
-        "Multi-language support"
-      ],
-      "screenshot": "https://app.bolablg.com/images/app_bolablg.png",
-      "mainEntityOfPage": "https://chat.bolablg.com/",
-      "isPartOf": {
-        "@type": "WebSite",
-        "@id": "https://bolablg.com",
-        "name": "BOLABLG",
-        "url": "https://bolablg.com",
-        "description": "Data Science & AI Engineer"
-      }
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "isPartOf": { "@type": "WebSite", "@id": "https://bolablg.com", "name": "BOLABLG", "url": "https://bolablg.com" }
     }
     </script>
 
     <link rel="stylesheet" href="/static/style.css">
+    <script>
+        // Auto-detect embed/iframe mode
+        if (window.location.search.includes('embed=true') || window !== window.parent) {
+            document.documentElement.classList.add('minimal');
+        }
+    </script>
 </head>
 <body>
-    <div class="chat-container">
-        <div class="chat-header">
-            <div class="title-section">
-                <h1 class="ibola-title">
-                    <span class="ibola-icon">🤖</span>
-                    <span class="ibola-text">iBola</span>
-                    <span class="ibola-subtitle">AI Assistant</span>
-                </h1>
-            </div>
-            <div class="header-controls">
-                <div class="mode-toggle" id="mode-toggle" title="Toggle theme">
-                    <div class="toggle-container">
-                        <span class="toggle-icon">🌙</span>
-                        <span class="toggle-text">Dark</span>
-                    </div>
-                    <div class="toggle-slider">
-                        <div class="toggle-handle"></div>
+    <div class="chat-container" id="chat-container">
+        <!-- Header -->
+        <header class="chat-header" role="banner">
+            <div class="header-brand">
+                <div class="brand-mark" aria-hidden="true">iB</div>
+                <div class="brand-text">
+                    <div class="brand-name">iBola</div>
+                    <div class="brand-status">
+                        <span class="status-dot" aria-hidden="true"></span>
+                        <span>AI Assistant</span>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="chat-box" id="chat-box">
-            <div class="typing-indicator" id="typing-indicator" style="display: none;">
-                <span></span><span></span><span></span>
+            <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle dark mode" title="Toggle theme">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sun" aria-hidden="true">
+                    <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                </svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-moon" aria-hidden="true">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                </svg>
+            </button>
+        </header>
+
+        <!-- Messages -->
+        <main class="chat-messages" id="chat-messages" role="log" aria-label="Chat messages" aria-live="polite">
+            <div class="typing-indicator" id="typing-indicator" aria-label="Assistant is typing">
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
             </div>
-        </div>
-        <form class="chat-input-form" id="chat-form">
-            <input type="text" id="user-input" placeholder="">
-            <button type="submit">&#x2191;</button>
-        </form>
-        <!-- Quick actions hidden for unified user experience -->
-        <div class="quick-actions" id="quick-actions" style="display: none;">
-            <!-- Hidden to maintain single system appearance -->
-        </div>
-    </div>
-    <script src="/static/script.js"></script>
+        </main>
 
-    <!-- The Modal -->
-    <div id="appointment-modal" class="modal">
+        <!-- Input -->
+        <footer class="chat-input-area" role="form">
+            <form class="input-row" id="chat-form" autocomplete="off">
+                <input
+                    class="input-field"
+                    id="user-input"
+                    type="text"
+                    placeholder=""
+                    aria-label="Type your message"
+                    maxlength="1000"
+                    autocomplete="off"
+                >
+                <button class="send-btn" type="submit" aria-label="Send message">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                </button>
+            </form>
+            <div class="powered-by">
+                Built by <a href="https://bolablg.com" target="_blank" rel="noopener">Bolaji BALOGOUN</a>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Booking Modal -->
+    <div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-label="Appointment booking">
         <div class="modal-content">
-            <span class="modal-close-btn">&times;</span>
-            <iframe id="modal-iframe" src="" frameborder="0"></iframe>
+            <button class="modal-close" id="modal-close" type="button" aria-label="Close modal">&times;</button>
+            <iframe id="modal-iframe" src="" title="Booking calendar"></iframe>
         </div>
     </div>
 
-    <!-- Agent Transition Modal - Hidden for unified user experience -->
-    <div id="agent-transition-modal" class="agent-transition-modal" style="display: none;">
-        <!-- Hidden to maintain single system appearance -->
-    </div>
+    <script src="/static/script.js"></script>
 </body>
 </html>
