@@ -181,15 +181,15 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          VERSION=$(cat VERSION | tr -d '[:space:]')
           EXISTING_PR=$(gh pr list --base main --head staging --json number --jq '.[0].number' 2>/dev/null || echo "")
           if [ -z "$EXISTING_PR" ]; then
-            COMMITS=$(git log origin/main..HEAD --oneline | head -20)
             RELEASE_DATE=$(date +%Y-%m-%d)
             gh pr create \
               --base main \
               --head staging \
-              --title "Release: staging → main (${RELEASE_DATE})" \
-              --body "## Release to Production
+              --title "Release v${VERSION} (${RELEASE_DATE})" \
+              --body "## Release v${VERSION}
 
           Security scans passed on staging. Ready for production deployment.
 
@@ -277,3 +277,16 @@ jobs:
             --service=ibola-chatbot \
             --domain=chat.bolablg.com \
             --region=us-central1
+
+      - name: Tag release from VERSION file
+        run: |
+          VERSION=$(cat VERSION | tr -d '[:space:]')
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if ! git rev-parse "v${VERSION}" >/dev/null 2>&1; then
+            git tag -a "v${VERSION}" -m "Release v${VERSION}"
+            git push origin "v${VERSION}"
+            echo "Tagged release: v${VERSION}"
+          else
+            echo "Tag v${VERSION} already exists — skipping"
+          fi
