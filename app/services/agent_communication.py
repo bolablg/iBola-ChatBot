@@ -98,7 +98,8 @@ class AgentCommunicationHub:
             )
 
             # Task delegation analysis chain
-            self.delegation_prompt = PromptTemplate.from_template("""
+            self.delegation_prompt = PromptTemplate.from_template(
+                """
             Analyze if this task should be delegated to another agent.
 
             Current Agent: {current_agent}
@@ -122,7 +123,8 @@ class AgentCommunicationHub:
             Target_Agent: [agent_name or NONE]
             Reasoning: [brief explanation]
             Confidence: [HIGH/MEDIUM/LOW]
-            """)
+            """
+            )
 
             self.delegation_chain = LLMChain(
                 llm=self.llm, prompt=self.delegation_prompt, verbose=False
