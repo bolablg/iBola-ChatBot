@@ -1,21 +1,25 @@
-import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import io
 import json
+
 import httpx
+from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
+
 import config
 from pipeline.update_vectorstore import update_vectorstore
 
 # If modifying these SCOPES, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
 SYNC_STATE_FILE = os.path.join(config.DATA_PATH, ".sync_state.json")
+
 
 def send_webhook_alert(updated_files):
     """Sends a notification to a Google Chat webhook about the sync status."""
@@ -27,7 +31,7 @@ def send_webhook_alert(updated_files):
                     {
                         "header": {
                             "title": "Vector Store Update",
-                            "subtitle": "The following files have been updated:"
+                            "subtitle": "The following files have been updated:",
                         },
                         "sections": [
                             {
@@ -39,7 +43,7 @@ def send_webhook_alert(updated_files):
                                     }
                                 ]
                             }
-                        ]
+                        ],
                     }
                 ]
             }
@@ -49,7 +53,7 @@ def send_webhook_alert(updated_files):
                     {
                         "header": {
                             "title": "Vector Store Update",
-                            "subtitle": "No changes detected in the Google Drive folder."
+                            "subtitle": "No changes detected in the Google Drive folder.",
                         }
                     }
                 ]
@@ -58,6 +62,7 @@ def send_webhook_alert(updated_files):
             response = client.post(webhook_url, json=message)
             response.raise_for_status()
 
+
 def get_sync_state():
     """Loads the last sync state from a local file."""
     if os.path.exists(SYNC_STATE_FILE):
@@ -65,10 +70,12 @@ def get_sync_state():
             return json.load(f)
     return {}
 
+
 def save_sync_state(state):
     """Saves the current sync state to a local file."""
     with open(SYNC_STATE_FILE, "w") as f:
         json.dump(state, f)
+
 
 def sync_folder_recursive(service, folder_id, local_path, sync_state):
     """Recursively syncs a Google Drive folder to a local path."""
@@ -77,7 +84,10 @@ def sync_folder_recursive(service, folder_id, local_path, sync_state):
 
     results = (
         service.files()
-        .list(q=f"'{folder_id}' in parents", fields="nextPageToken, files(id, name, mimeType, modifiedTime)")
+        .list(
+            q=f"'{folder_id}' in parents",
+            fields="nextPageToken, files(id, name, mimeType, modifiedTime)",
+        )
         .execute()
     )
     items = results.get("files", [])
@@ -86,26 +96,38 @@ def sync_folder_recursive(service, folder_id, local_path, sync_state):
     for item in items:
         item_path = os.path.join(local_path, item["name"])
         if item["mimeType"] == "application/vnd.google-apps.folder":
-            updated_files.extend(sync_folder_recursive(service, item["id"], item_path, sync_state))
+            updated_files.extend(
+                sync_folder_recursive(service, item["id"], item_path, sync_state)
+            )
         else:
             if item["id"] not in sync_state:
                 print(f"New file: {item['name']} (Modified: {item['modifiedTime']})")
                 file_status = "New"
             elif item["modifiedTime"] > sync_state.get(item["id"]):
-                print(f"Updated file: {item['name']} (Modified: {item['modifiedTime']})")
+                print(
+                    f"Updated file: {item['name']} (Modified: {item['modifiedTime']})"
+                )
                 file_status = "Updated"
             else:
                 continue
 
             if item["mimeType"].startswith("application/vnd.google-apps"):
                 if item["mimeType"] == "application/vnd.google-apps.document":
-                    request = service.files().export_media(fileId=item["id"], mimeType="application/pdf")
+                    request = service.files().export_media(
+                        fileId=item["id"], mimeType="application/pdf"
+                    )
                     item_path += ".pdf"
                 elif item["mimeType"] == "application/vnd.google-apps.spreadsheet":
-                    request = service.files().export_media(fileId=item["id"], mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                    request = service.files().export_media(
+                        fileId=item["id"],
+                        mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    )
                     item_path += ".xlsx"
                 elif item["mimeType"] == "application/vnd.google-apps.presentation":
-                    request = service.files().export_media(fileId=item["id"], mimeType="application/vnd.openxmlformats-officedocument.presentationml.presentation")
+                    request = service.files().export_media(
+                        fileId=item["id"],
+                        mimeType="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                    )
                     item_path += ".pptx"
                 else:
                     continue
@@ -122,14 +144,19 @@ def sync_folder_recursive(service, folder_id, local_path, sync_state):
                 f.write(fh.getbuffer())
 
             sync_state[item["id"]] = item["modifiedTime"]
-            updated_files.append(f"{file_status}: {item['name']} (Modified: {item['modifiedTime']})")
+            updated_files.append(
+                f"{file_status}: {item['name']} (Modified: {item['modifiedTime']})"
+            )
     return updated_files
+
 
 def sync_google_drive():
     """Main function to sync a Google Drive folder with a local folder."""
     creds = None
     if os.path.exists(config.GOOGLE_OAUTH_TOKEN_PATH):
-        creds = Credentials.from_authorized_user_file(config.GOOGLE_OAUTH_TOKEN_PATH, SCOPES)
+        creds = Credentials.from_authorized_user_file(
+            config.GOOGLE_OAUTH_TOKEN_PATH, SCOPES
+        )
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
@@ -144,7 +171,9 @@ def sync_google_drive():
     service = build("drive", "v3", credentials=creds)
 
     sync_state = get_sync_state()
-    updated_files = sync_folder_recursive(service, config.GDRIVE_FOLDER_ID, config.DATA_PATH, sync_state)
+    updated_files = sync_folder_recursive(
+        service, config.GDRIVE_FOLDER_ID, config.DATA_PATH, sync_state
+    )
 
     if updated_files:
         print("Changes detected, updating vector store...")
@@ -154,6 +183,7 @@ def sync_google_drive():
     else:
         print("No changes detected.")
         send_webhook_alert([])
+
 
 if __name__ == "__main__":
     sync_google_drive()

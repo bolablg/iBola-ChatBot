@@ -139,7 +139,11 @@ jobs:
           fi
           PR_NUMBER=$(gh pr list --base staging --head "$BRANCH_NAME" --json number --jq '.[0].number')
           if [ -n "$PR_NUMBER" ]; then
-            gh pr merge "$PR_NUMBER" --merge --auto --delete-branch=false
+            for i in 1 2 3; do
+              gh pr merge "$PR_NUMBER" --merge --delete-branch=false && break
+              echo "Merge attempt $i failed, retrying in 5s..."
+              sleep 5
+            done
           fi
 
   # ============================================================
@@ -288,6 +292,7 @@ jobs:
             --image "gcr.io/${GCP_PROJECT}/ibola-chatbot" \
             --platform managed \
             --region us-central1 \
+            --memory 1Gi \
             --allow-unauthenticated \
             --set-env-vars "GOOGLE_OAUTH_CREDENTIALS_PATH=${GOOGLE_OAUTH_CREDENTIALS_PATH}" \
             --set-env-vars "GEMINI_API_KEY=${GEMINI_API_KEY}" \
