@@ -1,0 +1,113 @@
+# Ignore everything from .gitignore EXCEPT chroma_db/
+# gcloud builds submit uses this instead of .gitignore when present.
+
+# Python
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+*.manifest
+*.spec
+install.log
+
+# Testing / Coverage
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+.pytest_cache/
+.hypothesis/
+coverage.xml
+test-results/
+
+# Environment & Secrets (CRITICAL — never include in image)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+_conf/*.json
+_conf/*.token
+*.credentials.json
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+**/.DS_Store
+Thumbs.db
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Type checking / Linting caches
+.mypy_cache/
+.ruff_cache/
+.dmypy.json
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Docker
+docker-compose.override.yml
+
+# Local development
+local/
+deploy_error.txt
+*.log
+
+# Claude Code agent state
+.claude
+.agents
+
+# Pipeline state files
+data/.sync_state.json
+
+# Generated reports
+pip-audit-report.txt
+safety-report.txt
+bandit-report.txt
+
+# Tests (not needed in production image)
+tests/
+
+# Docs (not needed in production image)
+docs/
+
+# Git
+.git/
+.github/
+.gitignore
+
+# NOTE: chroma_db/ is NOT ignored here — it MUST be included in the Docker image
