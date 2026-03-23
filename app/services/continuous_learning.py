@@ -309,7 +309,7 @@ class ContinuousLearningPipeline:
 
         if CONTINUOUS_LEARNING_AVAILABLE:
             self.llm = ChatGoogleGenerativeAI(
-                model="gemini-2.5-pro", temperature=0.3, google_api_key=GEMINI_API_KEY
+                model="gemini-2.5-flash", temperature=0.3, google_api_key=GEMINI_API_KEY
             )
 
             # Improvement analysis chain
