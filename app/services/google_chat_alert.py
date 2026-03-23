@@ -52,6 +52,7 @@ class GoogleChatAlert:
                 self.webhook_url,
                 json=message,
                 headers={"Content-Type": "application/json"},
+                timeout=10,
             )
 
             if response.status_code == 200:
@@ -140,6 +141,7 @@ A user has been redirected {redirect_count} times and may need direct assistance
                 self.webhook_url,
                 json=message,
                 headers={"Content-Type": "application/json"},
+                timeout=10,
             )
             return response.status_code == 200
         except Exception as e:
