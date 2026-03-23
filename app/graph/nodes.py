@@ -33,45 +33,122 @@ logger = logging.getLogger("ibola.graph")
 # ---------------------------------------------------------------------------
 
 _llms: Dict[str, Any] = {}
+_hybrid_search = None
+_lock = __import__("threading").Lock()
+_LLM_TIMEOUT_SECONDS = 15.0
+_LLM_MAX_RETRIES = 1
+_LLM_MAX_OUTPUT_TOKENS = 512
+
+
+class _SyncGeminiLLM:
+    """Minimal sync Gemini wrapper compatible with LangChain prompt templates.
+
+    Bypasses ChatGoogleGenerativeAI which hangs inside uvicorn due to
+    async event-loop conflicts in the google-genai SDK.
+    """
+
+    def __init__(
+        self, model: str, api_key: str, temperature: float, max_output_tokens: int
+    ):
+        from google import genai
+
+        self._model = model
+        self._temperature = temperature
+        self._max_output_tokens = max_output_tokens
+        self._client = genai.Client(api_key=api_key)
+
+    def invoke(self, messages, **kwargs):
+        """Accept LangChain message list, return an object with .content."""
+        from langchain_core.messages import AIMessage
+
+        # Convert LangChain messages to a single prompt string
+        parts = []
+        for msg in messages:
+            if hasattr(msg, "content"):
+                parts.append(msg.content)
+            elif isinstance(msg, str):
+                parts.append(msg)
+        prompt = "\n\n".join(parts)
+
+        response = self._client.models.generate_content(
+            model=self._model,
+            contents=prompt,
+            config={
+                "temperature": self._temperature,
+                "max_output_tokens": self._max_output_tokens,
+                "thinking_config": {"thinking_budget": 0},
+            },
+        )
+        return AIMessage(content=response.text or "")
+
+    def with_structured_output(self, schema):
+        """Return a wrapper that parses JSON into the given Pydantic schema."""
+        return _StructuredOutput(self, schema)
+
+
+class _StructuredOutput:
+    """Wraps _SyncGeminiLLM to parse responses into Pydantic models."""
+
+    def __init__(self, llm: _SyncGeminiLLM, schema):
+        self._llm = llm
+        self._schema = schema
+
+    def invoke(self, messages, **kwargs):
+        import json as _json
+
+        from google import genai
+
+        # Convert messages to prompt
+        parts = []
+        for msg in messages:
+            if hasattr(msg, "content"):
+                parts.append(msg.content)
+            elif isinstance(msg, str):
+                parts.append(msg)
+        prompt = "\n\n".join(parts)
+
+        response = self._llm._client.models.generate_content(
+            model=self._llm._model,
+            contents=prompt,
+            config=genai.types.GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema=self._schema,
+                temperature=self._llm._temperature,
+                max_output_tokens=self._llm._max_output_tokens,
+                thinking_config=genai.types.ThinkingConfig(thinking_budget=0),
+            ),
+        )
+        data = _json.loads(response.text)
+        return self._schema(**data)
 
 
 def _get_llm(temperature: float = 0.0):
-    key = f"gemini-{temperature}"
+    """Return a sync Gemini LLM (no async event-loop issues)."""
+    key = f"llm-{temperature}"
     if key not in _llms:
-        _llms[key] = ChatGoogleGenerativeAI(
-            model="gemini-2.5-pro",
-            temperature=temperature,
-            google_api_key=config.GEMINI_API_KEY,
-        )
+        with _lock:
+            if key not in _llms:
+                from app.settings import get_settings
+
+                settings = get_settings()
+                _llms[key] = _SyncGeminiLLM(
+                    model=settings.llm.model_name,
+                    api_key=config.GEMINI_API_KEY,
+                    temperature=temperature,
+                    max_output_tokens=_LLM_MAX_OUTPUT_TOKENS,
+                )
     return _llms[key]
 
 
-# ---------------------------------------------------------------------------
-# Retriever helper — maps category → specialised retriever
-# ---------------------------------------------------------------------------
+def _get_hybrid_search():
+    global _hybrid_search
+    if _hybrid_search is None:
+        with _lock:
+            if _hybrid_search is None:
+                from app.services.advanced_rag import hybrid_search
 
-_retrievers: Dict[str, Any] = {}
-
-
-def _get_retriever_for_category(category: AgentCategory):
-    """Return the specialised retriever for a given category."""
-    from app.agents.retrievers import (
-        get_education_retriever,
-        get_learning_retriever,
-        get_professional_retriever,
-        get_redirect_retriever,
-    )
-
-    mapping = {
-        AgentCategory.PROFESSIONAL: ("professional", get_professional_retriever),
-        AgentCategory.EDUCATION: ("education", get_education_retriever),
-        AgentCategory.LEARNING: ("learning", get_learning_retriever),
-        AgentCategory.OUT_OF_SCOPE: ("redirect", get_redirect_retriever),
-    }
-    name, factory = mapping.get(category, ("professional", get_professional_retriever))
-    if name not in _retrievers:
-        _retrievers[name] = factory()
-    return _retrievers[name]
+                _hybrid_search = hybrid_search
+    return _hybrid_search
 
 
 # ===================================================================
@@ -178,14 +255,35 @@ def guardrail_node(state: dict) -> dict:
 
 
 def retrieve_node(state: dict) -> dict:
-    """Retrieve documents using the specialised retriever for the category."""
+    """Retrieve documents using resilient hybrid retrieval with lexical fallback."""
     category = state.get("category", AgentCategory.PROFESSIONAL)
-    query = state.get("rewritten_query") or state.get("query", "")
+    query = (state.get("rewritten_query") or state.get("query", "")).strip()
     attempts = state.get("retrieval_attempts", 0)
 
+    if not query:
+        return {
+            "documents": [],
+            "retrieval_attempts": attempts + 1,
+            "reasoning_steps": state.get("reasoning_steps", [])
+            + [
+                ReasoningStep(
+                    node="retrieve",
+                    action="skipped",
+                    detail="empty query after sanitization",
+                )
+            ],
+        }
+
     try:
-        retriever = _get_retriever_for_category(category)
-        docs: List[Document] = retriever.invoke(query)
+        docs: List[Document] = _get_hybrid_search().search(
+            query,
+            top_k=8,
+            use_hybrid=True,
+            use_reranker=True,
+            category_filter=(
+                category.value if category != AgentCategory.OUT_OF_SCOPE else None
+            ),
+        )
 
         return {
             "documents": docs,
@@ -195,7 +293,10 @@ def retrieve_node(state: dict) -> dict:
                 ReasoningStep(
                     node="retrieve",
                     action="fetched",
-                    detail=f"docs={len(docs)} attempt={attempts + 1} query={query[:60]}",
+                    detail=(
+                        f"docs={len(docs)} attempt={attempts + 1} "
+                        f"query={query[:60]} mode=hybrid"
+                    ),
                 )
             ],
         }
@@ -234,10 +335,9 @@ GRADE_PROMPT = ChatPromptTemplate.from_messages(
 
 
 def grade_documents_node(state: dict) -> dict:
-    """Grade each retrieved document for relevance. Keep only relevant ones."""
+    """Grade retrieved documents for relevance using a single batched LLM call."""
     query = state.get("query", "")
     documents = state.get("documents", [])
-    graded: List[Document] = []
     steps = list(state.get("reasoning_steps", []))
 
     if not documents:
@@ -248,30 +348,46 @@ def grade_documents_node(state: dict) -> dict:
         )
         return {"graded_documents": [], "reasoning_steps": steps}
 
+    # Build a single prompt listing all documents for batch grading
+    doc_summaries = "\n".join(
+        f"[DOC {i}]: {doc.page_content[:300]}" for i, doc in enumerate(documents)
+    )
+
     try:
         llm = _get_llm(temperature=0.0)
-        structured_llm = llm.with_structured_output(GradeDocuments)
-    except Exception:
-        structured_llm = None
+        batch_prompt = ChatPromptTemplate.from_messages(
+            [
+                (
+                    "system",
+                    "You grade document relevance. Given a question and numbered "
+                    "documents, return ONLY the numbers of relevant documents as a "
+                    "comma-separated list. Example: 0,2,4\n"
+                    "If none are relevant, return: none",
+                ),
+                ("human", "Question: {query}\n\nDocuments:\n{docs}"),
+            ]
+        )
+        result = llm.invoke(
+            batch_prompt.format_messages(query=query, docs=doc_summaries)
+        )
+        answer = result.content.strip().lower()
 
-    for doc in documents:
-        try:
-            if structured_llm:
-                result: GradeDocuments = structured_llm.invoke(
-                    GRADE_PROMPT.format_messages(
-                        query=query, doc_content=doc.page_content[:500]
-                    )
-                )
-                if result.is_relevant:
-                    graded.append(doc)
-            else:
-                # Heuristic fallback: content > 50 chars
-                if len(doc.page_content.strip()) > 50:
-                    graded.append(doc)
-        except Exception:
-            # Heuristic fallback
-            if len(doc.page_content.strip()) > 50:
-                graded.append(doc)
+        if answer == "none":
+            graded = []
+        else:
+            indices = []
+            for part in answer.replace(" ", "").split(","):
+                try:
+                    idx = int(part)
+                    if 0 <= idx < len(documents):
+                        indices.append(idx)
+                except ValueError:
+                    continue
+            graded = [documents[i] for i in indices] if indices else documents[:3]
+
+    except Exception:
+        # Heuristic fallback: keep docs with substantial content
+        graded = [doc for doc in documents if len(doc.page_content.strip()) > 50]
 
     steps.append(
         ReasoningStep(
@@ -353,7 +469,7 @@ _GENERATE_PROMPTS = {
         "6) ALWAYS refer to Bolaji in third person.\n"
         "7) If info not available: say so briefly + invite to email hello@bolablg.com.\n"
         "8) Tool equivalence: relate unfamiliar tools to ones Bolaji uses.\n"
-        "9) Greetings: one warm sentence + invite to ask about his career.\n\n"
+        "9) Greetings ONLY when the user greets first (hi, hello, bonjour…). Never greet if the user asks a question.\n\n"
         "CANONICAL SHORT DESCRIPTIONS (use these exact phrasings when relevant):\n"
         "- EN about Bolaji: 'Bolaji is a Data Science and AI Engineer. He builds end-to-end data systems and AI-powered applications that drive measurable operational and business impact.'\n"
         "- FR about Bolaji: 'Bolaji est un ingénieur en Data Science et IA. Il conçoit des systèmes de données de bout en bout et des applications alimentées par l'IA qui génèrent un impact opérationnel et business mesurable.'\n"

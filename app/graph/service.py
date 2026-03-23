@@ -11,6 +11,7 @@ import logging
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
+import config
 from app.graph.state import AgentCategory, GraphState, ReasoningStep
 from app.graph.workflow import create_rag_workflow
 from app.services.google_chat_alert import google_chat_alert
@@ -57,6 +58,31 @@ class AgenticRAGService:
             }
 
         session = self.session_data[session_id]
+
+        welcome_intent = self._detect_welcome_intent(user_input)
+        if welcome_intent:
+            return self._welcome_prompt_response(
+                intent=welcome_intent,
+                session_id=session_id,
+                user_language=user_language,
+                chat_history=chat_history,
+            )
+
+        opportunity_intent = self._detect_opportunity_intent(user_input)
+        if opportunity_intent:
+            return self._opportunity_response(
+                session_id=session_id,
+                user_language=user_language,
+                chat_history=chat_history,
+            )
+
+        contact_type = self._detect_contact_type(user_input)
+        if contact_type:
+            return self._contact_response(
+                session_id=session_id,
+                user_language=user_language,
+                chat_history=chat_history,
+            )
 
         # Build initial state
         initial_state: Dict[str, Any] = {
@@ -118,14 +144,6 @@ class AgenticRAGService:
         else:
             session["redirect_count"] = 0
 
-        # Handle contact requests
-        if self._is_contact_request(user_input):
-            contact_type = self._detect_contact_type(user_input)
-            if contact_type:
-                google_chat_alert.send_contact_alert(
-                    contact_type, session_id, chat_history
-                )
-
         # Log reasoning steps
         for step in final_state.get("reasoning_steps", []):
             if isinstance(step, ReasoningStep):
@@ -180,6 +198,180 @@ class AgenticRAGService:
         }
 
     @staticmethod
+    def _contact_response(
+        session_id: str,
+        user_language: str,
+        chat_history: Optional[List[Tuple[str, str]]] = None,
+    ) -> Dict[str, Any]:
+        answer = (
+            "You can email Bolaji directly or book a meeting from the options below."
+        )
+        if user_language == "fr":
+            answer = (
+                "Vous pouvez ecrire directement a Bolaji ou reserver un rendez-vous "
+                "avec les options ci-dessous."
+            )
+
+        actions = [
+            {
+                "text": "Send email",
+                "type": "contact_email",
+                "url": f"mailto:{config.CONTACT_EMAIL}",
+                "session_id": session_id,
+                "chat_history": chat_history or [],
+                "description": "Send an email to Bolaji",
+                "primary": True,
+                "end_chat": False,
+            },
+            {
+                "text": "Book appointment",
+                "type": "contact_booking",
+                "url": config.CALENDAR_BOOKING_URL,
+                "session_id": session_id,
+                "chat_history": chat_history or [],
+                "description": "Schedule a meeting with Bolaji",
+                "primary": True,
+                "end_chat": False,
+            },
+        ]
+
+        return {
+            "answer": answer,
+            "actions": actions,
+            "agent_type": "contact",
+            "confidence": 1.0,
+            "language": user_language,
+            "redirect_count": 0,
+            "session_id": session_id,
+            "should_end_chat": False,
+            "response_time": 0.0,
+        }
+
+    @staticmethod
+    def _opportunity_response(
+        session_id: str,
+        user_language: str,
+        chat_history: Optional[List[Tuple[str, str]]] = None,
+    ) -> Dict[str, Any]:
+        answer = (
+            "Yes. Bolaji is open to ambitious AI, data, and technical leadership roles "
+            "with meaningful impact. The fastest next step is to email the role details "
+            "or book a conversation below."
+        )
+        if user_language == "fr":
+            answer = (
+                "Oui. Bolaji est ouvert aux roles ambitieux en IA, data et leadership "
+                "technique avec un impact concret. Le plus simple est d'envoyer les "
+                "details du poste ou de reserver un echange ci-dessous."
+            )
+
+        google_chat_alert.send_contact_alert("email", session_id, chat_history or [])
+        response = AgenticRAGService._contact_response(
+            session_id=session_id,
+            user_language=user_language,
+            chat_history=chat_history,
+        )
+        response.update(
+            {
+                "answer": answer,
+                "agent_type": "opportunity",
+                "confidence": 1.0,
+            }
+        )
+        return response
+
+    @staticmethod
+    def _detect_welcome_intent(message: str) -> Optional[str]:
+        lower = message.lower()
+        if any(keyword in lower for keyword in ["contact", "email", "meeting"]):
+            return "contact"
+        if any(keyword in lower for keyword in ["skill", "skills", "technology"]):
+            return "skills"
+        if any(
+            keyword in lower
+            for keyword in [
+                "work experience",
+                "experience",
+                "career",
+                "worked",
+                "gozem",
+            ]
+        ):
+            return "experience"
+        if any(
+            keyword in lower
+            for keyword in ["education", "educational", "study", "degree", "background"]
+        ):
+            return "education"
+        return None
+
+    @classmethod
+    def _welcome_prompt_response(
+        cls,
+        intent: str,
+        session_id: str,
+        user_language: str,
+        chat_history: Optional[List[Tuple[str, str]]] = None,
+    ) -> Dict[str, Any]:
+        responses = {
+            "skills": (
+                "Bolaji specializes in data engineering, machine learning, "
+                "analytics, and AI product delivery. He works deeply with "
+                "Python, SQL, BigQuery, Airflow, Looker, Dataform, Vertex AI, "
+                "Docker, and Google Cloud."
+            ),
+            "experience": (
+                "Bolaji has about a decade of experience turning data into "
+                "business assets across mobility, ecommerce, and fintech. "
+                "He currently leads Analytics and Data Science initiatives at "
+                "Gozem and has built scalable data platforms, observability "
+                "systems, and AI applications."
+            ),
+            "education": (
+                "Bolaji holds a Master of Science in Statistics from the "
+                "University of Abomey-Calavi, evaluated in 2024 as equivalent "
+                "to a U.S. master's degree. He also earned a bachelor's degree "
+                "in Statistics and Econometrics and completed additional "
+                "industry-focused data training."
+            ),
+        }
+
+        if intent == "contact":
+            return cls._contact_response(session_id, user_language, chat_history)
+
+        return {
+            "answer": responses[intent],
+            "actions": [],
+            "agent_type": intent,
+            "confidence": 0.98,
+            "language": user_language,
+            "redirect_count": 0,
+            "session_id": session_id,
+            "should_end_chat": False,
+            "response_time": 0.0,
+        }
+
+    @staticmethod
+    def _detect_opportunity_intent(message: str) -> bool:
+        lower = message.lower()
+        signals = [
+            "hiring",
+            "hire",
+            "job",
+            "role",
+            "position",
+            "opportunity",
+            "opening",
+            "recruit",
+            "recruiter",
+            "join our team",
+            "work with us",
+            "collaboration",
+            "consulting project",
+        ]
+        return any(signal in lower for signal in signals)
+
+    @staticmethod
     def _is_contact_request(message: str) -> bool:
         keywords = [
             "contact",
@@ -196,6 +388,8 @@ class AgenticRAGService:
     @staticmethod
     def _detect_contact_type(message: str) -> Optional[str]:
         lower = message.lower()
+        if "contact" in lower:
+            return "email"
         if any(w in lower for w in ["email", "mail", "write"]):
             return "email"
         if any(

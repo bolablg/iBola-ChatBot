@@ -94,8 +94,15 @@ async def sitemap_xml():
     return FileResponse("sitemap.xml", media_type="application/xml")
 
 
-# Initialize the multi-agent orchestrator
-orchestrator = AgentOrchestrator()
+# Lazy-initialize orchestrator (only used by legacy /chat endpoint)
+_orchestrator = None
+
+
+def get_orchestrator():
+    global _orchestrator
+    if _orchestrator is None:
+        _orchestrator = AgentOrchestrator()
+    return _orchestrator
 
 
 # Global exception handler
@@ -490,7 +497,7 @@ async def chat(payload: ChatInput, request: Request):
         }
 
         # Get the full response from the orchestrator with enhanced features
-        result = orchestrator.process_query(
+        result = get_orchestrator().process_query(
             user_input, chat_history_tuples, session_id, user_language, request_info
         )
 
@@ -611,7 +618,7 @@ async def health_check():
                 "memory_available": f"{memory.available / 1024 / 1024:.0f}MB",
             },
             "services": {
-                "orchestrator": "healthy" if orchestrator else "unhealthy",
+                "orchestrator": "available",
                 "language_service": "healthy",
                 "logging_service": "healthy",
                 "cache_service": (
@@ -626,11 +633,7 @@ async def health_check():
         }
 
         # Check if services are accessible
-        try:
-            orchestrator.get_session_stats("test")
-            health_data["services"]["orchestrator"] = "healthy"
-        except:
-            health_data["services"]["orchestrator"] = "degraded"
+        # Orchestrator is lazy-loaded, skip probing on health check
 
         logger.info("Health check performed", extra={"health_status": "healthy"})
         return health_data
@@ -697,8 +700,8 @@ async def get_performance_metrics():
                 "cache_stats": cache_service.get_cache_stats(),
                 "rate_limit_stats": rate_limiter.get_global_stats(),
                 "active_sessions": (
-                    len(orchestrator.session_data)
-                    if hasattr(orchestrator, "session_data")
+                    len(get_orchestrator().session_data)
+                    if _orchestrator and hasattr(_orchestrator, "session_data")
                     else 0
                 ),
             },
@@ -733,7 +736,7 @@ def get_session_stats(session_id: str):
         if not session_id or not session_id.strip():
             raise HTTPException(status_code=400, detail="Invalid session ID")
 
-        stats = orchestrator.get_session_stats(session_id)
+        stats = get_orchestrator().get_session_stats(session_id)
 
         logger.info(
             f"Session stats retrieved for {session_id}",
@@ -759,7 +762,7 @@ def reset_session(session_id: str):
         if not session_id or not session_id.strip():
             raise HTTPException(status_code=400, detail="Invalid session ID")
 
-        orchestrator.reset_session(session_id)
+        get_orchestrator().reset_session(session_id)
 
         logger.info(f"Session reset for {session_id}", extra={"session_id": session_id})
 
