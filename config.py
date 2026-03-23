@@ -52,6 +52,9 @@ DB_PATH = os.path.join(os.path.dirname(__file__), "chroma_db")
 # Data Directory Configuration
 DATA_PATH = os.path.join(os.path.dirname(__file__), "data")
 
+# Google Drive Sync
+GDRIVE_FOLDER_ID = os.getenv("GDRIVE_FOLDER_ID")
+
 # Google Chat Integration (for contact alerts)
 # To get a webhook URL:
 # 1. Go to Google Chat
