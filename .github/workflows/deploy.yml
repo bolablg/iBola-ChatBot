@@ -288,22 +288,6 @@ jobs:
             --set-env-vars "DB_PATH=${DB_PATH}" \
             --set-env-vars "REDIRECT_LOG_SHEET_ID=${REDIRECT_LOG_SHEET_ID}"
 
-      - name: Map custom domain (skip if already mapped)
-        run: |
-          EXISTING=$(gcloud run domain-mappings list \
-            --region=us-central1 \
-            --filter="metadata.name=chat.bolablg.com" \
-            --format="value(metadata.name)" 2>/dev/null || echo "")
-          if [ -n "$EXISTING" ]; then
-            echo "Domain mapping already exists — skipping."
-          else
-            gcloud components install beta --quiet
-            gcloud beta run domain-mappings create --quiet \
-              --service=ibola-chatbot \
-              --domain=chat.bolablg.com \
-              --region=us-central1
-          fi
-
       - name: Tag release from VERSION file
         run: |
           VERSION=$(cat VERSION | tr -d '[:space:]')
