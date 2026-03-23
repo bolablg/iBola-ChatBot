@@ -7,16 +7,13 @@ import io
 import json
 
 import httpx
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
+from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 
 import config
 from pipeline.update_vectorstore import update_vectorstore
 
-# If modifying these SCOPES, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
 SYNC_STATE_FILE = os.path.join(config.DATA_PATH, ".sync_state.json")
 
@@ -58,7 +55,7 @@ def send_webhook_alert(updated_files):
                     }
                 ]
             }
-        with httpx.Client() as client:
+        with httpx.Client(timeout=10) as client:
             response = client.post(webhook_url, json=message)
             response.raise_for_status()
 
@@ -152,22 +149,15 @@ def sync_folder_recursive(service, folder_id, local_path, sync_state):
 
 def sync_google_drive():
     """Main function to sync a Google Drive folder with a local folder."""
-    creds = None
-    if os.path.exists(config.GOOGLE_OAUTH_TOKEN_PATH):
-        creds = Credentials.from_authorized_user_file(
-            config.GOOGLE_OAUTH_TOKEN_PATH, SCOPES
-        )
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                config.GOOGLE_OAUTH_CREDENTIALS_PATH, SCOPES
-            )
-            creds = flow.run_local_server(port=8080)
-        with open(config.GOOGLE_OAUTH_TOKEN_PATH, "w") as token:
-            token.write(creds.to_json())
+    sa_path = config.GCP_SA_CREDENTIALS_PATH
+    if not sa_path or not os.path.exists(sa_path):
+        print(f"Service account credentials not found at: {sa_path}")
+        print("Set GCP_SA_CREDENTIALS_PATH and share the Drive folder with the SA.")
+        return
 
+    creds = service_account.Credentials.from_service_account_file(
+        sa_path, scopes=SCOPES
+    )
     service = build("drive", "v3", credentials=creds)
 
     sync_state = get_sync_state()
