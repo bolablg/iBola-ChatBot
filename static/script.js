@@ -419,13 +419,14 @@ document.addEventListener('DOMContentLoaded', () => {
         showTyping();
 
         try {
-            const res = await fetch('/chat', {
+            const res = await fetch('/ask-agentic', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     user_input: text,
                     session_id: sessionId,
                     user_language: userLanguage,
+                    stream: false,
                 }),
             });
 
@@ -543,45 +544,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Init ---
     const init = async () => {
-        const browserLang = navigator.language || 'en';
+        const browserLang = (navigator.language || 'en').split('-')[0];
+        userLanguage = Object.keys(placeholders).includes(browserLang) ? browserLang : 'en';
+        userInput.placeholder = placeholders[userLanguage] || placeholders.en;
 
-        try {
-            const res = await fetch('/welcome', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ session_id: sessionId, browser_language: browserLang }),
-            });
-
-            if (res.ok) {
-                const data = await res.json();
-                userLanguage = data.detected_language || 'en';
-                const msgs = data.welcome_messages || [];
-                userInput.placeholder = placeholders[userLanguage] || placeholders.en;
-
-                if (isEmbedMode) {
-                    // Embed: type welcome as a bubble, no suggestions
-                    if (msgs.length > 0) {
-                        await new Promise(r => setTimeout(r, 400));
-                        await typeMessage(msgs[0], 'bot', { noFeedback: true });
-                    }
-                } else {
-                    // Standalone: show suggestion cards
-                    renderSuggestions(userLanguage);
-                }
-            } else {
-                throw new Error('Welcome failed');
-            }
-        } catch (e) {
-            userInput.placeholder = placeholders.en;
-            if (isEmbedMode) {
-                await new Promise(r => setTimeout(r, 400));
-                await typeMessage(
-                    "Hello! I\u2019m iBola, Bolaji\u2019s AI assistant. Ask me about his professional life.",
-                    'bot', { noFeedback: true }
-                );
-            } else {
-                renderSuggestions('en');
-            }
+        if (isEmbedMode) {
+            await new Promise(r => setTimeout(r, 400));
+            await typeMessage(
+                "Hello! I\u2019m iBola, Bolaji\u2019s AI assistant. Ask me about his professional life.",
+                'bot', { noFeedback: true }
+            );
+        } else {
+            renderSuggestions(userLanguage);
         }
 
         userInput.focus();
