@@ -108,7 +108,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_TOKEN }}
 
       - name: Configure git
         run: |
@@ -125,7 +125,7 @@ jobs:
 
       - name: Create and auto-merge PR to staging
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
           BRANCH_NAME: ${{ github.ref_name }}
           COMMIT_SHA: ${{ github.sha }}
         run: |
@@ -212,7 +212,7 @@ jobs:
 
       - name: Create PR to main
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           VERSION=$(cat VERSION | tr -d '[:space:]')
           EXISTING_PR=$(gh pr list --base main --head staging --json number --jq '.[0].number' 2>/dev/null || echo "")
@@ -248,21 +248,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Create credential files
-        env:
-          GOOGLE_OAUTH_KEY: ${{ secrets.GOOGLE_OAUTH_KEY }}
-          GOOGLE_OAUTH_KEY_PATH: ${{ secrets.GOOGLE_OAUTH_KEY_PATH }}
-          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
-          GCP_SA_KEY_PATH: ${{ secrets.GCP_SA_KEY_PATH }}
-          GOOGLE_OAUTH_TOKEN: ${{ secrets.GOOGLE_OAUTH_TOKEN }}
-          GOOGLE_OAUTH_TOKEN_PATH: ${{ secrets.GOOGLE_OAUTH_TOKEN_PATH }}
-        run: |
-          echo "$GOOGLE_OAUTH_KEY" > "$GOOGLE_OAUTH_KEY_PATH"
-          echo "GOOGLE_OAUTH_CREDENTIALS_PATH=$GOOGLE_OAUTH_KEY_PATH" >> "$GITHUB_ENV"
-          echo "$GCP_SA_KEY" > "$GCP_SA_KEY_PATH"
-          echo "GCP_SA_CREDENTIALS_PATH=$GCP_SA_KEY_PATH" >> "$GITHUB_ENV"
-          echo "$GOOGLE_OAUTH_TOKEN" > "$GOOGLE_OAUTH_TOKEN_PATH"
-
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
@@ -281,9 +266,7 @@ jobs:
       - name: Deploy to Cloud Run
         env:
           GCP_PROJECT: ${{ secrets.GCP_PROJECT }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
-          GCHAT_WEBHOOK_URL: ${{ secrets.GCHAT_WEBHOOK_URL }}
           DATA_PATH: ${{ secrets.DATA_PATH }}
           DB_PATH: ${{ secrets.DB_PATH }}
           REDIRECT_LOG_SHEET_ID: ${{ secrets.REDIRECT_LOG_SHEET_ID }}
@@ -292,25 +275,34 @@ jobs:
             --image "gcr.io/${GCP_PROJECT}/ibola-chatbot" \
             --platform managed \
             --region us-central1 \
-            --memory 1Gi \
+            --memory 2Gi \
+            --min-instances 1 \
             --allow-unauthenticated \
-            --set-env-vars "GOOGLE_OAUTH_CREDENTIALS_PATH=${GOOGLE_OAUTH_CREDENTIALS_PATH}" \
-            --set-env-vars "GEMINI_API_KEY=${GEMINI_API_KEY}" \
+            --set-secrets="GEMINI_API_KEY=ibola-gemini-api-key:latest" \
+            --set-secrets="GCHAT_WEBHOOK_URL=ibola-gchat-webhook-url:latest" \
+            --set-secrets="/secrets/gcp-sa-key.json=ibola-gcp-sa-key:latest" \
+            --set-env-vars "GCP_SA_CREDENTIALS_PATH=/secrets/gcp-sa-key.json" \
             --set-env-vars "GCP_PROJECT=${GCP_PROJECT}" \
             --set-env-vars "GDRIVE_FOLDER_ID=${GDRIVE_FOLDER_ID}" \
-            --set-env-vars "GCHAT_WEBHOOK_URL=${GCHAT_WEBHOOK_URL}" \
             --set-env-vars "DATA_PATH=${DATA_PATH}" \
             --set-env-vars "DB_PATH=${DB_PATH}" \
-            --set-env-vars "REDIRECT_LOG_SHEET_ID=${REDIRECT_LOG_SHEET_ID}" \
-            --set-env-vars "GCP_SA_CREDENTIALS_PATH=${GCP_SA_CREDENTIALS_PATH}"
+            --set-env-vars "REDIRECT_LOG_SHEET_ID=${REDIRECT_LOG_SHEET_ID}"
 
-      - name: Map custom domain
+      - name: Map custom domain (skip if already mapped)
         run: |
-          gcloud components install beta --quiet
-          gcloud beta run domain-mappings create --quiet \
-            --service=ibola-chatbot \
-            --domain=chat.bolablg.com \
-            --region=us-central1
+          EXISTING=$(gcloud run domain-mappings list \
+            --region=us-central1 \
+            --filter="metadata.name=chat.bolablg.com" \
+            --format="value(metadata.name)" 2>/dev/null || echo "")
+          if [ -n "$EXISTING" ]; then
+            echo "Domain mapping already exists — skipping."
+          else
+            gcloud components install beta --quiet
+            gcloud beta run domain-mappings create --quiet \
+              --service=ibola-chatbot \
+              --domain=chat.bolablg.com \
+              --region=us-central1
+          fi
 
       - name: Tag release from VERSION file
         run: |

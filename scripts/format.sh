@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Format changed Python files only (vs main branch). Falls back to full format.
+# Format changed Python files (vs main), then verify ALL project files pass.
 set -euo pipefail
 
-TARGETS="app/ tests/ pipeline/"
+TARGETS="app/ tests/ pipeline/ utils/"
 
 CHANGED=$(git diff --name-only --diff-filter=d origin/main...HEAD -- '*.py' 2>/dev/null || echo "")
 
@@ -17,4 +17,9 @@ else
   echo "$CHANGED" | xargs isort
 fi
 
+# Verify ALL files pass (catches files missed by the diff)
+echo ""
+echo "Verifying all project files..."
+black --check --quiet $TARGETS
+isort --check-only --quiet $TARGETS
 echo "Format complete."
