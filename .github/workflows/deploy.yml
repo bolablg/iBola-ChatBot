@@ -260,6 +260,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -301,15 +303,45 @@ jobs:
             --set-env-vars "DB_PATH=${DB_PATH}" \
             --set-env-vars "REDIRECT_LOG_SHEET_ID=${REDIRECT_LOG_SHEET_ID}"
 
-      - name: Tag release from VERSION file
+      - name: Create GitHub Release with notes
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           VERSION=$(cat VERSION | tr -d '[:space:]')
+          TAG="v${VERSION}"
+
+          # Skip if this version was already released
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists — skipping"
+            exit 0
+          fi
+
+          # Create the git tag if it doesn't exist
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          if ! git rev-parse "v${VERSION}" >/dev/null 2>&1; then
-            git tag -a "v${VERSION}" -m "Release v${VERSION}"
-            git push origin "v${VERSION}"
-            echo "Tagged release: v${VERSION}"
-          else
-            echo "Tag v${VERSION} already exists — skipping"
+          if ! git rev-parse "$TAG" >/dev/null 2>&1; then
+            git tag -a "$TAG" -m "Release $TAG"
+            git push origin "$TAG"
           fi
+
+          # Find previous tag for changelog range
+          PREV_TAG=$(git tag --sort=-creatordate | grep -v "^${TAG}$" | head -n 1 || echo "")
+
+          # Build release notes
+          NOTES="## What's Changed"$'\n\n'
+          if [ -n "$PREV_TAG" ]; then
+            # List commit subjects since previous tag
+            COMMITS=$(git log "${PREV_TAG}..${TAG}" --pretty=format:"- %s" --no-merges 2>/dev/null || echo "")
+            if [ -n "$COMMITS" ]; then
+              NOTES="${NOTES}${COMMITS}"$'\n\n'
+            fi
+            NOTES="${NOTES}**Full Changelog**: \`${PREV_TAG}...${TAG}\`"
+          else
+            NOTES="${NOTES}Initial release."
+          fi
+
+          # Create the GitHub Release
+          gh release create "$TAG" \
+            --title "Release $TAG" \
+            --notes "$NOTES" \
+            --latest
