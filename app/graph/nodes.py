@@ -452,19 +452,18 @@ def rewrite_query_node(state: dict) -> dict:
 # ===================================================================
 
 # Prompt templates per category — reusing the existing well-crafted prompts
-_BILINGUAL_RULES = (
+_LANGUAGE_RULE = (
     "LANGUAGE RULE (CRITICAL — never violate):\n"
-    "- Detect the user's language from their message.\n"
-    "- If the user writes in French, reply ENTIRELY in French. No English words.\n"
-    "- If the user writes in English, reply ENTIRELY in English. No French words.\n"
-    "- NEVER mix languages in a single response.\n\n"
+    "- ALWAYS reply in English. Every word must be in English.\n"
+    "- Even if the user writes in French or another language, reply in English.\n"
+    "- NEVER use French words, phrases, or sentences in your response.\n\n"
 )
 
 _GENERATE_PROMPTS = {
     AgentCategory.PROFESSIONAL: (
         "You are iBola, Bolaji's AI assistant.\n\n"
         "VOICE: Succinct, captivating, straight to the point. Like a sharp elevator pitch.\n\n"
-        + _BILINGUAL_RULES
+        + _LANGUAGE_RULE
         + "ABSOLUTE RULES:\n"
         "1) DEFAULT: 2-3 sentences max. Each sentence <=15 words. Be punchy.\n"
         "2) DETAIL ONLY WHEN ASKED: If the user asks for more details or follows up "
@@ -479,7 +478,7 @@ _GENERATE_PROMPTS = {
     AgentCategory.EDUCATION: (
         "You are iBola, Bolaji's AI assistant.\n\n"
         "VOICE: Succinct, captivating, straight to the point.\n\n"
-        + _BILINGUAL_RULES
+        + _LANGUAGE_RULE
         + "ABSOLUTE RULES:\n"
         "1) DEFAULT: 2-3 sentences max. Each sentence <=15 words.\n"
         "2) DETAIL ONLY WHEN ASKED: elaborate only if user requests more info.\n"
@@ -491,7 +490,7 @@ _GENERATE_PROMPTS = {
     AgentCategory.LEARNING: (
         "You are iBola, Bolaji's AI assistant.\n\n"
         "VOICE: Succinct, captivating, encouraging.\n\n"
-        + _BILINGUAL_RULES
+        + _LANGUAGE_RULE
         + "ABSOLUTE RULES:\n"
         "1) DEFAULT: 2-3 sentences max. Give one actionable tip.\n"
         "2) DETAIL ONLY WHEN ASKED: expand into a learning path only if requested.\n"
@@ -507,6 +506,7 @@ GENERATE_PROMPT = ChatPromptTemplate.from_messages(
         ("system", "{system_prompt}"),
         (
             "human",
+            "Reply language: {reply_language}\n\n"
             "Context:\n{context}\n\nChat history:\n{chat_history}\n\nQuestion: {query}",
         ),
     ]
@@ -534,6 +534,8 @@ def generate_node(state: dict) -> dict:
             f"Human: {h[0]}\nAssistant: {h[1]}" for h in chat_history[-5:]
         )
 
+    reply_language = "English"
+
     system_prompt = _GENERATE_PROMPTS.get(
         category, _GENERATE_PROMPTS[AgentCategory.PROFESSIONAL]
     )
@@ -543,6 +545,7 @@ def generate_node(state: dict) -> dict:
         response = llm.invoke(
             GENERATE_PROMPT.format_messages(
                 system_prompt=system_prompt,
+                reply_language=reply_language,
                 context=context,
                 chat_history=history_str or "(none)",
                 query=query,
@@ -584,10 +587,8 @@ OUT_OF_SCOPE_PROMPT = ChatPromptTemplate.from_messages(
             "system",
             (
                 "You are iBola, Bolaji's AI assistant. The user asked something outside "
-                "your scope. Politely decline in 1-2 sentences. "
-                "If the user writes in French, reply entirely in French. "
-                "If the user writes in English, reply entirely in English. "
-                "Never mix languages. "
+                "your scope. Politely decline in 1-2 sentences in English. "
+                "ALWAYS reply in English regardless of the user's language. "
                 "Suggest they ask about Bolaji's professional experience, education, "
                 "community leadership, consulting, blog, or apps."
             ),
