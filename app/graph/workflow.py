@@ -26,7 +26,7 @@ from app.graph.nodes import (
     retrieve_node,
     rewrite_query_node,
 )
-from app.graph.state import RoutingDestination
+from app.graph.state import RoutingDestination, WorkflowState
 
 logger = logging.getLogger("ibola.graph")
 
@@ -70,7 +70,7 @@ def create_rag_workflow():
 
     Returns a compiled ``StateGraph`` that accepts and returns ``dict`` state.
     """
-    graph = StateGraph(dict)
+    graph = StateGraph(WorkflowState)
 
     # --- Add nodes ---
     graph.add_node("guardrail", guardrail_node)

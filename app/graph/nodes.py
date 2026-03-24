@@ -33,45 +33,122 @@ logger = logging.getLogger("ibola.graph")
 # ---------------------------------------------------------------------------
 
 _llms: Dict[str, Any] = {}
+_hybrid_search = None
+_lock = __import__("threading").Lock()
+_LLM_TIMEOUT_SECONDS = 15.0
+_LLM_MAX_RETRIES = 1
+_LLM_MAX_OUTPUT_TOKENS = 750
+
+
+class _SyncGeminiLLM:
+    """Minimal sync Gemini wrapper compatible with LangChain prompt templates.
+
+    Bypasses ChatGoogleGenerativeAI which hangs inside uvicorn due to
+    async event-loop conflicts in the google-genai SDK.
+    """
+
+    def __init__(
+        self, model: str, api_key: str, temperature: float, max_output_tokens: int
+    ):
+        from google import genai
+
+        self._model = model
+        self._temperature = temperature
+        self._max_output_tokens = max_output_tokens
+        self._client = genai.Client(api_key=api_key)
+
+    def invoke(self, messages, **kwargs):
+        """Accept LangChain message list, return an object with .content."""
+        from langchain_core.messages import AIMessage
+
+        # Convert LangChain messages to a single prompt string
+        parts = []
+        for msg in messages:
+            if hasattr(msg, "content"):
+                parts.append(msg.content)
+            elif isinstance(msg, str):
+                parts.append(msg)
+        prompt = "\n\n".join(parts)
+
+        response = self._client.models.generate_content(
+            model=self._model,
+            contents=prompt,
+            config={
+                "temperature": self._temperature,
+                "max_output_tokens": self._max_output_tokens,
+                "thinking_config": {"thinking_budget": 0},
+            },
+        )
+        return AIMessage(content=response.text or "")
+
+    def with_structured_output(self, schema):
+        """Return a wrapper that parses JSON into the given Pydantic schema."""
+        return _StructuredOutput(self, schema)
+
+
+class _StructuredOutput:
+    """Wraps _SyncGeminiLLM to parse responses into Pydantic models."""
+
+    def __init__(self, llm: _SyncGeminiLLM, schema):
+        self._llm = llm
+        self._schema = schema
+
+    def invoke(self, messages, **kwargs):
+        import json as _json
+
+        from google import genai
+
+        # Convert messages to prompt
+        parts = []
+        for msg in messages:
+            if hasattr(msg, "content"):
+                parts.append(msg.content)
+            elif isinstance(msg, str):
+                parts.append(msg)
+        prompt = "\n\n".join(parts)
+
+        response = self._llm._client.models.generate_content(
+            model=self._llm._model,
+            contents=prompt,
+            config=genai.types.GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema=self._schema,
+                temperature=self._llm._temperature,
+                max_output_tokens=self._llm._max_output_tokens,
+                thinking_config=genai.types.ThinkingConfig(thinking_budget=0),
+            ),
+        )
+        data = _json.loads(response.text)
+        return self._schema(**data)
 
 
 def _get_llm(temperature: float = 0.0):
-    key = f"gemini-{temperature}"
+    """Return a sync Gemini LLM (no async event-loop issues)."""
+    key = f"llm-{temperature}"
     if key not in _llms:
-        _llms[key] = ChatGoogleGenerativeAI(
-            model="gemini-2.5-pro",
-            temperature=temperature,
-            google_api_key=config.GEMINI_API_KEY,
-        )
+        with _lock:
+            if key not in _llms:
+                from app.settings import get_settings
+
+                settings = get_settings()
+                _llms[key] = _SyncGeminiLLM(
+                    model=settings.llm.model_name,
+                    api_key=config.GEMINI_API_KEY,
+                    temperature=temperature,
+                    max_output_tokens=_LLM_MAX_OUTPUT_TOKENS,
+                )
     return _llms[key]
 
 
-# ---------------------------------------------------------------------------
-# Retriever helper — maps category → specialised retriever
-# ---------------------------------------------------------------------------
+def _get_hybrid_search():
+    global _hybrid_search
+    if _hybrid_search is None:
+        with _lock:
+            if _hybrid_search is None:
+                from app.services.advanced_rag import hybrid_search
 
-_retrievers: Dict[str, Any] = {}
-
-
-def _get_retriever_for_category(category: AgentCategory):
-    """Return the specialised retriever for a given category."""
-    from app.agents.retrievers import (
-        get_education_retriever,
-        get_learning_retriever,
-        get_professional_retriever,
-        get_redirect_retriever,
-    )
-
-    mapping = {
-        AgentCategory.PROFESSIONAL: ("professional", get_professional_retriever),
-        AgentCategory.EDUCATION: ("education", get_education_retriever),
-        AgentCategory.LEARNING: ("learning", get_learning_retriever),
-        AgentCategory.OUT_OF_SCOPE: ("redirect", get_redirect_retriever),
-    }
-    name, factory = mapping.get(category, ("professional", get_professional_retriever))
-    if name not in _retrievers:
-        _retrievers[name] = factory()
-    return _retrievers[name]
+                _hybrid_search = hybrid_search
+    return _hybrid_search
 
 
 # ===================================================================
@@ -178,14 +255,35 @@ def guardrail_node(state: dict) -> dict:
 
 
 def retrieve_node(state: dict) -> dict:
-    """Retrieve documents using the specialised retriever for the category."""
+    """Retrieve documents using resilient hybrid retrieval with lexical fallback."""
     category = state.get("category", AgentCategory.PROFESSIONAL)
-    query = state.get("rewritten_query") or state.get("query", "")
+    query = (state.get("rewritten_query") or state.get("query", "")).strip()
     attempts = state.get("retrieval_attempts", 0)
 
+    if not query:
+        return {
+            "documents": [],
+            "retrieval_attempts": attempts + 1,
+            "reasoning_steps": state.get("reasoning_steps", [])
+            + [
+                ReasoningStep(
+                    node="retrieve",
+                    action="skipped",
+                    detail="empty query after sanitization",
+                )
+            ],
+        }
+
     try:
-        retriever = _get_retriever_for_category(category)
-        docs: List[Document] = retriever.invoke(query)
+        docs: List[Document] = _get_hybrid_search().search(
+            query,
+            top_k=8,
+            use_hybrid=True,
+            use_reranker=True,
+            category_filter=(
+                category.value if category != AgentCategory.OUT_OF_SCOPE else None
+            ),
+        )
 
         return {
             "documents": docs,
@@ -195,7 +293,10 @@ def retrieve_node(state: dict) -> dict:
                 ReasoningStep(
                     node="retrieve",
                     action="fetched",
-                    detail=f"docs={len(docs)} attempt={attempts + 1} query={query[:60]}",
+                    detail=(
+                        f"docs={len(docs)} attempt={attempts + 1} "
+                        f"query={query[:60]} mode=hybrid"
+                    ),
                 )
             ],
         }
@@ -234,10 +335,9 @@ GRADE_PROMPT = ChatPromptTemplate.from_messages(
 
 
 def grade_documents_node(state: dict) -> dict:
-    """Grade each retrieved document for relevance. Keep only relevant ones."""
+    """Grade retrieved documents for relevance using a single batched LLM call."""
     query = state.get("query", "")
     documents = state.get("documents", [])
-    graded: List[Document] = []
     steps = list(state.get("reasoning_steps", []))
 
     if not documents:
@@ -248,30 +348,46 @@ def grade_documents_node(state: dict) -> dict:
         )
         return {"graded_documents": [], "reasoning_steps": steps}
 
+    # Build a single prompt listing all documents for batch grading
+    doc_summaries = "\n".join(
+        f"[DOC {i}]: {doc.page_content[:300]}" for i, doc in enumerate(documents)
+    )
+
     try:
         llm = _get_llm(temperature=0.0)
-        structured_llm = llm.with_structured_output(GradeDocuments)
-    except Exception:
-        structured_llm = None
+        batch_prompt = ChatPromptTemplate.from_messages(
+            [
+                (
+                    "system",
+                    "You grade document relevance. Given a question and numbered "
+                    "documents, return ONLY the numbers of relevant documents as a "
+                    "comma-separated list. Example: 0,2,4\n"
+                    "If none are relevant, return: none",
+                ),
+                ("human", "Question: {query}\n\nDocuments:\n{docs}"),
+            ]
+        )
+        result = llm.invoke(
+            batch_prompt.format_messages(query=query, docs=doc_summaries)
+        )
+        answer = result.content.strip().lower()
 
-    for doc in documents:
-        try:
-            if structured_llm:
-                result: GradeDocuments = structured_llm.invoke(
-                    GRADE_PROMPT.format_messages(
-                        query=query, doc_content=doc.page_content[:500]
-                    )
-                )
-                if result.is_relevant:
-                    graded.append(doc)
-            else:
-                # Heuristic fallback: content > 50 chars
-                if len(doc.page_content.strip()) > 50:
-                    graded.append(doc)
-        except Exception:
-            # Heuristic fallback
-            if len(doc.page_content.strip()) > 50:
-                graded.append(doc)
+        if answer == "none":
+            graded = []
+        else:
+            indices = []
+            for part in answer.replace(" ", "").split(","):
+                try:
+                    idx = int(part)
+                    if 0 <= idx < len(documents):
+                        indices.append(idx)
+                except ValueError:
+                    continue
+            graded = [documents[i] for i in indices] if indices else documents[:3]
+
+    except Exception:
+        # Heuristic fallback: keep docs with substantial content
+        graded = [doc for doc in documents if len(doc.page_content.strip()) > 50]
 
     steps.append(
         ReasoningStep(
@@ -336,55 +452,49 @@ def rewrite_query_node(state: dict) -> dict:
 # ===================================================================
 
 # Prompt templates per category — reusing the existing well-crafted prompts
+_LANGUAGE_RULE = (
+    "LANGUAGE RULE (CRITICAL — never violate):\n"
+    "- ALWAYS reply in English. Every word must be in English.\n"
+    "- Even if the user writes in French or another language, reply in English.\n"
+    "- NEVER use French words, phrases, or sentences in your response.\n\n"
+)
+
 _GENERATE_PROMPTS = {
     AgentCategory.PROFESSIONAL: (
         "You are iBola, Bolaji's AI assistant.\n\n"
-        "VOICE: Succinct, captivating, straight to the point. Like a sharp elevator pitch.\n\n"
-        "ABSOLUTE RULES:\n"
-        "1) DEFAULT: 2-3 sentences max. Each sentence ≤15 words. Be punchy.\n"
-        "2) DETAIL ONLY WHEN ASKED: If the user says 'tell me more', 'details', 'explain', "
-        "'elaborate', 'plus de détails', 'développe', 'explique' or asks a follow-up "
-        "on the same topic — then give up to 5 sentences.\n"
-        "3) LANGUAGE: You MUST reply in the SAME language the user writes in. "
-        "If French, answer entirely in French. If English, entirely in English. "
-        "Never mix languages. Match their tone and register.\n"
-        "4) Base answers ONLY on context. Never invent.\n"
+        "VOICE: Succinct yet captivating. Like a well-prepared recruiter brief.\n\n"
+        + _LANGUAGE_RULE
+        + "RULES:\n"
+        "1) DEFAULT: 2-3 sentences. Pick the most impressive, relevant facts. Be precise.\n"
+        "2) Include specific numbers, tools, or achievements when available.\n"
+        "3) If the user asks for more details or follows up, give up to 5 sentences.\n"
+        "4) Base answers ONLY on context. Never invent facts.\n"
         "5) Never mention 'documents', 'context', 'RAG', or your data sources.\n"
         "6) ALWAYS refer to Bolaji in third person.\n"
         "7) If info not available: say so briefly + invite to email hello@bolablg.com.\n"
-        "8) Tool equivalence: relate unfamiliar tools to ones Bolaji uses.\n"
-        "9) Greetings: one warm sentence + invite to ask about his career.\n\n"
-        "CANONICAL SHORT DESCRIPTIONS (use these exact phrasings when relevant):\n"
-        "- EN about Bolaji: 'Bolaji is a Data Science and AI Engineer. He builds end-to-end data systems and AI-powered applications that drive measurable operational and business impact.'\n"
-        "- FR about Bolaji: 'Bolaji est un ingénieur en Data Science et IA. Il conçoit des systèmes de données de bout en bout et des applications alimentées par l'IA qui génèrent un impact opérationnel et business mesurable.'\n"
-        "- EN education: 'He holds a Master of Science in Statistics, reinforced with a Bootcamp in Big Data development and other data science industry certificates.'\n"
-        "- FR education: 'Il est titulaire d'un Master en Statistiques, renforcé par un Bootcamp en développement Big Data et d'autres certifications professionnelles en data science.'\n\n"
-        "EXAMPLES OF GOOD BREVITY:\n"
-        "- EN: 'He reduced cloud costs by 42% through optimized data modeling at Gozem.'\n"
-        "- FR: 'Il a réduit les coûts cloud de 42% grâce à une modélisation optimisée chez Gozem.'\n"
+        "8) Greetings ONLY when the user greets first. Never greet if the user asks a question.\n"
     ),
     AgentCategory.EDUCATION: (
         "You are iBola, Bolaji's AI assistant.\n\n"
-        "VOICE: Succinct, captivating, straight to the point.\n\n"
-        "ABSOLUTE RULES:\n"
-        "1) DEFAULT: 2-3 sentences max. Each sentence ≤15 words.\n"
-        "2) DETAIL ONLY WHEN ASKED: elaborate only if user requests more info.\n"
-        "3) Match the user's language. Confident and warm.\n"
+        "VOICE: Succinct yet captivating.\n\n" + _LANGUAGE_RULE + "RULES:\n"
+        "1) DEFAULT: 2-3 sentences. Highlight the most notable qualifications.\n"
+        "2) Include degrees, certifications, bootcamps, and courses with key facts.\n"
+        "3) If the user asks for more details, expand to cover all qualifications.\n"
         "4) Base answers ONLY on context. Never invent.\n"
         "5) Never mention 'documents', 'context', 'RAG'.\n"
         "6) ALWAYS refer to Bolaji in third person.\n"
-        "7) Focus on degrees, institutions, GPA, fields of study.\n"
     ),
     AgentCategory.LEARNING: (
         "You are iBola, Bolaji's AI assistant.\n\n"
-        "VOICE: Succinct, captivating, encouraging.\n\n"
-        "ABSOLUTE RULES:\n"
-        "1) DEFAULT: 2-3 sentences max. Give one actionable tip.\n"
-        "2) DETAIL ONLY WHEN ASKED: expand into a learning path only if requested.\n"
-        "3) Match the user's language. Be helpful and direct.\n"
-        "4) Never mention 'documents', 'context', 'RAG'.\n"
-        "5) ALWAYS refer to Bolaji in third person.\n"
-        "6) When elaborating: Prerequisites → Core Skills → Projects.\n"
+        "VOICE: Succinct yet captivating and encouraging.\n\n"
+        + _LANGUAGE_RULE
+        + "RULES:\n"
+        "1) DEFAULT: 2-3 sentences. Give one actionable tip grounded in Bolaji's experience.\n"
+        "2) Reference specific tools or paths when relevant.\n"
+        "3) If the user asks for more, expand into a structured learning path.\n"
+        "4) Base answers ONLY on context. Never invent.\n"
+        "5) Never mention 'documents', 'context', 'RAG'.\n"
+        "6) ALWAYS refer to Bolaji in third person.\n"
     ),
 }
 
@@ -393,6 +503,7 @@ GENERATE_PROMPT = ChatPromptTemplate.from_messages(
         ("system", "{system_prompt}"),
         (
             "human",
+            "Reply language: {reply_language}\n\n"
             "Context:\n{context}\n\nChat history:\n{chat_history}\n\nQuestion: {query}",
         ),
     ]
@@ -409,7 +520,7 @@ def generate_node(state: dict) -> dict:
 
     # Build context from graded documents
     if graded_docs:
-        context = "\n\n---\n\n".join(doc.page_content for doc in graded_docs[:3])
+        context = "\n\n---\n\n".join(doc.page_content for doc in graded_docs[:5])
     else:
         context = "(No relevant context found.)"
 
@@ -420,6 +531,8 @@ def generate_node(state: dict) -> dict:
             f"Human: {h[0]}\nAssistant: {h[1]}" for h in chat_history[-5:]
         )
 
+    reply_language = "English"
+
     system_prompt = _GENERATE_PROMPTS.get(
         category, _GENERATE_PROMPTS[AgentCategory.PROFESSIONAL]
     )
@@ -429,6 +542,7 @@ def generate_node(state: dict) -> dict:
         response = llm.invoke(
             GENERATE_PROMPT.format_messages(
                 system_prompt=system_prompt,
+                reply_language=reply_language,
                 context=context,
                 chat_history=history_str or "(none)",
                 query=query,
@@ -470,7 +584,8 @@ OUT_OF_SCOPE_PROMPT = ChatPromptTemplate.from_messages(
             "system",
             (
                 "You are iBola, Bolaji's AI assistant. The user asked something outside "
-                "your scope. Politely decline in ≤2 sentences. Match the user's language. "
+                "your scope. Politely decline in 1-2 sentences in English. "
+                "ALWAYS reply in English regardless of the user's language. "
                 "Suggest they ask about Bolaji's professional experience, education, "
                 "community leadership, consulting, blog, or apps."
             ),

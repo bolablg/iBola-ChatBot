@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from langchain_core.documents import Document
 from pydantic import BaseModel, Field
+from typing_extensions import TypedDict
 
 # ---------------------------------------------------------------------------
 # Enums
@@ -126,3 +127,50 @@ class GraphState:
 
     # --- Request context (for logging) ---
     request_info: Dict[str, Any] = field(default_factory=dict)
+
+
+# ---------------------------------------------------------------------------
+# TypedDict state for LangGraph (shallow-merge per key)
+# ---------------------------------------------------------------------------
+
+
+class WorkflowState(TypedDict, total=False):
+    """LangGraph state schema. Each node returns only the keys it modifies.
+
+    LangGraph with TypedDict uses shallow merge (last-writer-wins per key),
+    so keys not returned by a node persist from the previous state.
+    """
+
+    # Input
+    query: str
+    chat_history: List[Tuple[str, str]]
+    session_id: str
+    user_language: str
+
+    # Routing
+    category: AgentCategory
+    guardrail_score: int
+    routing_destination: RoutingDestination
+
+    # Retrieval
+    documents: List[Document]
+    graded_documents: List[Document]
+
+    # Generation
+    answer: str
+    confidence: float
+
+    # Control flow
+    retrieval_attempts: int
+    max_retrieval_attempts: int
+    rewritten_query: str
+
+    # Metadata
+    agent_type: str
+    reasoning_steps: List[ReasoningStep]
+    actions: List[Dict[str, Any]]
+    redirect_count: int
+    should_end_chat: bool
+
+    # Request context
+    request_info: Dict[str, Any]

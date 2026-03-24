@@ -467,40 +467,51 @@ body {
   30% { transform: translateY(-4px); opacity: 1; }
 }
 
-/* --- Action Buttons --- */
+/* --- Action Buttons (mobile-first) --- */
 .action-group {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
   animation: msgFadeIn 300ms ease-out both;
   padding-left: 44px;
+  max-width: 340px;
 }
 
 .action-btn {
   font-family: var(--font-ui);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
-  padding: 8px 16px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--border);
+  padding: 12px 20px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border);
   background: var(--bg-primary);
   color: var(--text-primary);
   cursor: pointer;
   transition: all var(--transition);
   text-decoration: none;
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 6px;
-  white-space: nowrap;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 48px;
   -webkit-appearance: none;
   appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: var(--shadow-card);
 }
 
 .action-btn:hover {
   border-color: var(--accent);
   color: var(--accent);
   background: var(--accent-subtle);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.12);
+}
+
+.action-btn:active {
+  transform: translateY(0);
 }
 
 .action-btn:focus-visible {
@@ -512,12 +523,26 @@ body {
   background: var(--accent);
   color: white;
   border-color: var(--accent);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
 }
 
 .action-btn--primary:hover {
   background: var(--accent-hover);
   color: white;
   border-color: var(--accent-hover);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+/* Side-by-side on wider screens */
+@media (min-width: 480px) {
+  .action-group {
+    flex-direction: row;
+    max-width: 100%;
+  }
+  .action-btn {
+    width: auto;
+    flex: 1;
+  }
 }
 
 /* --- Input Area --- */
@@ -865,15 +890,18 @@ html.minimal .typing-dots {
   border-radius: 18px 18px 18px 6px;
 }
 
-/* --- Embed Actions: no offset --- */
+/* --- Embed Actions: compact, no offset --- */
 html.minimal .action-group {
   padding-left: 0;
-  margin-top: 6px;
+  margin-top: 8px;
+  max-width: 100%;
 }
 
 html.minimal .action-btn {
-  font-size: 12px;
-  padding: 6px 14px;
+  font-size: 13px;
+  padding: 10px 16px;
+  min-height: 44px;
+  border-radius: 12px;
 }
 
 /* --- Embed Input: pill style --- */
