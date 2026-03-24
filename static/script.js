@@ -345,11 +345,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const group = document.createElement('div');
         group.classList.add('action-group');
 
+        const icons = {
+            contact_email: '\u2709\uFE0F',
+            contact_booking: '\uD83D\uDCC5',
+        };
+
         actions.forEach(action => {
             const btn = document.createElement('button');
             btn.classList.add('action-btn');
             if (action.primary) btn.classList.add('action-btn--primary');
-            btn.textContent = action.text;
+            const icon = icons[action.type] || '';
+            btn.textContent = icon ? `${icon}  ${action.text}` : action.text;
             btn.title = action.description || '';
 
             btn.addEventListener('click', () => {

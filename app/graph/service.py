@@ -59,6 +59,22 @@ class AgenticRAGService:
 
         session = self.session_data[session_id]
 
+        # --- Lead capture flow (multi-turn state machine) ---
+        if "lead_capture" in session:
+            return self._handle_lead_capture(
+                user_input, session, session_id, chat_history
+            )
+
+        # Detect "send a message to Bolaji" intent
+        if self._detect_message_intent(user_input):
+            session["lead_capture"] = {"step": "name"}
+            return self._lead_response(
+                "I'd be happy to pass along your message to Bolaji. "
+                "What's your name?",
+                session_id,
+                agent_type="lead_capture",
+            )
+
         # Deterministic fast-path only on the FIRST message in a session.
         # Follow-ups go through the agentic pipeline so the LLM can see
         # conversation context and give relevant, contextual answers.
@@ -447,3 +463,139 @@ class AgenticRAGService:
             )
         except Exception as exc:
             logger.warning("Redirect logging error: %s", exc)
+
+    # ------------------------------------------------------------------
+    # Lead capture (multi-turn: name → contact → message → webhook)
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _detect_message_intent(message: str) -> bool:
+        lower = message.lower()
+        signals = [
+            "send a message",
+            "leave a message",
+            "send him a message",
+            "talk to bolaji directly",
+            "reach out to bolaji",
+            "message bolaji",
+            "write to bolaji",
+            "get in touch directly",
+            "pass a message",
+            "i have a message",
+            "direct message",
+        ]
+        return any(s in lower for s in signals)
+
+    def _handle_lead_capture(
+        self,
+        user_input: str,
+        session: Dict[str, Any],
+        session_id: str,
+        chat_history: List[Tuple[str, str]],
+    ) -> Dict[str, Any]:
+        """State machine for lead collection: name → contact → message → send."""
+        capture = session["lead_capture"]
+        step = capture.get("step", "name")
+
+        if step == "name":
+            capture["name"] = user_input.strip()
+            capture["step"] = "contact"
+            return self._lead_response(
+                f"Thanks, {capture['name']}! "
+                "What's the best way for Bolaji to reach you? "
+                "(email, phone, or LinkedIn)",
+                session_id,
+            )
+
+        if step == "contact":
+            capture["contact"] = user_input.strip()
+            capture["step"] = "message"
+            return self._lead_response(
+                "Got it. What would you like Bolaji to know?",
+                session_id,
+            )
+
+        if step == "message":
+            capture["message"] = user_input.strip()
+            # Send to webhook
+            self._send_lead_to_webhook(capture, session_id, chat_history)
+            # Clean up
+            del session["lead_capture"]
+            return self._lead_response(
+                f"Your message has been sent to Bolaji. "
+                f"He'll get back to you at {capture['contact']}. "
+                "Is there anything else I can help with?",
+                session_id,
+            )
+
+        # Fallback — shouldn't happen
+        del session["lead_capture"]
+        return self._lead_response(
+            "Something went wrong. Please try again.", session_id
+        )
+
+    def _send_lead_to_webhook(
+        self,
+        capture: Dict[str, str],
+        session_id: str,
+        chat_history: List[Tuple[str, str]],
+    ) -> None:
+        """Send collected lead info to Google Chat webhook."""
+        try:
+            formatted_history = ""
+            if chat_history:
+                recent = chat_history[-5:]
+                formatted_history = "\n".join(
+                    f"  User: {h[0][:80]}\n  Bot: {h[1][:80]}" for h in recent
+                )
+
+            message_text = (
+                "💬 *New Direct Message for Bolaji*\n\n"
+                f"*From:* {capture.get('name', 'Unknown')}\n"
+                f"*Contact:* {capture.get('contact', 'Not provided')}\n"
+                f"*Session:* `{session_id}`\n\n"
+                f"*Message:*\n> {capture.get('message', '(empty)')}\n\n"
+            )
+            if formatted_history:
+                message_text += f"*Recent conversation:*\n```\n{formatted_history}\n```"
+
+            google_chat_alert.send_contact_alert(
+                contact_type="direct_message",
+                session_id=session_id,
+                chat_history=chat_history or [],
+                user_email=capture.get("contact"),
+            )
+            # Also send the rich message directly
+            import requests as _requests
+
+            if google_chat_alert.webhook_url:
+                _requests.post(
+                    google_chat_alert.webhook_url,
+                    json={"text": message_text},
+                    headers={"Content-Type": "application/json"},
+                    timeout=10,
+                )
+            logger.info(
+                "Lead captured: name=%s contact=%s session=%s",
+                capture.get("name"),
+                capture.get("contact"),
+                session_id,
+            )
+        except Exception as exc:
+            logger.warning("Lead webhook error: %s", exc)
+
+    @staticmethod
+    def _lead_response(
+        answer: str, session_id: str, agent_type: str = "lead_capture"
+    ) -> Dict[str, Any]:
+        return {
+            "answer": answer,
+            "actions": [],
+            "agent_type": agent_type,
+            "confidence": 1.0,
+            "language": "en",
+            "redirect_count": 0,
+            "session_id": session_id,
+            "should_end_chat": False,
+            "response_time": 0.0,
+        }
