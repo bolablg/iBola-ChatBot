@@ -344,43 +344,36 @@ class AgenticRAGService:
     ) -> Dict[str, Any]:
         responses_en = {
             "skills": (
-                "Bolaji specializes in data engineering, machine learning, "
-                "analytics, and AI product delivery. He works deeply with "
-                "Python, SQL, BigQuery, Airflow, Looker, Dataform, Vertex AI, "
-                "Docker, and Google Cloud."
+                "Bolaji's core expertise spans data engineering, ML, and AI product delivery. "
+                "He has 10+ years with Python, advanced SQL, BigQuery, and Google Cloud. "
+                "Key tools include Airflow, LangGraph, Docker, Spark, and Looker."
             ),
             "experience": (
-                "Bolaji has about a decade of experience turning data into "
-                "business assets across mobility, ecommerce, and fintech. "
-                "He currently leads Analytics and Data Science initiatives at "
-                "Gozem and has built scalable data platforms, observability "
-                "systems, and AI applications."
+                "Bolaji is Head of Data at Gozem, leading 14+ people across 6 countries. "
+                "He built their Data Hub from scratch and cut cloud costs by 42%. "
+                "Before that, he drove cloud migration and fraud detection as Global Data Analyst."
             ),
             "education": (
-                "Bolaji holds a Master of Science in Statistics from the "
-                "University of Abomey-Calavi, evaluated in 2024 as equivalent "
-                "to a U.S. master's degree. He also earned a bachelor's degree "
-                "in Statistics and Econometrics and completed additional "
-                "industry-focused data training."
+                "Bolaji holds a US-equivalent MSc in Statistics with a 3.72 GPA. "
+                "He is a Google-certified Professional Data Engineer and McKinsey Forward alumnus. "
+                "He also completed an intensive Big Data bootcamp covering Spark and Hadoop."
             ),
         }
         responses_fr = {
             "skills": (
-                "Bolaji est specialise en ingenierie des donnees, machine learning, "
-                "analytics et produits IA. Il travaille avec Python, SQL, BigQuery, "
-                "Airflow, Looker, Dataform, Vertex AI, Docker et Google Cloud."
+                "Bolaji est expert en ingenierie des donnees, ML et produits IA. "
+                "Il a 10+ ans d'experience avec Python, SQL avance, BigQuery et GCP. "
+                "Ses outils cles incluent Airflow, LangGraph, Docker, Spark et Looker."
             ),
             "experience": (
-                "Bolaji a pres d'une decennie d'experience dans la transformation "
-                "des donnees en actifs business dans la mobilite, le e-commerce et "
-                "la fintech. Il dirige actuellement les initiatives Analytics et "
-                "Data Science chez Gozem."
+                "Bolaji dirige la Data chez Gozem avec une equipe de 14+ dans 6 pays. "
+                "Il a construit le Data Hub et reduit les couts cloud de 42%. "
+                "Avant cela, il a pilote la migration cloud et la detection de fraude."
             ),
             "education": (
-                "Bolaji est titulaire d'un Master en Statistiques de l'Universite "
-                "d'Abomey-Calavi. Il a egalement obtenu une licence en Statistiques "
-                "et Econometrie, et complete des formations professionnelles en "
-                "data science."
+                "Bolaji a un MSc en Statistiques equivalent US avec un GPA de 3.72. "
+                "Il est certifie Google Professional Data Engineer et diplome McKinsey Forward. "
+                "Il a aussi complete un bootcamp intensif Big Data sur Spark et Hadoop."
             ),
         }
 
