@@ -8,6 +8,7 @@ Provides a ``process_query`` interface identical to the legacy orchestrator so
 from __future__ import annotations
 
 import logging
+import random
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -106,6 +107,15 @@ class AgenticRAGService:
                 session_id=session_id,
                 user_language=user_language,
                 chat_history=chat_history,
+            )
+
+        # Conversational pleasantries (thank you, goodbye, etc.)
+        pleasantry = self._detect_pleasantry(user_input)
+        if pleasantry:
+            return self._pleasantry_response(
+                pleasantry_type=pleasantry,
+                session_id=session_id,
+                user_language=user_language,
             )
 
         # Build initial state
@@ -227,8 +237,19 @@ class AgenticRAGService:
         user_language: str,
         chat_history: Optional[List[Tuple[str, str]]] = None,
     ) -> Dict[str, Any]:
-        answer = (
-            "You can email Bolaji directly or book a meeting from the options below."
+        answer = random.choice(
+            [
+                "You can email Bolaji directly or book a meeting from the options below.",
+                "Sure! Reach out to Bolaji via email or schedule a quick call below.",
+                "Absolutely — pick the option that works best for you below.",
+                "Great idea! You can drop Bolaji a message or book time on his calendar.",
+                "Here are the best ways to connect with Bolaji directly.",
+                "Happy to help you get in touch — use either option below.",
+                "Bolaji would love to hear from you! Email or book a meeting below.",
+                "You're one click away — email Bolaji or grab a spot on his calendar.",
+                "Let's get you connected! Choose email or a meeting slot below.",
+                "Perfect — here's how to reach Bolaji directly.",
+            ]
         )
 
         actions = [
@@ -272,10 +293,30 @@ class AgenticRAGService:
         user_language: str,
         chat_history: Optional[List[Tuple[str, str]]] = None,
     ) -> Dict[str, Any]:
-        answer = (
-            "Yes. Bolaji is open to ambitious AI, data, and technical leadership roles "
-            "with meaningful impact. The fastest next step is to email the role details "
-            "or book a conversation below."
+        answer = random.choice(
+            [
+                "Yes. Bolaji is open to ambitious AI, data, and technical leadership roles "
+                "with meaningful impact. The fastest next step is to email the role details "
+                "or book a conversation below.",
+                "Absolutely! Bolaji is actively exploring impactful data and AI leadership "
+                "opportunities. Share the role details via email or schedule a chat below.",
+                "Great timing — Bolaji is open to the right opportunity in AI, data, or "
+                "technical leadership. Reach out with details using the options below.",
+                "Yes, Bolaji welcomes conversations about ambitious roles in data and AI. "
+                "The best way forward is to send the details or book a quick call.",
+                "Definitely! Bolaji is interested in high-impact data, AI, and leadership "
+                "roles. Email the opportunity or book a meeting to discuss further.",
+                "Bolaji is open to meaningful opportunities in AI and data leadership. "
+                "Feel free to share the details or schedule a conversation below.",
+                "Yes — Bolaji is looking for impactful roles in data engineering, AI, and "
+                "technical leadership. Send the role info or book time to connect.",
+                "Absolutely. Bolaji is selectively exploring senior data and AI roles. "
+                "Drop the details via email or grab a meeting slot below.",
+                "Yes! If you have an exciting data, AI, or leadership role, Bolaji would "
+                "love to hear about it. Use the options below to connect.",
+                "Bolaji is always open to the right challenge in AI and data. "
+                "Share the opportunity details or schedule a call to discuss.",
+            ]
         )
 
         google_chat_alert.send_contact_alert("email", session_id, chat_history or [])
@@ -321,28 +362,105 @@ class AgenticRAGService:
         chat_history: Optional[List[Tuple[str, str]]] = None,
     ) -> Dict[str, Any]:
         responses = {
-            "skills": (
+            "skills": [
                 "Bolaji's core expertise spans data engineering, ML, and AI product delivery. "
                 "He has 10+ years with Python, advanced SQL, BigQuery, and Google Cloud. "
-                "Key tools include Airflow, LangGraph, Docker, Spark, and Looker."
-            ),
-            "experience": (
+                "Key tools include Airflow, LangGraph, Docker, Spark, and Looker.",
+                "Bolaji is a full-stack data professional — Python, SQL, BigQuery, GCP, "
+                "Airflow, Docker, Spark, and LangGraph are all in his daily toolkit. "
+                "He's been building data and AI systems for over a decade.",
+                "From data pipelines to AI products, Bolaji covers the full stack. "
+                "His go-to tools: Python, BigQuery, Airflow, Docker, GCP, Spark, and Looker. "
+                "He also builds agentic AI systems with LangGraph.",
+                "Bolaji brings 10+ years of hands-on experience with Python, SQL, "
+                "BigQuery, and Google Cloud. He's equally comfortable building Airflow DAGs, "
+                "training ML models, or shipping AI-powered products.",
+                "Data engineering, machine learning, and AI product delivery — that's Bolaji's "
+                "sweet spot. He works daily with Python, BigQuery, Airflow, GCP, Docker, "
+                "and modern AI frameworks like LangGraph.",
+                "Bolaji's toolkit includes Python, advanced SQL, BigQuery, GCP, Airflow, "
+                "Docker, Spark, Looker, and LangGraph. He's been shipping data and AI "
+                "solutions for 10+ years.",
+                "Think data engineering meets AI product delivery. Bolaji is fluent in Python, "
+                "BigQuery, GCP, Airflow, Docker, and Spark — plus modern AI tools like LangGraph.",
+                "Bolaji specializes in data engineering and AI, with deep expertise in Python, "
+                "BigQuery, Google Cloud, Airflow, Docker, and Spark. He also builds agentic "
+                "RAG systems with LangGraph.",
+                "Over 10 years of building with Python, SQL, BigQuery, GCP, Airflow, "
+                "Docker, and Spark. Bolaji also works with LangGraph and Looker to deliver "
+                "end-to-end data and AI solutions.",
+                "Bolaji's strengths lie in data engineering, ML, and AI. Key tools: Python, "
+                "BigQuery, Airflow, GCP, Docker, Spark, Looker, and LangGraph — backed by "
+                "10+ years of real-world experience.",
+            ],
+            "experience": [
                 "Bolaji is Head of Data at Gozem, leading 14+ people across 6 countries. "
                 "He built their Data Hub from scratch and cut cloud costs by 42%. "
-                "Before that, he drove cloud migration and fraud detection as Global Data Analyst."
-            ),
-            "education": (
+                "Before that, he drove cloud migration and fraud detection as Global Data Analyst.",
+                "Currently leading a 14+ person data team at Gozem across 6 African countries, "
+                "Bolaji built the company's Data Hub from zero and reduced cloud spend by 42%.",
+                "At Gozem, Bolaji heads the data function — 14+ people, 6 countries, and a "
+                "Data Hub he architected from scratch. He also saved 42% on cloud costs.",
+                "Bolaji leads data at Gozem, overseeing 14+ team members across West and "
+                "Central Africa. He built the entire Data Hub and cut cloud costs by 42%.",
+                "As Head of Data at Gozem, Bolaji manages 14+ people in 6 countries. "
+                "He's known for building their Data Hub from the ground up and driving "
+                "a 42% reduction in cloud costs.",
+                "Bolaji runs Gozem's data organization — 14+ people across 6 countries. "
+                "He architected their Data Hub and achieved a 42% cloud cost reduction. "
+                "Previously, he led cloud migration and fraud detection initiatives.",
+                "Leading 14+ data professionals across 6 African countries at Gozem, "
+                "Bolaji built the Data Hub from scratch. His cloud optimization work "
+                "saved 42% in infrastructure costs.",
+                "Bolaji's current role: Head of Data at Gozem, leading 14+ people in "
+                "6 countries. Highlights include building the Data Hub from zero and "
+                "cutting cloud costs by 42%.",
+                "At Gozem, Bolaji oversees data strategy across 6 countries with a team "
+                "of 14+. He's the architect behind their Data Hub and delivered 42% "
+                "savings in cloud infrastructure.",
+                "Bolaji heads data at Gozem — that's 14+ people across 6 countries, "
+                "a Data Hub built from scratch, and 42% cloud cost savings. "
+                "Before Gozem, he worked on fraud detection and cloud migration.",
+            ],
+            "education": [
                 "Bolaji holds a US-equivalent MSc in Statistics with a 3.72 GPA. "
                 "He is a Google-certified Professional Data Engineer and McKinsey Forward alumnus. "
-                "He also completed an intensive Big Data bootcamp covering Spark and Hadoop."
-            ),
+                "He also completed an intensive Big Data bootcamp covering Spark and Hadoop.",
+                "Bolaji earned an MSc in Statistics (3.72 GPA, US equivalent) and is a "
+                "Google-certified Professional Data Engineer. He's also a McKinsey Forward "
+                "alumnus with Big Data training in Spark and Hadoop.",
+                "With an MSc in Statistics (3.72 GPA) and Google's Professional Data Engineer "
+                "certification, Bolaji combines strong academic foundations with industry credentials. "
+                "He's also a McKinsey Forward program graduate.",
+                "Bolaji's education includes an MSc in Statistics (3.72 GPA), Google Cloud "
+                "Professional Data Engineer certification, and McKinsey Forward leadership program. "
+                "Plus an intensive Big Data bootcamp (Spark, Hadoop).",
+                "MSc in Statistics with a 3.72 GPA, Google-certified Professional Data Engineer, "
+                "and McKinsey Forward alumnus — Bolaji's credentials blend analytics, "
+                "cloud engineering, and leadership training.",
+                "Bolaji holds an MSc in Statistics (US-equivalent, 3.72 GPA) and is certified "
+                "as a Google Professional Data Engineer. He also completed McKinsey Forward "
+                "and a Big Data bootcamp focused on Spark and Hadoop.",
+                "Strong academic foundation: MSc in Statistics (3.72 GPA), Google Professional "
+                "Data Engineer certification, McKinsey Forward alumnus, and a Big Data "
+                "bootcamp graduate (Spark, Hadoop).",
+                "Bolaji combines an MSc in Statistics (3.72 GPA) with a Google Cloud "
+                "Professional Data Engineer cert and McKinsey Forward training. "
+                "His Big Data bootcamp covered Spark and Hadoop ecosystems.",
+                "Education highlights: MSc in Statistics with a 3.72 GPA, Google-certified "
+                "Professional Data Engineer, McKinsey Forward alumnus, and intensive training "
+                "in Spark and Hadoop through a Big Data bootcamp.",
+                "Bolaji's academic path includes an MSc in Statistics (3.72 GPA, US equivalent), "
+                "Google's Professional Data Engineer certification, the McKinsey Forward "
+                "leadership program, and a hands-on Big Data bootcamp.",
+            ],
         }
 
         if intent == "contact":
             return cls._contact_response(session_id, user_language, chat_history)
 
         return {
-            "answer": responses[intent],
+            "answer": random.choice(responses[intent]),
             "actions": [],
             "agent_type": intent,
             "confidence": 0.98,
@@ -399,6 +517,108 @@ class AgenticRAGService:
         ):
             return "booking"
         return None
+
+    @staticmethod
+    def _detect_pleasantry(message: str) -> Optional[str]:
+        """Detect conversational pleasantries that shouldn't hit the guardrail."""
+        lower = message.lower().strip()
+        thank_keywords = [
+            "thank",
+            "thanks",
+            "thx",
+            "appreciate",
+            "helpful",
+            "great answer",
+            "nice",
+            "awesome",
+            "wonderful",
+            "perfect",
+            "amazing",
+            "well done",
+            "good job",
+            "cool",
+        ]
+        bye_keywords = [
+            "bye",
+            "goodbye",
+            "good bye",
+            "see you",
+            "take care",
+            "have a good",
+            "have a nice",
+            "gotta go",
+            "talk later",
+            "cheers",
+        ]
+        if any(kw in lower for kw in thank_keywords):
+            return "thanks"
+        if any(kw in lower for kw in bye_keywords):
+            return "goodbye"
+        return None
+
+    @staticmethod
+    def _pleasantry_response(
+        pleasantry_type: str,
+        session_id: str,
+        user_language: str,
+    ) -> Dict[str, Any]:
+        """Return a warm response for conversational pleasantries."""
+        responses = {
+            "thanks": [
+                "You're welcome! If you have more questions about Bolaji's "
+                "experience, skills, or projects, feel free to ask anytime.",
+                "Glad I could help! Don't hesitate to ask if anything else "
+                "comes to mind about Bolaji's background.",
+                "Happy to help! Let me know if you'd like to dive deeper "
+                "into any aspect of Bolaji's work or experience.",
+                "Anytime! I'm here if you want to explore more about "
+                "Bolaji's skills, projects, or career journey.",
+                "You're welcome! There's plenty more to share about Bolaji "
+                "— just ask away.",
+                "My pleasure! Feel free to keep exploring Bolaji's "
+                "experience, education, or portfolio.",
+                "Glad that was useful! I'm here whenever you have more "
+                "questions about Bolaji.",
+                "No problem at all! Let me know if there's anything else "
+                "you'd like to know about Bolaji's work.",
+                "Happy I could assist! There's a lot more to Bolaji's story "
+                "if you're curious.",
+                "Of course! I'm always here to help you learn more about "
+                "Bolaji's professional journey.",
+            ],
+            "goodbye": [
+                "Thanks for chatting! If you'd like to learn more about Bolaji "
+                "or get in touch, don't hesitate to come back. Have a great day!",
+                "It was great talking with you! Come back anytime. Have a wonderful day!",
+                "Goodbye! Feel free to return whenever you have more questions "
+                "about Bolaji. Take care!",
+                "Thanks for stopping by! Wishing you a great day ahead.",
+                "See you next time! Don't hesitate to come back if you need "
+                "more info about Bolaji.",
+                "Bye for now! It was a pleasure chatting. Have a fantastic day!",
+                "Take care! You're always welcome to come back and learn more "
+                "about Bolaji's work.",
+                "Great chatting with you! Come back anytime you're curious. "
+                "Have a wonderful day!",
+                "Goodbye and thanks for your interest in Bolaji's work! "
+                "Wishing you all the best.",
+                "Until next time! Feel free to return whenever you'd like. "
+                "Have a great one!",
+            ],
+        }
+        return {
+            "answer": random.choice(
+                responses.get(pleasantry_type, responses["thanks"])
+            ),
+            "actions": [],
+            "agent_type": "pleasantry",
+            "confidence": 0.99,
+            "language": user_language,
+            "redirect_count": 0,
+            "session_id": session_id,
+            "should_end_chat": pleasantry_type == "goodbye",
+            "response_time": 0.0,
+        }
 
     def _log_redirect(
         self,
