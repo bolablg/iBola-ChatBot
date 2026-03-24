@@ -120,7 +120,7 @@ class AppSettings(BaseSettings):
 
     # --- Languages ---
     supported_languages: List[str] = Field(
-        default=["en", "fr", "es", "de", "it", "pt", "ru", "zh", "ja", "ko"],
+        default=["en", "fr"],
     )
 
     # --- Contact ---

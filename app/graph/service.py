@@ -291,24 +291,45 @@ class AgenticRAGService:
     @staticmethod
     def _detect_welcome_intent(message: str) -> Optional[str]:
         lower = message.lower()
-        if any(keyword in lower for keyword in ["contact", "email", "meeting"]):
-            return "contact"
-        if any(keyword in lower for keyword in ["skill", "skills", "technology"]):
-            return "skills"
+        # Contact (EN + FR)
         if any(
-            keyword in lower
-            for keyword in [
+            kw in lower
+            for kw in ["contact", "email", "meeting", "rendez-vous", "contacter"]
+        ):
+            return "contact"
+        # Skills (EN + FR)
+        if any(
+            kw in lower
+            for kw in ["skill", "skills", "technology", "competence", "competences"]
+        ):
+            return "skills"
+        # Experience (EN + FR)
+        if any(
+            kw in lower
+            for kw in [
                 "work experience",
                 "experience",
                 "career",
                 "worked",
                 "gozem",
+                "parcours",
+                "carriere",
             ]
         ):
             return "experience"
+        # Education (EN + FR)
         if any(
-            keyword in lower
-            for keyword in ["education", "educational", "study", "degree", "background"]
+            kw in lower
+            for kw in [
+                "education",
+                "educational",
+                "study",
+                "degree",
+                "background",
+                "formation",
+                "diplome",
+                "etude",
+            ]
         ):
             return "education"
         return None
@@ -321,7 +342,7 @@ class AgenticRAGService:
         user_language: str,
         chat_history: Optional[List[Tuple[str, str]]] = None,
     ) -> Dict[str, Any]:
-        responses = {
+        responses_en = {
             "skills": (
                 "Bolaji specializes in data engineering, machine learning, "
                 "analytics, and AI product delivery. He works deeply with "
@@ -343,9 +364,30 @@ class AgenticRAGService:
                 "industry-focused data training."
             ),
         }
+        responses_fr = {
+            "skills": (
+                "Bolaji est specialise en ingenierie des donnees, machine learning, "
+                "analytics et produits IA. Il travaille avec Python, SQL, BigQuery, "
+                "Airflow, Looker, Dataform, Vertex AI, Docker et Google Cloud."
+            ),
+            "experience": (
+                "Bolaji a pres d'une decennie d'experience dans la transformation "
+                "des donnees en actifs business dans la mobilite, le e-commerce et "
+                "la fintech. Il dirige actuellement les initiatives Analytics et "
+                "Data Science chez Gozem."
+            ),
+            "education": (
+                "Bolaji est titulaire d'un Master en Statistiques de l'Universite "
+                "d'Abomey-Calavi. Il a egalement obtenu une licence en Statistiques "
+                "et Econometrie, et complete des formations professionnelles en "
+                "data science."
+            ),
+        }
 
         if intent == "contact":
             return cls._contact_response(session_id, user_language, chat_history)
+
+        responses = responses_fr if user_language == "fr" else responses_en
 
         return {
             "answer": responses[intent],
