@@ -44,7 +44,7 @@ class KnowledgeGraph:
 
         if KNOWLEDGE_GRAPH_AVAILABLE:
             self.llm = ChatGoogleGenerativeAI(
-                model="gemini-2.5-pro", temperature=0.7, google_api_key=GEMINI_API_KEY
+                model="gemini-2.5-flash", temperature=0.7, google_api_key=GEMINI_API_KEY
             )
 
             # Initialize extraction chain
@@ -370,7 +370,7 @@ class KnowledgeGraphReasoner:
 
         if KNOWLEDGE_GRAPH_AVAILABLE:
             self.llm = ChatGoogleGenerativeAI(
-                model="gemini-2.5-pro", temperature=0.2, google_api_key=GEMINI_API_KEY
+                model="gemini-2.5-flash", temperature=0.2, google_api_key=GEMINI_API_KEY
             )
 
             # Reasoning chain

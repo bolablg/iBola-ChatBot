@@ -9,15 +9,16 @@ score fusion.  Falls back gracefully when dependencies are missing.
 from __future__ import annotations
 
 import logging
+import os
 import re
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 import config
+from utils.embedder import get_embeddings
 
 logger = logging.getLogger("ibola.search")
 
@@ -190,12 +191,27 @@ class CrossEncoderReranker:
 
     def __init__(self, model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"):
         self.model = None
-        if RERANKER_AVAILABLE:
-            try:
-                self.model = _CrossEncoder(model_name)
-                logger.info("Cross-encoder reranker loaded: %s", model_name)
-            except Exception as exc:
-                logger.warning("Reranker init failed: %s", exc)
+        self.model_name = model_name
+        self.enabled = (
+            os.getenv("ENABLE_CROSS_ENCODER_RERANKER", "false").lower() == "true"
+        )
+        if not self.enabled:
+            logger.info(
+                "Cross-encoder reranker disabled. Set ENABLE_CROSS_ENCODER_RERANKER=true "
+                "only when the model is preloaded and startup latency is acceptable."
+            )
+        self._load_attempted = False
+
+    def _ensure_model(self) -> None:
+        if self._load_attempted or not self.enabled or not RERANKER_AVAILABLE:
+            return
+
+        self._load_attempted = True
+        try:
+            self.model = _CrossEncoder(self.model_name)
+            logger.info("Cross-encoder reranker loaded: %s", self.model_name)
+        except Exception as exc:
+            logger.warning("Reranker init failed: %s", exc)
 
     def rerank(
         self,
@@ -203,6 +219,7 @@ class CrossEncoderReranker:
         documents: List[Document],
         top_k: int = 5,
     ) -> List[Tuple[Document, float]]:
+        self._ensure_model()
         if not self.model or not documents:
             return [(doc, 1.0) for doc in documents[:top_k]]
         try:
@@ -228,40 +245,74 @@ class HybridSearchService:
         self.reranker = CrossEncoderReranker()
         self.vectorstore: Optional[Chroma] = None
         self.embeddings = None
+        self.documents: List[Document] = []
         self._initialized = False
         self._initialize()
 
     def _initialize(self) -> None:
+        self._load_documents()
+        self._build_bm25()
+
         try:
-            self.embeddings = GoogleGenerativeAIEmbeddings(
-                model="models/gemini-embedding-001",
-                google_api_key=config.GEMINI_API_KEY,
-            )
+            self.embeddings = get_embeddings()
             self.vectorstore = Chroma(
                 persist_directory=self.vectorstore_path,
                 embedding_function=self.embeddings,
             )
-            self._build_bm25()
-            self._initialized = True
-            logger.info(
-                "HybridSearchService initialised (BM25=%s)", self.bm25_index.is_built
-            )
         except Exception as exc:
-            logger.error("HybridSearchService init failed: %s", exc)
+            logger.warning("HybridSearchService vector init failed: %s", exc)
 
-    def _build_bm25(self) -> None:
+        self._initialized = bool(self.documents or self.vectorstore is not None)
+        logger.info(
+            "HybridSearchService initialised (vector=%s, BM25=%s, docs=%d)",
+            self.vectorstore is not None,
+            self.bm25_index.is_built,
+            len(self.documents),
+        )
+
+    def _load_documents(self) -> None:
+        """Load persisted documents without requiring an embedding provider."""
         try:
-            data = self.vectorstore.get()
+            store = Chroma(persist_directory=self.vectorstore_path)
+            data = store.get()
             docs = []
             for i, content in enumerate(data.get("documents", [])):
+                if not content or not content.strip():
+                    continue
                 meta = {}
                 if data.get("metadatas") and i < len(data["metadatas"]):
                     meta = data["metadatas"][i] or {}
                 docs.append(Document(page_content=content, metadata=meta))
-            if docs:
-                self.bm25_index.build(docs)
+            self.documents = docs
+        except Exception as exc:
+            logger.warning("Document load error: %s", exc)
+            self.documents = []
+
+    def _build_bm25(self) -> None:
+        try:
+            if self.documents:
+                self.bm25_index.build(self.documents)
         except Exception as exc:
             logger.warning("BM25 build error: %s", exc)
+
+    def _keyword_fallback(
+        self, query: str, top_k: int = 8
+    ) -> List[Tuple[Document, float]]:
+        """Deterministic lexical fallback when vector retrieval is unavailable."""
+        query_tokens = set(_tokenize(query))
+        if not query_tokens or not self.documents:
+            return []
+
+        scored_docs: List[Tuple[Document, float]] = []
+        for doc in self.documents:
+            content_tokens = set(_tokenize(doc.page_content[:4000]))
+            overlap = query_tokens & content_tokens
+            if not overlap:
+                continue
+            score = len(overlap) / max(len(query_tokens), 1)
+            scored_docs.append((doc, score))
+
+        return sorted(scored_docs, key=lambda item: item[1], reverse=True)[:top_k]
 
     # ------------------------------------------------------------------
 
@@ -281,20 +332,40 @@ class HybridSearchService:
             ranked_lists: List[List[Tuple[Document, float]]] = []
 
             # 1. Vector search (MMR)
-            vector_docs = self.vectorstore.max_marginal_relevance_search(
-                query,
-                k=top_k,
-                fetch_k=top_k * 3,
-            )
-            ranked_lists.append(
-                [(doc, 1.0 / (i + 1)) for i, doc in enumerate(vector_docs)]
-            )
+            vector_docs: List[Document] = []
+            if self.vectorstore and query.strip():
+                try:
+                    vector_docs = self.vectorstore.max_marginal_relevance_search(
+                        query,
+                        k=top_k,
+                        fetch_k=top_k * 3,
+                    )
+                    ranked_lists.append(
+                        [(doc, 1.0 / (i + 1)) for i, doc in enumerate(vector_docs)]
+                    )
+                except Exception as exc:
+                    logger.warning(
+                        "Vector search failed for query '%s': %s", query, exc
+                    )
 
             # 2. BM25
             if use_hybrid and self.bm25_index.is_built:
                 bm25_results = self.bm25_index.search(query, top_k=top_k)
                 if bm25_results:
                     ranked_lists.append(bm25_results)
+
+            if not ranked_lists:
+                fallback = self._keyword_fallback(query, top_k=top_k)
+                results = [doc for doc, _ in fallback]
+                if category_filter:
+                    filtered = [
+                        d
+                        for d in results
+                        if d.metadata.get("category", "").lower()
+                        == category_filter.lower()
+                    ]
+                    results = filtered if filtered else results
+                return results
 
             # 3. Fuse
             if len(ranked_lists) > 1:
@@ -324,9 +395,13 @@ class HybridSearchService:
         except Exception as exc:
             logger.error("Hybrid search error: %s", exc)
             try:
-                return self.vectorstore.similarity_search(query, k=min(top_k, 3))
+                if self.vectorstore:
+                    return self.vectorstore.similarity_search(query, k=min(top_k, 3))
             except Exception:
-                return []
+                pass
+            return [
+                doc for doc, _ in self._keyword_fallback(query, top_k=min(top_k, 3))
+            ]
 
     def rebuild_bm25(self) -> None:
         """Rebuild BM25 index (call after vectorstore updates)."""
