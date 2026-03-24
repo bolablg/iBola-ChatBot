@@ -345,11 +345,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const group = document.createElement('div');
         group.classList.add('action-group');
 
+        const icons = {
+            contact_email: '\u2709\uFE0F',
+            contact_booking: '\uD83D\uDCC5',
+        };
+
         actions.forEach(action => {
             const btn = document.createElement('button');
             btn.classList.add('action-btn');
             if (action.primary) btn.classList.add('action-btn--primary');
-            btn.textContent = action.text;
+            const icon = icons[action.type] || '';
+            btn.textContent = icon ? `${icon}  ${action.text}` : action.text;
             btn.title = action.description || '';
 
             btn.addEventListener('click', () => {
@@ -419,13 +425,14 @@ document.addEventListener('DOMContentLoaded', () => {
         showTyping();
 
         try {
-            const res = await fetch('/chat', {
+            const res = await fetch('/ask-agentic', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     user_input: text,
                     session_id: sessionId,
                     user_language: userLanguage,
+                    stream: false,
                 }),
             });
 
@@ -462,52 +469,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Suggestion Cards ---
-    const suggestions = {
-        en: [
-            "What are Bolaji's key skills?",
-            "Tell me about his work experience",
-            "What is his educational background?",
-            "How can I contact Bolaji?",
-        ],
-        fr: [
-            "Quelles sont les comp\u00e9tences de Bolaji ?",
-            "Parlez-moi de son exp\u00e9rience professionnelle",
-            "Quelle est sa formation ?",
-            "Comment contacter Bolaji ?",
-        ],
-        es: [
-            "\u00bfCu\u00e1les son las habilidades de Bolaji?",
-            "Cu\u00e9ntame sobre su experiencia laboral",
-            "\u00bfCu\u00e1l es su formaci\u00f3n acad\u00e9mica?",
-            "\u00bfC\u00f3mo puedo contactar a Bolaji?",
-        ],
-        de: [
-            "Was sind Bolajis wichtigste F\u00e4higkeiten?",
-            "Erz\u00e4hlen Sie mir von seiner Berufserfahrung",
-            "Welche Ausbildung hat er?",
-            "Wie kann ich Bolaji kontaktieren?",
-        ],
-        pt: [
-            "Quais s\u00e3o as habilidades de Bolaji?",
-            "Fale sobre sua experi\u00eancia profissional",
-            "Qual \u00e9 sua forma\u00e7\u00e3o?",
-            "Como posso contactar Bolaji?",
-        ],
-    };
+    const suggestions = [
+        "What are Bolaji's key skills?",
+        "Tell me about his work experience",
+        "What is his educational background?",
+        "How can I contact Bolaji?",
+    ];
 
     const welcomeTexts = {
-        en: { title: "How can I help you?", subtitle: "Ask me anything about Bolaji's professional life" },
-        fr: { title: "Comment puis-je vous aider ?", subtitle: "Posez-moi une question sur la vie professionnelle de Bolaji" },
-        es: { title: "\u00bfC\u00f3mo puedo ayudarte?", subtitle: "Preg\u00fantame sobre la vida profesional de Bolaji" },
-        de: { title: "Wie kann ich Ihnen helfen?", subtitle: "Fragen Sie mich \u00fcber Bolajis Berufsleben" },
-        pt: { title: "Como posso ajudar?", subtitle: "Pergunte-me sobre a vida profissional de Bolaji" },
+        title: "How can I help you?",
+        subtitle: "Ask me anything about Bolaji's professional life",
     };
 
-    const renderSuggestions = (lang) => {
+    const renderSuggestions = () => {
         if (!suggestionsGrid) return;
         while (suggestionsGrid.firstChild) suggestionsGrid.removeChild(suggestionsGrid.firstChild);
 
-        const items = suggestions[lang] || suggestions.en;
+        const items = suggestions;
         items.forEach(text => {
             const btn = document.createElement('button');
             btn.classList.add('suggestion-card');
@@ -520,7 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Update welcome text
-        const texts = welcomeTexts[lang] || welcomeTexts.en;
+        const texts = welcomeTexts;
         const titleEl = document.getElementById('welcome-title');
         const subtitleEl = document.getElementById('welcome-subtitle');
         if (titleEl) titleEl.textContent = texts.title;
@@ -528,60 +506,19 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- Placeholder per language ---
-    const placeholders = {
-        en: "Ask about Bolaji\u2019s professional life\u2026",
-        fr: "Posez une question sur la vie pro de Bolaji\u2026",
-        es: "\u00bfPreguntas sobre la vida profesional de Bolaji?",
-        de: "Fragen \u00fcber Bolajis Berufsleben\u2026",
-        pt: "Pergunte sobre a vida profissional de Bolaji\u2026",
-        it: "Chiedi della vita professionale di Bolaji\u2026",
-        ru: "\u0421\u043f\u0440\u043e\u0441\u0438\u0442\u0435 \u043e \u043f\u0440\u043e\u0444\u0435\u0441\u0441\u0438\u043e\u043d\u0430\u043b\u044c\u043d\u043e\u0439 \u0436\u0438\u0437\u043d\u0438 Bolaji\u2026",
-        zh: "\u95ee\u5173\u4e8eBolaji\u7684\u804c\u4e1a\u751f\u6daf\u2026",
-        ja: "Bolaji\u306e\u8077\u696d\u751f\u6d3b\u306b\u3064\u3044\u3066\u8cea\u554f\u2026",
-        ko: "Bolaji\uc758 \uc9c1\uc5c5 \uc0dd\ud65c\uc5d0 \ub300\ud574 \ubb3c\uc5b4\ubcf4\uc138\uc694\u2026",
-    };
-
     // --- Init ---
     const init = async () => {
-        const browserLang = navigator.language || 'en';
+        userLanguage = 'en';
+        userInput.placeholder = "Ask about Bolaji\u2019s professional life\u2026";
 
-        try {
-            const res = await fetch('/welcome', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ session_id: sessionId, browser_language: browserLang }),
-            });
-
-            if (res.ok) {
-                const data = await res.json();
-                userLanguage = data.detected_language || 'en';
-                const msgs = data.welcome_messages || [];
-                userInput.placeholder = placeholders[userLanguage] || placeholders.en;
-
-                if (isEmbedMode) {
-                    // Embed: type welcome as a bubble, no suggestions
-                    if (msgs.length > 0) {
-                        await new Promise(r => setTimeout(r, 400));
-                        await typeMessage(msgs[0], 'bot', { noFeedback: true });
-                    }
-                } else {
-                    // Standalone: show suggestion cards
-                    renderSuggestions(userLanguage);
-                }
-            } else {
-                throw new Error('Welcome failed');
-            }
-        } catch (e) {
-            userInput.placeholder = placeholders.en;
-            if (isEmbedMode) {
-                await new Promise(r => setTimeout(r, 400));
-                await typeMessage(
-                    "Hello! I\u2019m iBola, Bolaji\u2019s AI assistant. Ask me about his professional life.",
-                    'bot', { noFeedback: true }
-                );
-            } else {
-                renderSuggestions('en');
-            }
+        if (isEmbedMode) {
+            await new Promise(r => setTimeout(r, 400));
+            await typeMessage(
+                "Hello! I\u2019m iBola, Bolaji\u2019s AI assistant. Ask me about his professional life.",
+                'bot', { noFeedback: true }
+            );
+        } else {
+            renderSuggestions();
         }
 
         userInput.focus();

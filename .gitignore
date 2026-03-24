@@ -115,7 +115,7 @@ deploy_error.txt
 # =============================================================
 # Vector store (generated — rebuild with pipeline/update_vectorstore.py)
 # =============================================================
-chroma_db/
+# chroma_db/
 
 # =============================================================
 # Pipeline state files

@@ -5,12 +5,11 @@
 This is a **production-grade agentic multi-agent RAG chatbot** built with:
 
 - **LangGraph** for the agentic workflow (guardrail → retrieve → grade → generate / rewrite)
-- **Google Gemini 2.5 Flash** as the LLM (configurable via `LLM_MODEL_NAME`)
-- **ChromaDB** for vector storage with **gemini-embedding-001** (sync client)
-- **BM25 + Vector MMR + RRF** hybrid search with optional cross-encoder reranking
-- **FastAPI** for the API layer (sync workflows run in thread pool via `run_in_executor`)
-- **Google Cloud Run** for deployment (2 GiB memory, min-instances=1)
-- **Google Secret Manager** for runtime secrets (API keys, SA credentials)
+- **Google Gemini 2.5 Pro** as the LLM
+- **ChromaDB** for vector storage
+- **BM25 + Vector + RRF** hybrid search
+- **FastAPI** for the API layer
+- **Google Cloud Run** for deployment
 
 ## Key Directories
 
@@ -26,19 +25,11 @@ This is a **production-grade agentic multi-agent RAG chatbot** built with:
 
 ## API Endpoints
 
-- `POST /ask-agentic` — **Primary**: Full agentic RAG pipeline (LangGraph, supports SSE streaming, 12s timeout)
-- `POST /chat` — Legacy chat (uses orchestrator, kept for backward compatibility)
+- `POST /chat` — Legacy chat (uses orchestrator)
+- `POST /ask-agentic` — Full agentic RAG pipeline (LangGraph, supports SSE streaming)
 - `POST /ask` — Simple RAG (fast, no agent routing)
 - `POST /feedback` — User feedback for quality monitoring
 - `GET /health` — System health check
-
-## Production RAG Design Principles
-
-- **Intent-first routing**: Guardrail classifies before retrieval. Deterministic intents (contact, opportunity) skip the RAG pipeline entirely.
-- **Bounded latency**: All external calls have hard timeouts (LLM=8s, pipeline=12s, collector=4s).
-- **No heavyweight init on request path**: Models and indexes load at startup or first request, never mid-pipeline.
-- **Hybrid search with fallbacks**: Vector MMR → BM25 → keyword overlap. Never returns empty without trying all paths.
-- **Sync embedding client**: `utils/embedder.py` uses `google.genai.Client` (sync) to avoid uvicorn event-loop corruption.
 
 ## Configuration
 
@@ -52,7 +43,7 @@ Version from `VERSION` file drives git tags on deploy.
 
 ## Quality Scripts
 
-Scripts lint/format changed files first, then verify ALL project files pass (including `utils/`).
+All scripts lint/format **changed files only** (vs main) for speed.
 
 ```bash
 bash scripts/format.sh    # Auto-format changed .py files (Black + isort)
@@ -99,4 +90,4 @@ bash scripts/test.sh --no-cov
 ## Commit Rules
 
 - Never include `Co-Authored-By` lines in commit messages
-- Never move CLAUDE.md out of the project root
+- Never move AGENTS.md out of the project root

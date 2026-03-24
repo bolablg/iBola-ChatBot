@@ -25,6 +25,16 @@ logger = logging.getLogger("ibola.streaming")
 
 router = APIRouter(tags=["Streaming"])
 
+_PROCESS_TIMEOUT_SECONDS = 45.0
+_COLLECTOR_TIMEOUT_SECONDS = 4.0
+_COLLECTOR_EXCLUDED_AGENT_TYPES = {
+    "contact",
+    "skills",
+    "education",
+    "experience",
+    "opportunity",
+}
+
 # Lazy-init service
 _agentic_service: Optional[AgenticRAGService] = None
 
@@ -34,6 +44,27 @@ def _get_service() -> AgenticRAGService:
     if _agentic_service is None:
         _agentic_service = AgenticRAGService()
     return _agentic_service
+
+
+def _should_run_collector(result: Dict[str, Any]) -> bool:
+    """Keep lead collection off the critical path for deterministic FAQ replies."""
+    return result.get("agent_type") not in _COLLECTOR_EXCLUDED_AGENT_TYPES
+
+
+def _timeout_response(session_id: str, user_language: str) -> Dict[str, Any]:
+    return {
+        "answer": (
+            "I'm taking longer than expected to answer right now. "
+            "Please try again in a moment."
+        ),
+        "actions": [],
+        "agent_type": "timeout",
+        "confidence": 0.0,
+        "language": user_language,
+        "redirect_count": 0,
+        "session_id": session_id,
+        "should_end_chat": False,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -112,28 +143,59 @@ async def ask_agentic(payload: AskInput, request: Request):
             },
         )
 
-    # Non-streaming
+    # Non-streaming — run sync workflow in a thread to avoid event-loop
+    # conflicts with the google-genai SDK's internal async HTTP client.
+    import asyncio
+
+    loop = asyncio.get_event_loop()
     start = time.time()
-    result = service.process_query(
-        user_input, chat_history, session_id, user_language, request_info
-    )
+    try:
+        result = await asyncio.wait_for(
+            loop.run_in_executor(
+                None,
+                lambda: service.process_query(
+                    user_input, chat_history, session_id, user_language, request_info
+                ),
+            ),
+            timeout=_PROCESS_TIMEOUT_SECONDS,
+        )
+    except asyncio.TimeoutError:
+        logger.warning(
+            "Agentic pipeline timed out for session %s after %.1fs",
+            session_id,
+            _PROCESS_TIMEOUT_SECONDS,
+        )
+        result = _timeout_response(session_id, user_language)
     elapsed = time.time() - start
 
-    # Run collector agent for lead detection
-    try:
-        from app.agents.collector_agent import collector_agent
+    # Run collector agent for lead detection, but never let it block the user response.
+    if _should_run_collector(result):
+        try:
+            from app.agents.collector_agent import collector_agent
 
-        collector_result = collector_agent.check_and_respond(
-            user_input=user_input,
-            session_id=session_id,
-            chat_history=chat_history,
-            user_language=user_language,
-            agent_response=result.get("answer", ""),
-        )
-        if collector_result and collector_result.get("follow_up_question"):
-            result["answer"] += "\n\n" + collector_result["follow_up_question"]
-    except Exception:
-        pass
+            collector_result = await asyncio.wait_for(
+                loop.run_in_executor(
+                    None,
+                    lambda: collector_agent.check_and_respond(
+                        user_input=user_input,
+                        session_id=session_id,
+                        chat_history=chat_history,
+                        user_language=user_language,
+                        agent_response=result.get("answer", ""),
+                    ),
+                ),
+                timeout=_COLLECTOR_TIMEOUT_SECONDS,
+            )
+            if collector_result and collector_result.get("follow_up_question"):
+                result["answer"] += "\n\n" + collector_result["follow_up_question"]
+        except asyncio.TimeoutError:
+            logger.warning(
+                "Collector agent timed out for session %s after %.1fs",
+                session_id,
+                _COLLECTOR_TIMEOUT_SECONDS,
+            )
+        except Exception:
+            logger.exception("Collector agent failed for session %s", session_id)
 
     await cache_service.set_cached_response(
         user_input, "agentic", user_language, result
@@ -167,12 +229,23 @@ async def _stream_agentic(
 
     # Run the synchronous workflow in a thread
     loop = asyncio.get_event_loop()
-    result = await loop.run_in_executor(
-        None,
-        lambda: service.process_query(
-            user_input, chat_history, session_id, user_language, request_info
-        ),
-    )
+    try:
+        result = await asyncio.wait_for(
+            loop.run_in_executor(
+                None,
+                lambda: service.process_query(
+                    user_input, chat_history, session_id, user_language, request_info
+                ),
+            ),
+            timeout=_PROCESS_TIMEOUT_SECONDS,
+        )
+    except asyncio.TimeoutError:
+        logger.warning(
+            "Streaming agentic pipeline timed out for session %s after %.1fs",
+            session_id,
+            _PROCESS_TIMEOUT_SECONDS,
+        )
+        result = _timeout_response(session_id, user_language)
 
     # Stream reasoning steps
     for step in result.get("reasoning_steps", []):
@@ -254,7 +327,7 @@ async def ask_simple(payload: AskInput, request: Request):
         context = "\n\n".join(doc.page_content for doc in docs[:5])
 
         llm = ChatGoogleGenerativeAI(
-            model="gemini-2.5-pro",
+            model="gemini-2.5-flash",
             temperature=0.7,
             google_api_key=config.GEMINI_API_KEY,
         )
