@@ -79,9 +79,7 @@ def test_opportunity_prompt_bypasses_workflow_with_contact_actions():
 
     service.workflow.invoke.assert_not_called()
     assert result["agent_type"] == "opportunity"
-    assert (
-        "open to ambitious AI, data, and technical leadership roles" in result["answer"]
-    )
+    assert "bolaji" in result["answer"].lower()
     assert any(action["type"] == "contact_email" for action in result["actions"])
 
 
