@@ -463,31 +463,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Suggestion Cards ---
-    const suggestions = {
-        en: [
-            "What are Bolaji's key skills?",
-            "Tell me about his work experience",
-            "What is his educational background?",
-            "How can I contact Bolaji?",
-        ],
-        fr: [
-            "Quelles sont les comp\u00e9tences de Bolaji ?",
-            "Parlez-moi de son exp\u00e9rience professionnelle",
-            "Quelle est sa formation ?",
-            "Comment contacter Bolaji ?",
-        ],
-    };
+    const suggestions = [
+        "What are Bolaji's key skills?",
+        "Tell me about his work experience",
+        "What is his educational background?",
+        "How can I contact Bolaji?",
+    ];
 
     const welcomeTexts = {
-        en: { title: "How can I help you?", subtitle: "Ask me anything about Bolaji's professional life" },
-        fr: { title: "Comment puis-je vous aider ?", subtitle: "Posez-moi une question sur la vie professionnelle de Bolaji" },
+        title: "How can I help you?",
+        subtitle: "Ask me anything about Bolaji's professional life",
     };
 
-    const renderSuggestions = (lang) => {
+    const renderSuggestions = () => {
         if (!suggestionsGrid) return;
         while (suggestionsGrid.firstChild) suggestionsGrid.removeChild(suggestionsGrid.firstChild);
 
-        const items = suggestions[lang] || suggestions.en;
+        const items = suggestions;
         items.forEach(text => {
             const btn = document.createElement('button');
             btn.classList.add('suggestion-card');
@@ -500,7 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Update welcome text
-        const texts = welcomeTexts[lang] || welcomeTexts.en;
+        const texts = welcomeTexts;
         const titleEl = document.getElementById('welcome-title');
         const subtitleEl = document.getElementById('welcome-subtitle');
         if (titleEl) titleEl.textContent = texts.title;
@@ -508,16 +500,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- Placeholder per language ---
-    const placeholders = {
-        en: "Ask about Bolaji\u2019s professional life\u2026",
-        fr: "Posez une question sur la vie pro de Bolaji\u2026",
-    };
-
     // --- Init ---
     const init = async () => {
-        const browserLang = (navigator.language || 'en').split('-')[0];
-        userLanguage = Object.keys(placeholders).includes(browserLang) ? browserLang : 'en';
-        userInput.placeholder = placeholders[userLanguage] || placeholders.en;
+        userLanguage = 'en';
+        userInput.placeholder = "Ask about Bolaji\u2019s professional life\u2026";
 
         if (isEmbedMode) {
             await new Promise(r => setTimeout(r, 400));
@@ -526,7 +512,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 'bot', { noFeedback: true }
             );
         } else {
-            renderSuggestions(userLanguage);
+            renderSuggestions();
         }
 
         userInput.focus();

@@ -89,7 +89,6 @@ FEEDBACK_HISTORY_FILE = os.path.join(GUARDRAILS_DATA_DIR, "conversation_feedback
 # Language Support
 SUPPORTED_LANGUAGES = [
     "en",  # English
-    "fr",  # French
 ]
 
 # Contact Information

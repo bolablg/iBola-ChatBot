@@ -214,11 +214,6 @@ class AgenticRAGService:
         answer = (
             "You can email Bolaji directly or book a meeting from the options below."
         )
-        if user_language == "fr":
-            answer = (
-                "Vous pouvez ecrire directement a Bolaji ou reserver un rendez-vous "
-                "avec les options ci-dessous."
-            )
 
         actions = [
             {
@@ -266,12 +261,6 @@ class AgenticRAGService:
             "with meaningful impact. The fastest next step is to email the role details "
             "or book a conversation below."
         )
-        if user_language == "fr":
-            answer = (
-                "Oui. Bolaji est ouvert aux roles ambitieux en IA, data et leadership "
-                "technique avec un impact concret. Le plus simple est d'envoyer les "
-                "details du poste ou de reserver un echange ci-dessous."
-            )
 
         google_chat_alert.send_contact_alert("email", session_id, chat_history or [])
         response = AgenticRAGService._contact_response(
@@ -291,45 +280,18 @@ class AgenticRAGService:
     @staticmethod
     def _detect_welcome_intent(message: str) -> Optional[str]:
         lower = message.lower()
-        # Contact (EN + FR)
-        if any(
-            kw in lower
-            for kw in ["contact", "email", "meeting", "rendez-vous", "contacter"]
-        ):
+        if any(kw in lower for kw in ["contact", "email", "meeting"]):
             return "contact"
-        # Skills (EN + FR)
-        if any(
-            kw in lower
-            for kw in ["skill", "skills", "technology", "competence", "competences"]
-        ):
+        if any(kw in lower for kw in ["skill", "skills", "technology"]):
             return "skills"
-        # Experience (EN + FR)
         if any(
             kw in lower
-            for kw in [
-                "work experience",
-                "experience",
-                "career",
-                "worked",
-                "gozem",
-                "parcours",
-                "carriere",
-            ]
+            for kw in ["work experience", "experience", "career", "worked", "gozem"]
         ):
             return "experience"
-        # Education (EN + FR)
         if any(
             kw in lower
-            for kw in [
-                "education",
-                "educational",
-                "study",
-                "degree",
-                "background",
-                "formation",
-                "diplome",
-                "etude",
-            ]
+            for kw in ["education", "educational", "study", "degree", "background"]
         ):
             return "education"
         return None
@@ -342,7 +304,7 @@ class AgenticRAGService:
         user_language: str,
         chat_history: Optional[List[Tuple[str, str]]] = None,
     ) -> Dict[str, Any]:
-        responses_en = {
+        responses = {
             "skills": (
                 "Bolaji's core expertise spans data engineering, ML, and AI product delivery. "
                 "He has 10+ years with Python, advanced SQL, BigQuery, and Google Cloud. "
@@ -359,28 +321,9 @@ class AgenticRAGService:
                 "He also completed an intensive Big Data bootcamp covering Spark and Hadoop."
             ),
         }
-        responses_fr = {
-            "skills": (
-                "Bolaji est expert en ingenierie des donnees, ML et produits IA. "
-                "Il a 10+ ans d'experience avec Python, SQL avance, BigQuery et GCP. "
-                "Ses outils cles incluent Airflow, LangGraph, Docker, Spark et Looker."
-            ),
-            "experience": (
-                "Bolaji dirige la Data chez Gozem avec une equipe de 14+ dans 6 pays. "
-                "Il a construit le Data Hub et reduit les couts cloud de 42%. "
-                "Avant cela, il a pilote la migration cloud et la detection de fraude."
-            ),
-            "education": (
-                "Bolaji a un MSc en Statistiques equivalent US avec un GPA de 3.72. "
-                "Il est certifie Google Professional Data Engineer et diplome McKinsey Forward. "
-                "Il a aussi complete un bootcamp intensif Big Data sur Spark et Hadoop."
-            ),
-        }
 
         if intent == "contact":
             return cls._contact_response(session_id, user_language, chat_history)
-
-        responses = responses_fr if user_language == "fr" else responses_en
 
         return {
             "answer": responses[intent],
