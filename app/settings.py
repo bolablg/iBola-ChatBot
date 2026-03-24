@@ -23,7 +23,7 @@ class LLMSettings(BaseSettings):
 
     model_config = SettingsConfigDict(env_prefix="LLM_")
 
-    model_name: str = "gemini-2.5-pro"
+    model_name: str = "gemini-2.5-flash"
     guardrail_temperature: float = 0.0
     grading_temperature: float = 0.0
     rewrite_temperature: float = 0.3
@@ -120,7 +120,7 @@ class AppSettings(BaseSettings):
 
     # --- Languages ---
     supported_languages: List[str] = Field(
-        default=["en", "fr", "es", "de", "it", "pt", "ru", "zh", "ja", "ko"],
+        default=["en"],
     )
 
     # --- Contact ---

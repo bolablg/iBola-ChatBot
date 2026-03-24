@@ -47,7 +47,7 @@ class LearningAgent:
 
     def __init__(self):
         self.llm = ChatGoogleGenerativeAI(
-            model="gemini-2.5-pro",
+            model="gemini-2.5-flash",
             temperature=0.8,
             google_api_key=config.GEMINI_API_KEY,
         )  # Slightly higher temperature for creative advice

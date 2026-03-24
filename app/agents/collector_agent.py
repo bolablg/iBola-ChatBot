@@ -29,6 +29,8 @@ import config
 from app.services.google_chat_alert import google_chat_alert
 
 logger = logging.getLogger("ibola.collector")
+_COLLECTOR_LLM_TIMEOUT_SECONDS = 10.0
+_COLLECTOR_LLM_MAX_RETRIES = 1
 
 
 # ---------------------------------------------------------------------------
@@ -192,9 +194,12 @@ class CollectorAgent:
 
     def __init__(self):
         self.llm = ChatGoogleGenerativeAI(
-            model="gemini-2.5-pro",
+            model="gemini-2.5-flash",
             temperature=0.0,
             google_api_key=config.GEMINI_API_KEY,
+            timeout=_COLLECTOR_LLM_TIMEOUT_SECONDS,
+            max_retries=_COLLECTOR_LLM_MAX_RETRIES,
+            max_output_tokens=256,
         )
         self.analysis_llm = self.llm.with_structured_output(ConversationAnalysis)
         self.extraction_llm = self.llm.with_structured_output(LeadExtraction)

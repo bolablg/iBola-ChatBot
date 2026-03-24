@@ -125,7 +125,7 @@ def get_education_retriever():
         content = doc.page_content.lower()
         metadata = doc.metadata
 
-        # Education keywords
+        # Education keywords (includes formal + continuous learning)
         edu_keywords = [
             "master",
             "bachelor",
@@ -144,6 +144,15 @@ def get_education_retriever():
             "academic",
             "thesis",
             "dissertation",
+            "certification",
+            "bootcamp",
+            "course",
+            "coursera",
+            "udemy",
+            "learning",
+            "certificate",
+            "professional development",
+            "training",
         ]
 
         # Professional keywords to exclude
@@ -173,14 +182,23 @@ def get_education_retriever():
         edu_score = sum(1 for keyword in edu_keywords if keyword in content)
         prof_score = sum(1 for keyword in prof_keywords if keyword in content)
 
-        # Prioritize bachelor's degree information
-        if "bachelor" in content or "College of Economics & Management" in content:
+        # Always include formal degrees and certifications
+        if any(
+            kw in content
+            for kw in [
+                "bachelor",
+                "master",
+                "degree",
+                "certification",
+                "bootcamp",
+                "course",
+                "professional development",
+            ]
+        ):
             return True
 
         # Include if education score > professional score
-        return edu_score > prof_score or any(
-            keyword in content for keyword in ["master", "university", "degree"]
-        )
+        return edu_score > prof_score
 
     # Create a custom retriever that filters results
     class EducationRetriever(BaseRetriever):
