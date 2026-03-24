@@ -59,15 +59,23 @@ class AgenticRAGService:
 
         session = self.session_data[session_id]
 
-        welcome_intent = self._detect_welcome_intent(user_input)
-        if welcome_intent:
-            return self._welcome_prompt_response(
-                intent=welcome_intent,
-                session_id=session_id,
-                user_language=user_language,
-                chat_history=chat_history,
-            )
+        # Deterministic fast-path only on the FIRST message in a session.
+        # Follow-ups go through the agentic pipeline so the LLM can see
+        # conversation context and give relevant, contextual answers.
+        is_first_message = len(chat_history) == 0
 
+        if is_first_message:
+            welcome_intent = self._detect_welcome_intent(user_input)
+            if welcome_intent:
+                return self._welcome_prompt_response(
+                    intent=welcome_intent,
+                    session_id=session_id,
+                    user_language=user_language,
+                    chat_history=chat_history,
+                )
+
+        # Contact and opportunity intents always trigger (even in follow-ups)
+        # because they're actionable business intents, not knowledge questions.
         opportunity_intent = self._detect_opportunity_intent(user_input)
         if opportunity_intent:
             return self._opportunity_response(
