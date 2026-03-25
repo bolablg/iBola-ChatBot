@@ -53,12 +53,22 @@
             border-radius: 50%;
             background: ${config.accent};
             border: none;
+            padding: 0;
+            margin: 0;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             box-shadow: 0 4px 16px rgba(0,0,0,0.16);
             transition: transform 200ms ease, box-shadow 200ms ease;
+        }
+
+        #ibola-chat-widget .ibola-trigger:focus-visible {
+            outline: 2px solid ${config.accent};
+            outline-offset: 2px;
         }
 
         #ibola-chat-widget .ibola-trigger:hover {
