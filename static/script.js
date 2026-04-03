@@ -27,6 +27,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let msgIndex = 0;
     let hasUserSent = false;
 
+    // --- Analytics helper ---
+    const trackEvent = (name, params) => {
+        if (typeof gtag === 'function') gtag('event', name, params);
+    };
+
     // --- Theme ---
     const applyTheme = (theme) => {
         const isDark = theme === 'dark';
@@ -40,7 +45,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (themeToggle) {
         themeToggle.addEventListener('click', () => {
-            applyTheme(document.body.classList.contains('dark-mode') ? 'light' : 'dark');
+            const newTheme = document.body.classList.contains('dark-mode') ? 'light' : 'dark';
+            applyTheme(newTheme);
+            trackEvent('theme_toggle', { theme: newTheme });
         });
     }
 
@@ -257,6 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (sender === 'user' && !hasUserSent) {
             hasUserSent = true;
             hideWelcomeScreen();
+            trackEvent('chat_started', { session_id: sessionId, is_embed: isEmbedMode });
         }
 
         const { row, content } = createMessageRow(sender);
@@ -322,6 +330,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         container.querySelectorAll('.feedback-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
+        trackEvent('feedback_given', {
+            score: score,
+            message_index: idx,
+            session_id: sessionId,
+            type: score > 0 ? 'thumbs_up' : 'thumbs_down',
+        });
 
         setTimeout(() => {
             while (container.firstChild) container.removeChild(container.firstChild);
@@ -359,6 +373,11 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.title = action.description || '';
 
             btn.addEventListener('click', () => {
+                trackEvent('action_button_clicked', {
+                    action_type: action.type,
+                    action_text: action.text,
+                    session_id: sessionId,
+                });
                 if (action.type === 'contact_booking') {
                     window.open(action.url, 'booking', 'width=600,height=700,scrollbars=yes');
                     sendContactAlert('booking_request', action.session_id, action.chat_history);
@@ -398,6 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
         userInput.disabled = true;
         userInput.placeholder = 'Chat ended';
         sendBtn.disabled = true;
+        trackEvent('chat_ended', { session_id: sessionId });
     };
 
     // --- Textarea Auto-Grow ---
@@ -423,6 +443,11 @@ document.addEventListener('DOMContentLoaded', () => {
         userInput.value = '';
         userInput.style.height = 'auto';
         showTyping();
+        trackEvent('message_sent', {
+            message_length: text.length,
+            session_id: sessionId,
+            is_embed: isEmbedMode,
+        });
 
         try {
             const res = await fetch('/ask-agentic', {
@@ -443,12 +468,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data.answer) await typeMessage(data.answer, 'bot');
                 if (data.actions && data.actions.length > 0) addActionButtons(data.actions);
                 if (data.should_end_chat && !chatEnded) endChat();
+                trackEvent('bot_response', {
+                    intent: data.intent || 'unknown',
+                    has_actions: !!(data.actions && data.actions.length > 0),
+                    session_id: sessionId,
+                });
             } else {
                 addMessage('Something went wrong. Please try again.', 'bot', { noFeedback: true });
+                trackEvent('bot_error', { status: res.status });
             }
         } catch (err) {
             hideTyping();
             addMessage('Connection error. Please check your internet and try again.', 'bot', { noFeedback: true });
+            trackEvent('bot_error', { error: 'network' });
         }
     });
 
@@ -491,6 +523,7 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.classList.add('suggestion-card');
             btn.textContent = text;
             btn.addEventListener('click', () => {
+                trackEvent('suggestion_clicked', { suggestion_text: text });
                 userInput.value = text;
                 chatForm.dispatchEvent(new Event('submit', { cancelable: true }));
             });
