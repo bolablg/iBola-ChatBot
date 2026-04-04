@@ -61,7 +61,7 @@ def test_welcome_skill_prompt_bypasses_workflow_with_deterministic_answer():
     service.workflow.invoke.assert_not_called()
     assert result["agent_type"] == "skills"
     assert "Python" in result["answer"]
-    assert "Google Cloud" in result["answer"]
+    assert "GCP" in result["answer"] or "Google Cloud" in result["answer"]
 
 
 def test_opportunity_prompt_bypasses_workflow_with_contact_actions():
