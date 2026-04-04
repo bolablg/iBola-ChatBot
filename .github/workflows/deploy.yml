@@ -291,7 +291,7 @@ jobs:
             --platform managed \
             --region us-central1 \
             --memory 2Gi \
-            --min-instances 1 \
+            --min-instances 0 \
             --allow-unauthenticated \
             --set-secrets="GEMINI_API_KEY=ibola-gemini-api-key:latest" \
             --set-secrets="GCHAT_WEBHOOK_URL=ibola-gchat-webhook-url:latest" \

@@ -157,11 +157,17 @@
 
     // Toggle
     let isOpen = false;
+    const trackEmbed = (name, params) => {
+        if (typeof gtag === 'function') gtag('event', name, params);
+    };
     const toggle = () => {
         isOpen = !isOpen;
         trigger.classList.toggle('open', isOpen);
         frameContainer.classList.toggle('visible', isOpen);
         trigger.setAttribute('aria-label', isOpen ? 'Close chat' : 'Open chat');
+        trackEmbed(isOpen ? 'chat_widget_opened' : 'chat_widget_closed', {
+            page_url: window.location.href,
+        });
 
         // Lazy-load iframe on first open
         if (isOpen && !iframe.src) {
