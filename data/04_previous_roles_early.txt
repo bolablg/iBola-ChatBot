@@ -1,0 +1,47 @@
+BOLAJI BALOGOUN — EARLY CAREER
+
+---
+
+DATA SCIENTIST — RINTIO (July 2018 – May 2019)
+
+Rintio is a technology company focused on precision agriculture. Bolaji was in charge of developing analytics and data science products to feed a smart application for agricultural guidance, and supported outsourcing clients in their data transformation.
+
+Key achievements:
+- Built and maintained a big data stack combining Hadoop data lake, Spark cluster, and ElasticSearch to store and transform diverse agricultural data into insights.
+- Engineered agricultural data scraping (weather, crops, soil, yields) and designed surveys to collect additional market information.
+- Built crop yield forecast models using statistical inference and multiple regression algorithms for predictive decision-making.
+- Delivered interactive dashboards using Kibana and Apache Superset for performance reporting.
+- Provided data consulting to outsourcing clients: assessed advanced analytics needs and crafted customized training materials with demos and hands-on labs.
+
+Tools: Python, Apache Spark, Hadoop, ElasticSearch, Kibana, Apache Superset, SQL, GitLab.
+
+---
+
+BIG DATA BOOTCAMP — RINTIO (March – June 2018)
+
+Bolaji transitioned from Statistics to Data Science through this intensive Big Data Bootcamp at Rintio. He gained hands-on experience in Data Engineering and Machine Learning, working with Apache Spark, Hive, Python, SQL, Hadoop, ElasticSearch, Kibana, Apache Superset, and GitLab. The bootcamp included a real-world agricultural data project called "Duniya Data."
+
+---
+
+INTERN — INSAE, BENIN NATIONAL INSTITUTE OF STATISTICS (September 2017 – February 2018)
+
+INSAE is Benin's official national statistics agency. Bolaji interned there after completing his Master's coursework.
+
+Key achievements:
+- Trained agency staff in advanced analytics by crafting and delivering hands-on training on analytics tools, including R statistical analysis.
+- Enriched public research financing data through a structured data collection campaign on survey funding across Benin's public institutions.
+
+Tools: R, SPSS, survey design methodologies.
+
+---
+
+INTERN — LE PENTAGRUEL (2013)
+
+Le Pentagruel is a business in Benin where Bolaji completed his first professional internship after earning his Bachelor's degree.
+
+Key achievements:
+- Designed and conducted a customer satisfaction survey in collaboration with the Sales team.
+- Built a structured and cleaned customer feedback database.
+- Increased the Net Promoter Score by 17 and sales by 11% in one quarter by powering management with actionable insights from analyzed data.
+
+Tools: SPSS, Microsoft Excel, survey design.
