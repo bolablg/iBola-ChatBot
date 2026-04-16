@@ -60,6 +60,17 @@ class GradeDocuments(BaseModel):
     reasoning: str = Field(default="", description="Brief explanation.")
 
 
+class BatchGradeResult(BaseModel):
+    """Structured output for batch document grading — temperature 0.0."""
+
+    relevant_indices: List[int] = Field(
+        description=(
+            "List of 0-based document indices that are relevant to the query. "
+            "Empty list if none are relevant."
+        ),
+    )
+
+
 class QueryRewrite(BaseModel):
     """Structured output for query rewriting — temperature 0.3."""
 
