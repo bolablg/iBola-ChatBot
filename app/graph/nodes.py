@@ -13,11 +13,11 @@ from typing import Any, Dict, List
 
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_google_genai import ChatGoogleGenerativeAI
 
 import config
 from app.graph.state import (
     AgentCategory,
+    BatchGradeResult,
     GeneratedAnswer,
     GradeDocuments,
     GuardrailScoring,
@@ -48,13 +48,19 @@ class _SyncGeminiLLM:
     """
 
     def __init__(
-        self, model: str, api_key: str, temperature: float, max_output_tokens: int
+        self,
+        model: str,
+        api_key: str,
+        temperature: float,
+        max_output_tokens: int,
+        thinking_budget: int = 0,
     ):
         from google import genai
 
         self._model = model
         self._temperature = temperature
         self._max_output_tokens = max_output_tokens
+        self._thinking_budget = thinking_budget
         self._client = genai.Client(api_key=api_key)
 
     def invoke(self, messages, **kwargs):
@@ -76,7 +82,7 @@ class _SyncGeminiLLM:
             config={
                 "temperature": self._temperature,
                 "max_output_tokens": self._max_output_tokens,
-                "thinking_config": {"thinking_budget": 0},
+                "thinking_config": {"thinking_budget": self._thinking_budget},
             },
         )
         return AIMessage(content=response.text or "")
@@ -115,16 +121,18 @@ class _StructuredOutput:
                 response_schema=self._schema,
                 temperature=self._llm._temperature,
                 max_output_tokens=self._llm._max_output_tokens,
-                thinking_config=genai.types.ThinkingConfig(thinking_budget=0),
+                thinking_config=genai.types.ThinkingConfig(
+                    thinking_budget=self._llm._thinking_budget
+                ),
             ),
         )
         data = _json.loads(response.text)
         return self._schema(**data)
 
 
-def _get_llm(temperature: float = 0.0):
+def _get_llm(temperature: float = 0.0, thinking_budget: int = 0):
     """Return a sync Gemini LLM (no async event-loop issues)."""
-    key = f"llm-{temperature}"
+    key = f"llm-{temperature}-think{thinking_budget}"
     if key not in _llms:
         with _lock:
             if key not in _llms:
@@ -136,6 +144,7 @@ def _get_llm(temperature: float = 0.0):
                     api_key=config.GEMINI_API_KEY,
                     temperature=temperature,
                     max_output_tokens=_LLM_MAX_OUTPUT_TOKENS,
+                    thinking_budget=thinking_budget,
                 )
     return _llms[key]
 
@@ -254,11 +263,51 @@ def guardrail_node(state: dict) -> dict:
 # ===================================================================
 
 
+_VAGUE_PATTERNS = frozenset(
+    {
+        "tell me more",
+        "more details",
+        "go on",
+        "continue",
+        "elaborate",
+        "expand on that",
+        "what about that",
+        "explain further",
+        "can you elaborate",
+        "more about that",
+        "more info",
+        "keep going",
+    }
+)
+
+
+def _is_vague_query(query: str) -> bool:
+    """Return True if the query is a vague follow-up that needs context."""
+    lower = query.lower().strip()
+    if len(lower.split()) <= 5:
+        return any(p in lower for p in _VAGUE_PATTERNS)
+    return False
+
+
+def _expand_vague_query(query: str, chat_history: list) -> str:
+    """Expand a vague follow-up with the last topic from chat history."""
+    if not chat_history:
+        return query
+    last_user_msg, last_bot_msg = chat_history[-1]
+    # Use the last user question as context seed
+    return f"{last_user_msg} — {query}"
+
+
 def retrieve_node(state: dict) -> dict:
     """Retrieve documents using resilient hybrid retrieval with lexical fallback."""
     category = state.get("category", AgentCategory.PROFESSIONAL)
     query = (state.get("rewritten_query") or state.get("query", "")).strip()
+    chat_history = state.get("chat_history", [])
     attempts = state.get("retrieval_attempts", 0)
+
+    # Expand vague follow-ups on the first attempt (before rewrite loop)
+    if attempts == 0 and _is_vague_query(query) and chat_history:
+        query = _expand_vague_query(query, chat_history)
 
     if not query:
         return {
@@ -315,27 +364,24 @@ def retrieve_node(state: dict) -> dict:
 # NODE: grade_documents
 # ===================================================================
 
-GRADE_PROMPT = ChatPromptTemplate.from_messages(
+BATCH_GRADE_PROMPT = ChatPromptTemplate.from_messages(
     [
         (
             "system",
             (
-                "You are a relevance grader. Given a user question and a document, "
-                "decide if the document contains information that helps answer the "
-                "question. Be generous — if the document is partially relevant, mark "
-                "it as relevant."
+                "You grade document relevance. Given a question and numbered "
+                "documents, return the indices (0-based) of documents that help "
+                "answer the question. Be generous — if a document is partially "
+                "relevant, include it. Return an empty list if none are relevant."
             ),
         ),
-        (
-            "human",
-            "Question: {query}\n\nDocument content:\n{doc_content}",
-        ),
+        ("human", "Question: {query}\n\nDocuments:\n{docs}"),
     ]
 )
 
 
 def grade_documents_node(state: dict) -> dict:
-    """Grade retrieved documents for relevance using a single batched LLM call."""
+    """Grade retrieved documents for relevance using structured output."""
     query = state.get("query", "")
     documents = state.get("documents", [])
     steps = list(state.get("reasoning_steps", []))
@@ -355,35 +401,16 @@ def grade_documents_node(state: dict) -> dict:
 
     try:
         llm = _get_llm(temperature=0.0)
-        batch_prompt = ChatPromptTemplate.from_messages(
-            [
-                (
-                    "system",
-                    "You grade document relevance. Given a question and numbered "
-                    "documents, return ONLY the numbers of relevant documents as a "
-                    "comma-separated list. Example: 0,2,4\n"
-                    "If none are relevant, return: none",
-                ),
-                ("human", "Question: {query}\n\nDocuments:\n{docs}"),
-            ]
+        structured_llm = llm.with_structured_output(BatchGradeResult)
+        result: BatchGradeResult = structured_llm.invoke(
+            BATCH_GRADE_PROMPT.format_messages(query=query, docs=doc_summaries)
         )
-        result = llm.invoke(
-            batch_prompt.format_messages(query=query, docs=doc_summaries)
-        )
-        answer = result.content.strip().lower()
 
-        if answer == "none":
-            graded = []
-        else:
-            indices = []
-            for part in answer.replace(" ", "").split(","):
-                try:
-                    idx = int(part)
-                    if 0 <= idx < len(documents):
-                        indices.append(idx)
-                except ValueError:
-                    continue
-            graded = [documents[i] for i in indices] if indices else documents[:3]
+        # Filter to valid indices only
+        valid_indices = [
+            idx for idx in result.relevant_indices if 0 <= idx < len(documents)
+        ]
+        graded = [documents[i] for i in valid_indices]
 
     except Exception:
         # Heuristic fallback: keep docs with substantial content
@@ -411,24 +438,39 @@ REWRITE_PROMPT = ChatPromptTemplate.from_messages(
                 "You are a query rewriter. The original query did not retrieve "
                 "enough relevant documents about Bolaji BALOGOUN. Rewrite it to be "
                 "more specific and likely to match content about his professional "
-                "experience, education, skills, community work, or blog."
+                "experience, education, skills, community work, or blog.\n\n"
+                "IMPORTANT: If the query is vague or uses pronouns (e.g. 'tell me "
+                "more', 'what about that'), use the chat history to understand what "
+                "the user is referring to and produce a self-contained query."
             ),
         ),
-        ("human", "Original query: {query}"),
+        (
+            "human",
+            "Chat history:\n{history}\n\nOriginal query: {query}",
+        ),
     ]
 )
 
 
 def rewrite_query_node(state: dict) -> dict:
-    """Rewrite the query for a better retrieval attempt."""
+    """Rewrite the query for a better retrieval attempt, using chat history."""
     query = state.get("query", "")
+    chat_history = state.get("chat_history", [])
     steps = list(state.get("reasoning_steps", []))
+
+    # Format recent history so the rewriter can resolve pronouns / context
+    history_str = "(none)"
+    if chat_history:
+        recent = chat_history[-3:]
+        history_str = "\n".join(
+            f"User: {h[0][:80]}\nAssistant: {h[1][:80]}" for h in recent
+        )
 
     try:
         llm = _get_llm(temperature=0.3)
         structured_llm = llm.with_structured_output(QueryRewrite)
         result: QueryRewrite = structured_llm.invoke(
-            REWRITE_PROMPT.format_messages(query=query)
+            REWRITE_PROMPT.format_messages(query=query, history=history_str)
         )
         new_query = result.rewritten_query
 
@@ -510,8 +552,15 @@ GENERATE_PROMPT = ChatPromptTemplate.from_messages(
 )
 
 
+_GENERATE_THINKING_BUDGET = 256
+
+
 def generate_node(state: dict) -> dict:
-    """Generate the final answer from graded documents."""
+    """Generate the final answer from graded documents.
+
+    Uses a thinking budget to improve answer coherence on nuanced questions,
+    and structured output (GeneratedAnswer) for LLM self-assessed confidence.
+    """
     query = state.get("query", "")
     category = state.get("category", AgentCategory.PROFESSIONAL)
     graded_docs = state.get("graded_documents", [])
@@ -538,8 +587,9 @@ def generate_node(state: dict) -> dict:
     )
 
     try:
-        llm = _get_llm(temperature=0.7)
-        response = llm.invoke(
+        llm = _get_llm(temperature=0.7, thinking_budget=_GENERATE_THINKING_BUDGET)
+        structured_llm = llm.with_structured_output(GeneratedAnswer)
+        result: GeneratedAnswer = structured_llm.invoke(
             GENERATE_PROMPT.format_messages(
                 system_prompt=system_prompt,
                 reply_language=reply_language,
@@ -548,8 +598,8 @@ def generate_node(state: dict) -> dict:
                 query=query,
             )
         )
-        answer = response.content
-        confidence = 0.85 if graded_docs else 0.5
+        answer = result.answer
+        confidence = result.confidence
 
     except Exception as exc:
         logger.error("Generate node error: %s", exc)
@@ -563,7 +613,7 @@ def generate_node(state: dict) -> dict:
         ReasoningStep(
             node="generate",
             action="answered",
-            detail=f"docs_used={len(graded_docs)} confidence={confidence}",
+            detail=f"docs_used={len(graded_docs)} confidence={confidence:.2f}",
         )
     )
 
