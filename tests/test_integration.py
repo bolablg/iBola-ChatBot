@@ -27,7 +27,9 @@ class TestCriticalIntegration:
         result = response.json()
         assert "answer" in result
         assert isinstance(result.get("agent_type"), str)
-        assert len(result["answer"]) > 0, "Chat response must contain a non-empty answer"
+        assert (
+            len(result["answer"]) > 0
+        ), "Chat response must contain a non-empty answer"
 
     def test_welcome_endpoint_works(self, test_client):
         """CRITICAL: Test that the welcome endpoint functions properly."""
