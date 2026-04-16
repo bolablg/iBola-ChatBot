@@ -2,15 +2,17 @@ BOLAJI BALOGOUN — CAREER OVERVIEW & TIMELINE
 
 Bolaji has over a decade of professional experience in data science, data engineering, analytics, and AI, progressing from statistician to Head of Data. Below is his complete career timeline, most recent first.
 
+CURRENT EMPLOYER: Bolaji is currently employed at Gozem as Head of Data & Analytics (October 2022 – Present). His latest role, his current role, and his present employer are all the same: Head of Data & Analytics at Gozem.
+
 ---
 
-CURRENT ROLE: Head of Data & Analytics — Gozem (October 2022 – Present)
-Bolaji currently leads the Data & Analytics function at Gozem, a Singapore-headquartered super app operating across 6 countries in French-speaking Africa (Togo, Benin, Cameroon, Congo, Gabon, and Singapore). He manages a team of 14+ data professionals. He designed and built the Gozem Data Hub from scratch — the company's centralized platform for data products, AI tools, and automation. Key achievements: reduced Google Cloud costs by 42%, scaled the team from small to 14+, and established data governance frameworks across all business units. Tools: Python, BigQuery, Apache Airflow, Google Cloud Platform, Docker, Dataform, Vertex AI, Looker Studio, Stitch Data.
+CURRENT ROLE / LATEST ROLE / PRESENT POSITION: Head of Data & Analytics — Gozem (October 2022 – Present)
+This is Bolaji's current job. He is currently working at Gozem. He currently leads the Data & Analytics function at Gozem, a Singapore-headquartered super app operating across 6 countries in French-speaking Africa (Togo, Benin, Cameroon, Congo, Gabon, and Singapore). He manages a team of 14+ data professionals. He designed and built the Gozem Data Hub from scratch — the company's centralized platform for data products, AI tools, and automation. Key achievements: reduced Google Cloud costs by 42%, scaled the team from small to 14+, and established data governance frameworks across all business units. Tools: Python, BigQuery, Apache Airflow, Google Cloud Platform, Docker, Dataform, Vertex AI, Looker Studio, Stitch Data.
 
 ---
 
 PREVIOUS ROLE: Global Data Analyst — Gozem (November 2019 – September 2022)
-Before his promotion to Head of Data, Bolaji served as Global Data Analyst at Gozem. He led the migration of Gozem's data infrastructure from on-premises systems to Google Cloud, deploying BigQuery as the central data warehouse within a single quarter. He built and led a distributed analytics team of 4 people, automated KPI reporting for management, managed the fraud patterns database, and supported marketing with user segmentation and cohort analysis. This role was where Bolaji taught himself GCP, BigQuery, and cloud data engineering through self-directed online courses.
+Before his promotion to Head of Data at the same company, Bolaji served as Global Data Analyst at Gozem. He led the migration of Gozem's data infrastructure from on-premises systems to Google Cloud, deploying BigQuery as the central data warehouse within a single quarter. He built and led a distributed analytics team of 4 people, automated KPI reporting for management, managed the fraud patterns database, and supported marketing with user segmentation and cohort analysis. This role was where Bolaji taught himself GCP, BigQuery, and cloud data engineering through self-directed online courses.
 
 ---
 
@@ -19,8 +21,8 @@ At Rintio, Bolaji developed analytics and data science products for a precision 
 
 ---
 
-PREVIOUS ROLE: Data Management Consultant — International Trade Centre (ITC), United Nations (2023 – 2024)
-Alongside his role at Gozem, Bolaji consulted for the ITC (a joint UN/WTO agency) as part of the Netherlands Trust Fund V program. He guided 15 startups across the ECOWAS zone in data strategy, developed training materials on data management, and provided one-on-one coaching to 5 startups.
+CONCURRENT CONSULTING ENGAGEMENT (side work alongside Gozem, NOT his primary or latest employment role): Data Management Consultant — International Trade Centre (ITC), United Nations (2023 – 2024)
+This was a part-time consulting contract performed ALONGSIDE Bolaji's full-time employment at Gozem, not a separate employment role. It is not his "latest role" or "current role" — those refer to Head of Data at Gozem. As a consultant for the ITC (a joint UN/WTO agency), under the Netherlands Trust Fund V program, he guided 15 startups across the ECOWAS zone in data strategy, developed training materials on data management, and provided one-on-one coaching to 5 startups.
 
 ---
 
