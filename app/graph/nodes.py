@@ -13,7 +13,6 @@ from typing import Any, Dict, List
 
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_google_genai import ChatGoogleGenerativeAI
 
 import config
 from app.graph.state import (

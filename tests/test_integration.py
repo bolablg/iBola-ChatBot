@@ -12,23 +12,22 @@ class TestCriticalIntegration:
     def test_basic_chat_functionality(self, test_client):
         """CRITICAL: Test that the chatbot can receive and respond to basic messages."""
         chat_data = {
-            "user_input": "Hi",  # Simple input that should work
+            "user_input": "Hi",
             "session_id": "critical_test_001",
             "user_language": "en",
         }
 
         response = test_client.post("/chat", json=chat_data)
 
-        # Accept both successful responses and internal errors
-        # The important thing is the endpoint exists and processes requests
-        assert response.status_code in [200, 500]
+        assert response.status_code == 200, (
+            f"Chat endpoint returned {response.status_code}, expected 200. "
+            f"Body: {response.text[:300]}"
+        )
 
-        # If successful, check the response format
-        if response.status_code == 200:
-            result = response.json()
-            assert "answer" in result
-            assert isinstance(result.get("agent_type"), str)
-            assert len(result["answer"]) > 0  # Must have some response
+        result = response.json()
+        assert "answer" in result
+        assert isinstance(result.get("agent_type"), str)
+        assert len(result["answer"]) > 0, "Chat response must contain a non-empty answer"
 
     def test_welcome_endpoint_works(self, test_client):
         """CRITICAL: Test that the welcome endpoint functions properly."""
