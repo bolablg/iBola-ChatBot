@@ -44,26 +44,25 @@ class TestCriticalAPI:
 
     def test_chat_endpoint_basic(self):
         """CRITICAL: Test chat endpoint accepts requests and returns proper format."""
-        # Test with a simple input that should work without complex processing
         chat_data = {
-            "user_input": "Hi",  # Very simple input
+            "user_input": "Hi",
             "session_id": "api_test_002",
             "user_language": "en",
         }
 
-        # For now, just test that endpoint accepts the request
-        # We accept both 200 (success) and 500 (service issues) as valid responses
-        # The important thing is that the endpoint exists and processes the request
         response = client.post("/chat", json=chat_data)
 
-        # Accept both successful responses and internal errors (which indicate the endpoint is working)
-        assert response.status_code in [200, 500]
+        assert response.status_code == 200, (
+            f"Chat endpoint returned {response.status_code}, expected 200. "
+            f"Body: {response.text[:300]}"
+        )
 
-        # If successful, check response format
-        if response.status_code == 200:
-            result = response.json()
-            assert "answer" in result
-            assert "agent_type" in result
+        result = response.json()
+        assert "answer" in result
+        assert "agent_type" in result
+        assert (
+            len(result["answer"]) > 0
+        ), "Chat response must contain a non-empty answer"
 
 
 # ===== END OF CRITICAL API TESTS =====

@@ -22,11 +22,18 @@ logger = logging.getLogger("ibola.graph")
 
 
 class AgenticRAGService:
-    """Wraps the LangGraph agentic RAG workflow with session management."""
+    """Wraps the LangGraph agentic RAG workflow with session management.
+
+    NOTE: Session state is in-memory only.  With Cloud Run min-instances=0,
+    cold starts wipe all session data (redirect counts, lead capture flows).
+    This is an accepted tradeoff for cost savings.  If session continuity
+    becomes critical, migrate ``session_data`` to Firestore or Redis.
+    """
 
     def __init__(self):
         self.workflow = create_rag_workflow()
         # Per-session state (redirect counts, language, etc.)
+        # WARNING: in-memory — lost on cold start / scale-to-zero.
         self.session_data: Dict[str, Dict[str, Any]] = {}
 
     # ------------------------------------------------------------------
@@ -336,7 +343,20 @@ class AgenticRAGService:
 
     @staticmethod
     def _detect_welcome_intent(message: str) -> Optional[str]:
-        lower = message.lower()
+        """Match simple first-message prompts to deterministic fast-paths.
+
+        Only triggers on SHORT queries (≤10 words) to avoid hijacking
+        real multi-word questions like "How has Bolaji combined his data
+        engineering skills with AI leadership?" which contain keywords
+        like "skills" but deserve a full RAG answer.
+        """
+        lower = message.lower().strip()
+        word_count = len(lower.split())
+
+        # Long queries are real questions — let the RAG pipeline handle them
+        if word_count > 10:
+            return None
+
         if any(kw in lower for kw in ["contact", "email", "meeting"]):
             return "contact"
         if any(kw in lower for kw in ["skill", "skills", "technology"]):
@@ -473,23 +493,79 @@ class AgenticRAGService:
 
     @staticmethod
     def _detect_opportunity_intent(message: str) -> bool:
+        """Detect recruiting / job-offer intent.
+
+        Uses two tiers:
+        - Strong signals (multi-word phrases): match unconditionally.
+        - Weak signals (single words like "role", "job"): only match in
+          short messages (≤10 words) to avoid false positives on questions
+          like "What was Bolaji's role at Gozem?"
+        """
         lower = message.lower()
-        signals = [
+        word_count = len(lower.split())
+
+        import re as _re
+
+        # Strong signals — multi-word phrases that clearly indicate
+        # recruiting / business intent. Match regardless of query length.
+        strong_signals = [
             "hiring",
-            "hire",
-            "job",
-            "role",
-            "position",
-            "opportunity",
-            "opening",
+            "hire you",
+            "hire bolaji",
             "recruit",
             "recruiter",
             "join our team",
             "work with us",
-            "collaboration",
             "consulting project",
+            "job opening",
+            "job opportunity",
+            "open position",
+            "have a role",
+            "have a position",
+            "have an opportunity",
+            "looking to hire",
         ]
-        return any(signal in lower for signal in signals)
+        if any(signal in lower for signal in strong_signals):
+            return True
+
+        # Weak signals — single words that overlap with career questions.
+        # Only match in short non-question messages (≤8 words) where the
+        # user is likely pitching, not asking about Bolaji's career.
+        question_starters = (
+            "what",
+            "how",
+            "when",
+            "where",
+            "who",
+            "which",
+            "does",
+            "did",
+            "is",
+            "are",
+            "was",
+            "were",
+            "can",
+            "could",
+            "tell",
+            "describe",
+            "explain",
+        )
+        first_word = lower.split()[0] if lower.split() else ""
+        is_question = first_word in question_starters or lower.rstrip().endswith("?")
+
+        if word_count <= 8 and not is_question:
+            weak_patterns = [
+                r"\bjob\b",
+                r"\brole\b",
+                r"\bposition\b",
+                r"\bopportunity\b",
+                r"\bopening\b",
+                r"\bcollaboration\b",
+            ]
+            if any(_re.search(p, lower) for p in weak_patterns):
+                return True
+
+        return False
 
     @staticmethod
     def _is_contact_request(message: str) -> bool:
@@ -510,7 +586,7 @@ class AgenticRAGService:
         lower = message.lower()
         if "contact" in lower:
             return "email"
-        if any(w in lower for w in ["email", "mail", "write"]):
+        if any(w in lower for w in ["email", "mail", "write to bolaji", "write him"]):
             return "email"
         if any(
             w in lower for w in ["meeting", "appointment", "book", "schedule", "call"]

@@ -1,0 +1,34 @@
+BOLAJI BALOGOUN — CURRENT ROLE: HEAD OF DATA & ANALYTICS AT GOZEM
+
+Status: CURRENT ROLE (October 2022 – Present)
+Company: Gozem (Singapore-headquartered, French-speaking Africa's leading super app)
+Title: Head of Data & Analytics for the Group
+Location: Operations across Singapore, Togo, Benin, Cameroon, Congo, and Gabon
+Team size: 14+ data professionals across Sub-Saharan Africa
+
+---
+
+WHAT GOZEM DOES:
+Gozem is a super app serving millions across ride-hailing, e-commerce, delivery, and financial services in French-speaking Africa. Bolaji leads all data and analytics for the group.
+
+---
+
+KEY ACHIEVEMENTS SUMMARY:
+
+- Built the Gozem Data Hub from scratch — a centralized platform for data products, AI tools, automation, and self-service analytics serving hundreds of employees daily across all countries.
+- Scaled the data team from small to 14+ across 6 countries, managing recruitment, technical interviews, onboarding (30/60/90 day plans), mentorship, and continuous learning.
+- Reduced Google Cloud costs by 42.57% in Q2 2024 through optimized data modeling, partitioning, and query patterns in BigQuery.
+- Established data governance and quality frameworks with automated testing, audit frameworks, and a data quality observability system (Asana + Looker Studio + Airflow).
+- Integrated AI and ML into products: recommendation systems, A/B testing, real-time monitoring, LLM-powered document processing, and a RAG customer support chatbot.
+- Redesigned freelancer activity and financing systems, enabling AI-driven fraud screening and reducing payment processing time by 7x.
+- Built real-time market monitoring for transportation operations with sub-minute refresh, GPS-based demand mapping, and automated alerts.
+- Designed fintech data infrastructure for Gozem Money including real-time transaction alerts, a fintech data warehouse, and regulatory reporting.
+- Led the deployment of a self-service no-code data exploration platform enabling non-technical users to query and visualize data independently.
+- Built an automated invoice data extraction pipeline using LLM-powered OCR, reducing manual processing across multi-country finance operations.
+
+See the dedicated Gozem internal projects file for detailed situation/action/tools/outcome descriptions of each project.
+
+---
+
+TOOLS USED IN THIS ROLE:
+Python, BigQuery (advanced SQL), Apache Airflow, Google Cloud Platform (GCS, Dataform, Vertex AI, DataFlow, Cloud Run, Cloud Build, Cloud Logging, Artifact Registry), Docker, Looker Studio, Metabase, Stitch Data, Asana, MongoDB, Git/GitLab, Google Chat API, LangChain, LangGraph, Google Gemini.

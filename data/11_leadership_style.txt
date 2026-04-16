@@ -1,0 +1,46 @@
+BOLAJI BALOGOUN — LEADERSHIP STYLE & MANAGEMENT PHILOSOPHY
+
+---
+
+LEADERSHIP PHILOSOPHY: "LEAD WITH CARE"
+
+Bolaji's leadership approach centers on genuine care for team members — prioritizing both professional growth and mental well-being. He has managed multi-cultural data science teams for over 5 years and believes this approach leads to exceptional results, fosters innovation, and helps teams overcome complex challenges collaboratively.
+
+---
+
+MANAGEMENT EXPERIENCE:
+
+At Gozem, Bolaji manages a team of 14+ data professionals distributed across 6 countries in Sub-Saharan Africa (Togo, Benin, Cameroon, Congo, Gabon) and Singapore.
+
+His management approach includes:
+- Recruiting and building distributed teams across multiple countries and cultures.
+- Introducing effective processes, mentorship programs, and continuous learning initiatives.
+- Leveraging LLM tools to boost team productivity and project delivery speed.
+- Wearing multiple hats when needed: data architect, data engineer, analytics engineer, and data governance specialist.
+- Proactively seeking solutions and enrolling in specialized courses to acquire skills for new challenges.
+
+---
+
+CROSS-FUNCTIONAL COLLABORATION:
+
+Bolaji excels at working across teams to turn messy data into strategic assets. A concrete example:
+
+In Gozem's fintech division, the team was offering installment-based vehicle financing to drivers, but the data was in disarray. Bolaji:
+1. Collaborated closely with business and operations teams to understand their day-to-day struggles and goals.
+2. Effectively managed and transformed the complex financing data.
+3. Extracted accurate and actionable insights for decision-making.
+4. Worked with the development team to improve data collection methods.
+This cross-team collaboration turned chaotic data into a strategic asset and improved decision-making across the company.
+
+---
+
+TECHNICAL LEADERSHIP UNDER PRESSURE:
+
+When Gozem needed scalable data infrastructure and had no dedicated data engineer, Bolaji stepped up. He:
+1. Evaluated options between building an open-source stack vs. a cloud-first approach.
+2. Chose a cloud-first approach (GCP) to minimize maintenance overhead.
+3. Self-taught BigQuery, Cloud Storage, and related tools through online courses.
+4. Deployed a fully functional cloud-based analytics infrastructure within a single quarter.
+5. Simultaneously served as data analyst, cloud data engineer, analytics engineer, and data governance specialist.
+
+This willingness to learn and deliver under pressure is a defining trait of Bolaji's leadership style.

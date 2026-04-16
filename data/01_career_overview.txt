@@ -1,0 +1,38 @@
+BOLAJI BALOGOUN — CAREER OVERVIEW & TIMELINE
+
+Bolaji has over a decade of professional experience in data science, data engineering, analytics, and AI, progressing from statistician to Head of Data. Below is his complete career timeline, most recent first.
+
+---
+
+CURRENT ROLE: Head of Data & Analytics — Gozem (October 2022 – Present)
+Bolaji currently leads the Data & Analytics function at Gozem, a Singapore-headquartered super app operating across 6 countries in French-speaking Africa (Togo, Benin, Cameroon, Congo, Gabon, and Singapore). He manages a team of 14+ data professionals. He designed and built the Gozem Data Hub from scratch — the company's centralized platform for data products, AI tools, and automation. Key achievements: reduced Google Cloud costs by 42%, scaled the team from small to 14+, and established data governance frameworks across all business units. Tools: Python, BigQuery, Apache Airflow, Google Cloud Platform, Docker, Dataform, Vertex AI, Looker Studio, Stitch Data.
+
+---
+
+PREVIOUS ROLE: Global Data Analyst — Gozem (November 2019 – September 2022)
+Before his promotion to Head of Data, Bolaji served as Global Data Analyst at Gozem. He led the migration of Gozem's data infrastructure from on-premises systems to Google Cloud, deploying BigQuery as the central data warehouse within a single quarter. He built and led a distributed analytics team of 4 people, automated KPI reporting for management, managed the fraud patterns database, and supported marketing with user segmentation and cohort analysis. This role was where Bolaji taught himself GCP, BigQuery, and cloud data engineering through self-directed online courses.
+
+---
+
+PREVIOUS ROLE: Data Scientist — Rintio (July 2018 – May 2019)
+At Rintio, Bolaji developed analytics and data science products for a precision agriculture application. He implemented a big data stack combining Hadoop, Spark, and ElasticSearch, and built crop yield forecasting models using statistical inference and regression algorithms. He delivered insights through interactive dashboards using Kibana and Apache Superset, and provided data consulting to outsourcing clients.
+
+---
+
+PREVIOUS ROLE: Data Management Consultant — International Trade Centre (ITC), United Nations (2023 – 2024)
+Alongside his role at Gozem, Bolaji consulted for the ITC (a joint UN/WTO agency) as part of the Netherlands Trust Fund V program. He guided 15 startups across the ECOWAS zone in data strategy, developed training materials on data management, and provided one-on-one coaching to 5 startups.
+
+---
+
+EARLY CAREER: Intern — INSAE (Benin National Institute of Statistics) (September 2017 – February 2018)
+Bolaji trained agency staff in advanced analytics and R programming, and contributed to public research financing data collection across Benin's government institutions.
+
+---
+
+EARLY CAREER: Intern — Le Pentagruel (2013)
+Bolaji designed and conducted a customer satisfaction survey, built a structured customer feedback database, and increased the Net Promoter Score by 17 and sales by 11% in one quarter.
+
+---
+
+CAREER TRANSITION: Big Data Bootcamp at Rintio (March – June 2018)
+Bolaji transitioned from Statistics to Data Science through an intensive Big Data Bootcamp. He gained hands-on experience with Apache Spark, Hive, Hadoop, ElasticSearch, Kibana, Apache Superset, Python, SQL, and GitLab. The bootcamp included a real-world agricultural data project called "Duniya Data."

@@ -372,7 +372,9 @@ class HybridSearchService:
                 fused = reciprocal_rank_fusion(ranked_lists, rank_constant=60)
                 results = [doc for doc, _ in fused[: top_k * 2]]
             else:
-                results = vector_docs[:top_k]
+                # Single retriever succeeded (vector OR BM25, not both).
+                # Extract docs from whichever ranked list is present.
+                results = [doc for doc, _ in ranked_lists[0][:top_k]]
 
             # 4. Optional rerank
             if use_reranker and len(results) > top_k:
