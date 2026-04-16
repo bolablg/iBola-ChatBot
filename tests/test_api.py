@@ -60,7 +60,9 @@ class TestCriticalAPI:
         result = response.json()
         assert "answer" in result
         assert "agent_type" in result
-        assert len(result["answer"]) > 0, "Chat response must contain a non-empty answer"
+        assert (
+            len(result["answer"]) > 0
+        ), "Chat response must contain a non-empty answer"
 
 
 # ===== END OF CRITICAL API TESTS =====
