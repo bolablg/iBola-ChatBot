@@ -1,0 +1,57 @@
+BOLAJI BALOGOUN — EDUCATION, CERTIFICATIONS & PROFESSIONAL DEVELOPMENT
+
+---
+
+MASTER OF SCIENCE IN STATISTICS — ICMPA UNESCO Chair, University of Abomey-Calavi, Benin (2015 – 2018)
+Grade: Distinction (Benin Republic). GPA: 3.72 / 4.0.
+In 2024, International Education Evaluations (IEE, United States) evaluated this degree as equivalent to a US Master's degree in Statistics, with an A- grade.
+Dissertation: Determinant factors and modelling of youth emigration from Benin.
+Skills gained: Statistical principles, statistical analysis with R programming, mathematical foundations of statistical modelling, survival analysis, high-dimensional data processing, statistical inference on big datasets, SQL database management, data manipulation with R, Python, and Java.
+
+---
+
+BACHELOR IN STATISTICS & ECONOMETRICS — College of Economics & Management, University of Abomey-Calavi, Benin (2010 – 2013)
+Skills gained: Statistical methodologies, econometric modeling, analytical frameworks for decision-making, survey design, extracting actionable insights from data, team collaboration, verbal and written communication.
+Software: STATA, SPSS, Microsoft Excel.
+
+---
+
+BIG DATA DEVELOPMENT BOOTCAMP — Rintio (March – June 2018)
+Bolaji transitioned from Statistics to Data Science through this intensive bootcamp. He gained hands-on experience in Data Engineering and Machine Learning.
+Technologies covered: Apache Spark, Hive, Python, SQL, Hadoop, ElasticSearch, Kibana, Apache Superset, GitLab.
+Project: "Duniya Data" — leveraging data insights to enhance agricultural practices.
+
+---
+
+PROFESSIONAL CERTIFICATIONS:
+
+Google Professional Data Engineer — Google (November 2025, expires November 2027)
+Credential ID: a81932fee73d448ba64a13eb713d85da
+Skills validated: Google BigQuery, Data Warehousing, Cloud Storage, SQL, Data Security, Google Cloud Platform (GCP), Data Lake, Data Engineering, Data Pipelines, Data Processing, Data Migration.
+
+McKinsey.org Forward Program — McKinsey & Company (July 2025)
+Credential ID: f95e7545-bb5e-414c-918a-2af9b1d7c603
+Skills validated: Problem Solving, Communicating for Impact, Adaptability & Resilience.
+
+Apache Airflow | A Real-Time & Hands-On Course on Airflow — Udemy (February 2024)
+Credential ID: UC-2d4e8045-bdae-40e0-9de1-5f474b46c165
+Skills validated: Automation, Apache Airflow, Data Pipelines, ETL.
+
+Applied Data Science with Python - Level 2 — IBM (September 2019)
+Machine Learning with Python - Level 1 — IBM (September 2019)
+Python for Data Science — IBM (August 2019)
+Statistics 101 — IBM (August 2019)
+Data Science Foundations - Level 1 — IBM (July 2019)
+Data Science Foundations - Level 2 (V2) — IBM (July 2019)
+Twelve Myths About Data Science — LinkedIn (November 2019)
+
+---
+
+CONTINUOUS PROFESSIONAL DEVELOPMENT:
+Bolaji proactively enrolls in specialized courses to acquire new skills as challenges arise. Key areas of self-directed learning include:
+- Google Cloud Platform (BigQuery, Cloud Storage, Dataflow, Vertex AI) — learned during cloud migration at Gozem.
+- Data governance and quality management frameworks.
+- LLM and AI engineering (LangChain, LangGraph, RAG pipelines).
+- Product analytics, A/B testing, and experimentation.
+
+Bolaji is deeply interested in Business at the era of AI, and is considering returning to school for an advanced business or AI degree.

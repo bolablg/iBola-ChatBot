@@ -1,8 +1,0 @@
-As Global Data Analyst at GOZEM from november 2019 to september 2022, Bolaji Led development and automation of analytical processes to drive data-driven decision-making across the organization. Key focus areas included business performance monitoring, diagnostic tool creation, operations optimization, and fostering a data-centric culture.
-
-- Facilitated more drivers engagement by automating a 3-days work manual incentives payment process within minutes at the end of activity days through mainly an accelerated performance fraud-screening.
-- Modernized data flow within the group by migrating the data infrastructure to Google Cloud, mainly replacing repetitive processings of limited data with BigQuery’s faster and scalable analysis power. 
-- Accelerated the delivery of performance monitoring and diagnostic tools group-wide by building from scratch and leading the upscaling of a distributed analytics team of 4.
-- Automated KPI reporting and presented performance weekly actionable insights to the Management.
-- Supported Marketing by refining segmentation and cohort analysis with a users profiling database.
-- Mitigated financial risks by managing the user fraud patterns database and automating predictive analyses and daily financing collection monitoring with critical alerts, ensuring 0 unknown default.

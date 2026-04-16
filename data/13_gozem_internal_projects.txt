@@ -1,0 +1,101 @@
+BOLAJI BALOGOUN — INTERNAL PROJECTS LED AT GOZEM (Head of Data, 2022–Present)
+
+These are major projects Bolaji designed, led, or oversaw as Head of Data & Analytics at Gozem. Each demonstrates specific technical, leadership, and product capabilities.
+
+---
+
+GOZEM DATA HUB — Central Data & AI Workspace
+
+- Situation: Gozem had no centralized data platform. Teams across 6 countries used fragmented tools and workflows with no unified access to data, analytics, or AI capabilities.
+- Action: Bolaji defined the product vision, architecture, and feature roadmap for the Data Hub web application. He built the app with a centralized permission-grained access system enabling secure collaboration across Benin, Togo, Gabon, Cameroon, and Congo. He integrated data exploration environments, model deployment interfaces, project trackers, and self-service analytics modules. He established role-based access governance and onboarded other engineers for additional self-service integrations and iterative deployment.
+- Tools: Python, BigQuery, Apache Airflow, Google Cloud Storage, Dataform, Vertex AI, Docker, Looker Studio.
+- Outcome: The Data Hub serves hundreds of employees daily as the backbone of all analytics, ML features, automated reporting, and AI tools across Gozem's operations.
+
+---
+
+DATA PROFESSIONAL TALENT ACQUISITION — Team Building Process
+
+- Situation: Gozem's data team needed to scale to support growing operational and business intelligence needs across multiple African markets.
+- Action: Bolaji led the end-to-end process of recruiting Data Engineers, Data Analysts, Data Scientists, and ML Engineers. He authored job scopes, technical requirements, and business cases justifying hires to Singapore leadership. He designed and administered the technical interview process and assessment framework. He managed candidate evaluation, selection, and offer negotiation end to end. He coordinated onboarding including tooling access, team integration, and 30/60/90-day ramp milestones.
+- Outcome: Scaled the data team to 14+ professionals across Sub-Saharan Africa, building a high-performing multi-cultural distributed team.
+
+---
+
+REAL-TIME MARKET MONITORING SYSTEM — Transportation Operations
+
+- Situation: Gozem's transportation operations needed real-time visibility into supply and demand during high-demand events such as public holidays, the Vodun Days festival, and major urban events.
+- Action: Bolaji architected a multi-source real-time data pipeline aggregating GPS, booking, and driver availability signals with sub-minute refresh rates. He built dynamic driver redirection logic with rule-based and model-driven incentive triggers to balance supply across demand hotspots. He developed an operational dashboard with live demand density maps, supply gap indicators, driver engagement scores, and event-level KPIs. He implemented automated Google Chat alerts for supply-demand imbalances and extended champion inactivity.
+- Tools: Python, BigQuery, Apache Airflow, Google Cloud Platform, Google Chat API, Looker Studio.
+- Outcome: Validated during the Vodun Days festival with measurable improvement in response time and driver coverage in high-demand zones.
+
+---
+
+EBANKING DATA INFRASTRUCTURE — Gozem Money (Fintech Vertical)
+
+- Situation: Gozem Money, the fintech vertical providing mobile payment and financial services to users and drivers, needed robust data infrastructure for transaction monitoring, analytics, and regulatory compliance.
+- Action: Bolaji designed and supervised the deployment of a real-time transaction alert system monitoring anomalous payment patterns, fraud signals, and threshold breaches. He designed and deployed a fintech data warehouse establishing the foundational layer for financial analytics and regulatory reporting. He onboarded stakeholders onto reporting dashboards covering transaction volumes, product adoption, revenue performance, and user cohort analytics. He established data quality pipelines and documented data models, reporting glossary, and metric definitions for cross-functional alignment.
+- Tools: Python, BigQuery, Apache Airflow, Looker Studio, Google Cloud Platform.
+- Outcome: Reliable fintech data infrastructure supporting real-time fraud detection, regulatory reporting, and data-driven financial product decisions across all African markets.
+
+---
+
+AUTOMATED INVOICE DATA EXTRACTION PIPELINE — Finance Automation
+
+- Situation: Gozem's finance team manually extracted data from supplier and operational invoices across multiple countries, formats, and currencies. Manual data entry was slow and error-prone, slowing financial reconciliation.
+- Action: Bolaji architected and built an automated pipeline ingesting invoices in multiple formats using LLM-powered OCR and document intelligence. He designed the structured output schema covering vendor details, line items, amounts, currencies, tax fields, and reference identifiers. He built a data validation and quality layer flagging anomalies and inconsistencies, integrated directly into Google Sheets for reconciliation matching.
+- Tools: Python, Google Gemini (LLM), Google Sheets API, Google Cloud Platform.
+- Outcome: Reduced manual processing time and improved reconciliation accuracy across Gozem's multi-country finance operations. Demonstrates Bolaji's ability to apply LLMs to real business automation beyond chatbots.
+
+---
+
+SELF-SERVICE NO-CODE DATA EXPLORATION PLATFORM — Data Democratization
+
+- Situation: Non-technical users across operations, finance, product, and customer support teams in all Gozem markets depended on the central data team for routine reporting and ad hoc queries.
+- Action: Bolaji assessed data literacy levels and exploration needs across teams. He coordinated the configuration of a no-code query and exploration layer integrated with Gozem's central data warehouse. He enabled self-serve analytics adoption across teams.
+- Tools: Metabase, BigQuery, Google Cloud Platform.
+- Outcome: Reduced dependency on the central data team for routine reporting, enabling non-technical users to independently query, visualize, and explore operational and business data.
+
+---
+
+DELIVERY AGENT INCENTIVE AUTOMATION SYSTEM — Operations Optimization
+
+- Situation: Gozem's delivery agents needed incentives to position themselves in high-demand zones. The incentive calculation, eligibility criteria, and payment process were manual and generated frequent customer support disputes.
+- Action: Bolaji modeled demand patterns by zone, time-of-day, and event type to identify underserved areas. He designed a performance criteria framework evaluating agent eligibility based on acceptance rate, completion rate, zone presence duration, and delivery quality scores. He designed the end-to-end payment automation pipeline from incentive calculation through disbursement instruction generation. He oversaw the technical scope with the engineering team from development to production deployment.
+- Tools: Python, BigQuery, Apache Airflow, Google Cloud Platform.
+- Outcome: Measurably improved agent coverage in high-demand zones during peak periods. Reduced manual finance intervention in payment processing. Reduced customer support ticket resolution time for incentive-related disputes through a detailed justification database used by the support team.
+
+---
+
+RAG-POWERED CUSTOMER SUPPORT CHATBOT — AI Product
+
+- Situation: Gozem's customer support team handled a high volume of repetitive requests. Human agent workload was growing, and complex cases needed seamless escalation without losing conversation context.
+- Action: Bolaji designed and oversaw the development of a multi-agent Retrieval-Augmented Generation (RAG) chatbot to handle customer support requests autonomously. The system includes intelligent escalation for complex cases with automatic context summarization to preserve conversation continuity when handing off to human agents.
+- Tools: Python, LangChain, Google Gemini, RAG architecture, Google Cloud Platform.
+- Outcome: Reduced human agent workload on repetitive requests while maintaining quality for complex cases through seamless escalation with full conversation context. Demonstrates Bolaji's ability to ship production AI products that serve real users at scale.
+
+---
+
+E-COMMERCE RECOMMENDATION SYSTEM & A/B TEST — Product Analytics
+
+- Situation: Gozem's e-commerce business line needed personalized product recommendations to drive user engagement and sales. The team needed to validate effectiveness before full rollout.
+- Action: Bolaji worked with the product team to deploy a recommendation system. He defined tracking events (user interactions, purchases, feedback) and success metrics (CTR, conversion rate, user satisfaction). He then designed and executed an A/B test: random assignment to control (no recommendations) vs test group (personalized recommendations), with rigorous data analysis comparing both groups.
+- Tools: Python, BigQuery, Looker Studio, Google Cloud Platform.
+- Outcome: The test group showed significant increases in CTR and conversion rates with similar positive user feedback. The product team rolled out personalized recommendations to all users, driving measurably higher sales. Bolaji's team continuously monitors and refines the algorithms.
+
+---
+
+DATA QUALITY OBSERVABILITY SYSTEM — Platform Reliability
+
+- Situation: Data quality and governance were inconsistent across Gozem's business units, with no systematic way to detect, track, or resolve data issues.
+- Action: Bolaji designed and built an observability system integrating ticketing, monitoring, and automated orchestration. Data quality issues are automatically detected, tickets created in Asana, dashboards updated in Looker Studio, and alerts triggered through Airflow orchestration.
+- Tools: Asana, Google Looker Studio, Apache Airflow, BigQuery, Python.
+- Outcome: Proactive detection and resolution of data quality issues. Automated testing and audit frameworks across all business units. Improved data asset reliability company-wide.
+
+---
+
+GROUP CLOSING DATABASE — Financial Reporting
+
+- Situation: Business health monitoring and accounting statements lacked a comprehensive, unified view across Gozem's multi-country operations.
+- Action: Bolaji designed a Group Closing Database providing a 360-degree view of organizational performance across all operating countries.
+- Tools: BigQuery, Dataform, Python, Looker Studio.
+- Outcome: Refined business health monitoring and accounting data accuracy for group-level financial reporting.

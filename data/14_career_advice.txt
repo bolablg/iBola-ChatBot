@@ -1,0 +1,72 @@
+BOLAJI BALOGOUN — CAREER ADVICE FOR ASPIRING DATA AND AI PROFESSIONALS
+
+This advice is grounded in Bolaji's own career journey — from a Statistics degree in Benin to Head of Data leading 14+ people across 6 countries.
+
+---
+
+HOW BOLAJI GOT INTO DATA AND AI:
+
+Bolaji's foundation is in statistics. He earned a Bachelor's degree in Statistics and Econometrics (2010-2013) and a Master's in Statistics (2015-2018, GPA 3.72) at the University of Abomey-Calavi in Benin. This gave him a rigorous grounding in statistical modeling, inference, survey design, and R programming — skills that still underpin his data work today.
+
+The turning point was a deliberate career transition: right after his Master's, Bolaji enrolled in an intensive Big Data Development Bootcamp at Rintio (March-June 2018). This bootcamp covered data engineering and machine learning hands-on — Apache Spark, Hadoop, Hive, Python, SQL, ElasticSearch, Kibana, and GitLab — through a real-world agricultural data project called "Duniya Data." It was the bridge from theoretical statistics to production data engineering and data science.
+
+The bootcamp led directly to a Data Scientist role at Rintio (July 2018), where he built big data stacks and ML models. From there: Global Data Analyst at Gozem (2019), where he self-taught cloud engineering and migrated the company to GCP. Then Head of Data at Gozem (2022), leading 14+ people across 6 countries. His path — strong statistics foundation, intensive bootcamp in big data engineering and ML, then rapid industry growth — shows that a deliberate transition works when you combine fundamentals with hands-on building under pressure.
+
+---
+
+WHAT TO LEARN FIRST IF YOU WANT A CAREER IN DATA:
+
+1. Master Python and SQL first — everything else builds on that. These are the two languages you will use every single day in any data role. Learn to query, transform, and manipulate data before touching machine learning.
+
+2. Build projects that solve real problems, not tutorial clones. A salary calculator for your country, a data pipeline for your community, or an automation tool that saves someone time beats another Titanic dataset notebook. Bolaji built a Benin salary converter, a video downloader, and an AI chatbot as side projects — each solving a real problem.
+
+3. Don't wait to be ready — learn by doing under pressure. Bolaji taught himself Google Cloud Platform and deployed a full production analytics infrastructure within a single quarter because the business needed it. He had never used GCP before. Momentum matters more than planning.
+
+4. Combine technical depth with business understanding. Data without business context is noise. Always understand the "why" behind the data. Bolaji's ability to translate complex data concepts into business value — not just build pipelines — is what led to his career growth.
+
+---
+
+HOW IMPORTANT IS STATISTICS FOR DATA AND AI ROLES:
+
+Very important. Bolaji's foundation in statistics (MSc with 3.72 GPA) gives him an edge in understanding what data actually means — statistical inference, hypothesis testing, survey design, and modeling are the intellectual backbone behind good data work. Many data professionals skip statistics and jump to tools, which leads to shallow analysis. Statistics teaches you to think critically about data quality, sampling bias, and what conclusions you can actually draw.
+
+---
+
+WHAT TOOLS SHOULD A BEGINNER PRIORITIZE:
+
+Based on Bolaji's experience and the tools he uses daily:
+1. Python — start with pandas, basic scripting, and data manipulation.
+2. SQL — learn to query relational databases. BigQuery, PostgreSQL, or MySQL are all fine starting points.
+3. Git — version control is non-negotiable in any professional setting.
+4. One cloud platform — Google Cloud Platform is a strong choice because BigQuery is widely used and GCP offers a generous free tier.
+5. One orchestration tool — Apache Airflow is the industry standard for data pipeline scheduling.
+Don't try to learn everything at once. Go deep on Python and SQL, then expand.
+
+---
+
+HOW TO TRANSITION FROM ANALYTICS INTO AI OR DATA ENGINEERING:
+
+Bolaji's own transition offers a clear playbook:
+
+1. Start with a real problem, not a course. Find something broken at work or in your community, and build the solution. That's how you learn fastest. Bolaji didn't learn GCP from a certification — he learned it by migrating a company's entire data stack because nobody else could.
+
+2. Learn cloud and pipelines before ML. Most AI work fails because of bad data infrastructure, not bad models. Get the data engineering and cloud foundation right first — storage, ingestion, transformation, orchestration. The ML will come naturally on top of solid infrastructure.
+
+3. Don't overthink the path — just start building. Bolaji went from statistics to bootcamp to production data scientist in under a year. He went from zero cloud experience to deploying a full GCP analytics stack in one quarter. Momentum matters more than having the perfect plan.
+
+---
+
+HOW TO BECOME EFFECTIVE IN BOTH STRATEGY AND HANDS-ON BUILDING:
+
+Bolaji's career demonstrates that you don't have to choose between being a leader and being a builder. At Gozem, he simultaneously serves as Head of Data (strategy, team management, stakeholder alignment) and a hands-on architect (writing code, designing systems, deploying pipelines). The key is to stay close to the work. Leaders who stop building lose touch with what's possible and what's hard. Bolaji maintains at least 40% of his time on hands-on building — coding, architecting, and shipping products — even while managing a team of 14+.
+
+---
+
+WHERE TO FOLLOW BOLAJI'S WORK AND LEARN MORE:
+
+- Blog and newsletter: blog.bolablg.com ("Free Your Data" on Substack) — technical articles on data engineering, automation, and Google Cloud.
+- Apps and portfolio: app.bolablg.com — side projects including AI chatbots, automation tools, and web apps.
+- GitHub: github.com/bolablg — open-source projects and code.
+- LinkedIn: linkedin.com/in/bolablg — career updates and professional network.
+- X/Twitter: x.com/bolablg
+- Substack: substack.com/@bolablg

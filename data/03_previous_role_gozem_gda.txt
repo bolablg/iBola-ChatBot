@@ -1,0 +1,45 @@
+BOLAJI BALOGOUN — PREVIOUS ROLE: GLOBAL DATA ANALYST AT GOZEM
+
+Status: PREVIOUS ROLE (November 2019 – September 2022)
+Company: Gozem
+Title: Global Data Analyst
+Note: Bolaji was promoted from this role to Head of Data & Analytics in October 2022.
+
+---
+
+KEY ACHIEVEMENTS:
+
+Migrated Gozem's data infrastructure to Google Cloud:
+- Situation: Gozem relied on on-premises systems with limited data processing. There was no data warehouse. Bolaji had never worked with GCP or AWS before.
+- Action: Self-taught Google BigQuery, Cloud Storage, and related tools through online courses. Opted for a cloud-first approach to avoid maintenance overhead. Chose Stitch Data for ingestion to enable faster delivery.
+- Tools: Google BigQuery, Google Cloud Storage, Google Dataflow, Apache Airflow, Stitch Data.
+- Outcome: Deployed a fully functional cloud-based analytics infrastructure within a single quarter. Replaced repetitive manual processing with BigQuery's scalable analysis power.
+
+Built and led a distributed analytics team:
+- Situation: No dedicated analytics team existed.
+- Action: Built from scratch and led the upscaling of a distributed analytics team of 4 people.
+- Outcome: Accelerated the delivery of performance monitoring and diagnostic tools group-wide.
+
+Automated KPI reporting and fraud detection:
+- Situation: Incentives payment was a 3-day manual process. Fraud screening was slow. Financing default monitoring had gaps.
+- Action: Automated the incentives payment process to run within minutes. Built a user fraud patterns database with automated predictive analysis. Set up daily financing collection monitoring with critical alerts.
+- Outcome: Facilitated more driver engagement. Ensured 0 unknown defaults in financing collection. Mitigated financial risks through automated monitoring.
+
+Supported marketing with user analytics:
+- Situation: Marketing lacked data-driven segmentation tools.
+- Action: Built a user profiling database for segmentation and cohort analysis.
+- Outcome: Refined marketing targeting and campaign effectiveness.
+
+Automated management reporting:
+- Action: Automated weekly KPI reporting with actionable insights presented to management.
+- Outcome: Faster, data-driven decision-making at the leadership level.
+
+---
+
+THE TRANSITION STORY:
+Bolaji joined Gozem as Global Data Analyst in 2019. He wore multiple hats — data analyst, cloud data engineer, analytics engineer, and data governance specialist — because there was no dedicated data engineering team. By teaching himself GCP and building the entire cloud infrastructure, he demonstrated the technical and leadership capability that led to his promotion to Head of Data & Analytics in October 2022.
+
+---
+
+TOOLS USED IN THIS ROLE:
+Python, BigQuery, Google Cloud Storage, Google Dataflow, Apache Airflow, Stitch Data, MongoDB, SQL, Metabase.
