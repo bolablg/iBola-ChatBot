@@ -1,0 +1,64 @@
+BOLAJI BALOGOUN — IDENTITY & CONTACT
+
+FULL NAME: Momboladji Fabrice Aristide BALOGOUN (goes by "Bolaji")
+LOCATION: Cotonou, Benin
+NATIONALITY: Beninese
+
+SPOKEN LANGUAGES:
+- French: Native proficiency.
+- English: Professional working proficiency.
+
+CONTACT:
+- Email: hello@bolablg.com
+- WhatsApp: wa.me/22964294420
+- Phone: (+229) 0196-653-056
+- Website: bolablg.com
+- Blog: blog.bolablg.com ("Free Your Data" newsletter on Substack)
+- Apps: app.bolablg.com
+- GitHub: github.com/bolablg
+- LinkedIn: linkedin.com/in/bolablg
+- X/Twitter: x.com/bolablg
+- Substack: substack.com/@bolablg
+
+TAGLINE: "I free data from constraints" / "Je libere les donnees de leurs contraintes"
+
+PERSONAL INTERESTS: Community building, continuous learning, exploring cultures, jogging, soccer, music, coffee, Real Madrid.
+
+AVAILABILITY & CAREER INTERESTS:
+Bolaji is open to ambitious, well-paid professional opportunities that impact communities.
+He is interested in both builder roles and leadership roles — ideally with at least 40% hands-on building tasks (coding, architecting, shipping products).
+He thrives in roles that combine technical depth with strategic influence.
+Target roles: Head of Data/AI, Senior AI/Data Engineer, Staff Engineer, Technical Lead — in organizations with ambitious projects that create lasting impact for communities.
+Ideal environment: Scale-up or large company with ambitious data and AI goals — an established organization that needs someone to build or transform their data function.
+Contact hello@bolablg.com to discuss opportunities.
+
+---
+
+WHY BOLAJI — VALUE PROPOSITION:
+
+Bolaji is an impact-driven builder and technical leader. He does not just set strategy — he architects and deploys the systems himself while leading the team that scales them. He cares about outcomes, not job titles. He has built data platforms serving millions of users in markets most engineers never touch.
+
+What makes Bolaji different from other senior data and AI candidates:
+
+1. Builder-leader hybrid: He leads a team of 14+ across 6 countries AND still codes, architects, and ships production systems. Most leaders at this level stop building — Bolaji does both.
+
+2. Self-taught adaptability: He taught himself Google Cloud Platform with zero prior cloud experience and deployed a full production analytics infrastructure within a single quarter because the business needed it. He learns fast under pressure and delivers.
+
+3. Full-stack data and AI: Bolaji has worked every layer of the data stack — from statistics and econometrics to data engineering, machine learning, AI product delivery, and team leadership. He is not a specialist in one layer — the combination across the entire stack is the differentiator.
+
+4. Real-world African market expertise: He has built production systems across 6 African countries with real infrastructure constraints, multilingual contexts, and distributed teams. This is not a lab exercise — it is systems serving millions of real users daily.
+
+Why should you interview Bolaji for a senior data or AI role:
+He combines 10+ years of hands-on technical depth (Python, SQL, GCP, Airflow, LLMs) with proven leadership of a 14+ person distributed team. He has built a Data Hub from scratch, reduced cloud costs by 42%, shipped AI products (RAG chatbots, recommendation systems, LLM-powered automation), and delivered results in some of the most challenging operational environments. He is equally comfortable writing BigQuery SQL, designing system architecture, mentoring engineers, or presenting to executive leadership.
+
+---
+
+CONSULTING AVAILABILITY:
+
+Bolaji is available for consulting engagements alongside his current role.
+Engagement format: Project-based pricing with clear deliverables — Bolaji prefers fixed scope over hourly billing.
+Work style: Remote-first. He works remotely and can serve clients anywhere in the world.
+Best first engagements:
+- Data platform audit and roadmap: A 2-4 week assessment of your current data stack with a concrete modernization plan.
+- Data team coaching and hiring: Help structure your data function, design interview processes, and coach your existing team.
+Contact hello@bolablg.com or book a meeting at calendar.app.google/Jg1r7af8Rk2jYqCV8 to discuss.
