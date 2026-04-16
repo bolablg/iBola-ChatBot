@@ -496,9 +496,12 @@ def rewrite_query_node(state: dict) -> dict:
 # Prompt templates per category — reusing the existing well-crafted prompts
 _LANGUAGE_RULE = (
     "LANGUAGE RULE (CRITICAL — never violate):\n"
-    "- ALWAYS reply in English. Every word must be in English.\n"
-    "- Even if the user writes in French or another language, reply in English.\n"
-    "- NEVER use French words, phrases, or sentences in your response.\n\n"
+    "- MATCH the user's language. If the user writes in French, reply in French. "
+    "If the user writes in English, reply in English. Detect the language of the "
+    "user's CURRENT question, not the chat history.\n"
+    "- Never mix languages within a single response.\n"
+    "- Keep technical terms (Python, BigQuery, LangGraph, etc.) in their original form "
+    "regardless of response language.\n\n"
 )
 
 _GENERATE_PROMPTS = {
@@ -510,11 +513,18 @@ _GENERATE_PROMPTS = {
         "1) DEFAULT: 2-3 sentences. Pick the most impressive, relevant facts. Be precise.\n"
         "2) Include specific numbers, tools, or achievements when available.\n"
         "3) If the user asks for more details or follows up, give up to 5 sentences.\n"
-        "4) Base answers ONLY on context. Never invent facts.\n"
-        "5) Never mention 'documents', 'context', 'RAG', or your data sources.\n"
+        "4) Base answers ONLY on what you know about Bolaji. Never invent facts.\n"
+        "5) STRICTLY FORBIDDEN PHRASES: 'provided context', 'the context', 'in the context', "
+        "'based on the context', 'the information provided', 'the documents', 'my knowledge base', "
+        "'from the data I have', 'RAG', 'retrieval'. NEVER use these. Speak as if you simply know Bolaji.\n"
         "6) ALWAYS refer to Bolaji in third person.\n"
-        "7) If info not available: say so briefly + invite to email hello@bolablg.com.\n"
+        "7) If info not available: say 'I don't have that information. Please email hello@bolablg.com.' "
+        "Do NOT say 'the context does not contain' or similar.\n"
         "8) Greetings ONLY when the user greets first. Never greet if the user asks a question.\n"
+        "9) RECENCY RULE: When asked about 'latest role', 'current role', 'last job', 'present position', "
+        "'where does Bolaji work', always refer to his CURRENT ROLE (ongoing, dated 'Present'). "
+        "A role dated 'Present' always outranks a role with a fixed end date. "
+        "Short-term consulting engagements performed ALONGSIDE a primary job are NOT the latest role.\n"
     ),
     AgentCategory.EDUCATION: (
         "You are iBola, Bolaji's AI assistant.\n\n"
@@ -554,6 +564,180 @@ GENERATE_PROMPT = ChatPromptTemplate.from_messages(
 
 _GENERATE_THINKING_BUDGET = 256
 
+# Phrases that leak RAG/context internals to the user. Stripped post-generation.
+_LEAK_PHRASES = [
+    # "provided context" variants
+    (
+        r"\b(?:based on|according to|from|in|within)\s+(?:the\s+)?provided\s+context\b",
+        "",
+    ),
+    (
+        r"\b(?:the\s+)?provided\s+context\s+(?:does\s+not|doesn't|indicates|shows|contains|suggests|mentions)\b",
+        "I don't have information that",
+    ),
+    # "the context" variants
+    (r"\b(?:based on|according to|from|in)\s+(?:the\s+)?context\b", ""),
+    (
+        r"\b(?:the\s+)?context\s+(?:does\s+not|doesn't)\s+(?:mention|contain|specify|indicate|provide)\b",
+        "I don't have information about",
+    ),
+    # "based on (the) information available" / "information I have" / "information provided"
+    (
+        r"\b(?:based on|according to|from)\s+(?:the\s+)?information\s+(?:available|provided|I\s+have)\b[,\s]*",
+        "",
+    ),
+    (
+        r"\b(?:based on|from)\s+(?:what\s+(?:I\s+know|is\s+known|is\s+available))\b[,\s]*",
+        "",
+    ),
+    (r"\bin (?:the\s+)?information provided\b", ""),
+    (r"\bthe information provided\b", "what I know"),
+    # "the documents" / "the data"
+    (r"\bthe documents?\s+(?:provided|indicate|show|mention|contain)\b", ""),
+    (r"\bfrom (?:the\s+)?(?:knowledge base|data I have|my knowledge)\b", ""),
+    (r"\b(?:the\s+)?(?:retrieved|fetched)\s+(?:documents?|content|data)\b", ""),
+    # "there is no mention/information" — deflection phrasing
+    (
+        r"\bthere\s+(?:is|are|isn't|aren't|are\s+no)\s+(?:no\s+)?(?:specific\s+)?(?:mention|information|details?|data)\s+(?:of|about|regarding|on)\b",
+        "I don't have information on",
+    ),
+    # "it is not specified" / "not mentioned in"
+    (
+        r"\b(?:is\s+)?not\s+(?:specifically\s+)?(?:mentioned|specified|detailed)\s+in\s+(?:the\s+)?(?:context|information|documents?)\b",
+        "",
+    ),
+    # Cleanup patterns
+    (r"^\s*[,.]\s*", ""),  # strip leading comma/period after substitution
+    (r"\s+([,.!?])", r"\1"),  # remove space before punctuation
+    (r"\s+,\s*", ", "),  # normalize comma spacing
+    (r"\s{2,}", " "),  # collapse double spaces
+]
+
+
+# Tokens that strongly signal French in portfolio-chatbot queries.
+_FR_MARKERS = frozenset(
+    {
+        "quel",
+        "quelle",
+        "quels",
+        "quelles",
+        "qui",
+        "que",
+        "quoi",
+        "ou",
+        "où",
+        "quand",
+        "comment",
+        "pourquoi",
+        "combien",
+        "est",
+        "sont",
+        "est-ce",
+        "c'est",
+        "ce",
+        "cette",
+        "ces",
+        "le",
+        "la",
+        "les",
+        "un",
+        "une",
+        "des",
+        "du",
+        "de",
+        "d'",
+        "il",
+        "elle",
+        "son",
+        "sa",
+        "ses",
+        "mon",
+        "ma",
+        "mes",
+        "avec",
+        "sans",
+        "pour",
+        "dans",
+        "sur",
+        "chez",
+        "entre",
+        "travaille",
+        "travailler",
+        "travaillait",
+        "expérience",
+        "experience",
+        "rôle",
+        "role",
+        "poste",
+        "emploi",
+        "entreprise",
+        "société",
+        "equipe",
+        "équipe",
+        "parle",
+        "parler",
+        "parlez",
+        "dites",
+        "dire",
+        "raconte",
+        "compétences",
+        "competences",
+        "bonjour",
+        "salut",
+        "merci",
+    }
+)
+
+
+def _detect_reply_language(query: str, user_language: str = "en") -> str:
+    """Return 'French' if the query appears to be in French, else 'English'.
+
+    Combines a quick lexical heuristic with the user_language hint from the
+    request.  Conservative: only returns French when there is strong signal,
+    so ambiguous/technical queries default to English.
+    """
+    import re as _re
+
+    if not query:
+        return "French" if user_language.lower().startswith("fr") else "English"
+
+    # Tokenize, lowercase, strip punctuation
+    tokens = _re.findall(r"[a-zA-ZÀ-ÿ']+", query.lower())
+    if not tokens:
+        return "French" if user_language.lower().startswith("fr") else "English"
+
+    total = len(tokens)
+    fr_hits = sum(1 for t in tokens if t in _FR_MARKERS)
+
+    # Accented characters common in French (é, è, ê, à, ç...)
+    has_accent = bool(_re.search(r"[àâçéèêëîïôùûÿœæ]", query.lower()))
+
+    # Strong signal: ≥2 French markers OR accented chars with ≥1 marker OR
+    # short query with any marker
+    if fr_hits >= 2 or (has_accent and fr_hits >= 1) or (total <= 5 and fr_hits >= 1):
+        return "French"
+
+    # Respect user_language hint as tiebreaker
+    if user_language.lower().startswith("fr") and fr_hits >= 1:
+        return "French"
+
+    return "English"
+
+
+def _sanitize_answer(answer: str) -> str:
+    """Strip RAG/context leakage phrases from generated answers.
+
+    Defense-in-depth: the prompt already forbids these phrases, but LLMs
+    occasionally slip. This post-processor removes the common patterns
+    without altering semantic content.
+    """
+    import re as _re
+
+    out = answer
+    for pattern, replacement in _LEAK_PHRASES:
+        out = _re.sub(pattern, replacement, out, flags=_re.IGNORECASE)
+    return out.strip()
+
 
 def generate_node(state: dict) -> dict:
     """Generate the final answer from graded documents.
@@ -580,7 +764,9 @@ def generate_node(state: dict) -> dict:
             f"Human: {h[0]}\nAssistant: {h[1]}" for h in chat_history[-5:]
         )
 
-    reply_language = "English"
+    # Detect language of the user's current query (lightweight heuristic).
+    # The LLM is the source of truth; this is a hint.
+    reply_language = _detect_reply_language(query, state.get("user_language", "en"))
 
     system_prompt = _GENERATE_PROMPTS.get(
         category, _GENERATE_PROMPTS[AgentCategory.PROFESSIONAL]
@@ -598,7 +784,7 @@ def generate_node(state: dict) -> dict:
                 query=query,
             )
         )
-        answer = result.answer
+        answer = _sanitize_answer(result.answer)
         confidence = result.confidence
 
     except Exception as exc:
@@ -634,8 +820,9 @@ OUT_OF_SCOPE_PROMPT = ChatPromptTemplate.from_messages(
             "system",
             (
                 "You are iBola, Bolaji's AI assistant. The user asked something outside "
-                "your scope. Politely decline in 1-2 sentences in English. "
-                "ALWAYS reply in English regardless of the user's language. "
+                "your scope. Politely decline in 1-2 sentences. "
+                "MATCH THE USER'S LANGUAGE: reply in French if the query is in French, "
+                "in English if the query is in English. "
                 "Suggest they ask about Bolaji's professional experience, education, "
                 "community leadership, consulting, blog, or apps."
             ),
