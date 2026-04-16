@@ -114,6 +114,7 @@ class AgenticRAGService:
                 session_id=session_id,
                 user_language=user_language,
                 chat_history=chat_history,
+                contact_type=contact_type,
             )
 
         # Conversational pleasantries (thank you, goodbye, etc.)
@@ -243,49 +244,102 @@ class AgenticRAGService:
         session_id: str,
         user_language: str,
         chat_history: Optional[List[Tuple[str, str]]] = None,
+        contact_type: str = "email",
     ) -> Dict[str, Any]:
-        answer = random.choice(
-            [
-                "You can email Bolaji directly or book a meeting from the options below.",
-                "Sure! Reach out to Bolaji via email or schedule a quick call below.",
-                "Absolutely — pick the option that works best for you below.",
-                "Great idea! You can drop Bolaji a message or book time on his calendar.",
-                "Here are the best ways to connect with Bolaji directly.",
-                "Happy to help you get in touch — use either option below.",
-                "Bolaji would love to hear from you! Email or book a meeting below.",
-                "You're one click away — email Bolaji or grab a spot on his calendar.",
-                "Let's get you connected! Choose email or a meeting slot below.",
-                "Perfect — here's how to reach Bolaji directly.",
-            ]
-        )
+        """Build a response for contact or booking intents.
 
-        actions = [
-            {
-                "text": "Send email",
-                "type": "contact_email",
-                "url": f"mailto:{config.CONTACT_EMAIL}",
-                "session_id": session_id,
-                "chat_history": chat_history or [],
-                "description": "Send an email to Bolaji",
-                "primary": True,
-                "end_chat": False,
-            },
-            {
-                "text": "Book appointment",
-                "type": "contact_booking",
-                "url": config.CALENDAR_BOOKING_URL,
-                "session_id": session_id,
-                "chat_history": chat_history or [],
-                "description": "Schedule a meeting with Bolaji",
-                "primary": True,
-                "end_chat": False,
-            },
-        ]
+        ``contact_type``:
+          - "email": generic contact — email button first, booking secondary.
+            ``agent_type`` returned is "contact".
+          - "booking": user asked to schedule/book — booking button first,
+            email secondary. ``agent_type`` returned is "booking".
+        """
+        is_french = user_language.lower().startswith("fr")
+        is_booking = contact_type == "booking"
+
+        if is_french and is_booking:
+            answer = random.choice(
+                [
+                    "Avec plaisir ! Réservez un créneau sur l'agenda de Bolaji ci-dessous — ou envoyez-lui un email si vous préférez.",
+                    "Parfait — choisissez un créneau de réunion avec Bolaji ci-dessous.",
+                    "Planifions cet appel ! Sélectionnez un horaire qui vous convient ci-dessous.",
+                    "Bolaji sera ravi de discuter — réservez un créneau ci-dessous.",
+                    "Voici l'agenda de Bolaji pour planifier votre rendez-vous.",
+                ]
+            )
+        elif is_french:
+            answer = random.choice(
+                [
+                    "Vous pouvez envoyer un email à Bolaji ou réserver un créneau via les options ci-dessous.",
+                    "Bien sûr ! Contactez Bolaji par email ou planifiez un appel rapide ci-dessous.",
+                    "Avec plaisir — choisissez l'option qui vous convient le mieux ci-dessous.",
+                    "Excellente idée ! Envoyez un message à Bolaji ou réservez un créneau sur son agenda.",
+                    "Voici les meilleurs moyens de contacter Bolaji directement.",
+                    "Ravi de vous aider à entrer en contact — utilisez l'une des options ci-dessous.",
+                    "Bolaji sera heureux de vous entendre ! Email ou rendez-vous ci-dessous.",
+                    "Vous êtes à un clic — envoyez-lui un email ou réservez un créneau.",
+                    "Mettons-vous en relation ! Choisissez email ou un créneau de réunion ci-dessous.",
+                    "Parfait — voici comment joindre Bolaji directement.",
+                ]
+            )
+        elif is_booking:
+            answer = random.choice(
+                [
+                    "Great — book a time on Bolaji's calendar below. You can also email him if you prefer.",
+                    "Let's get that meeting on the calendar. Pick a slot below.",
+                    "Perfect — grab a time that works for you on Bolaji's calendar below.",
+                    "Happy to help you schedule. Pick an available slot below.",
+                    "Here's Bolaji's calendar to book your meeting.",
+                ]
+            )
+        else:
+            answer = random.choice(
+                [
+                    "You can email Bolaji directly or book a meeting from the options below.",
+                    "Sure! Reach out to Bolaji via email or schedule a quick call below.",
+                    "Absolutely — pick the option that works best for you below.",
+                    "Great idea! You can drop Bolaji a message or book time on his calendar.",
+                    "Here are the best ways to connect with Bolaji directly.",
+                    "Happy to help you get in touch — use either option below.",
+                    "Bolaji would love to hear from you! Email or book a meeting below.",
+                    "You're one click away — email Bolaji or grab a spot on his calendar.",
+                    "Let's get you connected! Choose email or a meeting slot below.",
+                    "Perfect — here's how to reach Bolaji directly.",
+                ]
+            )
+
+        email_action = {
+            "text": "Send email",
+            "type": "contact_email",
+            "url": f"mailto:{config.CONTACT_EMAIL}",
+            "session_id": session_id,
+            "chat_history": chat_history or [],
+            "description": "Send an email to Bolaji",
+            "primary": True,
+            "end_chat": False,
+        }
+        booking_action = {
+            "text": "Book appointment",
+            "type": "contact_booking",
+            "url": config.CALENDAR_BOOKING_URL,
+            "session_id": session_id,
+            "chat_history": chat_history or [],
+            "description": "Schedule a meeting with Bolaji",
+            "primary": True,
+            "end_chat": False,
+        }
+
+        # Put booking button first for booking intents; email first otherwise
+        actions = (
+            [booking_action, email_action]
+            if is_booking
+            else [email_action, booking_action]
+        )
 
         return {
             "answer": answer,
             "actions": actions,
-            "agent_type": "contact",
+            "agent_type": "booking" if is_booking else "contact",
             "confidence": 1.0,
             "language": user_language,
             "redirect_count": 0,
@@ -345,11 +399,17 @@ class AgenticRAGService:
     def _detect_welcome_intent(message: str) -> Optional[str]:
         """Match simple first-message prompts to deterministic fast-paths.
 
-        Only triggers on SHORT queries (≤10 words) to avoid hijacking
+        Only triggers on SHORT ENGLISH queries (≤10 words) to avoid hijacking
         real multi-word questions like "How has Bolaji combined his data
         engineering skills with AI leadership?" which contain keywords
         like "skills" but deserve a full RAG answer.
+
+        French queries skip this fast-path so they flow through the RAG
+        pipeline and receive properly localized French answers (the canned
+        responses here are all in English).
         """
+        import re as _re
+
         lower = message.lower().strip()
         word_count = len(lower.split())
 
@@ -357,7 +417,43 @@ class AgenticRAGService:
         if word_count > 10:
             return None
 
-        if any(kw in lower for kw in ["contact", "email", "meeting"]):
+        # French queries: skip fast-path so user gets a French answer from RAG
+        if _re.search(r"[àâçéèêëîïôùûÿœæ]", lower) or any(
+            fr_marker in lower.split()
+            for fr_marker in {
+                "quel",
+                "quelle",
+                "quels",
+                "quelles",
+                "comment",
+                "ou",
+                "où",
+                "est-ce",
+                "c'est",
+                "travaille",
+                "parle",
+                "dites",
+                "compétence",
+                "compétences",
+                "expérience",
+                "carrière",
+                "études",
+                "diplôme",
+                "éducation",
+                "parcours",
+                "contacter",
+                "joindre",
+                "emploi",
+            }
+        ):
+            return None
+
+        # Bare keywords like "contact", "email", "meeting" only indicate
+        # intent in very short messages. "does bolaji write email pipelines"
+        # should NOT go to contact. Require ≤4 words for these matches.
+        if word_count <= 4 and any(
+            kw in lower for kw in ["contact", "email", "meeting"]
+        ):
             return "contact"
         if any(kw in lower for kw in ["skill", "skills", "technology"]):
             return "skills"
@@ -583,15 +679,108 @@ class AgenticRAGService:
 
     @staticmethod
     def _detect_contact_type(message: str) -> Optional[str]:
-        lower = message.lower()
-        if "contact" in lower:
+        """Detect contact/booking intent.
+
+        Only triggers the fast-path widget when the user clearly wants to
+        reach Bolaji — not when they ask knowledge questions that happen to
+        contain words like 'book' (e.g. 'what book would you recommend?')
+        or 'email' (e.g. 'does he write email pipelines?').
+        """
+        import re as _re
+
+        lower = message.lower().strip()
+        word_count = len(lower.split())
+
+        # Strong intent phrases — match at any length
+        strong_email = [
+            "contact bolaji",
+            "send bolaji an email",
+            "email bolaji",
+            "how can i contact",
+            "how do i contact",
+            "how to contact",
+            "get in touch",
+            "reach out to bolaji",
+            "comment contacter",
+            "contacter bolaji",
+            "joindre bolaji",
+            "envoyer un email",
+            "envoyer un mail",
+        ]
+        if any(s in lower for s in strong_email):
             return "email"
-        if any(w in lower for w in ["email", "mail", "write to bolaji", "write him"]):
-            return "email"
-        if any(
-            w in lower for w in ["meeting", "appointment", "book", "schedule", "call"]
-        ):
+
+        strong_booking = [
+            "book a meeting",
+            "book a call",
+            "book an appointment",
+            "schedule a meeting",
+            "schedule a call",
+            "schedule an appointment",
+            "set up a meeting",
+            "set up a call",
+            "prendre rendez-vous",
+            "prendre un rendez-vous",
+            "reserver une reunion",
+            "réserver une réunion",
+            "planifier un appel",
+            "planifier une reunion",
+            "planifier une réunion",
+        ]
+        if any(s in lower for s in strong_booking):
             return "booking"
+
+        # Weak signals — only for SHORT non-question messages (≤6 words).
+        # These are likely direct requests ("contact", "email him", "book a call").
+        question_starters = (
+            "what",
+            "how",
+            "when",
+            "where",
+            "who",
+            "which",
+            "does",
+            "did",
+            "is",
+            "are",
+            "was",
+            "were",
+            "can",
+            "could",
+            "has",
+            "have",
+            "tell",
+            "describe",
+            "explain",
+            "quel",
+            "quelle",
+            "quels",
+            "quelles",
+            "comment",
+            "ou",
+            "où",
+            "est",
+            "est-ce",
+            "as",
+            "a-t-il",
+            "peut",
+            "peux",
+            "dis",
+            "dites",
+        )
+        first_word = lower.split()[0] if lower.split() else ""
+        is_question = first_word in question_starters or lower.rstrip().endswith("?")
+
+        if word_count <= 6 and not is_question:
+            if _re.search(r"\bcontact\b", lower):
+                return "email"
+            if _re.search(r"\b(?:email|mail)\b", lower):
+                return "email"
+            if _re.search(
+                r"\b(?:meeting|appointment|schedule|call|reunion|réunion|rendez-vous|appel)\b",
+                lower,
+            ):
+                return "booking"
         return None
 
     @staticmethod
