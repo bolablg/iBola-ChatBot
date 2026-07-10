@@ -408,11 +408,23 @@ def main():
             print(f"  {r['id']}: {r['fact_failures']} -> {r['answer'][:120]!r}")
 
     if args.accept:
+        # Per-tag baselines (PART 5 C1): a smoke-subset run must never
+        # overwrite or be compared against the full-set baseline.
+        if args.tags:
+            suffix = "-".join(sorted(args.tags))
+            baseline_path = BASELINE_PATH.parent / f"accepted_baseline_{suffix}.json"
+            # Small subsets under burst concurrency have noisy p95; gate
+            # latency loosely there, tightly on the full set.
+            latency_p95_max = 12.0
+        else:
+            baseline_path = BASELINE_PATH
+            latency_p95_max = 8.0
         baseline = {
             "accepted_at": report["timestamp"],
             "report": str(report_path.relative_to(PROJECT_ROOT)),
             "answer_model": report["answer_model"],
             "judge_model": report["judge_model"],
+            "tags": args.tags,
             "aggregates": {
                 k: agg.get(k)
                 for k in (
@@ -427,10 +439,11 @@ def main():
             "gate": {
                 "canonical_fact_accuracy_min": agg.get("canonical_fact_accuracy"),
                 "max_aggregate_drop": 2.0,
+                "latency_p95_max_s": latency_p95_max,
             },
         }
-        BASELINE_PATH.write_text(json.dumps(baseline, indent=2))
-        print(f"\nAccepted as baseline: {BASELINE_PATH}")
+        baseline_path.write_text(json.dumps(baseline, indent=2))
+        print(f"\nAccepted as baseline: {baseline_path}")
 
     return 0
 
