@@ -33,12 +33,15 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 
+# isort: off  (the sys.path insert above must precede this import)
 from run_eval import (  # noqa: E402
     FACT_CATEGORIES,
     GOLDEN_PATH,
     Judge,
     check_facts,
 )
+
+# isort: on
 
 DOCS_DIR = PROJECT_ROOT / "_docs_"
 MAX_MESSAGES_PER_SESSION = 4
