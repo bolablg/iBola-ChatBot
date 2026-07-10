@@ -404,6 +404,45 @@ _HIGHLIGHT_TERMS = (
 )
 
 
+# Topic cues for compound-question fan-out. When a query references more than
+# one of these domains, each gets its own retrieval so neither half is starved.
+_SUBTOPIC_CUES = {
+    "education": (
+        "degree",
+        "diploma",
+        "master",
+        "msc",
+        "bachelor",
+        "studied",
+        "education",
+        "university",
+        "certification",
+        "diplome",
+        "diplôme",
+        "etudes",
+        "études",
+        "formation",
+        "universite",
+        "université",
+    ),
+    "role": ("role", "job", "position", "poste", "emploi", "travaille", "work"),
+    "skills": ("skill", "tool", "technology", "competence", "compétence", "stack"),
+    "community": ("community", "isheero", "takwimu", "award", "prix", "recherche"),
+}
+
+
+def _compound_subqueries(query: str):
+    """Return per-domain sub-queries when a question spans multiple domains."""
+    low = query.lower()
+    if " and " not in low and " et " not in low and "?" not in low[:-1]:
+        return []
+    hit = [dom for dom, cues in _SUBTOPIC_CUES.items() if any(c in low for c in cues)]
+    if len(hit) < 2:
+        return []
+    # One focused sub-query per matched domain so each is retrieved on its own.
+    return [f"Bolaji BALOGOUN {dom} {query}" for dom in hit]
+
+
 def retrieve_node(state: dict) -> dict:
     """Retrieve documents using resilient hybrid retrieval with lexical fallback.
 
@@ -443,15 +482,29 @@ def retrieve_node(state: dict) -> dict:
         from app.settings import get_settings
 
         search_settings = get_settings().search
-        docs: List[Document] = _get_hybrid_search().search(
+        search = _get_hybrid_search()
+        cat_filter = category.value if category != AgentCategory.OUT_OF_SCOPE else None
+        docs: List[Document] = search.search(
             query,
             top_k=search_settings.vector_top_k,
             use_hybrid=search_settings.use_hybrid,
             use_reranker=search_settings.use_reranker,
-            category_filter=(
-                category.value if category != AgentCategory.OUT_OF_SCOPE else None
-            ),
+            category_filter=cat_filter,
         )
+        # Compound questions ("role AND degree") otherwise fill the whole
+        # context with the dominant sub-topic and drop the other half
+        # (measured defect n09). Fan out a second search per detected sub-topic
+        # and merge, so both halves reach generation.
+        for sub in _compound_subqueries(query):
+            extra = search.search(
+                sub,
+                top_k=3,
+                use_hybrid=search_settings.use_hybrid,
+                use_reranker=search_settings.use_reranker,
+                category_filter=None,
+            )
+            seen = {d.page_content for d in docs}
+            docs.extend(d for d in extra if d.page_content not in seen)
         docs = _temporal_boost(query, docs)
 
         return {
