@@ -12,12 +12,23 @@ import logging
 from typing import Any, Dict, List
 
 from langchain_core.documents import Document
-from langchain_core.prompts import ChatPromptTemplate
 
 import config
+from app.graph.prompts import (
+    BATCH_GRADE_PROMPT,
+    CONDENSE_PROMPT,
+    GENERATE_PROMPT,
+    GENERATE_SYSTEM_PROMPTS,
+    GUARDRAIL_PROMPT,
+    OUT_OF_SCOPE_PROMPT,
+    REWRITE_PROMPT,
+    TRANSLATE_PROMPT,
+    VERIFY_GROUNDING_PROMPT,
+)
 from app.graph.state import (
     AgentCategory,
     BatchGradeResult,
+    CondensedQuery,
     GeneratedAnswer,
     GradeDocuments,
     GroundingVerdict,
@@ -26,8 +37,24 @@ from app.graph.state import (
     ReasoningStep,
     RoutingDestination,
 )
+from app.services.public_facts import public_facts_block
 
 logger = logging.getLogger("ibola.graph")
+
+
+def _format_history(chat_history: list, turns: int = 3, cap: int = 400) -> str:
+    """Full recent turns, each capped, for condense/guardrail/rewrite prompts.
+
+    60-80-char summaries starved these sub-agents of the context they need
+    to resolve pronouns and topic continuity (measured defect cluster).
+    """
+    if not chat_history:
+        return "(none)"
+    recent = chat_history[-turns:]
+    return "\n".join(
+        f"User: {user[:cap]}\nAssistant: {bot[:cap]}" for user, bot in recent
+    )
+
 
 # ---------------------------------------------------------------------------
 # Shared LLM helpers (lazy-initialised singletons)
@@ -165,54 +192,20 @@ def _get_hybrid_search():
 # NODE: guardrail
 # ===================================================================
 
-GUARDRAIL_PROMPT = ChatPromptTemplate.from_messages(
-    [
-        (
-            "system",
-            (
-                "You are a guardrail scoring agent. Evaluate whether the user query "
-                "is relevant to Bolaji BALOGOUN's professional profile.\n\n"
-                "ON-TOPIC includes: skills, technologies, tools, work experience, "
-                "projects, certifications, education, community leadership, consulting, "
-                "blog articles, apps/portfolio, career advice, availability, where he "
-                "is based (his public professional location), the languages he speaks, "
-                "how to contact him, or anything a recruiter or hiring manager might "
-                "ask about a candidate.\n\n"
-                "IMPORTANT: questions about projects, systems, metrics, or results "
-                "described in Bolaji's portfolio are ON-TOPIC even when they do not "
-                "mention his name (e.g. 'how much time does the invoice extraction "
-                "save?', 'what happened during the Vodun Days festival?'). Assume the "
-                "user is asking about Bolaji's work unless clearly unrelated.\n\n"
-                "Score 0-100:\n"
-                "  80-100 = clearly on-topic (skills, experience, projects, education…)\n"
-                "  50-79  = partially relevant or ambiguous\n"
-                "  0-49   = off-topic (politics, sports, weather, personal opinions…)\n\n"
-                "Category must be one of: professional, education, learning, out_of_scope"
-            ),
-        ),
-        ("human", "Query: {query}\nChat history (last 3): {history_summary}"),
-    ]
-)
-
 
 def guardrail_node(state: dict) -> dict:
     """Score the query for relevance (0-100) and classify it."""
     query = state.get("query", "")
     chat_history = state.get("chat_history", [])
 
-    history_summary = ""
-    if chat_history:
-        recent = chat_history[-3:]
-        history_summary = " | ".join(
-            f"User: {h[0][:60]} → AI: {h[1][:60]}" for h in recent
-        )
-
     try:
         llm = _get_llm(temperature=0.0)
         structured_llm = llm.with_structured_output(GuardrailScoring)
         result: GuardrailScoring = structured_llm.invoke(
             GUARDRAIL_PROMPT.format_messages(
-                query=query, history_summary=history_summary or "(none)"
+                query=query,
+                history_summary=_format_history(chat_history),
+                public_facts=public_facts_block(),
             )
         )
 
@@ -267,43 +260,60 @@ def guardrail_node(state: dict) -> dict:
 
 
 # ===================================================================
-# NODE: retrieve
+# NODE: condense_query
 # ===================================================================
 
 
-_VAGUE_PATTERNS = frozenset(
-    {
-        "tell me more",
-        "more details",
-        "go on",
-        "continue",
-        "elaborate",
-        "expand on that",
-        "what about that",
-        "explain further",
-        "can you elaborate",
-        "more about that",
-        "more info",
-        "keep going",
+def condense_query_node(state: dict) -> dict:
+    """Rewrite the question standalone against history before FIRST retrieval.
+
+    Always on when chat_history is non-empty; a no-op passthrough otherwise.
+    This is the condense-before-retrieve pattern the legacy chain had and the
+    LangGraph migration lost; its absence was the largest measured defect
+    cluster (pronoun/ellipsis follow-ups answered with IDK or the wrong
+    project). The original question is kept in ``original_query`` for the
+    downstream topic-match validator.
+    """
+    query = state.get("query", "")
+    chat_history = state.get("chat_history", [])
+    steps = list(state.get("reasoning_steps", []))
+
+    if not chat_history or not query.strip():
+        return {"original_query": query, "reasoning_steps": steps}
+
+    try:
+        llm = _get_llm(temperature=0.0)
+        structured_llm = llm.with_structured_output(CondensedQuery)
+        result: CondensedQuery = structured_llm.invoke(
+            CONDENSE_PROMPT.format_messages(
+                history=_format_history(chat_history), query=query
+            )
+        )
+        standalone = result.standalone_query.strip() or query
+    except Exception as exc:
+        logger.warning("Condense fallback (using raw query): %s", exc)
+        steps.append(
+            ReasoningStep(node="condense_query", action="error", detail=str(exc)[:80])
+        )
+        return {"original_query": query, "reasoning_steps": steps}
+
+    steps.append(
+        ReasoningStep(
+            node="condense_query",
+            action="condensed" if standalone != query else "unchanged",
+            detail=f"old={query[:40]} new={standalone[:40]}",
+        )
+    )
+    return {
+        "original_query": query,
+        "query": standalone,
+        "reasoning_steps": steps,
     }
-)
 
 
-def _is_vague_query(query: str) -> bool:
-    """Return True if the query is a vague follow-up that needs context."""
-    lower = query.lower().strip()
-    if len(lower.split()) <= 5:
-        return any(p in lower for p in _VAGUE_PATTERNS)
-    return False
-
-
-def _expand_vague_query(query: str, chat_history: list) -> str:
-    """Expand a vague follow-up with the last topic from chat history."""
-    if not chat_history:
-        return query
-    last_user_msg, last_bot_msg = chat_history[-1]
-    # Use the last user question as context seed
-    return f"{last_user_msg} — {query}"
+# ===================================================================
+# NODE: retrieve
+# ===================================================================
 
 
 # Temporal queries ("latest role", "where does he work now") must rank the
@@ -316,44 +326,37 @@ _TEMPORAL_QUERY_PATTERN = __import__("re").compile(
     __import__("re").IGNORECASE,
 )
 
-# Sources that answer "what is he doing now" style questions.
-_TEMPORAL_PRIORITY_MARKERS = (
-    "current_status",
-    "last_role",
-    "career_overview",
-)
-
 
 def _temporal_boost(query: str, docs: List[Document]) -> List[Document]:
-    """For temporal queries, float current-status/latest-role chunks first.
+    """For temporal queries, rank chunks by their structured recency signal.
 
-    Stable within groups so hybrid-search order is preserved otherwise.
+    Chunks carry ``latest_year`` metadata (extracted at ingestion; 9999 for
+    ongoing "Present" engagements). Stable sort, so hybrid-search order is
+    preserved within the same year. Policy as data: no source-name lists,
+    no prose rules that rot when the KB changes.
     """
     if not _TEMPORAL_QUERY_PATTERN.search(query):
         return docs
 
-    def is_priority(doc: Document) -> bool:
-        source = str(doc.metadata.get("source", "")).lower()
-        if any(marker in source for marker in _TEMPORAL_PRIORITY_MARKERS):
-            return True
-        # The website canon file: only its most-recent-role sections qualify
-        return "july 2026" in doc.page_content.lower()
+    def recency(doc: Document) -> int:
+        try:
+            return int(doc.metadata.get("latest_year") or 0)
+        except (TypeError, ValueError):
+            return 0
 
-    priority = [d for d in docs if is_priority(d)]
-    rest = [d for d in docs if not is_priority(d)]
-    return priority + rest
+    return [
+        doc
+        for _, doc in sorted(
+            enumerate(docs), key=lambda pair: (-recency(pair[1]), pair[0])
+        )
+    ]
 
 
 def retrieve_node(state: dict) -> dict:
     """Retrieve documents using resilient hybrid retrieval with lexical fallback."""
     category = state.get("category", AgentCategory.PROFESSIONAL)
     query = (state.get("rewritten_query") or state.get("query", "")).strip()
-    chat_history = state.get("chat_history", [])
     attempts = state.get("retrieval_attempts", 0)
-
-    # Expand vague follow-ups on the first attempt (before rewrite loop)
-    if attempts == 0 and _is_vague_query(query) and chat_history:
-        query = _expand_vague_query(query, chat_history)
 
     if not query:
         return {
@@ -414,20 +417,21 @@ def retrieve_node(state: dict) -> dict:
 # NODE: grade_documents
 # ===================================================================
 
-BATCH_GRADE_PROMPT = ChatPromptTemplate.from_messages(
-    [
-        (
-            "system",
-            (
-                "You grade document relevance. Given a question and numbered "
-                "documents, return the indices (0-based) of documents that help "
-                "answer the question. Be generous — if a document is partially "
-                "relevant, include it. Return an empty list if none are relevant."
-            ),
-        ),
-        ("human", "Question: {query}\n\nDocuments:\n{docs}"),
+
+def _grading_snippet(index: int, doc: Document) -> str:
+    """Snippet the grader sees: metadata line + first 1000 chars.
+
+    The previous 300-char window dropped facts that lived past the chunk's
+    header (measured misses: Takwimu LAB, AI4D award, 9 business units).
+    """
+    meta = doc.metadata or {}
+    header_bits = [
+        str(meta.get("title") or meta.get("filename") or meta.get("source") or "")
     ]
-)
+    if meta.get("section_header"):
+        header_bits.append(str(meta["section_header"]))
+    header = " | ".join(bit for bit in header_bits if bit)
+    return f"[DOC {index}] ({header}):\n{doc.page_content[:1000]}"
 
 
 def grade_documents_node(state: dict) -> dict:
@@ -445,8 +449,8 @@ def grade_documents_node(state: dict) -> dict:
         return {"graded_documents": [], "reasoning_steps": steps}
 
     # Build a single prompt listing all documents for batch grading
-    doc_summaries = "\n".join(
-        f"[DOC {i}]: {doc.page_content[:300]}" for i, doc in enumerate(documents)
+    doc_summaries = "\n\n".join(
+        _grading_snippet(i, doc) for i, doc in enumerate(documents)
     )
 
     try:
@@ -480,27 +484,6 @@ def grade_documents_node(state: dict) -> dict:
 # NODE: rewrite_query
 # ===================================================================
 
-REWRITE_PROMPT = ChatPromptTemplate.from_messages(
-    [
-        (
-            "system",
-            (
-                "You are a query rewriter. The original query did not retrieve "
-                "enough relevant documents about Bolaji BALOGOUN. Rewrite it to be "
-                "more specific and likely to match content about his professional "
-                "experience, education, skills, community work, or blog.\n\n"
-                "IMPORTANT: If the query is vague or uses pronouns (e.g. 'tell me "
-                "more', 'what about that'), use the chat history to understand what "
-                "the user is referring to and produce a self-contained query."
-            ),
-        ),
-        (
-            "human",
-            "Chat history:\n{history}\n\nOriginal query: {query}",
-        ),
-    ]
-)
-
 
 def rewrite_query_node(state: dict) -> dict:
     """Rewrite the query for a better retrieval attempt, using chat history."""
@@ -508,13 +491,8 @@ def rewrite_query_node(state: dict) -> dict:
     chat_history = state.get("chat_history", [])
     steps = list(state.get("reasoning_steps", []))
 
-    # Format recent history so the rewriter can resolve pronouns / context
-    history_str = "(none)"
-    if chat_history:
-        recent = chat_history[-3:]
-        history_str = "\n".join(
-            f"User: {h[0][:80]}\nAssistant: {h[1][:80]}" for h in recent
-        )
+    # Full recent turns so the rewriter can resolve pronouns / context
+    history_str = _format_history(chat_history)
 
     try:
         llm = _get_llm(temperature=0.3)
@@ -542,80 +520,6 @@ def rewrite_query_node(state: dict) -> dict:
 # ===================================================================
 # NODE: generate
 # ===================================================================
-
-# Prompt templates per category — reusing the existing well-crafted prompts
-_LANGUAGE_RULE = (
-    "LANGUAGE RULE (CRITICAL — never violate):\n"
-    "- MATCH the user's language. If the user writes in French, reply in French. "
-    "If the user writes in English, reply in English. Detect the language of the "
-    "user's CURRENT question, not the chat history.\n"
-    "- Never mix languages within a single response.\n"
-    "- Keep technical terms (Python, BigQuery, LangGraph, etc.) in their original form "
-    "regardless of response language.\n\n"
-)
-
-_GENERATE_PROMPTS = {
-    AgentCategory.PROFESSIONAL: (
-        "You are iBola, Bolaji's AI assistant.\n\n"
-        "VOICE: Succinct yet captivating. Like a well-prepared recruiter brief.\n\n"
-        + _LANGUAGE_RULE
-        + "RULES:\n"
-        "1) DEFAULT: 2-3 sentences. Pick the most impressive, relevant facts. Be precise.\n"
-        "2) Include specific numbers, tools, or achievements when available.\n"
-        "3) If the user asks for more details or follows up, give up to 5 sentences.\n"
-        "4) Base answers ONLY on what you know about Bolaji. Never invent facts.\n"
-        "5) STRICTLY FORBIDDEN PHRASES: 'provided context', 'the context', 'in the context', "
-        "'based on the context', 'the information provided', 'the documents', 'my knowledge base', "
-        "'from the data I have', 'RAG', 'retrieval'. NEVER use these. Speak as if you simply know Bolaji.\n"
-        "6) ALWAYS refer to Bolaji in third person.\n"
-        "7) If info not available: say 'I don't have that information. Please email hello@bolablg.com.' "
-        "Do NOT say 'the context does not contain' or similar.\n"
-        "8) Greetings ONLY when the user greets first. Never greet if the user asks a question.\n"
-        "9) RECENCY RULE: When asked about 'latest role', 'current role', 'last job', 'present position', "
-        "'where does Bolaji work', refer to the role with the MOST RECENT END DATE "
-        "(a role dated 'Present' outranks all others if one exists). "
-        "If his most recent role has ended, say so plainly in past tense and mention what he is doing now "
-        "if that information is available. Never present an ended role as current. "
-        "Short-term consulting engagements performed ALONGSIDE a primary job are NOT the latest role.\n"
-        "10) PUBLIC PROFILE FACTS: Bolaji's base location (city, state, country), languages, "
-        "and availability are published on his own website and are meant to be shared. "
-        "When the context contains them, state them plainly. Never refuse them as private.\n"
-    ),
-    AgentCategory.EDUCATION: (
-        "You are iBola, Bolaji's AI assistant.\n\n"
-        "VOICE: Succinct yet captivating.\n\n" + _LANGUAGE_RULE + "RULES:\n"
-        "1) DEFAULT: 2-3 sentences. Highlight the most notable qualifications.\n"
-        "2) Include degrees, certifications, bootcamps, and courses with key facts.\n"
-        "3) If the user asks for more details, expand to cover all qualifications.\n"
-        "4) Base answers ONLY on context. Never invent.\n"
-        "5) Never mention 'documents', 'context', 'RAG'.\n"
-        "6) ALWAYS refer to Bolaji in third person.\n"
-    ),
-    AgentCategory.LEARNING: (
-        "You are iBola, Bolaji's AI assistant.\n\n"
-        "VOICE: Succinct yet captivating and encouraging.\n\n"
-        + _LANGUAGE_RULE
-        + "RULES:\n"
-        "1) DEFAULT: 2-3 sentences. Give one actionable tip grounded in Bolaji's experience.\n"
-        "2) Reference specific tools or paths when relevant.\n"
-        "3) If the user asks for more, expand into a structured learning path.\n"
-        "4) Base answers ONLY on context. Never invent.\n"
-        "5) Never mention 'documents', 'context', 'RAG'.\n"
-        "6) ALWAYS refer to Bolaji in third person.\n"
-    ),
-}
-
-GENERATE_PROMPT = ChatPromptTemplate.from_messages(
-    [
-        ("system", "{system_prompt}"),
-        (
-            "human",
-            "Reply language: {reply_language}\n\n"
-            "Context:\n{context}\n\nChat history:\n{chat_history}\n\nQuestion: {query}",
-        ),
-    ]
-)
-
 
 _GENERATE_THINKING_BUDGET = 256
 
@@ -669,38 +573,85 @@ _LEAK_PHRASES = [
 ]
 
 
-# Tokens that strongly signal French in portfolio-chatbot queries.
-_FR_MARKERS = frozenset(
+# French detection markers, split by ambiguity. STRONG tokens are
+# unambiguously French; WEAK tokens also appear in English text ("role",
+# "experience", "est") and previously misfired: "What was his latest role?"
+# was classified French and answered in French (measured defect s01).
+_FR_STRONG = frozenset(
     {
         "quel",
         "quelle",
         "quels",
         "quelles",
-        "qui",
-        "que",
         "quoi",
-        "ou",
         "où",
         "quand",
         "comment",
         "pourquoi",
         "combien",
-        "est",
-        "sont",
-        "est-ce",
-        "c'est",
-        "ce",
         "cette",
         "ces",
+        "du",
+        "au",
+        "aux",
+        "chez",
+        "travaille",
+        "travailler",
+        "travaillait",
+        "expérience",
+        "rôle",
+        "poste",
+        "emploi",
+        "entreprise",
+        "société",
+        "équipe",
+        "equipe",
+        "parle",
+        "parler",
+        "parlez",
+        "dites",
+        "raconte",
+        "compétences",
+        "competences",
+        "bonjour",
+        "salut",
+        "merci",
+        "dernier",
+        "derniere",
+        "dernière",
+        "actuellement",
+        "aujourd'hui",
+        "maintenant",
+        "encore",
+        "toujours",
+        "était",
+        "etait",
+        "été",
+        "publie",
+        "publié",
+        "études",
+        "etudes",
+        "diplôme",
+        "diplome",
+        "langues",
+    }
+)
+
+_FR_WEAK = frozenset(
+    {
+        "qui",
+        "que",
+        "ou",
+        "est",
+        "sont",
+        "ce",
         "le",
         "la",
         "les",
         "un",
         "une",
         "des",
-        "du",
         "de",
-        "d'",
         "il",
         "elle",
         "son",
@@ -714,68 +665,44 @@ _FR_MARKERS = frozenset(
         "pour",
         "dans",
         "sur",
-        "chez",
         "entre",
-        "travaille",
-        "travailler",
-        "travaillait",
-        "expérience",
-        "experience",
-        "rôle",
-        "role",
-        "poste",
-        "emploi",
-        "entreprise",
-        "société",
-        "equipe",
-        "équipe",
-        "parle",
-        "parler",
-        "parlez",
-        "dites",
-        "dire",
-        "raconte",
-        "compétences",
-        "competences",
-        "bonjour",
-        "salut",
-        "merci",
+        "et",
+        "en",
     }
 )
 
 
 def _detect_reply_language(query: str, user_language: str = "en") -> str:
-    """Return 'French' if the query appears to be in French, else 'English'.
+    """Return 'French' or 'English' for the reply.
 
-    Combines a quick lexical heuristic with the user_language hint from the
-    request.  Conservative: only returns French when there is strong signal,
-    so ambiguous/technical queries default to English.
+    Requires UNAMBIGUOUS French evidence (strong markers, elisions like
+    "qu'a", or accented characters) so English questions containing shared
+    vocabulary ("role", "experience") are never misrouted to French.
     """
     import re as _re
 
+    default = "French" if user_language.lower().startswith("fr") else "English"
     if not query:
-        return "French" if user_language.lower().startswith("fr") else "English"
+        return default
 
-    # Tokenize, lowercase, strip punctuation
     tokens = _re.findall(r"[a-zA-ZÀ-ÿ']+", query.lower())
     if not tokens:
-        return "French" if user_language.lower().startswith("fr") else "English"
+        return default
 
-    total = len(tokens)
-    fr_hits = sum(1 for t in tokens if t in _FR_MARKERS)
-
-    # Accented characters common in French (é, è, ê, à, ç...)
+    strong = sum(1 for t in tokens if t in _FR_STRONG)
+    # Elisions (qu'a, j'ai, l'entreprise, d'une) are unambiguous French
+    strong += sum(1 for t in tokens if _re.match(r"^(?:qu|j|l|d|n|s|m)'\w", t))
+    weak = sum(1 for t in tokens if t in _FR_WEAK)
     has_accent = bool(_re.search(r"[àâçéèêëîïôùûÿœæ]", query.lower()))
 
-    # Strong signal: ≥2 French markers OR accented chars with ≥1 marker OR
-    # short query with any marker
-    if fr_hits >= 2 or (has_accent and fr_hits >= 1) or (total <= 5 and fr_hits >= 1):
+    if has_accent and (strong + weak) >= 1:
         return "French"
-
-    # Respect user_language hint as tiebreaker
-    if user_language.lower().startswith("fr") and fr_hits >= 1:
+    if strong >= 1 and (strong + weak) >= 2:
         return "French"
-
+    if len(tokens) <= 5 and strong >= 1:
+        return "French"
+    if user_language.lower().startswith("fr") and (strong + weak) >= 1:
+        return "French"
     return "English"
 
 
@@ -783,15 +710,43 @@ def _sanitize_answer(answer: str) -> str:
     """Strip RAG/context leakage phrases from generated answers.
 
     Defense-in-depth: the prompt already forbids these phrases, but LLMs
-    occasionally slip. This post-processor removes the common patterns
-    without altering semantic content.
+    occasionally slip. Every firing is logged as prompt-defect telemetry:
+    a rising firing rate means a prompt regression, so watch the
+    'leak_stripper_fired' log lines.
     """
     import re as _re
 
     out = answer
-    for pattern, replacement in _LEAK_PHRASES:
+    # Cleanup-only patterns at the tail are formatting, not leaks
+    substantive = _LEAK_PHRASES[:-4]
+    cleanup = _LEAK_PHRASES[-4:]
+
+    for pattern, replacement in substantive:
+        out, n = _re.subn(pattern, replacement, out, flags=_re.IGNORECASE)
+        if n:
+            logger.info("leak_stripper_fired pattern=%r count=%d", pattern[:60], n)
+    for pattern, replacement in cleanup:
         out = _re.sub(pattern, replacement, out, flags=_re.IGNORECASE)
     return out.strip()
+
+
+def _validate_answer_language(
+    answer: str, reply_language: str, user_language: str
+) -> bool:
+    """True when the answer's detected language matches the requested one."""
+    if not answer:
+        return True
+    detected = _detect_reply_language(answer, user_language)
+    return detected == reply_language
+
+
+def _translate_answer(answer: str, reply_language: str) -> str:
+    """Deterministic translation fallback for the language validator."""
+    llm = _get_llm(temperature=0.0)
+    response = llm.invoke(
+        TRANSLATE_PROMPT.format_messages(target_language=reply_language, text=answer)
+    )
+    return response.content.strip() or answer
 
 
 def _select_context_docs(graded_docs: List[Document]) -> List[Document]:
@@ -851,28 +806,70 @@ def generate_node(state: dict) -> dict:
             f"Human: {h[0]}\nAssistant: {h[1]}" for h in chat_history[-5:]
         )
 
-    # Detect language of the user's current query (lightweight heuristic).
-    # The LLM is the source of truth; this is a hint.
-    reply_language = _detect_reply_language(query, state.get("user_language", "en"))
+    # The reply language is decided ONCE from the question the user typed
+    # (original_query survives condensation) and passed explicitly; the
+    # validator below enforces it instead of exhorting the model.
+    user_language = state.get("user_language", "en")
+    language_source = state.get("original_query") or query
+    reply_language = _detect_reply_language(language_source, user_language)
 
-    system_prompt = _GENERATE_PROMPTS.get(
-        category, _GENERATE_PROMPTS[AgentCategory.PROFESSIONAL]
+    system_prompt_template = GENERATE_SYSTEM_PROMPTS.get(
+        category, GENERATE_SYSTEM_PROMPTS[AgentCategory.PROFESSIONAL]
     )
+    system_prompt = system_prompt_template.replace(
+        "{public_facts}", public_facts_block()
+    )
+    today = __import__("datetime").date.today().isoformat()
 
-    try:
+    def _call_generate(extra_instruction: str = "") -> GeneratedAnswer:
         llm = _get_llm(temperature=0.7, thinking_budget=_GENERATE_THINKING_BUDGET)
         structured_llm = llm.with_structured_output(GeneratedAnswer)
-        result: GeneratedAnswer = structured_llm.invoke(
+        return structured_llm.invoke(
             GENERATE_PROMPT.format_messages(
-                system_prompt=system_prompt,
+                system_prompt=system_prompt + extra_instruction,
                 reply_language=reply_language,
+                today=today,
                 context=context,
                 chat_history=history_str or "(none)",
                 query=query,
             )
         )
+
+    try:
+        result = _call_generate()
         answer = _sanitize_answer(result.answer)
         confidence = result.confidence
+
+        # Language validator: retry once with a corrective instruction, then
+        # fall back to deterministic translation. Validation, not exhortation.
+        if not _validate_answer_language(answer, reply_language, user_language):
+            logger.info("language_mismatch detected=not-%s; retrying", reply_language)
+            steps.append(
+                ReasoningStep(
+                    node="generate",
+                    action="language_retry",
+                    detail=f"expected={reply_language}",
+                )
+            )
+            try:
+                retry = _call_generate(
+                    f"\n\nCRITICAL: your previous draft was in the wrong "
+                    f"language. Write the ENTIRE answer in {reply_language}."
+                )
+                retried = _sanitize_answer(retry.answer)
+                if _validate_answer_language(retried, reply_language, user_language):
+                    answer, confidence = retried, retry.confidence
+                else:
+                    answer = _sanitize_answer(_translate_answer(answer, reply_language))
+                    steps.append(
+                        ReasoningStep(
+                            node="generate",
+                            action="language_translated",
+                            detail=reply_language,
+                        )
+                    )
+            except Exception as exc:
+                logger.warning("Language retry failed (keeping draft): %s", exc)
 
     except Exception as exc:
         logger.error("Generate node error: %s", exc)
@@ -888,7 +885,7 @@ def generate_node(state: dict) -> dict:
             action="answered",
             detail=(
                 f"docs_used={len(context_docs)}/{len(graded_docs)} "
-                f"confidence={confidence:.2f}"
+                f"confidence={confidence:.2f} lang={reply_language}"
             ),
         )
     )
@@ -905,42 +902,14 @@ def generate_node(state: dict) -> dict:
 # NODE: verify_grounding
 # ===================================================================
 
-VERIFY_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
-    [
-        (
-            "system",
-            (
-                "You verify that an assistant's answer about Bolaji BALOGOUN is "
-                "fully supported by the retrieved context.\n\n"
-                "1) Extract every MATERIAL claim in the answer: roles, employers, "
-                "dates, locations, numbers, titles, credentials, availability.\n"
-                "2) For each claim, check whether the context supports it. "
-                "Paraphrase counts as support; contradiction or absence does not.\n"
-                "3) If every claim is supported, return is_grounded=true.\n"
-                "4) Otherwise return is_grounded=false, list the unsupported "
-                "claims, and write corrected_answer: the same answer with "
-                "unsupported claims removed or fixed to match the context, in the "
-                "SAME language and tone as the original. If nothing survives, "
-                "corrected_answer should say the information is not available and "
-                "suggest emailing hello@bolablg.com.\n\n"
-                "Do NOT flag conversational filler, offers to help, or contact "
-                "suggestions. Only profile facts are material."
-            ),
-        ),
-        (
-            "human",
-            "Context:\n{context}\n\nAnswer to verify:\n{answer}",
-        ),
-    ]
-)
-
 _FALLBACK_UNGROUNDED_ANSWER = (
     "I don't have that information. Please email hello@bolablg.com."
 )
 
 
 def verify_grounding_node(state: dict) -> dict:
-    """Claim-level verification after generate: fail closed on unsupported claims.
+    """Claim-level verification after generate: fail closed on unsupported
+    claims AND on grounded-but-wrong-topic substitutions.
 
     Skipped for redirects and for turns with no retrieved context (those
     answers are already refusals or deterministic). On verifier failure the
@@ -950,6 +919,7 @@ def verify_grounding_node(state: dict) -> dict:
     answer = state.get("answer", "")
     agent_type = state.get("agent_type", "professional")
     context_docs = state.get("context_documents", []) or []
+    question = state.get("original_query") or state.get("query", "")
     steps = list(state.get("reasoning_steps", []))
 
     try:
@@ -983,7 +953,9 @@ def verify_grounding_node(state: dict) -> dict:
         llm = _get_llm(temperature=0.0)
         structured_llm = llm.with_structured_output(GroundingVerdict)
         verdict: GroundingVerdict = structured_llm.invoke(
-            VERIFY_GROUNDING_PROMPT.format_messages(context=context, answer=answer)
+            VERIFY_GROUNDING_PROMPT.format_messages(
+                question=question or "(unknown)", context=context, answer=answer
+            )
         )
     except Exception as exc:
         logger.warning("Grounding verifier error (pass-through): %s", exc)
@@ -996,7 +968,7 @@ def verify_grounding_node(state: dict) -> dict:
             "reasoning_steps": steps,
         }
 
-    if verdict.is_grounded:
+    if verdict.is_grounded and verdict.addresses_question:
         steps.append(
             ReasoningStep(node="verify_grounding", action="grounded", detail="")
         )
@@ -1007,15 +979,22 @@ def verify_grounding_node(state: dict) -> dict:
         }
 
     corrected = _sanitize_answer(verdict.corrected_answer.strip())
+    failure = (
+        "unsupported claims" if not verdict.is_grounded else "wrong-topic substitution"
+    )
     steps.append(
         ReasoningStep(
             node="verify_grounding",
             action="corrected",
-            detail=f"unsupported={len(verdict.unsupported_claims)}",
+            detail=(
+                f"{failure}: unsupported={len(verdict.unsupported_claims)} "
+                f"on_topic={verdict.addresses_question}"
+            ),
         )
     )
     logger.info(
-        "Grounding verifier dropped unsupported claims: %s",
+        "Grounding verifier corrected answer (%s): %s",
+        failure,
         verdict.unsupported_claims[:5],
     )
     return {
@@ -1030,23 +1009,6 @@ def verify_grounding_node(state: dict) -> dict:
 # ===================================================================
 # NODE: out_of_scope
 # ===================================================================
-
-OUT_OF_SCOPE_PROMPT = ChatPromptTemplate.from_messages(
-    [
-        (
-            "system",
-            (
-                "You are iBola, Bolaji's AI assistant. The user asked something outside "
-                "your scope. Politely decline in 1-2 sentences. "
-                "MATCH THE USER'S LANGUAGE: reply in French if the query is in French, "
-                "in English if the query is in English. "
-                "Suggest they ask about Bolaji's professional experience, education, "
-                "community leadership, consulting, blog, or apps."
-            ),
-        ),
-        ("human", "{query}"),
-    ]
-)
 
 
 def out_of_scope_node(state: dict) -> dict:
