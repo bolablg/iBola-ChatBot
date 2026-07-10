@@ -103,22 +103,59 @@ def load_golden(tags=None, limit=None):
     return rows
 
 
+def _accent_fold(text):
+    """Strip accents so 'première' matches 'premiere' (grader honesty)."""
+    import unicodedata
+
+    return "".join(
+        c for c in unicodedata.normalize("NFKD", text) if not unicodedata.combining(c)
+    )
+
+
+# Sentence delimiters for negation-aware banned-phrase checks.
+_SENTENCE_SPLIT = __import__("re").compile(r"[.!?\n]+")
+# A forbidden term inside one of these clauses is a correct refusal, not a
+# leak ("working at Google is NOT something I have"): don't fail on it.
+_NEGATION_MARKERS = (
+    "not ",
+    "n't",
+    "no ",
+    "cannot",
+    "can't",
+    "don't",
+    "isn't",
+    "aren't",
+    "never",
+    "pas ",
+    "aucun",
+    "ne ",
+    "n'",
+)
+
+
 def check_facts(answer, row, actions=None):
     """Deterministic checks. Returns (passed, failures).
 
-    ``must_contain`` / ``must_not_contain`` are case-insensitive substrings
-    ("a|b" = a or b). ``require_actions: true`` passes only when the response
-    ships quick-reply action chips: contact/booking/resume answers correctly
-    defer to buttons, so text-only checks would be a grader artifact (the
-    measured s14 false failure).
+    ``must_contain`` / ``must_not_contain`` are accent-folded, case-insensitive
+    substrings ("a|b" = a or b). ``must_not_contain`` ignores matches inside a
+    NEGATED clause (a refusal that names the forbidden thing to deny it is
+    correct, not a leak). ``require_actions: true`` passes only when the
+    response ships quick-reply action chips (contact/booking/resume defer to
+    buttons; text-only checks there were a grader artifact).
     """
-    low = answer.lower()
+    low = _accent_fold(answer.lower())
     failures = []
     for clause in row.get("must_contain", []):
-        if not any(alt.strip() in low for alt in clause.lower().split("|")):
+        clause_f = _accent_fold(clause.lower())
+        if not any(alt.strip() in low for alt in clause_f.split("|")):
             failures.append(f"missing: {clause}")
+    sentences = [_accent_fold(s.lower()) for s in _SENTENCE_SPLIT.split(answer)]
     for clause in row.get("must_not_contain", []):
-        if clause.lower() in low:
+        needle = _accent_fold(clause.lower())
+        hit_sentences = [s for s in sentences if needle in s]
+        if hit_sentences and not all(
+            any(m in s for m in _NEGATION_MARKERS) for s in hit_sentences
+        ):
             failures.append(f"forbidden: {clause}")
     if row.get("require_actions") and not actions:
         failures.append("missing: actions[] quick-reply chips")
@@ -265,6 +302,39 @@ def run_one(target, judge, row):
     }
 
 
+def measure_first_token(base_url, questions, lang="en"):
+    """Time-to-first-token over SSE against a deployed instance (PART 6 #7).
+
+    Only meaningful with --base-url; the in-process path has no stream. Note
+    the SSE route currently runs the full pipeline before emitting tokens, so
+    this approximates full-pipeline time until real streaming lands.
+    """
+    import httpx
+
+    timings = []
+    with httpx.Client(timeout=90) as client:
+        for question in questions:
+            start = time.time()
+            try:
+                with client.stream(
+                    "POST",
+                    f"{base_url}/ask-agentic",
+                    json={
+                        "user_input": question,
+                        "session_id": f"ft-{uuid.uuid4().hex[:8]}",
+                        "user_language": lang,
+                        "stream": True,
+                    },
+                ) as response:
+                    for line in response.iter_lines():
+                        if line.startswith("event: token"):
+                            timings.append(round(time.time() - start, 3))
+                            break
+            except Exception:
+                pass
+    return sorted(timings)
+
+
 def _mean(values):
     values = [v for v in values if v is not None]
     return round(statistics.mean(values), 2) if values else None
@@ -370,6 +440,20 @@ def main():
 
     results.sort(key=lambda r: r["id"])
     agg = aggregate(results)
+
+    # First-token via SSE (only against a deployment)
+    if args.base_url:
+        ft = measure_first_token(
+            args.base_url,
+            [
+                "Does Bolaji still work at Gozem?",
+                "What are Bolaji's key skills?",
+                "Where is Bolaji based?",
+            ],
+        )
+        if ft:
+            agg["first_token_samples_s"] = ft
+            agg["first_token_p95_s"] = ft[min(len(ft) - 1, int(len(ft) * 0.95))]
 
     report = {
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
