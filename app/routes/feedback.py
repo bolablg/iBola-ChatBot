@@ -1,16 +1,21 @@
 """
-Feedback endpoint — users can rate responses for quality monitoring.
+Feedback endpoint: user feedback and implicit signals become Langfuse scores.
 
-Feeds into Langfuse (when enabled) and logs locally for analysis.
+PART 7.1 design (skill user-feedback reference): scores are named by signal
+source with one consistent name and an explicit data type. Feedback is routed
+through this backend (never LangfuseWeb) so keys are never exposed and there
+are no embed-CORS issues. Explicit feedback carries the rated turn's
+``trace_id``; session CSAT attaches at the session level; implicit signals are
+logged where the event happens.
 """
 
 from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Union
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from app.services.tracing import get_tracer
@@ -19,67 +24,113 @@ logger = logging.getLogger("ibola.feedback")
 
 router = APIRouter(tags=["Feedback"])
 
+# Allowed score names and their data types (skill: one consistent name each,
+# explicit dataType). CATEGORICAL takes a string value; BOOLEAN 0/1; NUMERIC
+# a float. Unknown names are rejected so the score space stays analyzable.
+_TRACE_SCORES = {
+    "user-thumbs": "BOOLEAN",
+    "user-thumbs-reason": "CATEGORICAL",
+    "implicit-retry": "BOOLEAN",
+    "implicit-early-exit": "BOOLEAN",
+    "implicit-copy": "BOOLEAN",
+    "redirect-count": "NUMERIC",
+}
+_SESSION_SCORES = {
+    "session-csat": "CATEGORICAL",
+}
+_ALLOWED_REASONS = {
+    "wrong-info",
+    "didnt-answer",
+    "too-vague",
+    "not-relevant",
+    "other",
+}
+
 
 class FeedbackInput(BaseModel):
+    score_name: str = Field(..., description="One of the allowed score names.")
+    value: Union[float, str] = Field(
+        ..., description="BOOLEAN 0/1, NUMERIC float, or CATEGORICAL string."
+    )
     session_id: str = Field(..., min_length=1, max_length=100)
-    message_index: int = Field(
-        default=0, ge=0, description="Index of the message being rated"
-    )
-    score: float = Field(
-        ..., ge=0.0, le=1.0, description="Rating 0.0 (bad) to 1.0 (good)"
-    )
-    comment: Optional[str] = Field(default=None, max_length=500)
     trace_id: Optional[str] = Field(
         default=None,
         max_length=64,
-        description="trace_id from the answer being rated; links the score "
-        "to the originating turn's trace instead of a disconnected one",
+        description="trace_id of the rated turn (required for trace-level scores).",
     )
+    comment: Optional[str] = Field(default=None, max_length=500)
 
 
 @router.post("/feedback")
 async def submit_feedback(payload: FeedbackInput):
-    """Submit user feedback on a response."""
-    tracer = get_tracer()
+    """Record a user-feedback or implicit-signal score in Langfuse."""
+    name = payload.score_name
+    if name not in _TRACE_SCORES and name not in _SESSION_SCORES:
+        raise HTTPException(status_code=400, detail=f"Unknown score_name '{name}'.")
 
-    if payload.trace_id:
-        # Attach the score to the turn that produced the rated answer
+    is_session = name in _SESSION_SCORES
+    data_type = _SESSION_SCORES.get(name) or _TRACE_SCORES[name]
+
+    # Reject malformed ids to keep the score space clean (Codex)
+    import re as _re
+
+    if payload.trace_id and not _re.fullmatch(r"[0-9a-f]{16,64}", payload.trace_id):
+        raise HTTPException(status_code=400, detail="Malformed trace_id.")
+    if not _re.fullmatch(r"[\w.-]{1,100}", payload.session_id):
+        raise HTTPException(status_code=400, detail="Malformed session_id.")
+
+    # Coerce/validate value by declared type
+    value = payload.value
+    if data_type == "CATEGORICAL":
+        value = str(value)
+        if name == "user-thumbs-reason" and value not in _ALLOWED_REASONS:
+            raise HTTPException(status_code=400, detail=f"Unknown reason '{value}'.")
+        if name == "session-csat" and value not in {"1", "2", "3"}:
+            raise HTTPException(status_code=400, detail="session-csat must be 1-3.")
+    else:
+        try:
+            value = float(value)
+        except (TypeError, ValueError):
+            raise HTTPException(
+                status_code=400, detail=f"{name} requires a numeric value."
+            )
+        if data_type == "BOOLEAN" and value not in (0.0, 1.0):
+            raise HTTPException(status_code=400, detail=f"{name} must be 0 or 1.")
+
+    tracer = get_tracer()
+    if is_session:
+        tracer.score_session(
+            session_id=payload.session_id,
+            name=name,
+            value=value,
+            comment=payload.comment or "",
+            data_type=data_type,
+        )
+    elif payload.trace_id:
         tracer.score_trace(
             trace_id=payload.trace_id,
-            name="user_rating",
-            value=payload.score,
+            name=name,
+            value=value,
             comment=payload.comment or "",
+            data_type=data_type,
         )
     else:
-        # No trace linkage available; record a standalone feedback trace
-        trace = tracer.create_trace(
-            name="user_feedback",
-            session_id=payload.session_id,
-            metadata={
-                "message_index": payload.message_index,
-                "score": payload.score,
-                "comment": payload.comment or "",
-            },
-        )
-        tracer.score(
-            trace,
-            name="user_rating",
-            value=payload.score,
-            comment=payload.comment or "",
+        raise HTTPException(
+            status_code=400,
+            detail=f"{name} is a trace-level score and requires trace_id.",
         )
     tracer.flush()
 
-    # Always log locally
     logger.info(
-        "Feedback received: session=%s score=%.1f comment=%s",
+        "feedback score=%s value=%s session=%s trace=%s",
+        name,
+        value,
         payload.session_id,
-        payload.score,
-        (payload.comment or "")[:100],
+        (payload.trace_id or "-")[:16],
     )
 
     return {
         "status": "recorded",
-        "session_id": payload.session_id,
-        "score": payload.score,
+        "score_name": name,
         "timestamp": datetime.now().isoformat(),
     }

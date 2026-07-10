@@ -113,6 +113,10 @@ async def ask_agentic(payload: AskInput, request: Request):
     if cached and not payload.stream:
         cached["cached"] = True
         cached["session_id"] = session_id
+        # A cached body carries the trace_id of the ORIGINAL turn; replaying it
+        # would misattribute this visitor's feedback to another session's trace
+        # (Codex #6). Drop it: a cache hit has no trace of its own.
+        cached["trace_id"] = None
         return cached
 
     history = get_history(session_id)
@@ -275,7 +279,8 @@ async def _stream_agentic(
         yield _sse_event({"token": chunk}, "token")
         await asyncio.sleep(0.02)  # Small delay for streaming effect
 
-    # Final event with metadata
+    # Final event with metadata. trace_id lets the client attach feedback to
+    # this exact turn (Codex #1: SSE must surface it too).
     yield _sse_event(
         {
             "status": "done",
@@ -283,6 +288,7 @@ async def _stream_agentic(
             "confidence": result.get("confidence"),
             "redirect_count": result.get("redirect_count", 0),
             "actions": result.get("actions", []),
+            "trace_id": result.get("trace_id"),
         },
         "done",
     )
@@ -319,6 +325,7 @@ async def ask_simple(payload: AskInput, request: Request):
     if cached:
         cached["cached"] = True
         cached["session_id"] = session_id
+        cached["trace_id"] = None  # cache hit has no trace of its own
         return cached
 
     start = time.time()

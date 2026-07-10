@@ -14,6 +14,60 @@ from typing import Any, Dict, Optional
 
 logger = logging.getLogger("ibola.tracing")
 
+import hashlib as _hashlib  # noqa: E402
+import os as _os  # noqa: E402
+import re as _re  # noqa: E402
+
+# PII patterns masked before any text reaches Langfuse (Codex #8: traces
+# previously carried raw query/answer/IP/UA/referrer). EU-visitor safe.
+# The phone pattern is deliberately narrow (needs a leading + / 00 country
+# code OR explicit separators AND 7+ digits) so it does not eat dates like
+# 2026-07-10 or KB metrics like 42.57 / 650.
+_PII_PATTERNS = [
+    (_re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+"), "[email]"),
+    (_re.compile(r"\b\d{1,3}(?:\.\d{1,3}){3}\b"), "[ip]"),
+    (_re.compile(r"https?://\S+"), "[url]"),
+    # Only international-prefixed numbers (+ / 00 then 8+ digits): unambiguous
+    # and never matches dates (2026-07-10) or KB metrics (42.57, 650). A bare
+    # local number is under-masked by design; over-masking telemetry is worse.
+    (_re.compile(r"(?<![\w.])(?:\+|00)\d[\d\s().-]{7,}\d"), "[phone]"),
+]
+
+
+def mask_pii(value):
+    """Redact emails, phones, IPs, and URLs. Recurses into dicts/lists so
+    payload metadata and step details are masked too (Codex: rewritten_query
+    and reasoning details carried raw user text)."""
+    if value is None:
+        return value
+    if isinstance(value, str):
+        out = value
+        for pattern, repl in _PII_PATTERNS:
+            out = pattern.sub(repl, out)
+        return out
+    if isinstance(value, dict):
+        return {k: mask_pii(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return type(value)(mask_pii(v) for v in value)
+    return value
+
+
+# Private salt for the visitor hash so ids are pseudonymous, not a plain
+# reversible hash of IP+UA (Codex). Ephemeral per deploy if unset.
+_VISITOR_SALT = _os.environ.get("VISITOR_HASH_SALT", "ibola-visitor-salt-v1")
+
+
+def hash_visitor(*parts):
+    """Stable pseudonymous visitor id (HMAC-salted) from request signals."""
+    raw = "|".join(str(p) for p in parts if p)
+    if not raw:
+        return None
+    digest = _hashlib.blake2s(
+        raw.encode("utf-8"), key=_VISITOR_SALT.encode("utf-8"), digest_size=8
+    ).hexdigest()
+    return "anon-" + digest
+
+
 # Optional dependency
 try:
     from langfuse import Langfuse
@@ -120,55 +174,65 @@ class RAGTracer:
         answer: str,
         payload: Optional[Dict[str, Any]] = None,
         steps: Optional[Any] = None,
+        user_id: Optional[str] = None,
+        tags: Optional[list] = None,
     ) -> Optional[str]:
         """Record one full agentic turn as a trace with per-node child spans.
 
         Uses the Langfuse v3+ OTEL API (start_span / update_trace). The
         required payload keys make every answer reproducible from its trace:
         raw and rewritten query, retrieved chunk IDs with scores, the final
-        context order, the answer, and latency. Returns the trace_id so the
-        response (and later user feedback) can link back to it.
+        context order, the answer, and latency. Query and answer are PII-masked
+        before they leave the process (Codex #8). ``user_id`` is an anonymous
+        hashed visitor id; ``tags`` carry lang/category/endpoint/release/prompt
+        versions. Returns the trace_id so feedback can link back to this turn.
         """
         if not self.enabled or self.client is None:
             return None
         try:
-            root = self.client.start_span(
-                name="agentic_turn",
-                input={"query": query},
-                metadata=payload or {},
-            )
-            try:
-                root.update_trace(
-                    session_id=session_id or None,
-                    input=query,
-                    output=answer,
-                )
-            except Exception:
-                pass
+            from langfuse import propagate_attributes
 
-            for step in steps or []:
-                node = getattr(step, "node", None) or (
-                    step.get("node") if isinstance(step, dict) else "step"
-                )
-                action = getattr(step, "action", None) or (
-                    step.get("action") if isinstance(step, dict) else ""
-                )
-                detail = getattr(step, "detail", None) or (
-                    step.get("detail") if isinstance(step, dict) else ""
-                )
-                try:
-                    child = root.start_span(
-                        name=str(node),
-                        input={"action": action},
-                        metadata={"detail": detail},
-                    )
-                    child.end()
-                except Exception:
-                    continue
+            masked_query = mask_pii(query)
+            masked_answer = mask_pii(answer)
 
-            root.update(output={"answer": answer})
-            trace_id = getattr(root, "trace_id", None)
-            root.end()
+            # v4 API: session_id/user_id/tags are trace-level attributes set
+            # via propagate_attributes; the root observation's I/O becomes the
+            # trace I/O. Each graph node is a child span.
+            with propagate_attributes(
+                session_id=session_id or None,
+                user_id=user_id or None,
+                tags=tags or None,
+            ):
+                with self.client.start_as_current_observation(
+                    name="chat-response",
+                    as_type="span",
+                    input=masked_query,
+                    metadata=mask_pii(payload or {}),
+                ) as root:
+                    trace_id = root.trace_id
+                    for step in steps or []:
+                        node = getattr(step, "node", None) or (
+                            step.get("node") if isinstance(step, dict) else "step"
+                        )
+                        action = getattr(step, "action", None) or (
+                            step.get("action") if isinstance(step, dict) else ""
+                        )
+                        detail = getattr(step, "detail", None) or (
+                            step.get("detail") if isinstance(step, dict) else ""
+                        )
+                        try:
+                            child = root.start_observation(
+                                name=str(node),
+                                as_type="span",
+                                input={"action": action},
+                                # step details embed truncated user queries
+                                metadata={"detail": mask_pii(detail)},
+                            )
+                            child.end()
+                        except Exception:
+                            continue
+                    root.update(output=masked_answer)
+                    root.set_trace_io(input=masked_query, output=masked_answer)
             return trace_id
         except Exception as exc:
             logger.debug("record_turn failed: %s", exc)
@@ -178,19 +242,51 @@ class RAGTracer:
         self,
         trace_id: str,
         name: str,
-        value: float,
+        value,
         comment: str = "",
+        data_type: str = "NUMERIC",
     ):
-        """Attach a score to an existing trace by id (links user feedback to
-        the originating turn instead of creating a disconnected trace)."""
+        """Attach a typed score to an existing trace by id.
+
+        ``data_type`` is passed explicitly: a BOOLEAN score with value 1 is
+        otherwise inferred NUMERIC (skill user-feedback Common Mistakes).
+        CATEGORICAL scores take a string value.
+        """
         if not self.enabled or self.client is None or not trace_id:
             return
         try:
             self.client.create_score(
-                trace_id=trace_id, name=name, value=value, comment=comment or None
+                trace_id=trace_id,
+                name=name,
+                value=value,
+                data_type=data_type,
+                comment=comment or None,
             )
         except Exception as exc:
             logger.debug("score_trace failed: %s", exc)
+
+    def score_session(
+        self,
+        session_id: str,
+        name: str,
+        value,
+        comment: str = "",
+        data_type: str = "NUMERIC",
+    ):
+        """Attach a SESSION-level score (e.g. session-csat), not a trace score
+        (Codex #5): CSAT is about the conversation, not one turn."""
+        if not self.enabled or self.client is None or not session_id:
+            return
+        try:
+            self.client.create_score(
+                session_id=session_id,
+                name=name,
+                value=value,
+                data_type=data_type,
+                comment=comment or None,
+            )
+        except Exception as exc:
+            logger.debug("score_session failed: %s", exc)
 
     def flush(self):
         """Flush pending events to Langfuse."""
@@ -214,7 +310,7 @@ def get_tracer() -> RAGTracer:
 
             settings = get_settings()
             _tracer = RAGTracer(
-                enabled=settings.tracing.enabled,
+                enabled=settings.tracing.is_active,
                 public_key=settings.tracing.public_key,
                 secret_key=settings.tracing.secret_key,
                 host=settings.tracing.host,
