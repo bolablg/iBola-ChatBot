@@ -12,7 +12,6 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, validator
 
 from app.agents.collector_agent import collector_agent
-from app.agents.orchestrator import AgentOrchestrator
 from app.history_store import append_history, get_history
 from app.routes.feedback import router as feedback_router
 from app.routes.streaming import router as streaming_router
@@ -94,15 +93,14 @@ async def sitemap_xml():
     return FileResponse("sitemap.xml", media_type="application/xml")
 
 
-# Lazy-initialize orchestrator (only used by legacy /chat endpoint)
-_orchestrator = None
+# The legacy /chat endpoint now runs the same LangGraph agentic pipeline as
+# /ask-agentic. The legacy orchestrator (app/agents/orchestrator.py) baked
+# profile facts into prompts and bypassed the guardrail flow; no endpoint may
+# answer profile questions outside the graph.
+def get_agentic_service():
+    from app.routes.streaming import _get_service
 
-
-def get_orchestrator():
-    global _orchestrator
-    if _orchestrator is None:
-        _orchestrator = AgentOrchestrator()
-    return _orchestrator
+    return _get_service()
 
 
 # Global exception handler
@@ -496,9 +494,16 @@ async def chat(payload: ChatInput, request: Request):
             "accept_language": request.headers.get("accept-language", "unknown"),
         }
 
-        # Get the full response from the orchestrator with enhanced features
-        result = get_orchestrator().process_query(
-            user_input, chat_history_tuples, session_id, user_language, request_info
+        # Run the agentic LangGraph pipeline in a thread (the workflow is sync)
+        import asyncio
+
+        loop = asyncio.get_event_loop()
+        service = get_agentic_service()
+        result = await loop.run_in_executor(
+            None,
+            lambda: service.process_query(
+                user_input, chat_history_tuples, session_id, user_language, request_info
+            ),
         )
 
         # Calculate response time
@@ -517,6 +522,8 @@ async def chat(payload: ChatInput, request: Request):
             response=result.get("answer", ""),
             response_time=response_time,
             user_language=user_language,
+            evidence=result.get("evidence", []),
+            trace_id=result.get("trace_id"),
         )
 
         # Debug logging for development
@@ -540,6 +547,7 @@ async def chat(payload: ChatInput, request: Request):
             "should_end_chat": result.get(
                 "should_end_chat", False
             ),  # Add the missing field
+            "evidence": result.get("evidence", []),
         }
 
         # Run collector agent — detects opportunity intent and asks follow-up questions
@@ -699,11 +707,7 @@ async def get_performance_metrics():
             "application": {
                 "cache_stats": cache_service.get_cache_stats(),
                 "rate_limit_stats": rate_limiter.get_global_stats(),
-                "active_sessions": (
-                    len(get_orchestrator().session_data)
-                    if _orchestrator and hasattr(_orchestrator, "session_data")
-                    else 0
-                ),
+                "active_sessions": len(get_agentic_service().session_data),
             },
         }
 
@@ -736,7 +740,7 @@ def get_session_stats(session_id: str):
         if not session_id or not session_id.strip():
             raise HTTPException(status_code=400, detail="Invalid session ID")
 
-        stats = get_orchestrator().get_session_stats(session_id)
+        stats = get_agentic_service().get_session_stats(session_id)
 
         logger.info(
             f"Session stats retrieved for {session_id}",
@@ -762,7 +766,7 @@ def reset_session(session_id: str):
         if not session_id or not session_id.strip():
             raise HTTPException(status_code=400, detail="Invalid session ID")
 
-        get_orchestrator().reset_session(session_id)
+        get_agentic_service().reset_session(session_id)
 
         logger.info(f"Session reset for {session_id}", extra={"session_id": session_id})
 

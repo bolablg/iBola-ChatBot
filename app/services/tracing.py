@@ -113,6 +113,85 @@ class RAGTracer:
         except Exception as exc:
             logger.debug("Score recording failed: %s", exc)
 
+    def record_turn(
+        self,
+        session_id: str,
+        query: str,
+        answer: str,
+        payload: Optional[Dict[str, Any]] = None,
+        steps: Optional[Any] = None,
+    ) -> Optional[str]:
+        """Record one full agentic turn as a trace with per-node child spans.
+
+        Uses the Langfuse v3+ OTEL API (start_span / update_trace). The
+        required payload keys make every answer reproducible from its trace:
+        raw and rewritten query, retrieved chunk IDs with scores, the final
+        context order, the answer, and latency. Returns the trace_id so the
+        response (and later user feedback) can link back to it.
+        """
+        if not self.enabled or self.client is None:
+            return None
+        try:
+            root = self.client.start_span(
+                name="agentic_turn",
+                input={"query": query},
+                metadata=payload or {},
+            )
+            try:
+                root.update_trace(
+                    session_id=session_id or None,
+                    input=query,
+                    output=answer,
+                )
+            except Exception:
+                pass
+
+            for step in steps or []:
+                node = getattr(step, "node", None) or (
+                    step.get("node") if isinstance(step, dict) else "step"
+                )
+                action = getattr(step, "action", None) or (
+                    step.get("action") if isinstance(step, dict) else ""
+                )
+                detail = getattr(step, "detail", None) or (
+                    step.get("detail") if isinstance(step, dict) else ""
+                )
+                try:
+                    child = root.start_span(
+                        name=str(node),
+                        input={"action": action},
+                        metadata={"detail": detail},
+                    )
+                    child.end()
+                except Exception:
+                    continue
+
+            root.update(output={"answer": answer})
+            trace_id = getattr(root, "trace_id", None)
+            root.end()
+            return trace_id
+        except Exception as exc:
+            logger.debug("record_turn failed: %s", exc)
+            return None
+
+    def score_trace(
+        self,
+        trace_id: str,
+        name: str,
+        value: float,
+        comment: str = "",
+    ):
+        """Attach a score to an existing trace by id (links user feedback to
+        the originating turn instead of creating a disconnected trace)."""
+        if not self.enabled or self.client is None or not trace_id:
+            return
+        try:
+            self.client.create_score(
+                trace_id=trace_id, name=name, value=value, comment=comment or None
+            )
+        except Exception as exc:
+            logger.debug("score_trace failed: %s", exc)
+
     def flush(self):
         """Flush pending events to Langfuse."""
         if self.enabled and self.client:

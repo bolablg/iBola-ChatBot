@@ -1,0 +1,107 @@
+name: KB Refresh from Website Canon
+
+# ============================================================
+# PART 5 C3: the KB's source of truth (bolablg.com/llms-full.txt)
+# changes on every website deploy, but the chatbot's brain only
+# updated when the chatbot itself deployed. This workflow closes
+# the loop:
+#
+#   fetch canon -> regenerate derived KB docs (public facts, role
+#   timeline) -> rebuild vector store -> commit to the kb-refresh
+#   branch -> the standard pipeline takes over (lint + test +
+#   golden-eval gate on the NEW brain -> staging -> main -> canary
+#   deploy with pre-cutover smoke -> promote).
+#
+# An index only loads at startup: refresh = rebuild + redeploy,
+# never in place. Routing the new brain through the same quality
+# funnel as code changes means a bad canon update gets caught by
+# the eval gate, not by users.
+#
+# Triggers:
+#   - daily cron (safety net)
+#   - repository_dispatch 'website-deploy' (add to the website
+#     repo's deploy pipeline:
+#       curl -X POST \
+#         -H "Authorization: Bearer $GH_PAT" \
+#         -H "Accept: application/vnd.github+json" \
+#         https://api.github.com/repos/bolablg/iBola-ChatBot/dispatches \
+#         -d '{"event_type": "website-deploy"}' )
+#   - manual workflow_dispatch
+# ============================================================
+
+on:
+  schedule:
+    - cron: '30 4 * * *'
+  repository_dispatch:
+    types: [website-deploy]
+  workflow_dispatch:
+
+concurrency:
+  group: kb-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+    steps:
+      - name: Fail on missing secret
+        if: env.GEMINI_API_KEY == ''
+        run: |
+          echo "::error::GEMINI_API_KEY secret missing; cannot rebuild the vector store."
+          exit 1
+
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.PAT_TOKEN || github.token }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Sync canon and rebuild derived KB + vector store
+        env:
+          GCP_PROJECT_ID: kb-refresh
+          REDIRECT_LOG_SHEET_ID: kb-refresh-placeholder
+        run: python pipeline/sync_website.py
+
+      - name: Detect changes
+        id: diff
+        run: |
+          git add -A data/ chroma_db/
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Canon unchanged; nothing to refresh."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit to kb-refresh branch (enters the quality funnel)
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -B kb-refresh
+          git commit -m "kb: refresh from website canon ($(date -u +%Y-%m-%d))"
+          git push --force origin kb-refresh
+
+      - name: Alert on failure
+        if: failure()
+        env:
+          GCHAT_WEBHOOK_URL: ${{ secrets.GCHAT_WEBHOOK_URL }}
+        run: |
+          if [ -n "$GCHAT_WEBHOOK_URL" ]; then
+            curl -s -X POST -H 'Content-Type: application/json' \
+              -d '{"text": "KB refresh FAILED for ibola-chatbot: the brain may be stale vs the website. Check the kb-refresh workflow run."}' \
+              "$GCHAT_WEBHOOK_URL"
+          fi

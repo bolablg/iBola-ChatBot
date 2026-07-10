@@ -3,8 +3,6 @@ Agentic RAG graph state and structured output models.
 All LLM calls that require deterministic parsing use Pydantic structured outputs.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
@@ -38,7 +36,13 @@ class RoutingDestination(str, Enum):
 
 
 class GuardrailScoring(BaseModel):
-    """Structured output for guardrail evaluation — temperature 0.0."""
+    """Structured output for guardrail evaluation — temperature 0.0.
+
+    Also carries the condense rewrites (standalone + English retrieval form)
+    so scoring and condensation share ONE LLM call per turn: the separate
+    condense call added ~1-1.5s to every retrieval turn (measured p95 8.5s
+    vs the 6s target).
+    """
 
     score: int = Field(
         ge=0,
@@ -49,6 +53,22 @@ class GuardrailScoring(BaseModel):
         description="One of: professional, education, learning, out_of_scope"
     )
     reasoning: str = Field(description="One-sentence explanation of the score.")
+    standalone_query: str = Field(
+        default="",
+        description=(
+            "The query rewritten as a fully standalone question in its "
+            "ORIGINAL language, pronouns and ellipsis resolved against the "
+            "chat history. Equal to the query when already standalone."
+        ),
+    )
+    retrieval_query_en: str = Field(
+        default="",
+        description=(
+            "The standalone question in ENGLISH, used only to search an "
+            "English knowledge base. Equal to standalone_query when the "
+            "question is already English."
+        ),
+    )
 
 
 class GradeDocuments(BaseModel):
@@ -79,12 +99,64 @@ class QueryRewrite(BaseModel):
     )
 
 
+class CondensedQuery(BaseModel):
+    """Structured output for condense-first standalone rewriting, temp 0."""
+
+    standalone_query: str = Field(
+        description=(
+            "The follow-up question rewritten as a fully standalone question "
+            "in its original language, with every pronoun and ellipsis "
+            "resolved against the conversation."
+        )
+    )
+    retrieval_query_en: str = Field(
+        default="",
+        description=(
+            "The standalone question translated to English, used ONLY to "
+            "search an English knowledge base. Equal to standalone_query "
+            "when the question is already in English."
+        ),
+    )
+
+
 class GeneratedAnswer(BaseModel):
     """Structured generation output."""
 
     answer: str = Field(description="The answer to the user's question.")
     confidence: float = Field(
         ge=0.0, le=1.0, default=0.8, description="Confidence in the answer."
+    )
+
+
+class GroundingVerdict(BaseModel):
+    """Structured output for claim-level grounding verification, temperature 0.
+
+    Fail-closed contract: when the answer states claims the retrieved context
+    does not support, ``is_grounded`` is False, the offending claims are
+    listed, and ``corrected_answer`` restates the answer using only supported
+    claims (or declines when nothing survives).
+    """
+
+    is_grounded: bool = Field(
+        description="True only if every material claim is supported by the context."
+    )
+    addresses_question: bool = Field(
+        default=True,
+        description=(
+            "True only if the answer addresses the specific entity or metric "
+            "the question asked about (not an adjacent fact)."
+        ),
+    )
+    unsupported_claims: List[str] = Field(
+        default_factory=list,
+        description="Material claims in the answer that the context does not support.",
+    )
+    corrected_answer: str = Field(
+        default="",
+        description=(
+            "The answer rewritten using ONLY supported claims, in the same "
+            "language. Empty when is_grounded is true."
+        ),
     )
 
 
@@ -170,11 +242,21 @@ class WorkflowState(TypedDict, total=False):
     # Generation
     answer: str
     confidence: float
+    # Chunks that actually entered the generation context (post budget+dedup)
+    context_documents: List[Document]
+    # Claim-level grounding verification (verify_grounding node)
+    grounding_checked: bool
+    unsupported_claims: List[str]
 
     # Control flow
     retrieval_attempts: int
     max_retrieval_attempts: int
     rewritten_query: str
+    # The user's question as asked (before condense), kept for validators
+    original_query: str
+    # English-normalized query used ONLY for retrieval (the KB is mostly
+    # English; searching in English closes the FR/EN retrieval parity gap)
+    retrieval_query: str
 
     # Metadata
     agent_type: str
