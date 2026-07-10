@@ -5,6 +5,8 @@ BOLAJI BALOGOUN - SKILLS & TOOLS WITH APPLICATION CONTEXT
 CORE EXPERTISE AREAS:
 Data platform engineering, data modeling, AI and LLM engineering (RAG, agentic workflows), statistical analysis, data visualization, machine learning, automation, cloud computing, FinOps, data product management, data governance, team leadership, problem-solving, cross-functional communication.
 
+Quelles sont les competences cles de Bolaji: Python, SQL avance, BigQuery, Google Cloud Platform, Apache Airflow, Dataform, ingenierie IA et LLM (RAG, workflows agentiques, LangGraph, MCP), FinOps et leadership d'equipes data.
+
 ---
 
 PROGRAMMING LANGUAGES:
@@ -146,6 +148,7 @@ PROJECT MANAGEMENT:
 TOOL EQUIVALENCES (transferable skills):
 Bolaji can transfer his expertise to equivalent tools in the same categories:
 - dbt is equivalent to Dataform: SQL-based modeling, DAGs, tests, documentation, CI/CD for data warehouses.
+  Est-ce que Bolaji connait dbt: son expertise approfondie porte sur Dataform, l'equivalent direct de dbt. Il a construit un framework de smart templates sur Dataform chez Gozem.
 - Power BI is equivalent to Looker Studio / Tableau: BI dashboards, data modeling layers, visual storytelling, sharing, governance.
 - Snowflake / Redshift is equivalent to BigQuery / ClickHouse: cloud data warehouses, MPP SQL, partitioning, clustering, cost/performance tuning.
 - Airflow is equivalent to Dagster: workflow orchestration, scheduling, monitoring, data pipeline management.

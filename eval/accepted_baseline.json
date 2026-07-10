@@ -1,0 +1,18 @@
+{
+  "accepted_at": "2026-07-10T02:23:46",
+  "report": "local/eval_reports/eval_20260710_022346.json",
+  "answer_model": "gemini-2.5-flash (default)",
+  "judge_model": "gemini-2.5-pro",
+  "aggregates": {
+    "n": 90,
+    "canonical_fact_accuracy": 0.9615,
+    "relevance": 9.66,
+    "accuracy": 9.24,
+    "helpfulness": 8.67,
+    "faithfulness": 9.71
+  },
+  "gate": {
+    "canonical_fact_accuracy_min": 0.9,
+    "max_aggregate_drop": 2.0
+  }
+}

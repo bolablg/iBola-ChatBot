@@ -219,8 +219,23 @@ class LoggingService:
         response: str,
         response_time: float,
         user_language: str = "en",
+        evidence: list = None,
+        trace_id: str = None,
     ):
-        """Log chat interaction with structured data."""
+        """Log chat interaction with structured data.
+
+        ``evidence`` carries the retrieved chunk sources and scores so every
+        answer is reproducible from its log line (query -> chunks -> answer).
+        """
+        retrieved_chunks = [
+            {
+                "source": e.get("source"),
+                "section": e.get("section"),
+                "rank": e.get("retrieval_rank"),
+                "score": e.get("retrieval_score"),
+            }
+            for e in (evidence or [])
+        ]
         self.logger.info(
             f"Chat interaction: {len(user_input)} chars -> {len(response)} chars",
             extra={
@@ -229,6 +244,8 @@ class LoggingService:
                 "agent_type": agent_type,
                 "response_time": response_time,
                 "user_language": user_language,
+                "retrieved_chunks": retrieved_chunks,
+                "trace_id": trace_id,
             },
         )
 

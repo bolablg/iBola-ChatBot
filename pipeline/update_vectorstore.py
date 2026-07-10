@@ -25,7 +25,7 @@ from langchain_chroma import Chroma
 from langchain_community.document_loaders import Docx2txtLoader, PyPDFLoader, TextLoader
 
 import config
-from pipeline.chunker import IntelligentChunker
+from pipeline.chunker import IntelligentChunker, dedupe_chunks
 from utils.embedder import get_embeddings
 
 VECTORSTORE_STATE_FILE = os.path.join(config.DB_PATH, ".vectorstore_state.json")
@@ -150,6 +150,14 @@ def update_vectorstore(rebuild=False):
             for doc in raw_documents:
                 metadata = {**(doc.metadata or {}), "source": rel_path}
                 all_chunks.extend(chunker.chunk_document(doc.page_content, metadata))
+
+            deduped = dedupe_chunks(all_chunks, threshold=0.8)
+            if len(deduped) < len(all_chunks):
+                print(
+                    f"  Dropped {len(all_chunks) - len(deduped)} near-duplicate "
+                    f"chunks (>80% token overlap) from {rel_path}"
+                )
+            all_chunks = deduped
 
             if not all_chunks:
                 print(f"  No chunks generated from {rel_path}")

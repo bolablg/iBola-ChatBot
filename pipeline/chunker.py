@@ -126,6 +126,33 @@ _CATEGORY_KEYWORDS = {
 }
 
 
+def token_overlap(text_a: str, text_b: str) -> float:
+    """Overlap coefficient between two texts' token sets (0.0 - 1.0)."""
+    tokens_a = set(text_a.lower().split())
+    tokens_b = set(text_b.lower().split())
+    if not tokens_a or not tokens_b:
+        return 0.0
+    return len(tokens_a & tokens_b) / min(len(tokens_a), len(tokens_b))
+
+
+def dedupe_chunks(chunks: List[Document], threshold: float = 0.8) -> List[Document]:
+    """Drop chunks whose token overlap with an earlier chunk exceeds threshold.
+
+    Near-duplicate chunks waste context tokens and can trigger hallucinated
+    merges of similar passages. Applied per source at ingestion; the first
+    occurrence wins.
+    """
+    kept: List[Document] = []
+    for chunk in chunks:
+        if any(
+            token_overlap(chunk.page_content, existing.page_content) > threshold
+            for existing in kept
+        ):
+            continue
+        kept.append(chunk)
+    return kept
+
+
 class IntelligentChunker:
     """Section-based document chunker with metadata enrichment."""
 

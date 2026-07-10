@@ -14,6 +14,9 @@ on:
   pull_request:
     branches:
       - main
+  schedule:
+    # Weekly production smoke: golden-QA subset against the live service.
+    - cron: '0 6 * * 1'
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -97,10 +100,57 @@ jobs:
           flags: unittests
 
   # ============================================================
+  # JOB 1b: Golden-QA eval gate (feature branches)
+  # Runs the smoke subset through the real graph and blocks the
+  # merge when canonical-fact accuracy or judged aggregates regress
+  # vs eval/accepted_baseline.json. Skips (passes) when the
+  # GEMINI_API_KEY secret is unavailable (e.g. forks).
+  # ============================================================
+  eval-gate:
+    needs: lint-and-test
+    if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/staging'
+    runs-on: ubuntu-latest
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        if: env.GEMINI_API_KEY != ''
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        if: env.GEMINI_API_KEY != ''
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run golden-QA smoke eval
+        if: env.GEMINI_API_KEY != ''
+        env:
+          GCHAT_WEBHOOK_URL: https://test-webhook.com
+          GCP_PROJECT_ID: test-project
+          REDIRECT_LOG_SHEET_ID: test_sheet_id_placeholder
+        run: python scripts/run_eval.py --tags smoke --concurrency 4
+
+      - name: Gate against accepted baseline
+        if: env.GEMINI_API_KEY != ''
+        run: |
+          REPORT=$(ls -t local/eval_reports/*.json | head -1)
+          python scripts/eval_gate.py --report "$REPORT"
+
+      - name: Skipped (no GEMINI_API_KEY secret)
+        if: env.GEMINI_API_KEY == ''
+        run: echo "GEMINI_API_KEY secret not available; eval gate skipped."
+
+  # ============================================================
   # JOB 2: Auto-merge to staging (if tests pass)
   # ============================================================
   merge-to-staging:
-    needs: lint-and-test
+    needs: [lint-and-test, eval-gate]
     if: github.event_name == 'push' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/staging'
     runs-on: ubuntu-latest
 
@@ -252,6 +302,59 @@ jobs:
           fi
 
   # ============================================================
+  # JOB 4b: Weekly production smoke (scheduled)
+  # Golden-QA smoke subset against the live service. Catches stale
+  # profile facts reaching users between deploys.
+  # ============================================================
+  weekly-prod-smoke:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run smoke eval against production
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          PROD_URL=$(gcloud run services describe ibola-chatbot \
+            --region us-central1 --format 'value(status.url)')
+          python scripts/run_eval.py --tags smoke --base-url "$PROD_URL" --concurrency 4
+          REPORT=$(ls -t local/eval_reports/*.json | head -1)
+          python scripts/eval_gate.py --report "$REPORT"
+
+      - name: Alert on failure
+        if: failure()
+        env:
+          GCHAT_WEBHOOK_URL: ${{ secrets.GCHAT_WEBHOOK_URL }}
+        run: |
+          if [ -n "$GCHAT_WEBHOOK_URL" ]; then
+            curl -s -X POST -H 'Content-Type: application/json' \
+              -d '{"text": "Weekly production smoke eval FAILED for ibola-chatbot. Check the workflow run."}' \
+              "$GCHAT_WEBHOOK_URL"
+          fi
+
+  # ============================================================
   # JOB 5: Deploy to production (main branch)
   # ============================================================
   deploy:
@@ -278,7 +381,7 @@ jobs:
           GCP_PROJECT: ${{ secrets.GCP_PROJECT }}
         run: gcloud builds submit --tag "gcr.io/${GCP_PROJECT}/ibola-chatbot"
 
-      - name: Deploy to Cloud Run
+      - name: Deploy canary revision (no traffic)
         env:
           GCP_PROJECT: ${{ secrets.GCP_PROJECT }}
           GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
@@ -293,6 +396,8 @@ jobs:
             --memory 2Gi \
             --min-instances 0 \
             --allow-unauthenticated \
+            --no-traffic \
+            --tag canary \
             --set-secrets="GEMINI_API_KEY=ibola-gemini-api-key:latest" \
             --set-secrets="GCHAT_WEBHOOK_URL=ibola-gchat-webhook-url:latest" \
             --set-secrets="/secrets/gcp-sa-key.json=ibola-gcp-sa-key:latest" \
@@ -302,6 +407,29 @@ jobs:
             --set-env-vars "DATA_PATH=${DATA_PATH}" \
             --set-env-vars "DB_PATH=${DB_PATH}" \
             --set-env-vars "REDIRECT_LOG_SHEET_ID=${REDIRECT_LOG_SHEET_ID}"
+
+      - name: Smoke-eval the canary before cutover
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          CANARY_URL=$(gcloud run services describe ibola-chatbot \
+            --region us-central1 --format json \
+            | jq -r '.status.traffic[] | select(.tag == "canary") | .url' | head -1)
+          if [ -z "$CANARY_URL" ]; then
+            echo "Could not resolve canary URL"; exit 1
+          fi
+          echo "Canary URL: $CANARY_URL"
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          python scripts/run_eval.py --tags smoke --base-url "$CANARY_URL" --concurrency 4
+          REPORT=$(ls -t local/eval_reports/*.json | head -1)
+          python scripts/eval_gate.py --report "$REPORT"
+
+      - name: Promote canary to full traffic
+        run: |
+          gcloud run services update-traffic ibola-chatbot \
+            --region us-central1 \
+            --to-latest
 
       - name: Create GitHub Release with notes
         env:

@@ -25,11 +25,21 @@ This is a **production-grade agentic multi-agent RAG chatbot** built with:
 
 ## API Endpoints
 
-- `POST /chat` — Legacy chat (uses orchestrator)
 - `POST /ask-agentic` — Full agentic RAG pipeline (LangGraph, supports SSE streaming)
+- `POST /chat` — Legacy path, now routed through the same LangGraph pipeline
 - `POST /ask` — Simple RAG (fast, no agent routing)
-- `POST /feedback` — User feedback for quality monitoring
+- `POST /feedback` — User feedback (accepts `trace_id` to link the score to the turn)
 - `GET /health` — System health check
+
+## Grounding invariants (do not regress)
+
+- No endpoint may state a profile fact without retrieval; knowledge answers
+  carry an `evidence` field with retrieved chunk sources and scores.
+- The graph ends with a claim-level grounding verifier (generate → verify_grounding).
+- `eval/golden.jsonl` + `scripts/run_eval.py` is the quality gate; CI blocks
+  merges on regressions vs `eval/accepted_baseline.json`.
+- KB canon syncs from https://www.bolablg.com/llms-full.txt via
+  `pipeline/sync_website.py`; `--check` is the freshness monitor.
 
 ## Configuration
 
@@ -91,3 +101,10 @@ bash scripts/test.sh --no-cov
 
 - Never include `Co-Authored-By` lines in commit messages
 - Never move AGENTS.md out of the project root
+
+
+## Standing rules (owner's instructions)
+
+1. **Cross-check everything substantive with Codex.** Copy, branding, SEO, strategy, and factual changes must be reviewed with the Codex CLI (`codex exec --sandbox read-only -C <repo> "<brief>"`) before implementation. Plan with it, then verify with it.
+2. **No em dashes (—) anywhere** in rendered content, titles, seoTitles, or machine files. Use commas, colons, parentheses, `·`, or en dash (–) for numeric ranges.
+3. **No filler copy.** Every sentence must state a verifiable fact, a concrete capability, or a specific way of working. Banned: "effective use of data", "measurable business impact", "empowering", "seamless", unqualified "impact"/"high-impact", stock values lists.

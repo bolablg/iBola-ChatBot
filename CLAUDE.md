@@ -94,9 +94,48 @@ bash scripts/test.sh -k test_health
 
 # Run tests without coverage
 bash scripts/test.sh --no-cov
+
+# Sync KB from the website canon (llms-full.txt) and upsert the vector store
+python pipeline/sync_website.py
+
+# KB freshness monitor (exit 1 if KB lags the site or has stale phrases)
+python pipeline/sync_website.py --check
+
+# Rebuild the vector store from scratch
+python pipeline/update_vectorstore.py --rebuild
+
+# Golden-QA eval (full run, LLM judge; report under local/eval_reports/)
+python scripts/run_eval.py
+
+# Eval smoke subset / against a deployment / model sweep candidate
+python scripts/run_eval.py --tags smoke
+python scripts/run_eval.py --base-url https://<cloud-run-url>
+python scripts/run_eval.py --model gemini-2.5-pro
+
+# Gate a report against the accepted baseline (CI does this on every PR)
+python scripts/eval_gate.py --report local/eval_reports/eval_<ts>.json
+
+# Chunk-quality audit (sample the vector store, flag noise)
+python scripts/audit_chunks.py --flagged-only
 ```
+
+## Eval discipline
+
+- `eval/golden.jsonl` is the golden QA set; `eval/accepted_baseline.json` is the
+  committed baseline the CI gate compares against.
+- Every retrieval or generation change must show its eval delta before merging.
+  Accept a new baseline deliberately with `python scripts/run_eval.py --accept`.
+- Context-budget sweeps are env changes, not code changes:
+  `SEARCH_GENERATION_CONTEXT_DOCS=3 python scripts/run_eval.py`.
 
 ## Commit Rules
 
 - Never include `Co-Authored-By` lines in commit messages
 - Never move CLAUDE.md out of the project root
+
+
+## Standing rules (owner's instructions)
+
+1. **Cross-check everything substantive with Codex.** Copy, branding, SEO, strategy, and factual changes must be reviewed with the Codex CLI (`codex exec --sandbox read-only -C <repo> "<brief>"`) before implementation. Plan with it, then verify with it.
+2. **No em dashes (—) anywhere** in rendered content, titles, seoTitles, or machine files. Use commas, colons, parentheses, `·`, or en dash (–) for numeric ranges.
+3. **No filler copy.** Every sentence must state a verifiable fact, a concrete capability, or a specific way of working. Banned: "effective use of data", "measurable business impact", "empowering", "seamless", unqualified "impact"/"high-impact", stock values lists.

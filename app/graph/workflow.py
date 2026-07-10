@@ -2,11 +2,11 @@
 LangGraph workflow definition for the agentic RAG pipeline.
 
 Graph topology:
-  guardrail ──┬── (score >= 60) ──► retrieve ──► grade_documents ──┬── (has relevant) ──► generate ──► END
+  guardrail ──┬── (score >= 60) ──► retrieve ──► grade_documents ──┬── (has relevant) ──► generate ──► verify_grounding ──► END
               │                                                    │
               │                                                    ├── (no relevant, attempts < max) ──► rewrite_query ──► retrieve
               │                                                    │
-              │                                                    └── (no relevant, attempts >= max) ──► generate (best-effort)
+              │                                                    └── (no relevant, attempts >= max) ──► generate (best-effort) ──► verify_grounding ──► END
               │
               └── (score < 60) ──► out_of_scope ──► END
 """
@@ -25,6 +25,7 @@ from app.graph.nodes import (
     out_of_scope_node,
     retrieve_node,
     rewrite_query_node,
+    verify_grounding_node,
 )
 from app.graph.state import RoutingDestination, WorkflowState
 
@@ -78,6 +79,7 @@ def create_rag_workflow():
     graph.add_node("grade_documents", grade_documents_node)
     graph.add_node("rewrite_query", rewrite_query_node)
     graph.add_node("generate", generate_node)
+    graph.add_node("verify_grounding", verify_grounding_node)
     graph.add_node("out_of_scope", out_of_scope_node)
 
     # --- Entry point ---
@@ -103,8 +105,11 @@ def create_rag_workflow():
 
     graph.add_edge("rewrite_query", "retrieve")
 
+    # --- Grounding verification: generate never ends the graph directly ---
+    graph.add_edge("generate", "verify_grounding")
+
     # --- Terminal nodes ---
-    graph.add_edge("generate", END)
+    graph.add_edge("verify_grounding", END)
     graph.add_edge("out_of_scope", END)
 
     return graph.compile()
