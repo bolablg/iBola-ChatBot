@@ -77,6 +77,18 @@ class AgenticRAGService:
 
         session = self.session_data[session_id]
 
+        # --- Prompt-exfiltration / meta-instruction attempts (security) ---
+        # Deterministic, no LLM call: the model cannot leak instructions it is
+        # never asked to process. Must run before every other path.
+        if self._detect_exfiltration_intent(user_input):
+            return self._exfiltration_response(session_id, user_language)
+
+        # --- Identity / meta questions ("are you an AI?") ---
+        # Deterministic answer that never trips the redirect counter or ends
+        # the chat (measured defect n18).
+        if self._detect_identity_intent(user_input):
+            return self._identity_response(session_id, user_language)
+
         # --- Lead capture flow (multi-turn state machine) ---
         if "lead_capture" in session:
             return self._handle_lead_capture(
@@ -492,6 +504,137 @@ class AgenticRAGService:
         return response
 
     @staticmethod
+    def _detect_exfiltration_intent(message: str) -> bool:
+        """Detect attempts to extract the system prompt / instructions or to
+        override the persona (jailbreak). Matched deterministically so the
+        request never reaches an LLM that could comply."""
+        lower = message.lower()
+        # "prompt/instructions/rules" only count as exfiltration when tied to
+        # THIS assistant (system/your/these), so domain questions like "rules
+        # of thumb for cost optimization" or "what are his instructions to the
+        # team" do not trip the guard.
+        # The exfiltration TARGET is always this assistant's own hidden text,
+        # so domain questions ("his rules of thumb", "repeat the Data Hub
+        # description verbatim") never trip the guard.
+        _target = (
+            r"(system prompt|system message|system instruction|"
+            r"your (prompt|instructions?|rules?|guidelines?|directives?)|"
+            r"these instructions|the (system )?prompt|initial prompt|"
+            r"(the )?(instructions?|prompt|messages?) (above|below|before|"
+            r"you (were|are) given)|developer (message|instructions?)|"
+            r"hidden (instructions?|prompt|messages?))"
+        )
+        # Extraction verbs, including transform/encode tricks (translate,
+        # base64, summarize your instructions).
+        _verb = (
+            r"(repeat|reveal|show|print|display|output|give me|tell me|"
+            r"what (is|are)|list|share|translate|encode|decode|base64|"
+            r"summari[sz]e|rephrase|echo)"
+        )
+        patterns = [
+            rf"\b{_verb}\b[^.?!]*{_target}",
+            rf"{_target}[^.?!]*\b(verbatim|word for word)\b",
+            r"\bignore (all |your |the )?(previous|prior|above|earlier)\b",
+            r"\bdisregard (all |your |the )?(previous|prior|instructions)\b",
+            r"\byou are now\b|\bact as (an?|dan)\b|\bpretend to be\b|\bdan mode\b",
+            r"\brepete[sz]? (tes|les|vos) (instructions|consignes|regles|règles)",
+            r"\b(montre|revele|révèle|affiche|donne|traduis|encode)[^.?!]*"
+            r"(tes instructions|tes consignes|invite systeme|invite système|"
+            r"prompt systeme|prompt système|instructions systeme|"
+            r"instructions système)",
+            r"\bignore[sz]? (les |tes )?(instructions|consignes) "
+            r"(precedentes|précédentes)",
+        ]
+        import re as _re
+
+        return any(_re.search(p, lower) for p in patterns)
+
+    @staticmethod
+    def _exfiltration_response(session_id: str, user_language: str) -> Dict[str, Any]:
+        is_french = user_language.lower().startswith("fr")
+        answer = (
+            "iBola ne peut pas partager ses instructions internes, mais peut "
+            "repondre a vos questions sur le parcours, les competences et les "
+            "projets de Bolaji. Que souhaitez-vous savoir ?"
+            if is_french
+            else "iBola can't share its internal instructions, but it can "
+            "answer questions about Bolaji's background, skills, and projects. "
+            "What would you like to know?"
+        )
+        return {
+            "answer": answer,
+            "actions": [],
+            "agent_type": "security",
+            "confidence": 1.0,
+            "language": user_language,
+            "redirect_count": 0,
+            "session_id": session_id,
+            "should_end_chat": False,
+            "response_time": 0.0,
+            "evidence": [],
+        }
+
+    @staticmethod
+    def _detect_identity_intent(message: str) -> bool:
+        """Detect identity/meta smalltalk ('are you an AI?', 'who are you?')."""
+        lower = message.lower().strip().rstrip("?!.")
+        exact = {
+            "are you an ai",
+            "are you a bot",
+            "are you a robot",
+            "are you human",
+            "are you real",
+            "who are you",
+            "what are you",
+            "are you chatgpt",
+            "are you a person",
+            "es-tu une ia",
+            "es tu une ia",
+            "es-tu un robot",
+            "es-tu un bot",
+            "es-tu humain",
+            "es-tu reel",
+            "qui es-tu",
+            "qui es tu",
+            "tu es une ia",
+            "tu es un robot",
+        }
+        if lower in exact:
+            return True
+        if len(lower.split()) <= 7 and (
+            "are you an ai" in lower
+            or "you a bot" in lower
+            or "es-tu une ia" in lower
+            or "es-tu un bot" in lower
+        ):
+            return True
+        return False
+
+    @staticmethod
+    def _identity_response(session_id: str, user_language: str) -> Dict[str, Any]:
+        is_french = user_language.lower().startswith("fr")
+        answer = (
+            "Oui, iBola est l'assistant IA de Bolaji. iBola peut vous parler "
+            "de son parcours, ses competences et ses projets. Que voulez-vous "
+            "savoir ?"
+            if is_french
+            else "Yes, iBola is Bolaji's AI assistant. It can tell you about "
+            "his background, skills, and projects. What would you like to know?"
+        )
+        return {
+            "answer": answer,
+            "actions": [],
+            "agent_type": "identity",
+            "confidence": 1.0,
+            "language": user_language,
+            "redirect_count": 0,
+            "session_id": session_id,
+            "should_end_chat": False,
+            "response_time": 0.0,
+            "evidence": [],
+        }
+
+    @staticmethod
     def _detect_resume_intent(message: str) -> bool:
         """Detect requests for Bolaji's resume/CV.
 
@@ -697,7 +840,9 @@ class AgenticRAGService:
         lower = message.lower().strip()
         word_count = len(lower.split())
 
-        # Strong intent phrases: match at any length
+        # Strong intent phrases: match at any length. Includes casual
+        # phrasings ("best way to reach out", "how do I get in touch") that
+        # previously missed (measured defect n19).
         strong_email = [
             "contact bolaji",
             "send bolaji an email",
@@ -705,11 +850,27 @@ class AgenticRAGService:
             "how can i contact",
             "how do i contact",
             "how to contact",
+            "how do i reach",
+            "how can i reach",
+            "how to reach",
+            "reach out",
             "get in touch",
-            "reach out to bolaji",
+            "way to reach",
+            "way to contact",
+            "way to connect",
+            "connect with bolaji",
+            "get ahold of",
+            "get hold of",
+            "reach him",
+            "contact him",
             "comment contacter",
             "contacter bolaji",
             "joindre bolaji",
+            "le joindre",
+            "le contacter",
+            "entrer en contact",
+            "meilleur moyen de",
+            "comment joindre",
             "envoyer un email",
             "envoyer un mail",
         ]

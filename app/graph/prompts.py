@@ -123,7 +123,7 @@ BATCH_GRADE_PROMPT = ChatPromptTemplate.from_messages(
             (
                 "You grade document relevance. Given a question and numbered "
                 "documents, return the indices (0-based) of documents that help "
-                "answer the question. Be generous — if a document is partially "
+                "answer the question. Be generous: if a document is partially "
                 "relevant, include it. Return an empty list if none are relevant."
             ),
         ),
@@ -164,7 +164,7 @@ REWRITE_PROMPT = ChatPromptTemplate.from_messages(
 # ---------------------------------------------------------------------------
 
 _LANGUAGE_RULE = (
-    "LANGUAGE RULE (CRITICAL — never violate):\n"
+    "LANGUAGE RULE (CRITICAL, never violate):\n"
     "- The reply language is given explicitly in the request. Write the ENTIRE "
     "answer in that language. Never mix languages within a single response.\n"
     "- Keep technical terms (Python, BigQuery, LangGraph, etc.) in their original "
@@ -372,3 +372,57 @@ TRANSLATE_PROMPT = ChatPromptTemplate.from_messages(
         ("human", "{text}"),
     ]
 )
+
+# ---------------------------------------------------------------------------
+# Prompt-exfiltration defense (PART 6 item 1)
+# ---------------------------------------------------------------------------
+
+_ALL_PROMPTS = [
+    GUARDRAIL_PROMPT,
+    CONDENSE_PROMPT,
+    BATCH_GRADE_PROMPT,
+    REWRITE_PROMPT,
+    VERIFY_GROUNDING_PROMPT,
+    OUT_OF_SCOPE_PROMPT,
+    TRANSLATE_PROMPT,
+    *GENERATE_SYSTEM_PROMPTS.values(),
+]
+
+
+def _prompt_texts():
+    """Every registered prompt's raw system text, for the echo detector."""
+    texts = []
+    for prompt in _ALL_PROMPTS:
+        if isinstance(prompt, str):
+            texts.append(prompt)
+            continue
+        for message in getattr(prompt, "messages", []):
+            tmpl = getattr(getattr(message, "prompt", None), "template", None)
+            if tmpl:
+                texts.append(tmpl)
+    return texts
+
+
+def _word_ngrams(text, n=6):
+    words = "".join(c.lower() if c.isalnum() else " " for c in text).split()
+    return {" ".join(words[i : i + n]) for i in range(len(words) - n + 1)}
+
+
+# Precompute the prompt-corpus n-gram set once at import.
+_PROMPT_NGRAMS = set()
+for _t in _prompt_texts():
+    _PROMPT_NGRAMS |= _word_ngrams(_t)
+
+
+def answer_echoes_prompt(answer, threshold=2):
+    """True if the answer leaks the system prompt (>= threshold 6-gram hits).
+
+    A model coaxed into 'repeat your instructions' emits long verbatim spans
+    of a registered template. Legitimate answers never share multi-word spans
+    with the meta-instructions ('politely decline in 1-2 sentences', etc.), so
+    even a couple of matching 6-grams is a reliable exfiltration signal.
+    """
+    if not answer:
+        return False
+    hits = len(_word_ngrams(answer) & _PROMPT_NGRAMS)
+    return hits >= threshold

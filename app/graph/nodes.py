@@ -24,6 +24,7 @@ from app.graph.prompts import (
     REWRITE_PROMPT,
     TRANSLATE_PROMPT,
     VERIFY_GROUNDING_PROMPT,
+    answer_echoes_prompt,
 )
 from app.graph.state import (
     AgentCategory,
@@ -386,6 +387,62 @@ def _temporal_boost(query: str, docs: List[Document]) -> List[Document]:
     ]
 
 
+# Highlight-seeking asks ("impress me", "why should we hire him", "give me
+# the highlights") carry no lexical overlap with the pitch content, so they
+# retrieved generic prose with no numbers (measured defect n19). Augment the
+# search with the pitch vocabulary.
+_HIGHLIGHT_QUERY_PATTERN = __import__("re").compile(
+    r"\b(impress|highlights?|why (should|would)|why hire|stand ?out|"
+    r"elevator pitch|top achievements?|best (work|achievements?)|"
+    r"sell me|convince me|pourquoi (recruter|embaucher|lui)|"
+    r"impressionne|points? forts?|meilleures? (realisations?|réalisations?))\b",
+    __import__("re").IGNORECASE,
+)
+_HIGHLIGHT_TERMS = (
+    "highlights impact achievements 42.57% cost reduction 650+ Data Hub "
+    "0 to 14+ team 30+ AI tools 88% match rate why Bolaji stands out"
+)
+
+
+# Topic cues for compound-question fan-out. When a query references more than
+# one of these domains, each gets its own retrieval so neither half is starved.
+_SUBTOPIC_CUES = {
+    "education": (
+        "degree",
+        "diploma",
+        "master",
+        "msc",
+        "bachelor",
+        "studied",
+        "education",
+        "university",
+        "certification",
+        "diplome",
+        "diplôme",
+        "etudes",
+        "études",
+        "formation",
+        "universite",
+        "université",
+    ),
+    "role": ("role", "job", "position", "poste", "emploi", "travaille", "work"),
+    "skills": ("skill", "tool", "technology", "competence", "compétence", "stack"),
+    "community": ("community", "isheero", "takwimu", "award", "prix", "recherche"),
+}
+
+
+def _compound_subqueries(query: str):
+    """Return per-domain sub-queries when a question spans multiple domains."""
+    low = query.lower()
+    if " and " not in low and " et " not in low and "?" not in low[:-1]:
+        return []
+    hit = [dom for dom, cues in _SUBTOPIC_CUES.items() if any(c in low for c in cues)]
+    if len(hit) < 2:
+        return []
+    # One focused sub-query per matched domain so each is retrieved on its own.
+    return [f"Bolaji BALOGOUN {dom} {query}" for dom in hit]
+
+
 def retrieve_node(state: dict) -> dict:
     """Retrieve documents using resilient hybrid retrieval with lexical fallback.
 
@@ -400,6 +457,12 @@ def retrieve_node(state: dict) -> dict:
         or state.get("query", "")
     ).strip()
     attempts = state.get("retrieval_attempts", 0)
+
+    # Highlight-seeking asks: augment the search vocabulary so the pitch block
+    # (data/17_highlights_pitch.txt) is retrievable.
+    original = state.get("original_query") or query
+    if _HIGHLIGHT_QUERY_PATTERN.search(original):
+        query = f"{query} {_HIGHLIGHT_TERMS}"
 
     if not query:
         return {
@@ -419,16 +482,46 @@ def retrieve_node(state: dict) -> dict:
         from app.settings import get_settings
 
         search_settings = get_settings().search
-        docs: List[Document] = _get_hybrid_search().search(
+        search = _get_hybrid_search()
+        cat_filter = category.value if category != AgentCategory.OUT_OF_SCOPE else None
+        docs: List[Document] = search.search(
             query,
             top_k=search_settings.vector_top_k,
             use_hybrid=search_settings.use_hybrid,
             use_reranker=search_settings.use_reranker,
-            category_filter=(
-                category.value if category != AgentCategory.OUT_OF_SCOPE else None
-            ),
+            category_filter=cat_filter,
         )
-        docs = _temporal_boost(query, docs)
+        # Compound questions ("role AND degree") otherwise fill the whole
+        # context with the dominant sub-topic and drop the other half
+        # (measured defect n09). Fan out a search per detected sub-topic and
+        # PREPEND each sub-topic's best doc so both halves survive the context
+        # budget, not just get appended past the cutoff.
+        subqueries = _compound_subqueries(query)
+        if subqueries:
+            seen = {d.page_content for d in docs}
+            leaders = []
+            for sub in subqueries:
+                extra = search.search(
+                    sub,
+                    top_k=3,
+                    use_hybrid=search_settings.use_hybrid,
+                    use_reranker=search_settings.use_reranker,
+                    category_filter=None,
+                )
+                for d in extra:
+                    if d.page_content not in seen:
+                        leaders.append(d)  # guaranteed a front slot
+                        seen.add(d.page_content)
+                        break
+                for d in extra[1:]:
+                    if d.page_content not in seen:
+                        docs.append(d)
+                        seen.add(d.page_content)
+            # Temporal boost sorts by recency, which would re-sink the (older)
+            # education/community half; skip it when serving a compound query.
+            docs = leaders + _temporal_boost(query, docs)
+        else:
+            docs = _temporal_boost(query, docs)
 
         return {
             "documents": docs,
@@ -582,6 +675,13 @@ _LEAK_PHRASES = [
     (
         r"\b(?:the\s+)?context\s+(?:does\s+not|doesn't)\s+(?:mention|contain|specify|indicate|provide)\b",
         "I don't have information about",
+    ),
+    # AFFIRMATIVE context mentions ("the context does mention", "the context
+    # mentions/shows/indicates") — the negated forms above missed these (s07)
+    (
+        r"\b(?:the\s+)?context\s+(?:does\s+)?(?:mention|mentions|show|shows|"
+        r"indicate|indicates|state|states|note|notes)\b",
+        "",
     ),
     # "based on (the) information available" / "information I have" / "information provided"
     (
@@ -1140,10 +1240,17 @@ def out_of_scope_node(state: dict) -> dict:
         try:
             llm = _get_llm(temperature=0.6)
             response = llm.invoke(OUT_OF_SCOPE_PROMPT.format_messages(query=query))
-            answer = response.content
+            answer = _sanitize_answer(response.content)
+            # Defense-in-depth: if the model echoed any registered prompt text
+            # (exfiltration that slipped past the deterministic detector),
+            # drop it for the canned refusal. Redirects skip grounding, so
+            # this is the last guard on that path.
+            if answer_echoes_prompt(answer):
+                logger.warning("prompt_echo_blocked on out_of_scope path")
+                answer = canned["fallback"]
             # Same validator discipline as generate: never ship the wrong
             # language on a redirect either
-            if not _validate_answer_language(
+            elif not _validate_answer_language(
                 answer, reply_language, state.get("user_language", "en")
             ):
                 answer = _translate_answer(answer, reply_language)
