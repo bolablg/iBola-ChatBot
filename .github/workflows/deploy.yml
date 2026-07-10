@@ -476,6 +476,19 @@ jobs:
           DB_PATH: ${{ secrets.DB_PATH }}
           REDIRECT_LOG_SHEET_ID: ${{ secrets.REDIRECT_LOG_SHEET_ID }}
         run: |
+          # Langfuse is wired entirely from Secret Manager (like the Gemini /
+          # GChat secrets): no keys as plain env vars. Only enabled when all
+          # three SM secrets exist, so forks / unprovisioned envs still deploy
+          # with tracing inert.
+          LANGFUSE_ARGS=""
+          if gcloud secrets describe ibola-langfuse-secret-key >/dev/null 2>&1 \
+             && gcloud secrets describe ibola-langfuse-public-key >/dev/null 2>&1 \
+             && gcloud secrets describe ibola-langfuse-base-url >/dev/null 2>&1; then
+            LANGFUSE_ARGS="--set-secrets=LANGFUSE_SECRET_KEY=ibola-langfuse-secret-key:latest \
+              --set-secrets=LANGFUSE_PUBLIC_KEY=ibola-langfuse-public-key:latest \
+              --set-secrets=LANGFUSE_BASE_URL=ibola-langfuse-base-url:latest \
+              --set-env-vars LANGFUSE_ENABLED=true"
+          fi
           gcloud run deploy ibola-chatbot \
             --image "gcr.io/${GCP_PROJECT}/ibola-chatbot" \
             --platform managed \
@@ -493,7 +506,8 @@ jobs:
             --set-env-vars "GDRIVE_FOLDER_ID=${GDRIVE_FOLDER_ID}" \
             --set-env-vars "DATA_PATH=${DATA_PATH}" \
             --set-env-vars "DB_PATH=${DB_PATH}" \
-            --set-env-vars "REDIRECT_LOG_SHEET_ID=${REDIRECT_LOG_SHEET_ID}"
+            --set-env-vars "REDIRECT_LOG_SHEET_ID=${REDIRECT_LOG_SHEET_ID}" \
+            $LANGFUSE_ARGS
 
       - name: Smoke-eval the canary before cutover
         env:
