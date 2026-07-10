@@ -121,10 +121,17 @@ python scripts/audit_chunks.py --flagged-only
 
 ## Eval discipline
 
-- `eval/golden.jsonl` is the golden QA set; `eval/accepted_baseline.json` is the
-  committed baseline the CI gate compares against.
+- `eval/golden.jsonl` is the golden QA set. Baselines are PER TAG SET:
+  `eval/accepted_baseline.json` (full set) and
+  `eval/accepted_baseline_smoke.json` (smoke subset); the gate picks the
+  baseline matching the report's tags and, in CI, runs `--strict` (missing
+  baseline = red, hard-error rows = red, latency p95 gated).
 - Every retrieval or generation change must show its eval delta before merging.
-  Accept a new baseline deliberately with `python scripts/run_eval.py --accept`.
+  Accept a new baseline deliberately with
+  `python scripts/run_eval.py [--tags smoke] --accept`.
+- The full set runs nightly in CI; the KB refreshes daily (and on website
+  deploys) via `.github/workflows/kb-refresh.yml`, which routes the new brain
+  through the same lint + test + eval funnel as code.
 - Context-budget sweeps are env changes, not code changes:
   `SEARCH_GENERATION_CONTEXT_DOCS=3 python scripts/run_eval.py`.
 

@@ -13,6 +13,8 @@
   },
   "gate": {
     "canonical_fact_accuracy_min": 0.98,
-    "max_aggregate_drop": 2.0
-  }
+    "max_aggregate_drop": 2.0,
+    "latency_p95_max_s": 8.0
+  },
+  "tags": null
 }
