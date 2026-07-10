@@ -196,9 +196,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Build feedback row (safe DOM) ---
     const createFeedbackRow = (idx, traceId) => {
+        // Trace-level thumbs only make sense when the turn has a trace
+        // (deterministic intents and cache hits carry no trace_id): rendering
+        // them anyway would POST feedback that the backend 400s.
+        if (!traceId) return document.createDocumentFragment();
         const fb = document.createElement('div');
         fb.classList.add('msg-feedback');
-        if (traceId) fb.dataset.traceId = traceId;
+        fb.dataset.traceId = traceId;
 
         const upBtn = document.createElement('button');
         upBtn.classList.add('feedback-btn');
