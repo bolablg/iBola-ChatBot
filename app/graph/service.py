@@ -513,23 +513,35 @@ class AgenticRAGService:
         # THIS assistant (system/your/these), so domain questions like "rules
         # of thumb for cost optimization" or "what are his instructions to the
         # team" do not trip the guard.
+        # The exfiltration TARGET is always this assistant's own hidden text,
+        # so domain questions ("his rules of thumb", "repeat the Data Hub
+        # description verbatim") never trip the guard.
         _target = (
             r"(system prompt|system message|system instruction|"
             r"your (prompt|instructions?|rules?|guidelines?|directives?)|"
-            r"these instructions|the (system )?prompt|initial prompt)"
+            r"these instructions|the (system )?prompt|initial prompt|"
+            r"(the )?(instructions?|prompt|messages?) (above|below|before|"
+            r"you (were|are) given)|developer (message|instructions?)|"
+            r"hidden (instructions?|prompt|messages?))"
+        )
+        # Extraction verbs, including transform/encode tricks (translate,
+        # base64, summarize your instructions).
+        _verb = (
+            r"(repeat|reveal|show|print|display|output|give me|tell me|"
+            r"what (is|are)|list|share|translate|encode|decode|base64|"
+            r"summari[sz]e|rephrase|echo)"
         )
         patterns = [
-            rf"\b(repeat|reveal|show|print|display|output|give me|tell me|"
-            rf"what (is|are)|list|share)\b[^.?!]*{_target}",
-            rf"{_target}[^.?!]*\bverbatim\b",
-            r"\brepeat[^.?!]*\bverbatim\b",
+            rf"\b{_verb}\b[^.?!]*{_target}",
+            rf"{_target}[^.?!]*\b(verbatim|word for word)\b",
             r"\bignore (all |your |the )?(previous|prior|above|earlier)\b",
             r"\bdisregard (all |your |the )?(previous|prior|instructions)\b",
             r"\byou are now\b|\bact as (an?|dan)\b|\bpretend to be\b|\bdan mode\b",
             r"\brepete[sz]? (tes|les|vos) (instructions|consignes|regles|règles)",
-            r"\b(montre|revele|révèle|affiche|donne)[^.?!]*"
+            r"\b(montre|revele|révèle|affiche|donne|traduis|encode)[^.?!]*"
             r"(tes instructions|tes consignes|invite systeme|invite système|"
-            r"prompt systeme|prompt système)",
+            r"prompt systeme|prompt système|instructions systeme|"
+            r"instructions système)",
             r"\bignore[sz]? (les |tes )?(instructions|consignes) "
             r"(precedentes|précédentes)",
         ]
@@ -541,13 +553,13 @@ class AgenticRAGService:
     def _exfiltration_response(session_id: str, user_language: str) -> Dict[str, Any]:
         is_french = user_language.lower().startswith("fr")
         answer = (
-            "Je ne peux pas partager mes instructions internes. Je suis la pour "
+            "iBola ne peut pas partager ses instructions internes, mais peut "
             "repondre a vos questions sur le parcours, les competences et les "
             "projets de Bolaji. Que souhaitez-vous savoir ?"
             if is_french
-            else "I can't share my internal instructions. I'm here to answer "
-            "questions about Bolaji's background, skills, and projects. What "
-            "would you like to know?"
+            else "iBola can't share its internal instructions, but it can "
+            "answer questions about Bolaji's background, skills, and projects. "
+            "What would you like to know?"
         )
         return {
             "answer": answer,
@@ -602,11 +614,11 @@ class AgenticRAGService:
     def _identity_response(session_id: str, user_language: str) -> Dict[str, Any]:
         is_french = user_language.lower().startswith("fr")
         answer = (
-            "Oui, je suis iBola, l'assistant IA de Bolaji. Je peux vous parler "
+            "Oui, iBola est l'assistant IA de Bolaji. iBola peut vous parler "
             "de son parcours, ses competences et ses projets. Que voulez-vous "
             "savoir ?"
             if is_french
-            else "Yes, I'm iBola, Bolaji's AI assistant. I can tell you about "
+            else "Yes, iBola is Bolaji's AI assistant. It can tell you about "
             "his background, skills, and projects. What would you like to know?"
         )
         return {

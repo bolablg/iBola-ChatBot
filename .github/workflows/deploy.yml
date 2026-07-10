@@ -508,6 +508,16 @@ jobs:
           echo "Canary URL: $CANARY_URL"
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          # Warm the canary first: min-instances=0 means the first request
+          # cold-starts (model + index load, ~35s) and would blow the latency
+          # gate on an otherwise-healthy revision. Warm, wait, then measure.
+          echo "Warming canary..."
+          for i in 1 2 3; do
+            curl -s -o /dev/null -m 90 "$CANARY_URL/health" || true
+            curl -s -o /dev/null -m 90 -X POST "$CANARY_URL/ask-agentic" \
+              -H 'Content-Type: application/json' \
+              -d '{"user_input":"What is Bolaji latest role?","session_id":"warmup","user_language":"en"}' || true
+          done
           python scripts/run_eval.py --tags smoke --base-url "$CANARY_URL" --concurrency 4
           REPORT=$(ls -t local/eval_reports/*.json | head -1)
           python scripts/eval_gate.py --report "$REPORT" --strict

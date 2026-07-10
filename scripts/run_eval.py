@@ -112,36 +112,27 @@ def _accent_fold(text):
     )
 
 
-# Sentence delimiters for negation-aware banned-phrase checks.
-_SENTENCE_SPLIT = __import__("re").compile(r"[.!?\n]+")
-# A forbidden term inside one of these clauses is a correct refusal, not a
-# leak ("working at Google is NOT something I have"): don't fail on it.
-_NEGATION_MARKERS = (
-    "not ",
-    "n't",
-    "no ",
-    "cannot",
-    "can't",
-    "don't",
-    "isn't",
-    "aren't",
-    "never",
-    "pas ",
-    "aucun",
-    "ne ",
-    "n'",
+# A denial in the ~25 chars immediately BEFORE a forbidden phrase makes the
+# mention a correct refusal ("does NOT live in Cotonou"), not a leak. Scoped
+# tightly and excluding "not only" (an intensifier, not a denial) so
+# "Not only did he use Stitch Data" still fails.
+_re_mod = __import__("re")
+_LOCAL_DENIAL = _re_mod.compile(
+    r"\b(not|never|no longer|isn't|is not|doesn't|does not|n'est|ne|"
+    r"pas|jamais|aucun|plus)\b",
+    _re_mod.IGNORECASE,
 )
+_DENIAL_WINDOW = 25
 
 
 def check_facts(answer, row, actions=None):
     """Deterministic checks. Returns (passed, failures).
 
     ``must_contain`` / ``must_not_contain`` are accent-folded, case-insensitive
-    substrings ("a|b" = a or b). ``must_not_contain`` ignores matches inside a
-    NEGATED clause (a refusal that names the forbidden thing to deny it is
-    correct, not a leak). ``require_actions: true`` passes only when the
-    response ships quick-reply action chips (contact/booking/resume defer to
-    buttons; text-only checks there were a grader artifact).
+    substrings ("a|b" = a or b). ``must_not_contain`` ignores matches with a
+    denial in the local window just before them (a refusal that names the
+    forbidden thing to deny it is correct, not a leak). ``require_actions``
+    passes only when the response ships quick-reply action chips.
     """
     low = _accent_fold(answer.lower())
     failures = []
@@ -149,13 +140,21 @@ def check_facts(answer, row, actions=None):
         clause_f = _accent_fold(clause.lower())
         if not any(alt.strip() in low for alt in clause_f.split("|")):
             failures.append(f"missing: {clause}")
-    sentences = [_accent_fold(s.lower()) for s in _SENTENCE_SPLIT.split(answer)]
     for clause in row.get("must_not_contain", []):
         needle = _accent_fold(clause.lower())
-        hit_sentences = [s for s in sentences if needle in s]
-        if hit_sentences and not all(
-            any(m in s for m in _NEGATION_MARKERS) for s in hit_sentences
-        ):
+        leaked = False
+        start = 0
+        while True:
+            idx = low.find(needle, start)
+            if idx == -1:
+                break
+            window = low[max(0, idx - _DENIAL_WINDOW) : idx]
+            if _LOCAL_DENIAL.search(window) and "not only" not in window:
+                start = idx + len(needle)  # denied here; keep scanning
+                continue
+            leaked = True
+            break
+        if leaked:
             failures.append(f"forbidden: {clause}")
     if row.get("require_actions") and not actions:
         failures.append("missing: actions[] quick-reply chips")
