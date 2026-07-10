@@ -30,20 +30,36 @@ class LLMSettings(BaseSettings):
     generation_temperature: float = 0.7
     guardrail_threshold: int = 60
     max_retrieval_attempts: int = 2
+    # Claim-level grounding verifier after generate (fail closed on
+    # unsupported profile claims). One extra temperature-0 call per turn.
+    grounding_verifier_enabled: bool = True
 
 
 class SearchSettings(BaseSettings):
-    """Hybrid search configuration."""
+    """Hybrid search configuration.
+
+    These knobs feed the graph's retrieve and generate nodes directly, so a
+    context-budget sweep (rerank-top 3 vs 5 vs 8) is an env change scored by
+    scripts/run_eval.py, not a code change.
+    """
 
     model_config = SettingsConfigDict(env_prefix="SEARCH_")
 
     use_hybrid: bool = True
     use_reranker: bool = True
     rrf_rank_constant: int = 60
+    # How many chunks retrieval returns to the grader.
     vector_top_k: int = 8
     vector_fetch_k: int = 24
     bm25_top_k: int = 8
-    reranker_model: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+    # How many graded chunks reach the generation context (precision beats
+    # volume: adopt the smallest budget that holds eval accuracy).
+    generation_context_docs: int = 5
+    # Near-duplicate filter applied when assembling the generation context.
+    context_dedup_overlap: float = 0.8
+    # Multilingual cross-encoder: the bot serves French users, so the
+    # English-only MS MARCO models are not acceptable defaults.
+    reranker_model: str = "BAAI/bge-reranker-v2-m3"
 
 
 class CacheSettings(BaseSettings):

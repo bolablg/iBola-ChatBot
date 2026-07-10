@@ -20,6 +20,7 @@ from app.graph.state import (
     BatchGradeResult,
     GeneratedAnswer,
     GradeDocuments,
+    GroundingVerdict,
     GuardrailScoring,
     QueryRewrite,
     ReasoningStep,
@@ -173,8 +174,15 @@ GUARDRAIL_PROMPT = ChatPromptTemplate.from_messages(
                 "is relevant to Bolaji BALOGOUN's professional profile.\n\n"
                 "ON-TOPIC includes: skills, technologies, tools, work experience, "
                 "projects, certifications, education, community leadership, consulting, "
-                "blog articles, apps/portfolio, career advice, or anything a recruiter "
-                "or hiring manager might ask about a candidate.\n\n"
+                "blog articles, apps/portfolio, career advice, availability, where he "
+                "is based (his public professional location), the languages he speaks, "
+                "how to contact him, or anything a recruiter or hiring manager might "
+                "ask about a candidate.\n\n"
+                "IMPORTANT: questions about projects, systems, metrics, or results "
+                "described in Bolaji's portfolio are ON-TOPIC even when they do not "
+                "mention his name (e.g. 'how much time does the invoice extraction "
+                "save?', 'what happened during the Vodun Days festival?'). Assume the "
+                "user is asking about Bolaji's work unless clearly unrelated.\n\n"
                 "Score 0-100:\n"
                 "  80-100 = clearly on-topic (skills, experience, projects, education…)\n"
                 "  50-79  = partially relevant or ambiguous\n"
@@ -298,6 +306,44 @@ def _expand_vague_query(query: str, chat_history: list) -> str:
     return f"{last_user_msg} — {query}"
 
 
+# Temporal queries ("latest role", "where does he work now") must rank the
+# current-status and most-recent-role chunks first: with all Gozem roles
+# ended, generic role chunks otherwise crowd out the "tenure ended" answer.
+_TEMPORAL_QUERY_PATTERN = __import__("re").compile(
+    r"\b(latest|current(ly)?|now|today|still|recent|present|last (role|job|"
+    r"position)|dernier|derniere|dernière|actuel(le(ment)?)?|aujourd'hui|"
+    r"maintenant|encore|toujours)\b",
+    __import__("re").IGNORECASE,
+)
+
+# Sources that answer "what is he doing now" style questions.
+_TEMPORAL_PRIORITY_MARKERS = (
+    "current_status",
+    "last_role",
+    "career_overview",
+)
+
+
+def _temporal_boost(query: str, docs: List[Document]) -> List[Document]:
+    """For temporal queries, float current-status/latest-role chunks first.
+
+    Stable within groups so hybrid-search order is preserved otherwise.
+    """
+    if not _TEMPORAL_QUERY_PATTERN.search(query):
+        return docs
+
+    def is_priority(doc: Document) -> bool:
+        source = str(doc.metadata.get("source", "")).lower()
+        if any(marker in source for marker in _TEMPORAL_PRIORITY_MARKERS):
+            return True
+        # The website canon file: only its most-recent-role sections qualify
+        return "july 2026" in doc.page_content.lower()
+
+    priority = [d for d in docs if is_priority(d)]
+    rest = [d for d in docs if not is_priority(d)]
+    return priority + rest
+
+
 def retrieve_node(state: dict) -> dict:
     """Retrieve documents using resilient hybrid retrieval with lexical fallback."""
     category = state.get("category", AgentCategory.PROFESSIONAL)
@@ -324,15 +370,19 @@ def retrieve_node(state: dict) -> dict:
         }
 
     try:
+        from app.settings import get_settings
+
+        search_settings = get_settings().search
         docs: List[Document] = _get_hybrid_search().search(
             query,
-            top_k=8,
-            use_hybrid=True,
-            use_reranker=True,
+            top_k=search_settings.vector_top_k,
+            use_hybrid=search_settings.use_hybrid,
+            use_reranker=search_settings.use_reranker,
             category_filter=(
                 category.value if category != AgentCategory.OUT_OF_SCOPE else None
             ),
         )
+        docs = _temporal_boost(query, docs)
 
         return {
             "documents": docs,
@@ -527,6 +577,9 @@ _GENERATE_PROMPTS = {
         "If his most recent role has ended, say so plainly in past tense and mention what he is doing now "
         "if that information is available. Never present an ended role as current. "
         "Short-term consulting engagements performed ALONGSIDE a primary job are NOT the latest role.\n"
+        "10) PUBLIC PROFILE FACTS: Bolaji's base location (city, state, country), languages, "
+        "and availability are published on his own website and are meant to be shared. "
+        "When the context contains them, state them plainly. Never refuse them as private.\n"
     ),
     AgentCategory.EDUCATION: (
         "You are iBola, Bolaji's AI assistant.\n\n"
@@ -741,6 +794,35 @@ def _sanitize_answer(answer: str) -> str:
     return out.strip()
 
 
+def _select_context_docs(graded_docs: List[Document]) -> List[Document]:
+    """Pick the generation context: budgeted and near-duplicate-free."""
+    try:
+        from app.settings import get_settings
+
+        budget = get_settings().search.generation_context_docs
+        overlap_cap = get_settings().search.context_dedup_overlap
+    except Exception:
+        budget, overlap_cap = 5, 0.8
+
+    def _overlap(a: str, b: str) -> float:
+        ta, tb = set(a.lower().split()), set(b.lower().split())
+        if not ta or not tb:
+            return 0.0
+        return len(ta & tb) / min(len(ta), len(tb))
+
+    selected: List[Document] = []
+    for doc in graded_docs:
+        if len(selected) >= budget:
+            break
+        if any(
+            _overlap(doc.page_content, kept.page_content) > overlap_cap
+            for kept in selected
+        ):
+            continue
+        selected.append(doc)
+    return selected
+
+
 def generate_node(state: dict) -> dict:
     """Generate the final answer from graded documents.
 
@@ -753,9 +835,12 @@ def generate_node(state: dict) -> dict:
     chat_history = state.get("chat_history", [])
     steps = list(state.get("reasoning_steps", []))
 
-    # Build context from graded documents
-    if graded_docs:
-        context = "\n\n---\n\n".join(doc.page_content for doc in graded_docs[:5])
+    # Build context from graded documents: settings-driven budget with a
+    # near-duplicate filter (five tight chunks beat fifty loose ones; dupes
+    # waste tokens and invite hallucinated merges).
+    context_docs = _select_context_docs(graded_docs)
+    if context_docs:
+        context = "\n\n---\n\n".join(doc.page_content for doc in context_docs)
     else:
         context = "(No relevant context found.)"
 
@@ -801,13 +886,143 @@ def generate_node(state: dict) -> dict:
         ReasoningStep(
             node="generate",
             action="answered",
-            detail=f"docs_used={len(graded_docs)} confidence={confidence:.2f}",
+            detail=(
+                f"docs_used={len(context_docs)}/{len(graded_docs)} "
+                f"confidence={confidence:.2f}"
+            ),
         )
     )
 
     return {
         "answer": answer,
         "confidence": confidence,
+        "context_documents": context_docs,
+        "reasoning_steps": steps,
+    }
+
+
+# ===================================================================
+# NODE: verify_grounding
+# ===================================================================
+
+VERIFY_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            (
+                "You verify that an assistant's answer about Bolaji BALOGOUN is "
+                "fully supported by the retrieved context.\n\n"
+                "1) Extract every MATERIAL claim in the answer: roles, employers, "
+                "dates, locations, numbers, titles, credentials, availability.\n"
+                "2) For each claim, check whether the context supports it. "
+                "Paraphrase counts as support; contradiction or absence does not.\n"
+                "3) If every claim is supported, return is_grounded=true.\n"
+                "4) Otherwise return is_grounded=false, list the unsupported "
+                "claims, and write corrected_answer: the same answer with "
+                "unsupported claims removed or fixed to match the context, in the "
+                "SAME language and tone as the original. If nothing survives, "
+                "corrected_answer should say the information is not available and "
+                "suggest emailing hello@bolablg.com.\n\n"
+                "Do NOT flag conversational filler, offers to help, or contact "
+                "suggestions. Only profile facts are material."
+            ),
+        ),
+        (
+            "human",
+            "Context:\n{context}\n\nAnswer to verify:\n{answer}",
+        ),
+    ]
+)
+
+_FALLBACK_UNGROUNDED_ANSWER = (
+    "I don't have that information. Please email hello@bolablg.com."
+)
+
+
+def verify_grounding_node(state: dict) -> dict:
+    """Claim-level verification after generate: fail closed on unsupported claims.
+
+    Skipped for redirects and for turns with no retrieved context (those
+    answers are already refusals or deterministic). On verifier failure the
+    original answer passes through with grounding_checked=False; the verifier
+    must never take the bot down.
+    """
+    answer = state.get("answer", "")
+    agent_type = state.get("agent_type", "professional")
+    context_docs = state.get("context_documents", []) or []
+    steps = list(state.get("reasoning_steps", []))
+
+    try:
+        from app.settings import get_settings
+
+        enabled = get_settings().llm.grounding_verifier_enabled
+    except Exception:
+        enabled = True
+
+    if not enabled or not answer or agent_type == "redirect" or not context_docs:
+        steps.append(
+            ReasoningStep(
+                node="verify_grounding",
+                action="skipped",
+                detail=(
+                    "disabled"
+                    if not enabled
+                    else f"agent={agent_type} " f"context_docs={len(context_docs)}"
+                ),
+            )
+        )
+        return {
+            "grounding_checked": False,
+            "unsupported_claims": [],
+            "reasoning_steps": steps,
+        }
+
+    context = "\n\n---\n\n".join(doc.page_content for doc in context_docs)
+
+    try:
+        llm = _get_llm(temperature=0.0)
+        structured_llm = llm.with_structured_output(GroundingVerdict)
+        verdict: GroundingVerdict = structured_llm.invoke(
+            VERIFY_GROUNDING_PROMPT.format_messages(context=context, answer=answer)
+        )
+    except Exception as exc:
+        logger.warning("Grounding verifier error (pass-through): %s", exc)
+        steps.append(
+            ReasoningStep(node="verify_grounding", action="error", detail=str(exc)[:80])
+        )
+        return {
+            "grounding_checked": False,
+            "unsupported_claims": [],
+            "reasoning_steps": steps,
+        }
+
+    if verdict.is_grounded:
+        steps.append(
+            ReasoningStep(node="verify_grounding", action="grounded", detail="")
+        )
+        return {
+            "grounding_checked": True,
+            "unsupported_claims": [],
+            "reasoning_steps": steps,
+        }
+
+    corrected = _sanitize_answer(verdict.corrected_answer.strip())
+    steps.append(
+        ReasoningStep(
+            node="verify_grounding",
+            action="corrected",
+            detail=f"unsupported={len(verdict.unsupported_claims)}",
+        )
+    )
+    logger.info(
+        "Grounding verifier dropped unsupported claims: %s",
+        verdict.unsupported_claims[:5],
+    )
+    return {
+        "answer": corrected or _FALLBACK_UNGROUNDED_ANSWER,
+        "confidence": min(state.get("confidence", 0.5), 0.5),
+        "grounding_checked": True,
+        "unsupported_claims": verdict.unsupported_claims,
         "reasoning_steps": steps,
     }
 

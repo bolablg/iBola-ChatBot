@@ -183,6 +183,15 @@ class AgenticRAGService:
                     step.get("detail"),
                 )
 
+        evidence = self._build_evidence(final_state)
+        trace_id = self._record_trace(
+            session_id=session_id,
+            user_input=user_input,
+            final_state=final_state,
+            evidence=evidence,
+            elapsed=elapsed,
+        )
+
         return {
             "answer": final_state.get("answer", ""),
             "actions": final_state.get("actions", []),
@@ -193,7 +202,89 @@ class AgenticRAGService:
             "session_id": session_id,
             "should_end_chat": final_state.get("should_end_chat", False),
             "response_time": round(elapsed, 3),
+            "evidence": evidence,
+            "unsupported_claims": final_state.get("unsupported_claims", []),
+            "trace_id": trace_id,
         }
+
+    @staticmethod
+    def _record_trace(
+        session_id: str,
+        user_input: str,
+        final_state: Dict[str, Any],
+        evidence: List[Dict[str, Any]],
+        elapsed: float,
+    ) -> Optional[str]:
+        """Record the turn in Langfuse (no-op when tracing is disabled).
+
+        The payload makes every answer reproducible from its trace:
+        raw query -> rewritten query -> chunks and scores -> context order
+        -> answer, plus latency and grounding outcome. Returns the trace_id
+        so the response and user feedback can link back to this turn.
+        """
+        try:
+            from app.services.tracing import get_tracer
+
+            tracer = get_tracer()
+            if not tracer.enabled:
+                return None
+            return tracer.record_turn(
+                session_id=session_id,
+                query=user_input,
+                answer=final_state.get("answer", ""),
+                payload={
+                    "rewritten_query": final_state.get("rewritten_query", ""),
+                    "agent_type": final_state.get("agent_type", ""),
+                    "confidence": final_state.get("confidence", 0.0),
+                    "retrieved_chunks": [
+                        {
+                            "source": e["source"],
+                            "section": e["section"],
+                            "rank": e["retrieval_rank"],
+                            "score": e["retrieval_score"],
+                        }
+                        for e in evidence
+                    ],
+                    "context_order": [e["source"] for e in evidence],
+                    "grounding_checked": final_state.get("grounding_checked", False),
+                    "unsupported_claims": final_state.get("unsupported_claims", []),
+                    "latency_s": round(elapsed, 3),
+                },
+                steps=final_state.get("reasoning_steps", []),
+            )
+        except Exception as exc:
+            logger.debug("Trace recording failed: %s", exc)
+            return None
+
+    @staticmethod
+    def _build_evidence(final_state: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Extract retrieved-evidence metadata from the workflow final state.
+
+        Every knowledge answer must be traceable to the chunks that grounded
+        it. Deterministic intents (contact, opportunity, pleasantries) carry
+        no profile facts and therefore no evidence.
+        """
+        docs = (
+            final_state.get("context_documents")
+            or final_state.get("graded_documents")
+            or final_state.get("documents")
+            or []
+        )
+        evidence = []
+        for doc in docs[:10]:
+            meta = getattr(doc, "metadata", {}) or {}
+            evidence.append(
+                {
+                    "source": meta.get("source", meta.get("filename", "unknown")),
+                    "section": meta.get("section_header", ""),
+                    "retrieval_rank": meta.get("retrieval_rank"),
+                    "retrieval_score": meta.get("retrieval_score"),
+                    # Long enough for a faithfulness judge to find supporting
+                    # text; still bounded so payloads stay small.
+                    "content_preview": getattr(doc, "page_content", "")[:1500],
+                }
+            )
+        return evidence
 
     def get_session_stats(self, session_id: str) -> Dict[str, Any]:
         session = self.session_data.get(session_id, {})
@@ -222,6 +313,7 @@ class AgenticRAGService:
             "redirect_count": 0,
             "session_id": session_id,
             "should_end_chat": False,
+            "evidence": [],
         }
 
     @staticmethod
@@ -331,6 +423,7 @@ class AgenticRAGService:
             "session_id": session_id,
             "should_end_chat": False,
             "response_time": 0.0,
+            "evidence": [],
         }
 
     @staticmethod
@@ -676,6 +769,7 @@ class AgenticRAGService:
             "session_id": session_id,
             "should_end_chat": pleasantry_type == "goodbye",
             "response_time": 0.0,
+            "evidence": [],
         }
 
     def _log_redirect(
@@ -876,4 +970,5 @@ class AgenticRAGService:
             "session_id": session_id,
             "should_end_chat": False,
             "response_time": 0.0,
+            "evidence": [],
         }

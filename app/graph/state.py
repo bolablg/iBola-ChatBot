@@ -86,6 +86,31 @@ class GeneratedAnswer(BaseModel):
     )
 
 
+class GroundingVerdict(BaseModel):
+    """Structured output for claim-level grounding verification, temperature 0.
+
+    Fail-closed contract: when the answer states claims the retrieved context
+    does not support, ``is_grounded`` is False, the offending claims are
+    listed, and ``corrected_answer`` restates the answer using only supported
+    claims (or declines when nothing survives).
+    """
+
+    is_grounded: bool = Field(
+        description="True only if every material claim is supported by the context."
+    )
+    unsupported_claims: List[str] = Field(
+        default_factory=list,
+        description="Material claims in the answer that the context does not support.",
+    )
+    corrected_answer: str = Field(
+        default="",
+        description=(
+            "The answer rewritten using ONLY supported claims, in the same "
+            "language. Empty when is_grounded is true."
+        ),
+    )
+
+
 class ReasoningStep(BaseModel):
     """Tracks a single step in the agent workflow for debugging / tracing."""
 
@@ -168,6 +193,11 @@ class WorkflowState(TypedDict, total=False):
     # Generation
     answer: str
     confidence: float
+    # Chunks that actually entered the generation context (post budget+dedup)
+    context_documents: List[Document]
+    # Claim-level grounding verification (verify_grounding node)
+    grounding_checked: bool
+    unsupported_claims: List[str]
 
     # Control flow
     retrieval_attempts: int
