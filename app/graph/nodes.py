@@ -522,8 +522,10 @@ _GENERATE_PROMPTS = {
         "Do NOT say 'the context does not contain' or similar.\n"
         "8) Greetings ONLY when the user greets first. Never greet if the user asks a question.\n"
         "9) RECENCY RULE: When asked about 'latest role', 'current role', 'last job', 'present position', "
-        "'where does Bolaji work', always refer to his CURRENT ROLE (ongoing, dated 'Present'). "
-        "A role dated 'Present' always outranks a role with a fixed end date. "
+        "'where does Bolaji work', refer to the role with the MOST RECENT END DATE "
+        "(a role dated 'Present' outranks all others if one exists). "
+        "If his most recent role has ended, say so plainly in past tense and mention what he is doing now "
+        "if that information is available. Never present an ended role as current. "
         "Short-term consulting engagements performed ALONGSIDE a primary job are NOT the latest role.\n"
     ),
     AgentCategory.EDUCATION: (

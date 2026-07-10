@@ -1,48 +1,55 @@
-BOLAJI BALOGOUN — APPS & SIDE PROJECTS
+BOLAJI BALOGOUN - APPS & SIDE PROJECTS
 
 Portfolio URL: app.bolablg.com
 Bolaji builds side projects to solve real problems and experiment with new technologies.
 
 ---
 
-iBOLA — AI-POWERED PORTFOLIO CHATBOT
-What: A production-grade multi-agent RAG (Retrieval-Augmented Generation) chatbot that serves as Bolaji's professional portfolio assistant. Users can ask questions about his experience, skills, education, and projects.
-Stack: LangChain, LangGraph, Google Gemini, ChromaDB, FastAPI, Python, Docker, Google Cloud Run.
-Architecture: Agentic workflow with guardrail scoring, hybrid search (BM25 + vector MMR + RRF fusion), document grading, query rewriting, and structured LLM outputs. Supports SSE streaming.
+iBOLA - AI-POWERED PORTFOLIO CHATBOT
+What: a production-grade agentic RAG (Retrieval-Augmented Generation) chatbot that serves as Bolaji's professional portfolio assistant. Users can ask questions about his experience, skills, education, and projects.
+Stack: LangGraph, Google Gemini, ChromaDB, FastAPI, Python, Docker, Google Cloud Run.
+Architecture: agentic workflow with guardrail scoring, hybrid search (BM25 + vector MMR + RRF fusion), document grading, query rewriting, and structured LLM outputs. Supports SSE streaming.
 Live at: chat.bolablg.com
-Outcome: Demonstrates Bolaji's ability to build production AI systems end-to-end, from data pipeline to deployment.
+Outcome: demonstrates Bolaji's ability to build production AI systems end to end, from data pipeline to deployment. His website's experience pages cite this chatbot pattern as a use case.
 
 ---
 
 uDOWNLOADER
-What: A tool to download videos and audio from YouTube, Instagram, TikTok, Twitter, and other platforms. Features a modern graphical interface (GUI) and a command-line (CLI) mode for power users.
+What: a tool to download videos and audio from YouTube, Instagram, TikTok, Twitter, and other platforms. Features a modern graphical interface (GUI) and a command-line (CLI) mode for power users.
 Stack: Python, Bash, Git.
-Distribution: Available on GitHub and PyPI (installable via pip).
+Distribution: available on GitHub and PyPI (installable via pip).
 
 ---
 
 CONVERTISSEUR SALAIRE BENIN (Salary Converter Benin)
-What: A web application to calculate net or gross salary in Benin according to the 2025 finance law. Provides a detailed breakdown of employee and employer contributions, taxes, and net take-home pay.
+What: a web application to calculate net or gross salary in Benin according to the 2025 finance law. Provides a detailed breakdown of employee and employer contributions, taxes, and net take-home pay.
 Stack: Python, Flask, HTML, CSS.
-Live: Available for public use.
+Live: available for public use.
 
 ---
 
-AUTOMATISATION: GOOGLE SHEETS + PYTHON
-What: A tool and tutorial to automatically create and share Google Sheets data reports from any server using Python. Designed for teams that need automated daily or weekly reports.
+AUTOMATION: GOOGLE SHEETS + PYTHON
+What: a tool and tutorial to automatically create and share Google Sheets data reports from any server using Python. Designed for teams that need automated daily or weekly reports.
 Stack: Python, Google Drive API, MongoDB, cron automation.
 Accompanied by a blog article and GitHub repository.
 
 ---
 
+GOZEM DATA HUB (Gozem internal, flagship platform)
+What: the central data and AI workspace Bolaji chartered and architected at Gozem (data.gozem.co): data exploration environments, AI-powered tools, operational workflows, and self-service analytics behind role-based governance.
+Stack: Python, BigQuery, Google Cloud Storage, Cloud Functions, AWS EC2, Docker, RBAC, Claude Code.
+Outcome: served over 650 people (employees, field agents, and partners) across five African countries by the end of his mandate. Two engineers he onboarded shipped two additional self-service apps onto the platform.
+
+---
+
 DATA QUALITY OBSERVABILITY SYSTEM (Gozem internal)
-What: An internal system built at Gozem for monitoring data quality across the entire data platform.
-Stack: Asana (ticketing data quality issues), Google Looker Studio (dashboards for monitoring), Apache Airflow (orchestrating automated checks and alerts).
-Outcome: Proactive detection and resolution of data quality issues across all business units.
+What: an internal system built at Gozem for monitoring data quality across 250+ production pipelines.
+Stack: Asana (ticketing data quality issues), Google Looker Studio (monitoring dashboards), Apache Airflow (orchestrating automated checks and alerts).
+Outcome: proactive detection and resolution of data quality issues across all business units, with automated quality checks and discrepancy alerts.
 
 ---
 
 DATA STACK MIGRATION (Gozem internal)
-What: Led the migration of Gozem's entire data infrastructure from on-premises systems to Google Cloud Platform.
-Stack: Google Cloud Storage (raw and temp file storage), BigQuery (data lakehouse), Vertex AI (machine learning), Dataform (SQL-based data modeling and transformation).
-Outcome: Scalable, cost-effective cloud analytics infrastructure serving the entire organization.
+What: led the migration of Gozem's entire data infrastructure to Google Cloud Platform as its first data hire, moving 10+ TB within a quarter without operational interruption.
+Stack: Google Cloud Storage, BigQuery, Vertex AI, Dataform, Apache Airflow.
+Outcome: a scalable, cost-effective cloud analytics platform with 50+ scheduled ETL pipelines, later optimized to cut costs by 42.57% in a single quarter.

@@ -1,17 +1,28 @@
-BOLAJI BALOGOUN — CONSULTING EXPERIENCE
+BOLAJI BALOGOUN - CONSULTING EXPERIENCE
 
 ---
 
-DATA MANAGEMENT CONSULTANT — International Trade Centre (ITC), United Nations Agency (2023 – 2024)
+DATA MANAGEMENT CONSULTANT - International Trade Centre (ITC), United Nations agency (2023)
 
 The International Trade Centre is a joint agency of the United Nations and the World Trade Organization. This engagement was part of the Netherlands Trust Fund V (NTF V) program, a partnership between the Dutch Ministry of Foreign Affairs and ITC.
 
-Bolaji worked on this consulting engagement alongside his full-time role as Head of Data at Gozem.
+Bolaji performed this consulting engagement alongside his full-time role at Gozem at the time. It was side work, not his primary employment.
 
 Responsibilities and achievements:
-- Guided startups across the ECOWAS (Economic Community of West African States) zone in leveraging data strategy to improve business operations and decision-making.
-- Developed comprehensive training materials on data collection, data management, and data-driven decision-making.
-- Delivered hands-on workshops for 15 startups from Benin and other ECOWAS countries.
+- Guided 15 early-stage startups from Benin and other ECOWAS (Economic Community of West African States) countries in leveraging data strategy to improve business operations and decision-making.
+- Developed training materials and delivered workshops on data collection, data management, and data-driven decision-making.
 - Provided one-on-one coaching to 5 startups, helping them address specific data management challenges and build internal data capabilities.
 
-This role demonstrated Bolaji's ability to translate complex data concepts into actionable guidance for early-stage businesses in emerging markets.
+This engagement demonstrated Bolaji's ability to translate complex data concepts into actionable guidance for early-stage businesses in emerging markets.
+
+---
+
+EXECUTIVE TRAINING ENGAGEMENTS:
+
+- Societe Generale Maroc: designed and delivered an executive data & AI training mission to top management, covering banking applications of data and AI with hands-on labs (during his Rintio tenure).
+- Benin Ministry of Finance: co-trained directors of information systems (DSIs) across ministry departments in data science (through iSheero).
+
+---
+
+CURRENT CONSULTING AVAILABILITY:
+Since concluding his Gozem tenure in July 2026, Bolaji is available for selected consulting engagements across the US, Canada, France, and Sub-Saharan Africa: data platform audits and roadmaps, AI strategy and adoption frameworks, and data team coaching and hiring. Contact hello@bolablg.com.
