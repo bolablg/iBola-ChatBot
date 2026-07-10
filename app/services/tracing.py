@@ -15,39 +15,57 @@ from typing import Any, Dict, Optional
 logger = logging.getLogger("ibola.tracing")
 
 import hashlib as _hashlib  # noqa: E402
+import os as _os  # noqa: E402
 import re as _re  # noqa: E402
 
 # PII patterns masked before any text reaches Langfuse (Codex #8: traces
 # previously carried raw query/answer/IP/UA/referrer). EU-visitor safe.
+# The phone pattern is deliberately narrow (needs a leading + / 00 country
+# code OR explicit separators AND 7+ digits) so it does not eat dates like
+# 2026-07-10 or KB metrics like 42.57 / 650.
 _PII_PATTERNS = [
     (_re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+"), "[email]"),
-    (
-        _re.compile(
-            r"(?:(?:\+|00)\d{1,3}[\s.-]?)?(?:\(?\d{2,4}\)?[\s.-]?){3,5}\d{2,4}"
-        ),
-        "[phone]",
-    ),
     (_re.compile(r"\b\d{1,3}(?:\.\d{1,3}){3}\b"), "[ip]"),
     (_re.compile(r"https?://\S+"), "[url]"),
+    # Only international-prefixed numbers (+ / 00 then 8+ digits): unambiguous
+    # and never matches dates (2026-07-10) or KB metrics (42.57, 650). A bare
+    # local number is under-masked by design; over-masking telemetry is worse.
+    (_re.compile(r"(?<![\w.])(?:\+|00)\d[\d\s().-]{7,}\d"), "[phone]"),
 ]
 
 
-def mask_pii(text):
-    """Redact emails, phone numbers, IPs, and URLs from free text."""
-    if not text:
-        return text
-    out = str(text)
-    for pattern, repl in _PII_PATTERNS:
-        out = pattern.sub(repl, out)
-    return out
+def mask_pii(value):
+    """Redact emails, phones, IPs, and URLs. Recurses into dicts/lists so
+    payload metadata and step details are masked too (Codex: rewritten_query
+    and reasoning details carried raw user text)."""
+    if value is None:
+        return value
+    if isinstance(value, str):
+        out = value
+        for pattern, repl in _PII_PATTERNS:
+            out = pattern.sub(repl, out)
+        return out
+    if isinstance(value, dict):
+        return {k: mask_pii(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return type(value)(mask_pii(v) for v in value)
+    return value
+
+
+# Private salt for the visitor hash so ids are pseudonymous, not a plain
+# reversible hash of IP+UA (Codex). Ephemeral per deploy if unset.
+_VISITOR_SALT = _os.environ.get("VISITOR_HASH_SALT", "ibola-visitor-salt-v1")
 
 
 def hash_visitor(*parts):
-    """Stable anonymous visitor id from non-PII request signals (hashed)."""
+    """Stable pseudonymous visitor id (HMAC-salted) from request signals."""
     raw = "|".join(str(p) for p in parts if p)
     if not raw:
         return None
-    return "anon-" + _hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
+    digest = _hashlib.blake2s(
+        raw.encode("utf-8"), key=_VISITOR_SALT.encode("utf-8"), digest_size=8
+    ).hexdigest()
+    return "anon-" + digest
 
 
 # Optional dependency
@@ -189,7 +207,7 @@ class RAGTracer:
                     name="chat-response",
                     as_type="span",
                     input=masked_query,
-                    metadata=payload or {},
+                    metadata=mask_pii(payload or {}),
                 ) as root:
                     trace_id = root.trace_id
                     for step in steps or []:
@@ -207,7 +225,8 @@ class RAGTracer:
                                 name=str(node),
                                 as_type="span",
                                 input={"action": action},
-                                metadata={"detail": detail},
+                                # step details embed truncated user queries
+                                metadata={"detail": mask_pii(detail)},
                             )
                             child.end()
                         except Exception:

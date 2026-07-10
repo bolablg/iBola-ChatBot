@@ -550,6 +550,7 @@ async def chat(payload: ChatInput, request: Request):
                 "should_end_chat", False
             ),  # Add the missing field
             "evidence": result.get("evidence", []),
+            "trace_id": result.get("trace_id"),
         }
 
         # Run collector agent — detects opportunity intent and asks follow-up questions
