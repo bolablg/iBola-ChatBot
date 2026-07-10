@@ -21,13 +21,13 @@ from langchain_core.prompts import ChatPromptTemplate
 from app.graph.state import AgentCategory
 
 PROMPT_VERSIONS = {
-    "guardrail": "2.0",
-    "condense": "1.0",
+    "guardrail": "2.1",
+    "condense": "1.1",
     "batch_grade": "2.0",
-    "rewrite": "2.0",
-    "generate_professional": "3.0",
-    "generate_education": "3.0",
-    "generate_learning": "3.0",
+    "rewrite": "2.1",
+    "generate_professional": "3.1",
+    "generate_education": "3.1",
+    "generate_learning": "3.1",
     "verify_grounding": "2.0",
     "out_of_scope": "2.0",
     "translate": "1.0",
@@ -56,11 +56,26 @@ GUARDRAIL_PROMPT = ChatPromptTemplate.from_messages(
                 "mention his name (e.g. 'how much time does the invoice extraction "
                 "save?', 'what happened during the Vodun Days festival?'). Assume the "
                 "user is asking about Bolaji's work unless clearly unrelated.\n\n"
+                "Statements or questions about the PUBLIC FACTS above (where he is "
+                "based or lives, languages, nationality, availability) are ON-TOPIC, "
+                "not personal questions. A statement with a FALSE premise about "
+                "Bolaji (wrong city, wrong employer, wrong dates) is ON-TOPIC: it "
+                "must route to retrieval so the profile can correct it, never be "
+                "refused.\n\n"
                 "Score 0-100:\n"
                 "  80-100 = clearly on-topic (skills, experience, projects, education…)\n"
                 "  50-79  = partially relevant or ambiguous\n"
                 "  0-49   = off-topic (politics, sports, weather, personal opinions…)\n\n"
-                "Category must be one of: professional, education, learning, out_of_scope"
+                "Category must be one of: professional, education, learning, out_of_scope\n\n"
+                "ALSO rewrite the query (same call, saves a round trip):\n"
+                "- standalone_query: the query as a fully standalone question in "
+                "its ORIGINAL language, every pronoun and ellipsis resolved "
+                "against the chat history ('how many people use it?' -> name the "
+                "thing). Unchanged when already standalone. Do not answer it.\n"
+                "- retrieval_query_en: the standalone question in ENGLISH (for "
+                "searching an English knowledge base). Keep names, technical "
+                "terms, and titles as-is; copy standalone_query when already "
+                "English."
             ),
         ),
         ("human", "Query: {query}\nChat history (last 3 turns): {history_summary}"),
@@ -76,20 +91,23 @@ CONDENSE_PROMPT = ChatPromptTemplate.from_messages(
         (
             "system",
             (
-                "Given a conversation and a follow-up question, rephrase the "
-                "follow-up question to be a fully standalone question about "
-                "Bolaji BALOGOUN, in its ORIGINAL language.\n\n"
-                "- Resolve every pronoun and ellipsis ('it', 'that project', "
-                "'how many people use it?') against the conversation.\n"
-                "- Preserve the question's intent, specificity, and language "
-                "exactly; do not answer it.\n"
-                "- If the question is already standalone, return it unchanged."
+                "Given a conversation and a follow-up question, produce two "
+                "rewrites of the follow-up question about Bolaji BALOGOUN:\n\n"
+                "1) standalone_query: the question as a fully standalone "
+                "question in its ORIGINAL language. Resolve every pronoun and "
+                "ellipsis ('it', 'that project', 'how many people use it?') "
+                "against the conversation. Preserve intent, specificity, and "
+                "language exactly; do not answer it. If already standalone, "
+                "return it unchanged.\n"
+                "2) retrieval_query_en: the same standalone question in "
+                "ENGLISH, used only to search an English knowledge base. "
+                "Keep technical terms, names, and titles as-is. When the "
+                "question is already English, copy standalone_query."
             ),
         ),
         (
             "human",
-            "Conversation:\n{history}\n\nFollow-up question: {query}\n\n"
-            "Standalone question:",
+            "Conversation:\n{history}\n\nFollow-up question: {query}",
         ),
     ]
 )
@@ -129,8 +147,9 @@ REWRITE_PROMPT = ChatPromptTemplate.from_messages(
                 "blog.\n\n"
                 "IMPORTANT: If the query is vague or uses pronouns (e.g. 'tell me "
                 "more', 'what about that'), use the chat history to understand what "
-                "the user is referring to and produce a self-contained query in the "
-                "query's original language."
+                "the user is referring to and produce a self-contained query.\n"
+                "Write the rewritten query in ENGLISH (the knowledge base is "
+                "English); keep names, technical terms, and titles as-is."
             ),
         ),
         (
@@ -172,13 +191,18 @@ _PUBLIC_FACTS_RULE = (
 )
 
 _REFUSAL_AND_CTA_RULE = (
-    "REFUSALS: when you don't have the information, never dead-end. Name 1-2 "
-    "adjacent topics you CAN answer (from what you know), then offer the email. "
-    "Example shape: \"I don't have details on X. I can tell you about his Y or "
-    'Z, or you can reach him at hello@bolablg.com."\n'
-    "FOLLOW-UPS: for roughly one in three informational answers, end with ONE "
-    "short, contextual follow-up question. Never more than one question per "
-    "answer. No follow-up on refusals (the redirect-offer is the CTA there).\n"
+    "REFUSALS (MANDATORY, no exceptions): when you don't have the "
+    "information, the answer MUST contain all three parts: (a) the refusal, "
+    "(b) 1-2 adjacent topics you CAN answer, named concretely from what you "
+    "know, and (c) the email hello@bolablg.com. A refusal without parts (b) "
+    "and (c) is an incorrect answer. Example shape: \"I don't have details "
+    "on X. I can tell you about his Y or Z, or you can reach him at "
+    'hello@bolablg.com."\n'
+    "FOLLOW-UPS: when the topic has an obvious deeper layer (a metric, a "
+    "project detail, an outcome), end the answer with ONE short follow-up "
+    "question offering it (e.g. 'Want the numbers behind it?'). Target "
+    "roughly one in three informational answers. Never more than one "
+    "question per answer; never a follow-up on refusals.\n"
 )
 
 _EQUIVALENCE_RULE = (

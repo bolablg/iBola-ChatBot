@@ -1,0 +1,44 @@
+BOLAJI BALOGOUN - ROLE TIMELINE (GENERATED FROM THE WEBSITE CANON)
+
+One line per role, most recent first. Employment roles only;
+consulting and community engagements are listed separately below.
+
+EMPLOYMENT TIMELINE:
+- Data Director at Gozem: April 2025 - July 2026 (Apr 2025 - Jul 2026)
+- Head of Data at Gozem: October 2022 - March 2025 (Oct 2022 - Mar 2025)
+- Global Data Analyst at Gozem: November 2019 - September 2022 (Nov 2019 - Sep 2022)
+- Data Scientist at Rintio: July 2018 - May 2019 (Jul 2018 - May 2019)
+- Statistician at INStaD: September 2017 - February 2018 (Sep 2017 - Feb 2018)
+- Statistician at Le PANTAGRUEL: August 2013 - October 2013 (Aug 2013 - Oct 2013)
+
+SIDE ENGAGEMENTS (alongside employment, never the primary role):
+- Data Management Consultant (International Trade Centre - ITC (UN Agency)): 2023
+- Founding Vice-Chair of iSheero (iSheero): December 2021 - present
+- Chair of Takwimu LAB (Takwimu LAB): 2019 - 2022
+- Big Data Bootcamp (RINTIO Big Data Bootcamp): March 2018 - June 2018
+
+WHAT WAS BOLAJI'S ROLE IN EACH YEAR (year to containing role):
+- In 2013, Bolaji was Statistician at Le PANTAGRUEL (August 2013 - October 2013).
+- In 2017, Bolaji was Statistician at INStaD (September 2017 - February 2018).
+- In 2018, Bolaji was Statistician at INStaD (September 2017 - February 2018) and then Data Scientist at Rintio (July 2018 - May 2019).
+- In 2019, Bolaji was Data Scientist at Rintio (July 2018 - May 2019) and then Global Data Analyst at Gozem (November 2019 - September 2022).
+- In 2020, Bolaji was Global Data Analyst at Gozem (November 2019 - September 2022).
+- In 2021, Bolaji was Global Data Analyst at Gozem (November 2019 - September 2022).
+- In 2022, Bolaji was Global Data Analyst at Gozem (November 2019 - September 2022) and then Head of Data at Gozem (October 2022 - March 2025).
+- In 2023, Bolaji was Head of Data at Gozem (October 2022 - March 2025).
+- In 2024, Bolaji was Head of Data at Gozem (October 2022 - March 2025).
+- In 2025, Bolaji was Head of Data at Gozem (October 2022 - March 2025) and then Data Director at Gozem (April 2025 - July 2026).
+- In 2026, Bolaji was Data Director at Gozem (April 2025 - July 2026).
+
+QUEL ETAIT LE POSTE DE BOLAJI CHAQUE ANNEE:
+- En 2013, Bolaji etait Statistician chez Le PANTAGRUEL (aout 2013 - octobre 2013).
+- En 2017, Bolaji etait Statistician chez INStaD (septembre 2017 - fevrier 2018).
+- En 2018, Bolaji etait Statistician chez INStaD (septembre 2017 - fevrier 2018) puis Data Scientist chez Rintio (juillet 2018 - mai 2019).
+- En 2019, Bolaji etait Data Scientist chez Rintio (juillet 2018 - mai 2019) puis Global Data Analyst chez Gozem (novembre 2019 - septembre 2022).
+- En 2020, Bolaji etait Global Data Analyst chez Gozem (novembre 2019 - septembre 2022).
+- En 2021, Bolaji etait Global Data Analyst chez Gozem (novembre 2019 - septembre 2022).
+- En 2022, Bolaji etait Global Data Analyst chez Gozem (novembre 2019 - septembre 2022) puis Head of Data chez Gozem (octobre 2022 - mars 2025).
+- En 2023, Bolaji etait Head of Data chez Gozem (octobre 2022 - mars 2025).
+- En 2024, Bolaji etait Head of Data chez Gozem (octobre 2022 - mars 2025).
+- En 2025, Bolaji etait Head of Data chez Gozem (octobre 2022 - mars 2025) puis Data Director chez Gozem (avril 2025 - juillet 2026).
+- En 2026, Bolaji etait Data Director chez Gozem (avril 2025 - juillet 2026).

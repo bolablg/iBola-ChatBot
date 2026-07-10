@@ -1,18 +1,18 @@
 {
-  "accepted_at": "2026-07-10T10:51:00",
-  "report": "local/eval_reports/eval_20260710_105100.json",
+  "accepted_at": "2026-07-10T12:23:38",
+  "report": "local/eval_reports/eval_20260710_122338.json",
   "answer_model": "gemini-2.5-flash (default)",
   "judge_model": "gemini-2.5-pro",
   "aggregates": {
-    "n": 96,
-    "canonical_fact_accuracy": 0.9643,
-    "relevance": 9.89,
-    "accuracy": 9.78,
-    "helpfulness": 9.33,
-    "faithfulness": 9.75
+    "n": 107,
+    "canonical_fact_accuracy": 1.0,
+    "relevance": 10,
+    "accuracy": 9.9,
+    "helpfulness": 9.64,
+    "faithfulness": 9.51
   },
   "gate": {
-    "canonical_fact_accuracy_min": 0.9,
+    "canonical_fact_accuracy_min": 0.98,
     "max_aggregate_drop": 2.0
   }
 }

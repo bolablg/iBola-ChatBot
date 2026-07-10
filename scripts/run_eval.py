@@ -103,8 +103,15 @@ def load_golden(tags=None, limit=None):
     return rows
 
 
-def check_facts(answer, row):
-    """Deterministic substring checks. Returns (passed, failures)."""
+def check_facts(answer, row, actions=None):
+    """Deterministic checks. Returns (passed, failures).
+
+    ``must_contain`` / ``must_not_contain`` are case-insensitive substrings
+    ("a|b" = a or b). ``require_actions: true`` passes only when the response
+    ships quick-reply action chips: contact/booking/resume answers correctly
+    defer to buttons, so text-only checks would be a grader artifact (the
+    measured s14 false failure).
+    """
     low = answer.lower()
     failures = []
     for clause in row.get("must_contain", []):
@@ -113,6 +120,8 @@ def check_facts(answer, row):
     for clause in row.get("must_not_contain", []):
         if clause.lower() in low:
             failures.append(f"forbidden: {clause}")
+    if row.get("require_actions") and not actions:
+        failures.append("missing: actions[] quick-reply chips")
     return (not failures), failures
 
 
@@ -224,7 +233,7 @@ def run_one(target, judge, row):
         f"[{e.get('source', '?')}] {e.get('content_preview', '')}" for e in evidence
     )
 
-    fact_pass, fact_failures = check_facts(answer, row)
+    fact_pass, fact_failures = check_facts(answer, row, actions=result.get("actions"))
 
     scores = None
     judge_error = None

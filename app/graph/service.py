@@ -410,7 +410,6 @@ class AgenticRAGService:
             "type": "contact_email",
             "url": f"mailto:{config.CONTACT_EMAIL}",
             "session_id": session_id,
-            "chat_history": chat_history or [],
             "description": "Send an email to Bolaji",
             "primary": True,
             "end_chat": False,
@@ -420,7 +419,6 @@ class AgenticRAGService:
             "type": "contact_booking",
             "url": config.CALENDAR_BOOKING_URL,
             "session_id": session_id,
-            "chat_history": chat_history or [],
             "description": "Schedule a meeting with Bolaji",
             "primary": True,
             "end_chat": False,
@@ -495,25 +493,43 @@ class AgenticRAGService:
 
     @staticmethod
     def _detect_resume_intent(message: str) -> bool:
-        """Detect requests for Bolaji's resume/CV (short, direct asks only)."""
-        lower = message.lower().strip()
-        strong = [
-            "send me his resume",
-            "send me your resume",
-            "share his resume",
-            "download his resume",
-            "download resume",
-            "his cv",
-            "your cv",
-            "envoyer son cv",
-            "telecharger son cv",
-            "télécharger son cv",
-        ]
-        if any(s in lower for s in strong):
-            return True
-        return len(lower.split()) <= 5 and (
-            "resume" in lower.split() or lower.split() == ["cv"] or "cv?" in lower
-        )
+        """Detect requests for Bolaji's resume/CV.
+
+        Token-based (punctuation-safe: 'resume?' previously missed the
+        detector) and verb-gated so 'can we resume?' or 'did he write his
+        resume in LaTeX' do not trigger.
+        """
+        import re as _re
+
+        tokens = _re.findall(r"[a-zà-ÿ']+", message.lower())
+        if not tokens or len(tokens) > 12:
+            return False
+        if not ({"resume", "cv", "résumé"} & set(tokens)):
+            return False
+        # Access VERBS only: possessives/articles ("his resume") also appear
+        # in knowledge questions ("did he write his resume in LaTeX?") and
+        # must not trigger the shortcut.
+        request_verbs = {
+            "send",
+            "share",
+            "download",
+            "get",
+            "have",
+            "see",
+            "want",
+            "need",
+            "request",
+            "envoyer",
+            "partager",
+            "telecharger",
+            "télécharger",
+            "obtenir",
+            "voir",
+            "avoir",
+            "veux",
+            "voudrais",
+        }
+        return bool(request_verbs & set(tokens)) or len(tokens) <= 2
 
     @staticmethod
     def _resume_response(
@@ -541,7 +557,6 @@ class AgenticRAGService:
                 "type": "view_profile",
                 "url": "https://www.bolablg.com",
                 "session_id": session_id,
-                "chat_history": chat_history or [],
                 "description": "Open Bolaji's website profile",
                 "primary": True,
                 "end_chat": False,
@@ -551,7 +566,6 @@ class AgenticRAGService:
                 "type": "contact_email",
                 "url": f"mailto:{config.CONTACT_EMAIL}",
                 "session_id": session_id,
-                "chat_history": chat_history or [],
                 "description": "Request the resume by email",
                 "primary": True,
                 "end_chat": False,
@@ -561,7 +575,6 @@ class AgenticRAGService:
                 "type": "contact_booking",
                 "url": config.CALENDAR_BOOKING_URL,
                 "session_id": session_id,
-                "chat_history": chat_history or [],
                 "description": "Schedule a meeting with Bolaji",
                 "primary": False,
                 "end_chat": False,

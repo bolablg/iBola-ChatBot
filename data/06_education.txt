@@ -25,6 +25,8 @@ Project: "Duniya Data", leveraging data insights to enhance agricultural practic
 
 PROFESSIONAL CERTIFICATIONS:
 
+Quelles certifications Bolaji possede-t-il: Google Cloud Professional Data Engineer (novembre 2025 a novembre 2027), le programme McKinsey Forward de McKinsey & Company (juillet 2025), et une certification Apache Airflow d'Udemy (fevrier 2024).
+
 Google Cloud Professional Data Engineer - Google Cloud (November 2025, expires November 2027)
 Credential ID: a81932fee73d448ba64a13eb713d85da
 Skills validated: Google BigQuery, data warehousing, Cloud Storage, SQL, data security, Google Cloud Platform, data lake, data engineering, data pipelines, data processing, data migration.

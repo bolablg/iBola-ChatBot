@@ -119,14 +119,19 @@ def run_session(base_url, session, judge):
             payload, latency = post(row["question"], row.get("lang", "en"))
             error = None
         except Exception as exc:
-            payload, latency, error = {"answer": "", "evidence": []}, 0.0, str(exc)[:200]
+            payload, latency, error = (
+                {"answer": "", "evidence": []},
+                0.0,
+                str(exc)[:200],
+            )
 
         answer = payload.get("answer", "")
-        fact_pass, fact_failures = check_facts(answer, row)
+        fact_pass, fact_failures = check_facts(
+            answer, row, actions=payload.get("actions")
+        )
         evidence = payload.get("evidence", []) or []
         context = "\n---\n".join(
-            f"[{e.get('source', '?')}] {e.get('content_preview', '')}"
-            for e in evidence
+            f"[{e.get('source', '?')}] {e.get('content_preview', '')}" for e in evidence
         )
 
         scores = None
@@ -159,6 +164,37 @@ def run_session(base_url, session, judge):
 
     client.close()
     return results, messages_sent
+
+
+def measure_first_token(base_url, questions, lang="en"):
+    """Time-to-first-token over SSE (the previously unmeasured metric).
+
+    Note the current SSE implementation runs the full pipeline before
+    streaming, so first-token approximates full pipeline time; measuring it
+    makes that architectural fact visible instead of assumed.
+    """
+    timings = []
+    with httpx.Client(timeout=90) as client:
+        for question in questions:
+            start = time.time()
+            try:
+                with client.stream(
+                    "POST",
+                    f"{base_url}/ask-agentic",
+                    json={
+                        "user_input": question,
+                        "session_id": f"sse-{uuid.uuid4().hex[:8]}",
+                        "user_language": lang,
+                        "stream": True,
+                    },
+                ) as response:
+                    for line in response.iter_lines():
+                        if line.startswith("event: token"):
+                            timings.append(round(time.time() - start, 3))
+                            break
+            except Exception as exc:
+                print(f"  SSE first-token measurement failed: {exc}")
+    return timings
 
 
 def _mean(values):
@@ -234,6 +270,7 @@ def write_report(summary, results, stamp):
         f"| Judge helpfulness | {summary['helpfulness']} |",
         f"| Judge faithfulness | {summary['faithfulness']} |",
         f"| Latency p50 / p95 | {summary['latency_p50_s']}s / {summary['latency_p95_s']}s |",
+        f"| First token via SSE (sorted samples) | {summary.get('first_token_s')} |",
         f"| Transport errors | {summary['errors']} |",
         "",
         "## FR / EN parity",
@@ -281,8 +318,12 @@ def write_report(summary, results, stamp):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base-url", default="http://localhost:8010")
-    parser.add_argument("--concurrency", type=int, default=3,
-                        help="concurrent sessions (messages within a session are sequential)")
+    parser.add_argument(
+        "--concurrency",
+        type=int,
+        default=3,
+        help="concurrent sessions (messages within a session are sequential)",
+    )
     parser.add_argument("--no-judge", action="store_true")
     args = parser.parse_args()
 
@@ -310,11 +351,26 @@ def main():
             all_results.extend(results)
             total_messages += sent
             done = sum(1 for r in results if r["fact_pass"])
-            print(f"  session {i}/{len(sessions)}: {done}/{len(results)} pass "
-                  f"({sent} msgs)")
+            print(
+                f"  session {i}/{len(sessions)}: {done}/{len(results)} pass "
+                f"({sent} msgs)"
+            )
 
     all_results.sort(key=lambda r: r["id"])
     summary = summarize(all_results, total_messages, len(sessions), args.base_url)
+
+    print("Measuring first token via SSE (5 samples)...")
+    sse_timings = measure_first_token(
+        args.base_url,
+        [
+            "Does Bolaji still work at Gozem?",
+            "What are Bolaji's key skills?",
+            "Where is Bolaji based?",
+            "What was Bolaji's role at Gozem in 2023?",
+            "How many people did the Gozem Data Hub serve?",
+        ],
+    )
+    summary["first_token_s"] = sorted(sse_timings) if sse_timings else None
 
     stamp = time.strftime("%Y-%m-%d-%H%M")
     md_path, jsonl_path = write_report(summary, all_results, stamp)
