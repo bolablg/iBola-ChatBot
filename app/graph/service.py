@@ -31,6 +31,18 @@ def _prompt_versions() -> Dict[str, str]:
         return {}
 
 
+def _release_version() -> str:
+    """Release version from the VERSION file, for trace tags."""
+    try:
+        import os
+
+        path = os.path.join(os.path.dirname(__file__), "..", "..", "VERSION")
+        with open(path) as f:
+            return f.read().strip()
+    except Exception:
+        return "unknown"
+
+
 class AgenticRAGService:
     """Wraps the LangGraph agentic RAG workflow with session management.
 
@@ -218,6 +230,8 @@ class AgenticRAGService:
         trace_id = self._record_trace(
             session_id=session_id,
             user_input=user_input,
+            user_language=user_language,
+            request_info=request_info or {},
             final_state=final_state,
             evidence=evidence,
             elapsed=elapsed,
@@ -245,6 +259,8 @@ class AgenticRAGService:
         final_state: Dict[str, Any],
         evidence: List[Dict[str, Any]],
         elapsed: float,
+        user_language: str = "en",
+        request_info: Optional[Dict[str, Any]] = None,
     ) -> Optional[str]:
         """Record the turn in Langfuse (no-op when tracing is disabled).
 
@@ -254,15 +270,31 @@ class AgenticRAGService:
         so the response and user feedback can link back to this turn.
         """
         try:
-            from app.services.tracing import get_tracer
+            from app.services.tracing import get_tracer, hash_visitor
 
             tracer = get_tracer()
             if not tracer.enabled:
                 return None
+            request_info = request_info or {}
+            category = final_state.get("category")
+            category = getattr(category, "value", category) or "professional"
+            # Anonymous, hashed visitor id: never store the raw IP/UA
+            user_id = hash_visitor(
+                request_info.get("ip_address"), request_info.get("user_agent")
+            )
+            tags = [
+                f"lang:{user_language}",
+                f"category:{category}",
+                f"agent:{final_state.get('agent_type', '')}",
+                "endpoint:ask-agentic",
+                f"version:{_release_version()}",
+            ] + [f"prompt:{k}={v}" for k, v in _prompt_versions().items()]
             return tracer.record_turn(
                 session_id=session_id,
                 query=user_input,
                 answer=final_state.get("answer", ""),
+                user_id=user_id,
+                tags=tags,
                 payload={
                     "rewritten_query": final_state.get("rewritten_query", ""),
                     "agent_type": final_state.get("agent_type", ""),
@@ -346,6 +378,7 @@ class AgenticRAGService:
             "session_id": session_id,
             "should_end_chat": False,
             "evidence": [],
+            "trace_id": None,
         }
 
     @staticmethod
@@ -454,6 +487,7 @@ class AgenticRAGService:
             "should_end_chat": False,
             "response_time": 0.0,
             "evidence": [],
+            "trace_id": None,
         }
 
     @staticmethod
@@ -572,6 +606,7 @@ class AgenticRAGService:
             "should_end_chat": False,
             "response_time": 0.0,
             "evidence": [],
+            "trace_id": None,
         }
 
     @staticmethod
@@ -632,6 +667,7 @@ class AgenticRAGService:
             "should_end_chat": False,
             "response_time": 0.0,
             "evidence": [],
+            "trace_id": None,
         }
 
     @staticmethod
@@ -734,6 +770,7 @@ class AgenticRAGService:
             "should_end_chat": False,
             "response_time": 0.0,
             "evidence": [],
+            "trace_id": None,
         }
 
     @staticmethod
@@ -1051,6 +1088,7 @@ class AgenticRAGService:
             "should_end_chat": pleasantry_type == "goodbye",
             "response_time": 0.0,
             "evidence": [],
+            "trace_id": None,
         }
 
     def _log_redirect(
@@ -1252,4 +1290,5 @@ class AgenticRAGService:
             "should_end_chat": False,
             "response_time": 0.0,
             "evidence": [],
+            "trace_id": None,
         }

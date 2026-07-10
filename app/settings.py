@@ -12,7 +12,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import List, Optional
 
-from pydantic import Field, field_validator
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -74,14 +74,27 @@ class CacheSettings(BaseSettings):
 
 
 class TracingSettings(BaseSettings):
-    """Langfuse tracing configuration."""
+    """Langfuse tracing configuration.
 
-    model_config = SettingsConfigDict(env_prefix="LANGFUSE_")
+    ``enabled`` may be left unset: tracing auto-enables when both keys are
+    present (see ``is_active``). ``host`` accepts either LANGFUSE_HOST (SDK
+    default) or LANGFUSE_BASE_URL (what the owner set).
+    """
+
+    model_config = SettingsConfigDict(env_prefix="LANGFUSE_", populate_by_name=True)
 
     enabled: bool = False
     public_key: Optional[str] = None
     secret_key: Optional[str] = None
-    host: str = "https://cloud.langfuse.com"
+    host: str = Field(
+        default="https://cloud.langfuse.com",
+        validation_alias=AliasChoices("LANGFUSE_HOST", "LANGFUSE_BASE_URL"),
+    )
+
+    @property
+    def is_active(self) -> bool:
+        """Trace when explicitly enabled OR when both keys are configured."""
+        return bool(self.enabled or (self.public_key and self.secret_key))
 
 
 class AppSettings(BaseSettings):
