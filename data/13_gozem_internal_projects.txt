@@ -22,6 +22,8 @@ GOZEM AI STRATEGY KNOWLEDGE BASE
 - Tools: data collection and analysis, internal stakeholder interviews, market data scraping, LLM-powered tools profiling, strategic framework documentation.
 - Outcome: 49 validated use cases catalogued; 6 in implementation, with near-full top-management adoption of daily AI assistance.
 
+Quelle etait la portee de la strategie IA que Bolaji a co-dirigee chez Gozem: il a documente les besoins IA de 9 unites d'affaires avec plus de 50 parties prenantes, scanne 133 outils et fournisseurs dans 38 categories, catalogue 49 cas d'usage valides, et mis 6 en implementation.
+
 ---
 
 AUTOMATED INVOICE DATA EXTRACTION - Finance Automation

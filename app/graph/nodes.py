@@ -493,19 +493,35 @@ def retrieve_node(state: dict) -> dict:
         )
         # Compound questions ("role AND degree") otherwise fill the whole
         # context with the dominant sub-topic and drop the other half
-        # (measured defect n09). Fan out a second search per detected sub-topic
-        # and merge, so both halves reach generation.
-        for sub in _compound_subqueries(query):
-            extra = search.search(
-                sub,
-                top_k=3,
-                use_hybrid=search_settings.use_hybrid,
-                use_reranker=search_settings.use_reranker,
-                category_filter=None,
-            )
+        # (measured defect n09). Fan out a search per detected sub-topic and
+        # PREPEND each sub-topic's best doc so both halves survive the context
+        # budget, not just get appended past the cutoff.
+        subqueries = _compound_subqueries(query)
+        if subqueries:
             seen = {d.page_content for d in docs}
-            docs.extend(d for d in extra if d.page_content not in seen)
-        docs = _temporal_boost(query, docs)
+            leaders = []
+            for sub in subqueries:
+                extra = search.search(
+                    sub,
+                    top_k=3,
+                    use_hybrid=search_settings.use_hybrid,
+                    use_reranker=search_settings.use_reranker,
+                    category_filter=None,
+                )
+                for d in extra:
+                    if d.page_content not in seen:
+                        leaders.append(d)  # guaranteed a front slot
+                        seen.add(d.page_content)
+                        break
+                for d in extra[1:]:
+                    if d.page_content not in seen:
+                        docs.append(d)
+                        seen.add(d.page_content)
+            # Temporal boost sorts by recency, which would re-sink the (older)
+            # education/community half; skip it when serving a compound query.
+            docs = leaders + _temporal_boost(query, docs)
+        else:
+            docs = _temporal_boost(query, docs)
 
         return {
             "documents": docs,
