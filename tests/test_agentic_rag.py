@@ -45,23 +45,34 @@ def test_contact_requests_bypass_workflow_and_return_actions():
     assert any(action["type"] == "contact_booking" for action in result["actions"])
 
 
-def test_welcome_skill_prompt_bypasses_workflow_with_deterministic_answer():
+def test_profile_questions_route_through_rag_workflow():
+    """Profile questions must go through retrieval, never canned answers.
+
+    Canned profile responses went stale (they described an ended Gozem role
+    as current), so they were removed in favor of the RAG pipeline.
+    """
     AgenticRAGService, _, _ = _import_agentic_modules()
     service = AgenticRAGService()
     service.workflow = Mock()
+    service.workflow.invoke.return_value = {
+        "answer": "Bolaji's core skills include Python and BigQuery.",
+        "actions": [],
+        "agent_type": "professional",
+        "confidence": 0.9,
+        "redirect_count": 0,
+        "should_end_chat": False,
+        "reasoning_steps": [],
+    }
 
-    result = service.process_query(
+    for query in [
         "What are Bolaji key skills?",
-        [],
-        "skills-test",
-        "en",
-        {},
-    )
+        "Tell me about his work experience",
+        "What is his education background?",
+    ]:
+        result = service.process_query(query, [], "profile-test", "en", {})
+        assert result["agent_type"] == "professional"
 
-    service.workflow.invoke.assert_not_called()
-    assert result["agent_type"] == "skills"
-    assert "Python" in result["answer"]
-    assert "GCP" in result["answer"] or "Google Cloud" in result["answer"]
+    assert service.workflow.invoke.call_count == 3
 
 
 def test_opportunity_prompt_bypasses_workflow_with_contact_actions():

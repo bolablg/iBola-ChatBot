@@ -29,6 +29,12 @@ class FeedbackInput(BaseModel):
         ..., ge=0.0, le=1.0, description="Rating 0.0 (bad) to 1.0 (good)"
     )
     comment: Optional[str] = Field(default=None, max_length=500)
+    trace_id: Optional[str] = Field(
+        default=None,
+        max_length=64,
+        description="trace_id from the answer being rated; links the score "
+        "to the originating turn's trace instead of a disconnected one",
+    )
 
 
 @router.post("/feedback")
@@ -36,19 +42,31 @@ async def submit_feedback(payload: FeedbackInput):
     """Submit user feedback on a response."""
     tracer = get_tracer()
 
-    # Log to Langfuse if available
-    trace = tracer.create_trace(
-        name="user_feedback",
-        session_id=payload.session_id,
-        metadata={
-            "message_index": payload.message_index,
-            "score": payload.score,
-            "comment": payload.comment or "",
-        },
-    )
-    tracer.score(
-        trace, name="user_rating", value=payload.score, comment=payload.comment or ""
-    )
+    if payload.trace_id:
+        # Attach the score to the turn that produced the rated answer
+        tracer.score_trace(
+            trace_id=payload.trace_id,
+            name="user_rating",
+            value=payload.score,
+            comment=payload.comment or "",
+        )
+    else:
+        # No trace linkage available; record a standalone feedback trace
+        trace = tracer.create_trace(
+            name="user_feedback",
+            session_id=payload.session_id,
+            metadata={
+                "message_index": payload.message_index,
+                "score": payload.score,
+                "comment": payload.comment or "",
+            },
+        )
+        tracer.score(
+            trace,
+            name="user_rating",
+            value=payload.score,
+            comment=payload.comment or "",
+        )
     tracer.flush()
 
     # Always log locally

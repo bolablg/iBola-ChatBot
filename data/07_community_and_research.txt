@@ -1,39 +1,50 @@
-BOLAJI BALOGOUN — COMMUNITY LEADERSHIP, MENTORSHIP & RESEARCH
+BOLAJI BALOGOUN - COMMUNITY LEADERSHIP, MENTORSHIP & RESEARCH
 
-Bolaji is actively involved in community building, mentorship, and AI research for African languages. He believes in giving back to the tech community, especially in Francophone Africa.
+Bolaji is actively involved in community building, mentorship, and AI research for African languages. He has helped build the African data and AI ecosystem beyond his industry roles.
 
 ---
 
-VICE-CHAIR — iSHEERO (December 2021 – Present)
+FOUNDING VICE-CHAIR - iSHEERO (December 2021 - Present)
 Website: isheero.com
 
-iSheero is an initiative promoting data science and artificial intelligence in Benin and Francophone Africa. Bolaji serves as Vice-Chair.
+iSheero is an initiative promoting data science and artificial intelligence in Benin and across Francophone Africa. Bolaji is a FOUNDING Vice-Chair.
 
 Three pillars of iSheero:
-1. Empower, Guide, Inspire — Equipping young Beninese talent with AI and data science skills through workshops, mentorship, and hands-on projects.
-2. Build a local ecosystem — Positioning Benin as a data science and AI hub in West Africa by fostering a community of practitioners and enthusiasts.
-3. Champion AI adoption — Encouraging Beninese businesses and organizations to adopt AI-driven solutions for growth and efficiency.
+1. Skills development: equipping young Beninese talent with AI and data science skills through workshops, mentorship, and hands-on projects.
+2. Local ecosystem: building a data science ecosystem to position Benin as a hub for international AI projects.
+3. AI in business: helping companies adopt AI in their operating workflows.
 
-Bolaji's involvement in iSheero demonstrates his commitment to mentorship, community building, and nurturing the next generation of data professionals in Africa.
+Bolaji's contributions as founding Vice-Chair:
+- Led a real-time visualization lab in Google Cloud at the Africa TechUp Tour bootcamp.
+- Engaged with DataCamp scholarship recipients in data engineering as part of an iSheero partnership program.
+- Served as a review contributor to Benin's National AI and Big Data Strategy with the Ministry of Digital Affairs.
+- Co-trained directors of information systems (DSIs) across Benin's Ministry of Finance departments in data science.
 
 ---
 
-CHAIR & CO-FOUNDER — TAKWIMU LAB (2019 – 2022)
+CHAIR & CO-FOUNDER - TAKWIMU LAB (2019 - 2022)
 
-Bolaji co-founded Takwimu Lab, a community for AI and Data Science enthusiasts focused on research and practical applications in African contexts.
+Bolaji co-founded and chaired Takwimu LAB, a research collective advancing NLP for low-resource African languages, built as a community for AI and Data Science learners in Francophone Africa.
 
 Key achievements:
-- Promoted research on low-resource African languages for Natural Language Processing (NLP).
-- Collected, labeled, and published parallel text datasets for Neural Machine Translation: French-Fongbe and French-Ewe language pairs.
-- Built a prototype English-Fongbe Neural Machine Translation app with support from AI4D-Africa Network and UNESCO.
-- Won the Zindi Africa Award for the AI4D-African Dataset Challenge in 2020.
+- Helped collect, clean, annotate, and release over 70,000 aligned French-Fongbe and French-Ewe sentence pairs on Zenodo under the UNESCO-backed AI4D program.
+- Built a prototype English-Fongbe Neural Machine Translation app through the AI4D-Africa Network with UNESCO support.
+- Won the Zindi Africa Award for the AI4D African Dataset Challenge in 2020.
 - Co-organized a machine translation challenge on Zindi Africa.
-- Published dataset on Zenodo (zenodo.org/record/4266935, November 2020).
-- Paper: "AI4D African Language Program", April 2021, presented at the AfricaNLP Workshop at EACL2021 Conference (arXiv:2104.02516).
+- Published the parallel text dataset on Zenodo (zenodo.org/record/4266935, November 2020).
+- Contributed to the paper "Participatory Research for Low-resourced Machine Translation", presented at the AfricaNLP Workshop at the EACL 2021 conference (arXiv:2104.02516).
 
 This work positioned Bolaji at the intersection of AI research and African language preservation, contributing to multilingual NLP for underrepresented languages.
 
 ---
 
+PUBLIC SPEAKING & RECOGNITION:
+
+- CAF2025 conference speaker: "Super Apps & Data Protection", on Gozem's super-app approach to data protection (2025).
+- WakeUp Champ podcast guest: on the path from statistics to data science leadership (2023).
+- Zindi Africa Award: AI4D African Dataset Challenge, with Takwimu LAB (2020).
+
+---
+
 MENTORSHIP & TEACHING:
-Beyond formal community roles, Bolaji mentors team members at Gozem, has trained agency staff at INSAE in R analytics, and has delivered data management workshops for 15 startups through his ITC/UN consulting engagement. He fosters professional growth and continuous learning as a core leadership principle.
+Beyond formal community roles, Bolaji mentored his data team at Gozem, trained agency staff at INStaD in R analytics, delivered data management workshops for 15 early-stage startups from Benin and other ECOWAS countries through his ITC/UN consulting engagement (coaching 5 of them one-on-one), delivered an introduction-to-AI-in-banking training to Societe Generale Maroc's top management, and co-trained CIOs at Benin's Ministry of Finance in data science. He fosters professional growth and continuous learning as a core leadership principle.

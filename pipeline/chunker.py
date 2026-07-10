@@ -29,6 +29,7 @@ _CATEGORY_KEYWORDS = {
         "skill",
         "technology",
         "head of data",
+        "data director",
         "global data analyst",
         "data scientist",
         "consultant",
@@ -125,6 +126,33 @@ _CATEGORY_KEYWORDS = {
 }
 
 
+def token_overlap(text_a: str, text_b: str) -> float:
+    """Overlap coefficient between two texts' token sets (0.0 - 1.0)."""
+    tokens_a = set(text_a.lower().split())
+    tokens_b = set(text_b.lower().split())
+    if not tokens_a or not tokens_b:
+        return 0.0
+    return len(tokens_a & tokens_b) / min(len(tokens_a), len(tokens_b))
+
+
+def dedupe_chunks(chunks: List[Document], threshold: float = 0.8) -> List[Document]:
+    """Drop chunks whose token overlap with an earlier chunk exceeds threshold.
+
+    Near-duplicate chunks waste context tokens and can trigger hallucinated
+    merges of similar passages. Applied per source at ingestion; the first
+    occurrence wins.
+    """
+    kept: List[Document] = []
+    for chunk in chunks:
+        if any(
+            token_overlap(chunk.page_content, existing.page_content) > threshold
+            for existing in kept
+        ):
+            continue
+        kept.append(chunk)
+    return kept
+
+
 class IntelligentChunker:
     """Section-based document chunker with metadata enrichment."""
 
@@ -200,9 +228,20 @@ class IntelligentChunker:
             "section_header": header,
             "category": category,
             "word_count": len(text.split()),
+            # Structured recency signal: the most recent year mentioned
+            # (9999 for ongoing "Present" engagements). Temporal queries
+            # rank chunks by this instead of prose rules or source-name lists.
+            "latest_year": self._latest_year(text),
         }
 
         return Document(page_content=prefixed_content, metadata=chunk_metadata)
+
+    @staticmethod
+    def _latest_year(text: str) -> int:
+        if re.search(r"\bpresent\b", text, re.IGNORECASE):
+            return 9999
+        years = [int(y) for y in re.findall(r"\b(?:19|20)\d{2}\b", text)]
+        return max(years) if years else 0
 
     def _detect_sections(self, content: str) -> List[Dict[str, Any]]:
         """Detect document sections by structural patterns."""

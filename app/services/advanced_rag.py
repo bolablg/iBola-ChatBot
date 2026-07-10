@@ -154,6 +154,46 @@ class BM25Index:
 # ---------------------------------------------------------------------------
 
 
+def _annotate_retrieval(
+    pairs: List[Tuple[Document, float]],
+) -> List[Document]:
+    """Copy docs with their retrieval rank and score in metadata.
+
+    Copies (not mutations) because the underlying Document objects are shared
+    with the BM25 index corpus. The rank/score feed the response's evidence
+    field and tracing spans.
+    """
+    out = []
+    for rank, (doc, score) in enumerate(pairs, start=1):
+        out.append(
+            Document(
+                page_content=doc.page_content,
+                metadata={
+                    **(doc.metadata or {}),
+                    "retrieval_rank": rank,
+                    "retrieval_score": round(float(score), 6),
+                },
+            )
+        )
+    return out
+
+
+def _prefer_category(docs: List[Document], category: Optional[str]) -> List[Document]:
+    """Stable-sort docs so the guardrail's category comes first, keeping all.
+
+    A HARD category filter measurably destroyed recall: the answer to "what
+    languages does Bolaji speak" lives in a community-tagged chunk that a
+    "professional" filter silently dropped. Chunk categories are heuristic
+    guesses; relevance grading downstream is the real filter.
+    """
+    if not category:
+        return docs
+    category = category.lower()
+    matching = [d for d in docs if d.metadata.get("category", "").lower() == category]
+    rest = [d for d in docs if d.metadata.get("category", "").lower() != category]
+    return matching + rest
+
+
 def reciprocal_rank_fusion(
     ranked_lists: List[List[Tuple[Document, float]]],
     rank_constant: int = 60,
@@ -187,9 +227,15 @@ except ImportError:
 
 
 class CrossEncoderReranker:
-    """Post-retrieval reranker using a cross-encoder model."""
+    """Post-retrieval reranker using a cross-encoder model.
 
-    def __init__(self, model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"):
+    Defaults to a multilingual cross-encoder (bge-reranker-v2-m3) because the
+    bot serves French users; an English-only MS MARCO model silently degrades
+    half the traffic. Still env-gated behind ENABLE_CROSS_ENCODER_RERANKER
+    because model load adds startup latency.
+    """
+
+    def __init__(self, model_name: str = "BAAI/bge-reranker-v2-m3"):
         self.model = None
         self.model_name = model_name
         self.enabled = (
@@ -242,7 +288,13 @@ class HybridSearchService:
     def __init__(self, vectorstore_path: str | None = None):
         self.vectorstore_path = vectorstore_path or config.DB_PATH
         self.bm25_index = BM25Index()
-        self.reranker = CrossEncoderReranker()
+        try:
+            from app.settings import get_settings
+
+            reranker_model = get_settings().search.reranker_model
+        except Exception:
+            reranker_model = "BAAI/bge-reranker-v2-m3"
+        self.reranker = CrossEncoderReranker(model_name=reranker_model)
         self.vectorstore: Optional[Chroma] = None
         self.embeddings = None
         self.documents: List[Document] = []
@@ -356,43 +408,30 @@ class HybridSearchService:
 
             if not ranked_lists:
                 fallback = self._keyword_fallback(query, top_k=top_k)
-                results = [doc for doc, _ in fallback]
-                if category_filter:
-                    filtered = [
-                        d
-                        for d in results
-                        if d.metadata.get("category", "").lower()
-                        == category_filter.lower()
-                    ]
-                    results = filtered if filtered else results
-                return results
+                results = _annotate_retrieval(fallback)
+                return _prefer_category(results, category_filter)
 
             # 3. Fuse
             if len(ranked_lists) > 1:
                 fused = reciprocal_rank_fusion(ranked_lists, rank_constant=60)
-                results = [doc for doc, _ in fused[: top_k * 2]]
+                pairs = fused[: top_k * 2]
             else:
                 # Single retriever succeeded (vector OR BM25, not both).
                 # Extract docs from whichever ranked list is present.
-                results = [doc for doc, _ in ranked_lists[0][:top_k]]
+                pairs = ranked_lists[0][:top_k]
 
             # 4. Optional rerank
-            if use_reranker and len(results) > top_k:
-                reranked = self.reranker.rerank(query, results, top_k=top_k)
-                results = [doc for doc, _ in reranked]
+            if use_reranker and len(pairs) > top_k:
+                pairs = self.reranker.rerank(
+                    query, [doc for doc, _ in pairs], top_k=top_k
+                )
             else:
-                results = results[:top_k]
+                pairs = pairs[:top_k]
 
-            # 5. Category filter
-            if category_filter:
-                filtered = [
-                    d
-                    for d in results
-                    if d.metadata.get("category", "").lower() == category_filter.lower()
-                ]
-                results = filtered if filtered else results
+            results = _annotate_retrieval(pairs)
 
-            return results
+            # 5. Category preference (soft, never a hard filter)
+            return _prefer_category(results, category_filter)
 
         except Exception as exc:
             logger.error("Hybrid search error: %s", exc)
