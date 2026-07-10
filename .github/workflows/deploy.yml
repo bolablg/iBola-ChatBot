@@ -158,7 +158,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.PAT_TOKEN }}
+          # PAT preferred (its pushes trigger downstream workflows); built-in
+          # token as fallback so an expired PAT degrades instead of failing.
+          token: ${{ secrets.PAT_TOKEN || github.token }}
 
       - name: Configure git
         run: |
@@ -186,7 +188,7 @@ jobs:
       - name: Create and auto-merge PR to staging
         if: steps.check-diff.outputs.ahead != '0'
         env:
-          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT_TOKEN || github.token }}
           BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
           COMMIT_SHA: ${{ github.sha }}
         run: |
@@ -275,7 +277,7 @@ jobs:
 
       - name: Create PR to main
         env:
-          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT_TOKEN || github.token }}
         run: |
           VERSION=$(cat VERSION | tr -d '[:space:]')
           EXISTING_PR=$(gh pr list --base main --head staging --json number --jq '.[0].number' 2>/dev/null || echo "")
@@ -433,7 +435,7 @@ jobs:
 
       - name: Create GitHub Release with notes
         env:
-          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT_TOKEN || github.token }}
         run: |
           VERSION=$(cat VERSION | tr -d '[:space:]')
           TAG="v${VERSION}"
