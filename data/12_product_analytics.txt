@@ -1,4 +1,6 @@
-BOLAJI BALOGOUN — PRODUCT ANALYTICS CASE STUDIES AT GOZEM
+BOLAJI BALOGOUN - PRODUCT ANALYTICS CASE STUDIES AT GOZEM
+
+These case studies are from Bolaji's tenure at Gozem (2019 - 2026).
 
 ---
 
@@ -9,28 +11,38 @@ Situation: Gozem's e-commerce business line needed personalized product recommen
 Action: Bolaji worked with the product team to deploy a recommendation system in Gozem's user app. After deployment, he was responsible for defining tracking events and measuring performance.
 
 Events defined and tracked:
-- User Interaction Events: clicks, views, and interactions with recommended products.
-- Purchase Events: conversions and purchases from recommendations.
-- Feedback Events: user ratings and reviews on recommended products.
+- User interaction events: clicks, views, and interactions with recommended products.
+- Purchase events: conversions and purchases from recommendations.
+- Feedback events: user ratings and reviews on recommended products.
 
 Performance metrics:
 - Click-Through Rate (CTR): percentage of users clicking on recommended products.
-- Conversion Rate: percentage of users purchasing recommended products.
-- User Satisfaction: analysis of user feedback and ratings on recommendation quality.
+- Conversion rate: percentage of users purchasing recommended products.
+- User satisfaction: analysis of user feedback and ratings on recommendation quality.
 
-Outcome: These events and metrics enabled the team to optimize the recommendation system, enhance user experience, and drive higher engagement and sales.
+Outcome: these events and metrics enabled the team to optimize the recommendation system, enhance user experience, and drive higher engagement and sales.
 
 ---
 
 RECOMMENDATION SYSTEM A/B TEST
 
-Situation: The team needed to validate whether personalized recommendations actually improved engagement and conversions.
+Situation: the team needed to validate whether personalized recommendations actually improved engagement and conversions.
 
 Action: Bolaji designed and executed an A/B test to evaluate the recommendation system.
-1. Test Design: Collaborated with the product team to define hypotheses and objectives — specifically whether personalized recommendations would increase engagement and conversions.
-2. Implementation: Worked with developers to randomly assign users to a control group (no recommendations) and a test group (with personalized recommendations).
-3. Data Analysis: Compared performance across both groups on CTR, conversion rate, and user satisfaction.
+1. Test design: collaborated with the product team to define hypotheses and objectives, specifically whether personalized recommendations would increase engagement and conversions.
+2. Implementation: worked with developers to randomly assign users to a control group (no recommendations) and a test group (with personalized recommendations).
+3. Data analysis: compared performance across both groups on CTR, conversion rate, and user satisfaction.
 
-Outcome: The test group showed a significant increase in CTR and conversion rates, with similar positive user feedback as the control group. Based on these results, the product team rolled out personalized recommendations to all users. Bolaji's team continuously monitors and refines the recommendation algorithms.
+Outcome: the test group showed a significant increase in CTR and conversion rates, with similar positive user feedback as the control group. Based on these results, the product team rolled out personalized recommendations to all users, driving measurably higher sales.
 
-This A/B test provided actionable, data-driven insights that led to a product-wide rollout and measurably higher sales.
+This A/B test provided actionable, data-driven insights that led to a product-wide rollout.
+
+---
+
+MARKETING ANALYTICS STACK
+
+Situation: growth reviews lacked a consistent analytical foundation across campaign platforms.
+
+Action: Bolaji co-chartered the marketing analytics stack (CAC, LTV, cohort, and multi-touch attribution embedded into weekly Growth reviews), owning the end-to-end supporting data pipelines from campaign platforms.
+
+Outcome: marketing decisions grounded in a shared, governed analytical layer, building on the RFM segmentation and cohort analysis work that had supported a 9%+ quarter-over-quarter user-retention increase.

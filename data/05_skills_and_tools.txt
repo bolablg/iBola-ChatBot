@@ -1,22 +1,24 @@
-BOLAJI BALOGOUN — SKILLS & TOOLS WITH APPLICATION CONTEXT
+BOLAJI BALOGOUN - SKILLS & TOOLS WITH APPLICATION CONTEXT
 
 ---
 
 CORE EXPERTISE AREAS:
-Data engineering, data modeling, statistical analysis, data visualization, machine learning, automation, cloud computing, data product management, team leadership, problem-solving, cross-functional communication.
+Data platform engineering, data modeling, AI and LLM engineering (RAG, agentic workflows), statistical analysis, data visualization, machine learning, automation, cloud computing, FinOps, data product management, data governance, team leadership, problem-solving, cross-functional communication.
+
+Quelles sont les competences cles de Bolaji: Python, SQL avance, BigQuery, Google Cloud Platform, Apache Airflow, Dataform, ingenierie IA et LLM (RAG, workflows agentiques, LangGraph, MCP), FinOps et leadership d'equipes data.
 
 ---
 
 PROGRAMMING LANGUAGES:
 
-- Python (primary language — 10+ years): pandas, numpy, scikit-learn, Flask, FastAPI, LangChain, LangGraph.
+- Python (primary language, 10+ years): pandas, numpy, scikit-learn, Flask, FastAPI, LangGraph.
   Used at: Gozem (data pipelines, automation, AI tools), Rintio (ML models, data engineering), personal projects (iBola chatbot, uDownloader, salary converter). Bolaji's strongest and most-used language.
 
-- SQL (advanced — 10+ years): BigQuery SQL, PostgreSQL, MySQL, SQLite, MariaDB.
-  Used at: Gozem (BigQuery is the central data warehouse — daily use), Rintio (data analysis), INSAE (data collection).
+- SQL (advanced, 10+ years): BigQuery SQL, PostgreSQL, MySQL, SQLite, MariaDB, ClickHouse.
+  Used at: Gozem (BigQuery was the central data warehouse, daily use), Rintio (data analysis), INStaD (data collection).
 
 - R: statistical analysis, ggplot2.
-  Used at: University (Master's dissertation), INSAE (training staff in R analytics).
+  Used at: University (Master's dissertation), INStaD (training staff in R analytics).
 
 - JavaScript: web development, Dataform templates.
   Used at: Gozem (Dataform JavaScript-based templates for BigQuery transformations).
@@ -24,33 +26,60 @@ PROGRAMMING LANGUAGES:
 - Bash/Shell scripting: automation, CI/CD, server management.
   Used at: Gozem (pipeline automation), personal projects (deployment scripts).
 
-- Scala: used in big data contexts.
+---
+
+AI & LLM ENGINEERING:
+
+- LLM APIs and prompt engineering: Google Gemini, Claude.
+  Used at: Gozem (30+ production AI-powered tools: document intelligence, fraud alerts, market monitoring; brought Claude into leadership workflows and product engineering), personal projects (iBola agentic RAG chatbot).
+
+- RAG (Retrieval-Augmented Generation) and vector databases: ChromaDB, hybrid search.
+  Used at: Gozem (multi-agent RAG customer support chatbot with Zendesk escalation), personal projects (iBola chatbot with BM25 + vector + RRF hybrid search).
+
+- Agentic workflows and LangGraph: multi-agent systems, guardrails, structured outputs.
+  Used at: Gozem (every validated AI use case shipped with its agentic workflow architecture), personal projects (iBola production multi-agent RAG system).
+
+- MCP (Model Context Protocol): data-exploration tooling for AI assistants.
+  Used at: Gozem (a data-exploration MCP as part of pipeline observability).
+
+- Document intelligence and LLM-powered OCR.
+  Used at: Gozem (automated invoice extraction saving each financing manager roughly 40 hours per month across thousands of invoices).
+
+- Scikit-learn: classification, regression, clustering.
+  Used at: Rintio (crop yield prediction models), Gozem (ML-based fraud screening that made field-agent payment processing 7x faster).
+
+- Natural Language Processing: neural machine translation, text classification, language detection.
+  Used at: Takwimu LAB (French-Fongbe and French-Ewe neural machine translation), iBola chatbot.
+
+- Vertex AI: managed ML platform.
+  Used at: Gozem (ML model deployment and management).
 
 ---
 
 CLOUD & DATA PLATFORMS:
 
-- Google Cloud Platform (GCP): BigQuery, Cloud Storage (GCS), DataForm, Vertex AI, DataFlow, Cloud Run, Artifact Registry, Cloud Logging, Cloud Build.
-  Used at: Gozem (entire data infrastructure runs on GCP — Bolaji led the migration from on-premises to GCP).
+- Google Cloud Platform (GCP): BigQuery, Cloud Storage, Dataform, Vertex AI, Dataflow, Cloud Run, Pub/Sub, Artifact Registry, Cloud Logging, Cloud Build.
+  Used at: Gozem (the entire data platform ran on GCP; Bolaji led the migration of 10+ TB within a quarter and architected the warehouse with 50+ scheduled ETL pipelines).
+  Certification: Google Cloud Professional Data Engineer (November 2025 - November 2027).
 
 - Amazon Web Services (AWS): EC2.
-  Used at: Gozem (specific compute workloads).
+  Used at: Gozem (specific compute workloads, including the Data Hub).
 
-- Data warehousing concepts: partitioning, clustering, cost optimization, incremental loading, MPP SQL engines.
-  Applied at: Gozem (achieved 42% cloud cost reduction through BigQuery optimization).
+- Data warehousing and FinOps: partitioning, clustering, cost optimization, incremental loading, MPP SQL engines.
+  Applied at: Gozem (42.57% reduction in Google Cloud costs in a single quarter through data model redesign, BigQuery schema optimization, orchestration optimization, and pipeline tuning, while maintaining SLAs on freshness and integrity).
 
 ---
 
 DATABASES:
 
-- Relational: BigQuery, PostgreSQL, MySQL, SQLite, MariaDB.
+- Relational and analytical: BigQuery, PostgreSQL, MySQL, SQLite, MariaDB, ClickHouse.
   Used at: Gozem (BigQuery), Rintio (PostgreSQL), personal projects.
 
 - NoSQL: MongoDB.
   Used at: Gozem (application data from MongoDB Atlas integrated into the data pipeline).
 
 - Vector: ChromaDB.
-  Used at: Personal projects (iBola chatbot uses ChromaDB for vector storage).
+  Used at: personal projects (iBola chatbot uses ChromaDB for vector storage).
 
 ---
 
@@ -60,7 +89,7 @@ DEVOPS & CI/CD:
   Used at: Gozem (containerized Data Hub services), personal projects (iBola chatbot deployed with Docker on Google Cloud Run).
 
 - Apache Airflow: workflow orchestration, scheduling, DAG development.
-  Used at: Gozem (data pipeline orchestration, data quality automation, near real-time processing).
+  Used at: Gozem (pipeline orchestration, data quality automation, near real-time processing). Certified via Udemy (February 2024).
 
 - Git/GitHub/GitLab: version control, CI/CD pipelines, code review.
   Used at: Gozem (GitLab), Rintio (GitLab), personal projects (GitHub with GitFlow CI/CD).
@@ -69,77 +98,40 @@ DEVOPS & CI/CD:
   Used at: Gozem (Docker image storage for Cloud Run deployments).
 
 - Pre-commit hooks, Black, isort, Flake8: code quality automation.
-  Used at: Personal projects (automated formatting and linting).
+  Used at: personal projects (automated formatting and linting).
 
 ---
 
 DATA VISUALIZATION & BI:
 
-- Looker and Looker Studio (formerly Google Data Studio): dashboards, data modeling layers.
+- Looker and Looker Studio: dashboards, data modeling layers.
   Used at: Gozem (performance monitoring, data quality dashboards, management reporting).
 
 - Metabase: self-service analytics.
-  Used at: Gozem (ad-hoc analysis for business teams).
+  Used at: Gozem (the no-code exploration layer that halved routine query load on the central data team, with 12+ active manager users).
 
-- Plotly (Python): interactive charts.
-  Used at: Personal projects and data exploration.
+- Plotly (Python) and analytics web apps: interactive charts and data applications.
+  Used at: Gozem (Data Hub self-service analytics modules), personal projects.
 
-- Kibana (ElasticSearch dashboards): log and data visualization.
-  Used at: Rintio (agricultural data dashboards).
-
-- Apache Superset: open-source BI tool.
-  Used at: Rintio (performance reporting dashboards).
-
----
-
-AI & MACHINE LEARNING:
-
-- Large Language Models (LLMs): Google Gemini, prompt engineering, RAG pipelines.
-  Used at: Gozem (LLM tools to boost team productivity), personal projects (iBola agentic RAG chatbot).
-
-- LangChain and LangGraph: agentic AI, multi-agent systems, retrieval-augmented generation.
-  Used at: Personal projects (iBola chatbot — production-grade multi-agent RAG system with guardrails, hybrid search, and structured outputs).
-
-- Scikit-learn: classification, regression, clustering.
-  Used at: Rintio (crop yield prediction models), Gozem (fraud detection models).
-
-- Natural Language Processing: neural machine translation, text classification, language detection.
-  Used at: Takwimu Lab (French-Fongbe and French-Ewe neural machine translation), iBola chatbot.
-
-- Vertex AI: managed ML platform.
-  Used at: Gozem (ML model deployment and management).
-
-- Deep Learning, Apache Spark ML.
-  Used at: Rintio (big data ML pipelines with Spark).
+- Kibana and Apache Superset: log and BI dashboards.
+  Used at: Rintio (agricultural data dashboards and leadership reporting).
 
 ---
 
 BIG DATA:
 
-- Apache Hadoop: distributed storage (HDFS).
-  Used at: Rintio (data lake for agricultural data).
-
-- Apache Spark: distributed computing, PySpark.
-  Used at: Rintio (data processing and ML), Big Data Bootcamp.
-
-- Apache Hive: SQL-on-Hadoop, data warehousing.
-  Used at: Rintio, Big Data Bootcamp.
-
-- ElasticSearch: full-text search, analytics.
-  Used at: Rintio (agricultural data search and analytics).
+- Apache Hadoop (HDFS), Apache Spark (PySpark), Apache Hive, ElasticSearch.
+  Used at: Rintio (data lake and processing for 100GB+ of agricultural data), Big Data Bootcamp.
 
 ---
 
-DATA INGESTION & INTEGRATION:
-
-- Stitch Data: managed ETL/ELT.
-  Used at: Gozem (long-period batch ingestion into BigQuery from multiple sources: MongoDB Atlas, Zendesk, Pipedrive, Asana, CallCenterStudio).
-
-- Google Dataflow: stream and batch processing.
-  Used at: Gozem (near real-time data processing).
+DATA INGESTION & TRANSFORMATION:
 
 - Dataform: SQL-based data modeling and transformation.
-  Used at: Gozem (Bolaji built a custom JavaScript-based template framework extending Dataform for incremental data flows, partition-filtered merges, and scoped assertions).
+  Used at: Gozem (Bolaji built a custom JavaScript-based smart-template framework extending Dataform for incremental data flows, partition-filtered merges, and scoped assertions, documented on his blog; this work contributed to the 42.57% cost reduction).
+
+- Google Dataflow and Pub/Sub: stream and batch processing.
+  Used at: Gozem (near real-time data processing).
 
 ---
 
@@ -156,6 +148,7 @@ PROJECT MANAGEMENT:
 TOOL EQUIVALENCES (transferable skills):
 Bolaji can transfer his expertise to equivalent tools in the same categories:
 - dbt is equivalent to Dataform: SQL-based modeling, DAGs, tests, documentation, CI/CD for data warehouses.
+  Est-ce que Bolaji connait dbt: son expertise approfondie porte sur Dataform, l'equivalent direct de dbt. Il a construit un framework de smart templates sur Dataform chez Gozem.
 - Power BI is equivalent to Looker Studio / Tableau: BI dashboards, data modeling layers, visual storytelling, sharing, governance.
 - Snowflake / Redshift is equivalent to BigQuery / ClickHouse: cloud data warehouses, MPP SQL, partitioning, clustering, cost/performance tuning.
 - Airflow is equivalent to Dagster: workflow orchestration, scheduling, monitoring, data pipeline management.
@@ -163,9 +156,9 @@ Bolaji can transfer his expertise to equivalent tools in the same categories:
 ---
 
 LEADERSHIP & SOFT SKILLS:
-Team Leadership, Team Management, Product Development, Product Design, Problem Solving, Adaptability & Resilience, Communicating for Impact, Presentations, Training Delivery, Research and Development (R&D), Scientific Writing, Mentorship.
+Team leadership (built a team from 0 to 14+), team management, hiring and onboarding design, product development, product design, problem solving, adaptability and resilience, communicating for impact, presentations, executive training delivery, research and development, scientific writing, mentorship.
 
 ---
 
 ADDITIONAL SKILLS:
-Data Pipelines, ETL, Data Warehousing, Data Lake, Data Processing, Data Mining, Data Collection, Data Management, Data Migration, Data Governance, Data Security, Data Strategies, Strategic Data Analysis, Customer Analysis, Predictive Analytics, Business Intelligence (BI), Web Analytics, A/B Testing, Survey Design, IBM SPSS, Statistical Inference, Statistical Modeling, SEO, Social Media Optimization (SMO).
+Data pipelines, ETL/ELT, data warehousing, data lake, data processing, data mining, data collection, data management, data migration, data governance, data security, data strategy, AI strategy, strategic data analysis, customer analysis, predictive analytics, business intelligence, A/B testing, survey design, statistical inference, statistical modeling.

@@ -1,45 +1,54 @@
-BOLAJI BALOGOUN — PREVIOUS ROLE: GLOBAL DATA ANALYST AT GOZEM
+BOLAJI BALOGOUN - PREVIOUS ROLE: GLOBAL DATA ANALYST AT GOZEM
 
-Status: PREVIOUS ROLE (November 2019 – September 2022)
+Status: PREVIOUS ROLE (November 2019 - September 2022)
 Company: Gozem
 Title: Global Data Analyst
-Note: Bolaji was promoted from this role to Head of Data & Analytics in October 2022.
+Note: Bolaji was Gozem's FIRST DATA HIRE. He was promoted from this role to Head of Data in October 2022, then to Data Director in April 2025. His Gozem tenure ended in July 2026.
 
 ---
 
 KEY ACHIEVEMENTS:
 
 Migrated Gozem's data infrastructure to Google Cloud:
-- Situation: Gozem relied on on-premises systems with limited data processing. There was no data warehouse. Bolaji had never worked with GCP or AWS before.
-- Action: Self-taught Google BigQuery, Cloud Storage, and related tools through online courses. Opted for a cloud-first approach to avoid maintenance overhead. Chose Stitch Data for ingestion to enable faster delivery.
-- Tools: Google BigQuery, Google Cloud Storage, Google Dataflow, Apache Airflow, Stitch Data.
-- Outcome: Deployed a fully functional cloud-based analytics infrastructure within a single quarter. Replaced repetitive manual processing with BigQuery's scalable analysis power.
+- Situation: the data infrastructure ran on legacy batch processes that could not keep up with growing operational and analytical needs across countries. There was no data warehouse. Bolaji had never worked with GCP or AWS before.
+- Action: self-taught Google BigQuery, Cloud Storage, and related tools. Opted for a cloud-first approach to avoid maintenance overhead. Designed a BigQuery-based data warehouse with 50+ scheduled ETL pipelines.
+- Tools: Google BigQuery, Google Cloud Storage, Google Dataflow, Apache Airflow, Python.
+- Outcome: migrated 10+ TB within a single quarter, without operational interruption, into a fully functional cloud-based analytics infrastructure. Founded the analytics engineering function on top of it.
+
+Automated operational monitoring:
+- Situation: operations monitoring relied on a manual recurring job to spot business scenarios across markets, taking up to 2 days of analyst work per cycle.
+- Action: automated the workflow within the first 6 months of the role. Python jobs querying PostgreSQL surfaced supply gaps, driver behaviour anomalies, and fraudulent trip patterns into Google Sheets for the operations team.
+- Outcome: replaced a 2-day manual job with a 5-15 minute automated cycle.
+
+Automated incentive payments:
+- Situation: the agent and partner incentive payment process took multiple days, with manual reviews creating delays, errors, and heavy load on the finance team.
+- Action: built automated data pipelines combining predictive analytics and near-real-time monitoring, with structured logs and dispute trails for finance and support.
+- Outcome: reduced a multi-day manual process to minutes and facilitated more driver engagement.
+
+Built the fraud patterns database:
+- Situation: financial defaults from undetected fraud patterns were eroding margins, with no central knowledge base of known schemes.
+- Action: implemented a fraud patterns database fed by automated daily collection monitoring, surfacing anomalies the same day they appeared.
+- Outcome: zero unknown financial defaults during the period. Laid the groundwork for the later ML-based fraud screening pipeline.
+
+Marketing segmentation and cohort analysis:
+- Situation: marketing campaigns were broadly targeted because the team lacked a structured user profiling layer.
+- Action: built a profiling database covering riders and drivers, with RFM segmentation and cohort analysis used by Marketing for targeted campaigns.
+- Outcome: supported targeted campaigns and a 9%+ quarter-over-quarter increase in user retention.
+
+Business health monitoring and daily insights:
+- Situation: country managers and top management lacked a single daily lens on business health across markets.
+- Action: consolidated 20+ KPIs into a daily report spanning all business areas, built in Google Sheets and transitioned to Google Data Studio and Tableau after the BigQuery migration.
+- Outcome: daily insights presented to country managers and top management, surfacing trends and anomalies for operational decisions.
 
 Built and led a distributed analytics team:
-- Situation: No dedicated analytics team existed.
-- Action: Built from scratch and led the upscaling of a distributed analytics team of 4 people.
-- Outcome: Accelerated the delivery of performance monitoring and diagnostic tools group-wide.
-
-Automated KPI reporting and fraud detection:
-- Situation: Incentives payment was a 3-day manual process. Fraud screening was slow. Financing default monitoring had gaps.
-- Action: Automated the incentives payment process to run within minutes. Built a user fraud patterns database with automated predictive analysis. Set up daily financing collection monitoring with critical alerts.
-- Outcome: Facilitated more driver engagement. Ensured 0 unknown defaults in financing collection. Mitigated financial risks through automated monitoring.
-
-Supported marketing with user analytics:
-- Situation: Marketing lacked data-driven segmentation tools.
-- Action: Built a user profiling database for segmentation and cohort analysis.
-- Outcome: Refined marketing targeting and campaign effectiveness.
-
-Automated management reporting:
-- Action: Automated weekly KPI reporting with actionable insights presented to management.
-- Outcome: Faster, data-driven decision-making at the leadership level.
+- Action: founded the analytics engineering function and grew a distributed team of 4, delivering automated dashboards, KPI reporting, and weekly market insights.
 
 ---
 
 THE TRANSITION STORY:
-Bolaji joined Gozem as Global Data Analyst in 2019. He wore multiple hats — data analyst, cloud data engineer, analytics engineer, and data governance specialist — because there was no dedicated data engineering team. By teaching himself GCP and building the entire cloud infrastructure, he demonstrated the technical and leadership capability that led to his promotion to Head of Data & Analytics in October 2022.
+Bolaji joined Gozem as its first data hire in 2019. He wore multiple hats (data analyst, cloud data engineer, analytics engineer, and data governance specialist) because there was no dedicated data engineering team. By teaching himself GCP and building the entire cloud infrastructure, he demonstrated the technical and leadership capability that led to his promotion to Head of Data in October 2022, and later to Data Director in April 2025.
 
 ---
 
 TOOLS USED IN THIS ROLE:
-Python, BigQuery, Google Cloud Storage, Google Dataflow, Apache Airflow, Stitch Data, MongoDB, SQL, Metabase.
+Python, BigQuery, Google Cloud Storage, Google Dataflow, Apache Airflow, PostgreSQL, MongoDB, SQL, Google Sheets, Google Data Studio, Tableau, Looker.
