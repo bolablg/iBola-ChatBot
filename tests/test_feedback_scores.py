@@ -26,6 +26,17 @@ class TestPIIMasking:
         text = "Bolaji was Data Director at Gozem through July 2026."
         assert mask_pii(text) == text
 
+    def test_dates_and_metrics_not_masked(self):
+        # The phone regex must not eat dates or KB numbers (Codex)
+        for keep in ("2026-07-10", "42.57%", "650+ people", "0 to 14+", "88% match"):
+            assert keep.split()[0] in mask_pii(f"value {keep} here")
+
+    def test_masks_nested_payload(self):
+        payload = {"rewritten_query": "email me at x@y.com", "n": 5}
+        masked = mask_pii(payload)
+        assert "x@y.com" not in masked["rewritten_query"]
+        assert masked["n"] == 5
+
     def test_hash_visitor_is_anonymous_and_stable(self):
         a = hash_visitor("1.2.3.4", "Mozilla/5.0")
         b = hash_visitor("1.2.3.4", "Mozilla/5.0")
@@ -52,7 +63,7 @@ class TestFeedbackEndpoint:
                 "score_name": "user-thumbs",
                 "value": 0,
                 "session_id": "s1",
-                "trace_id": "trace-abc",
+                "trace_id": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4",
             },
         )
         assert r.status_code == 200
@@ -60,7 +71,7 @@ class TestFeedbackEndpoint:
         kwargs = tracer.score_trace.call_args.kwargs
         assert kwargs["name"] == "user-thumbs"
         assert kwargs["data_type"] == "BOOLEAN"
-        assert kwargs["trace_id"] == "trace-abc"
+        assert kwargs["trace_id"] == "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4"
 
     def test_reason_is_categorical(self, client):
         c, tracer = client
@@ -70,7 +81,7 @@ class TestFeedbackEndpoint:
                 "score_name": "user-thumbs-reason",
                 "value": "too-vague",
                 "session_id": "s1",
-                "trace_id": "t1",
+                "trace_id": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f",
             },
         )
         assert r.status_code == 200
@@ -102,7 +113,7 @@ class TestFeedbackEndpoint:
                 "score_name": "user-thumbs-reason",
                 "value": "nonsense",
                 "session_id": "s1",
-                "trace_id": "t1",
+                "trace_id": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f",
             },
         )
         assert r.status_code == 400
@@ -123,7 +134,7 @@ class TestFeedbackEndpoint:
                 "score_name": "user-thumbs",
                 "value": 5,
                 "session_id": "s1",
-                "trace_id": "t1",
+                "trace_id": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f",
             },
         )
         assert r.status_code == 400

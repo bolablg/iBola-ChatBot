@@ -71,12 +71,22 @@ async def submit_feedback(payload: FeedbackInput):
     is_session = name in _SESSION_SCORES
     data_type = _SESSION_SCORES.get(name) or _TRACE_SCORES[name]
 
+    # Reject malformed ids to keep the score space clean (Codex)
+    import re as _re
+
+    if payload.trace_id and not _re.fullmatch(r"[0-9a-f]{16,64}", payload.trace_id):
+        raise HTTPException(status_code=400, detail="Malformed trace_id.")
+    if not _re.fullmatch(r"[\w.-]{1,100}", payload.session_id):
+        raise HTTPException(status_code=400, detail="Malformed session_id.")
+
     # Coerce/validate value by declared type
     value = payload.value
     if data_type == "CATEGORICAL":
         value = str(value)
         if name == "user-thumbs-reason" and value not in _ALLOWED_REASONS:
             raise HTTPException(status_code=400, detail=f"Unknown reason '{value}'.")
+        if name == "session-csat" and value not in {"1", "2", "3"}:
+            raise HTTPException(status_code=400, detail="session-csat must be 1-3.")
     else:
         try:
             value = float(value)
