@@ -29,10 +29,10 @@ _PROCESS_TIMEOUT_SECONDS = 45.0
 _COLLECTOR_TIMEOUT_SECONDS = 4.0
 _COLLECTOR_EXCLUDED_AGENT_TYPES = {
     "contact",
-    "skills",
-    "education",
-    "experience",
+    "booking",
     "opportunity",
+    "lead_capture",
+    "pleasantry",
 }
 
 # Lazy-init service
@@ -209,6 +209,8 @@ async def ask_agentic(payload: AskInput, request: Request):
         response=result.get("answer", ""),
         response_time=elapsed,
         user_language=user_language,
+        evidence=result.get("evidence", []),
+        trace_id=result.get("trace_id"),
     )
 
     result["response_time"] = round(elapsed, 3)

@@ -24,6 +24,7 @@ redis
 
 # Google Cloud Services
 google-cloud-logging
+google-cloud-firestore
 google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib

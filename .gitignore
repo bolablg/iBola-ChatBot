@@ -144,3 +144,7 @@ htmlcov/
 __pycache__/
 .hypothesis/
 .benchmarks/
+
+
+_docs_
+ASSESSMENT.md

@@ -1,47 +1,50 @@
-BOLAJI BALOGOUN — EARLY CAREER
+BOLAJI BALOGOUN - EARLY CAREER
 
 ---
 
-DATA SCIENTIST — RINTIO (July 2018 – May 2019)
+Where did Bolaji work before Gozem: at Rintio, as a Data Scientist (July 2018 - May 2019), building the smart-farming data platform.
+Ou travaillait Bolaji avant Gozem: chez Rintio, comme Data Scientist (juillet 2018 a mai 2019), sur la plateforme de donnees agricoles Duniya.
 
-Rintio is a technology company focused on precision agriculture. Bolaji was in charge of developing analytics and data science products to feed a smart application for agricultural guidance, and supported outsourcing clients in their data transformation.
+DATA SCIENTIST - RINTIO (July 2018 - May 2019)
+
+Rintio is a technology company focused on precision agriculture. Bolaji developed analytics and data science products for Duniya, Rintio's smart-farming MVP for Beninese farmers, and supported outsourcing clients in their data transformation.
 
 Key achievements:
-- Built and maintained a big data stack combining Hadoop data lake, Spark cluster, and ElasticSearch to store and transform diverse agricultural data into insights.
-- Engineered agricultural data scraping (weather, crops, soil, yields) and designed surveys to collect additional market information.
-- Built crop yield forecast models using statistical inference and multiple regression algorithms for predictive decision-making.
-- Delivered interactive dashboards using Kibana and Apache Superset for performance reporting.
-- Provided data consulting to outsourcing clients: assessed advanced analytics needs and crafted customized training materials with demos and hands-on labs.
+- Designed and deployed a big data architecture combining a Hadoop data lake, an Apache Spark cluster, and ElasticSearch, ingesting 100GB+ of agricultural data from multiple sources (scraped market data, spreadsheets, PDFs, images) covering crops, fertilizers, yields, rainfall, and climate.
+- Built end-to-end ingestion and transformation pipelines turning raw agricultural data into ML-ready features for the smart-farming app.
+- Developed statistical crop yield forecast models using regression algorithms, mainly for maize with additional models for beans, achieving R squared above 80% in most cases. Forecasts powered sourcing, cycle, and pricing decisions.
+- Delivered a consolidated leadership BI report in Kibana and Apache Superset covering multiple KPIs and data domains.
+- Delivered an executive data & AI training mission to Societe Generale Maroc's top management: training content and lab use cases tailored to banking applications of data and AI.
 
-Tools: Python, Apache Spark, Hadoop, ElasticSearch, Kibana, Apache Superset, SQL, GitLab.
-
----
-
-BIG DATA BOOTCAMP — RINTIO (March – June 2018)
-
-Bolaji transitioned from Statistics to Data Science through this intensive Big Data Bootcamp at Rintio. He gained hands-on experience in Data Engineering and Machine Learning, working with Apache Spark, Hive, Python, SQL, Hadoop, ElasticSearch, Kibana, Apache Superset, and GitLab. The bootcamp included a real-world agricultural data project called "Duniya Data."
+Tools: Python, Apache Spark, Hadoop, ElasticSearch, scikit-learn, Kibana, Apache Superset, SQL, GitLab.
 
 ---
 
-INTERN — INSAE, BENIN NATIONAL INSTITUTE OF STATISTICS (September 2017 – February 2018)
+BIG DATA BOOTCAMP - RINTIO (March - June 2018)
 
-INSAE is Benin's official national statistics agency. Bolaji interned there after completing his Master's coursework.
+Bolaji transitioned from Statistics to Data Science through this intensive 4-month program covering Data Engineering, Machine Learning, and Big Data infrastructure (Apache Spark, Hive, Python, SQL, Hadoop, ElasticSearch, Kibana, Apache Superset, GitLab), with hands-on projects on data visualization and large-scale processing. Key project: "Duniya Data", a collaborative agricultural insights app built with peers under mentor guidance.
+
+---
+
+STATISTICIAN - INStaD, BENIN NATIONAL INSTITUTE OF STATISTICS (September 2017 - February 2018)
+
+INStaD is Benin's official national statistics agency. Bolaji worked there after completing his Master's coursework.
 
 Key achievements:
-- Trained agency staff in advanced analytics by crafting and delivering hands-on training on analytics tools, including R statistical analysis.
-- Enriched public research financing data through a structured data collection campaign on survey funding across Benin's public institutions.
+- Designed and delivered hands-on R analytics training to about 30 agents from 2 departments over a one-week seminar (2 sessions), leaving agency staff with reusable training materials.
+- Contributed to INStaD's national survey-funding data collection campaign, covering the statistics departments of 4 ministries and enriching the agency's national knowledge base on research financing.
 
-Tools: R, SPSS, survey design methodologies.
+Tools: R, RStudio, Excel, survey design methodologies, field data collection.
 
 ---
 
-INTERN — LE PENTAGRUEL (2013)
+STATISTICIAN - LE PANTAGRUEL (August 2013 - October 2013)
 
-Le Pentagruel is a business in Benin where Bolaji completed his first professional internship after earning his Bachelor's degree.
+Le Pantagruel is a business in Benin where Bolaji completed his first professional engagement after earning his Bachelor's degree.
 
 Key achievements:
-- Designed and conducted a customer satisfaction survey in collaboration with the Sales team.
-- Built a structured and cleaned customer feedback database.
-- Increased the Net Promoter Score by 17 and sales by 11% in one quarter by powering management with actionable insights from analyzed data.
+- Designed and conducted a customer satisfaction survey in collaboration with the Sales team, delivering a structured client feedback database.
+- Built and deployed a customer satisfaction scoring system, then trained the Sales team to use it in performance reviews.
+- Findings shaped management policies that lifted the Net Promoter Score by 8 points and grew sales by nearly double digits in one quarter.
 
-Tools: SPSS, Microsoft Excel, survey design.
+Tools: Excel, survey design, statistical scoring.
