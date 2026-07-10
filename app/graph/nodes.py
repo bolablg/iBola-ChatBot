@@ -224,10 +224,23 @@ def guardrail_node(state: dict) -> dict:
         else:
             destination = RoutingDestination.OUT_OF_SCOPE
 
+        # Condense rides the same call: standalone + English retrieval forms.
+        # Without history there is nothing to resolve, so a "rewrite" can only
+        # be a hallucinated different question: accept the standalone form
+        # only on follow-up turns, but always accept the English retrieval
+        # form (retrieval-only, never shown to the user).
+        standalone = (result.standalone_query or "").strip() or query
+        if not chat_history:
+            standalone = query
+        retrieval_query = (result.retrieval_query_en or "").strip() or standalone
+
         return {
             "guardrail_score": result.score,
             "category": category,
             "routing_destination": destination,
+            "original_query": query,
+            "query": standalone,
+            "retrieval_query": retrieval_query,
             "agent_type": (
                 category.value if category != AgentCategory.OUT_OF_SCOPE else "redirect"
             ),
@@ -236,7 +249,11 @@ def guardrail_node(state: dict) -> dict:
                 ReasoningStep(
                     node="guardrail",
                     action="scored",
-                    detail=f"score={result.score} cat={category.value} reason={result.reasoning[:80]}",
+                    detail=(
+                        f"score={result.score} cat={category.value} "
+                        f"standalone={standalone[:40]} "
+                        f"reason={result.reasoning[:60]}"
+                    ),
                 )
             ],
         }
@@ -267,18 +284,30 @@ def guardrail_node(state: dict) -> dict:
 def condense_query_node(state: dict) -> dict:
     """Rewrite the question standalone against history before FIRST retrieval.
 
-    Always on when chat_history is non-empty; a no-op passthrough otherwise.
-    This is the condense-before-retrieve pattern the legacy chain had and the
-    LangGraph migration lost; its absence was the largest measured defect
-    cluster (pronoun/ellipsis follow-ups answered with IDK or the wrong
-    project). The original question is kept in ``original_query`` for the
-    downstream topic-match validator.
+    Two jobs in one temp-0 call:
+      1. Standalone rewriting (pronoun/ellipsis resolution against history),
+         the condense-before-retrieve pattern whose absence was the largest
+         measured defect cluster.
+      2. English retrieval-query normalization: the KB is mostly English, so
+         French queries lexically miss chunks their English twins hit (the
+         dominant round-2 defect theme). The English form is used ONLY for
+         retrieval; the reply language comes from ``original_query``.
+
+    Normally a FREE passthrough: the guardrail emits both rewrites in its own
+    structured call (one round trip saved per turn). This node only makes its
+    own LLM call as a fallback when the guardrail errored out.
     """
     query = state.get("query", "")
     chat_history = state.get("chat_history", [])
+    user_language = state.get("user_language", "en")
     steps = list(state.get("reasoning_steps", []))
 
-    if not chat_history or not query.strip():
+    if state.get("retrieval_query"):
+        # Guardrail already condensed in the same call
+        return {"reasoning_steps": steps}
+
+    needs_translation = _detect_reply_language(query, user_language) != "English"
+    if (not chat_history and not needs_translation) or not query.strip():
         return {"original_query": query, "reasoning_steps": steps}
 
     try:
@@ -290,6 +319,7 @@ def condense_query_node(state: dict) -> dict:
             )
         )
         standalone = result.standalone_query.strip() or query
+        retrieval_query = result.retrieval_query_en.strip() or standalone
     except Exception as exc:
         logger.warning("Condense fallback (using raw query): %s", exc)
         steps.append(
@@ -301,12 +331,16 @@ def condense_query_node(state: dict) -> dict:
         ReasoningStep(
             node="condense_query",
             action="condensed" if standalone != query else "unchanged",
-            detail=f"old={query[:40]} new={standalone[:40]}",
+            detail=(
+                f"old={query[:40]} new={standalone[:40]} "
+                f"retrieval_en={retrieval_query[:40]}"
+            ),
         )
     )
     return {
         "original_query": query,
         "query": standalone,
+        "retrieval_query": retrieval_query,
         "reasoning_steps": steps,
     }
 
@@ -353,9 +387,18 @@ def _temporal_boost(query: str, docs: List[Document]) -> List[Document]:
 
 
 def retrieve_node(state: dict) -> dict:
-    """Retrieve documents using resilient hybrid retrieval with lexical fallback."""
+    """Retrieve documents using resilient hybrid retrieval with lexical fallback.
+
+    Search preference: retry rewrite > English-normalized retrieval query >
+    raw query. The English form exists because the KB is English and BM25 is
+    lexical; generation still answers in the user's language.
+    """
     category = state.get("category", AgentCategory.PROFESSIONAL)
-    query = (state.get("rewritten_query") or state.get("query", "")).strip()
+    query = (
+        state.get("rewritten_query")
+        or state.get("retrieval_query")
+        or state.get("query", "")
+    ).strip()
     attempts = state.get("retrieval_attempts", 0)
 
     if not query:
@@ -902,8 +945,12 @@ def generate_node(state: dict) -> dict:
 # NODE: verify_grounding
 # ===================================================================
 
+# Even the last-resort refusal carries the redirect-offer (policy: refusals
+# never dead-end)
 _FALLBACK_UNGROUNDED_ANSWER = (
-    "I don't have that information. Please email hello@bolablg.com."
+    "I don't have that information. I can tell you about Bolaji's roles at "
+    "Gozem, his AI projects, or his education, or you can email "
+    "hello@bolablg.com."
 )
 
 
@@ -1011,13 +1058,79 @@ def verify_grounding_node(state: dict) -> dict:
 # ===================================================================
 
 
+def _oos_contact_actions(session_id: str, end_chat: bool) -> List[Dict[str, Any]]:
+    """Quick-reply chips for redirect turns. Payloads carry only session_id:
+    embedding the full chat_history per button bloated every response."""
+    return [
+        {
+            "text": "Send email",
+            "type": "contact_email",
+            "url": "mailto:hello@bolablg.com",
+            "session_id": session_id,
+            "description": "Send an email to Bolaji",
+            "primary": True,
+            "end_chat": end_chat,
+        },
+        {
+            "text": "Book appointment",
+            "type": "contact_booking",
+            "url": "https://calendar.app.google/Jg1r7af8Rk2jYqCV8",
+            "session_id": session_id,
+            "description": "Schedule a meeting with Bolaji",
+            "primary": True,
+            "end_chat": end_chat,
+        },
+    ]
+
+
+# Canned redirect copy per language: the LLM path only covers the first
+# redirect, so hardcoded English here answered French adversarial turns in
+# English (measured defect s26-fr).
+_OOS_CANNED = {
+    "English": {
+        "fallback": (
+            "I can only answer questions about Bolaji's professional background, "
+            "education, or learning advice. Could you ask about one of those?"
+        ),
+        "second": (
+            "This is not information I have about Bolaji's professional journey or "
+            "education. Please contact him directly.\n\nChat ended. Thank you for "
+            "your interest!"
+        ),
+        "final": (
+            "For questions outside Bolaji's professional journey or education, "
+            "please contact him directly.\n\nChat ended. Thank you for your interest!"
+        ),
+    },
+    "French": {
+        "fallback": (
+            "Je ne peux repondre qu'aux questions sur le parcours professionnel, "
+            "la formation ou les conseils d'apprentissage de Bolaji. Voulez-vous "
+            "poser une question sur l'un de ces sujets ?"
+        ),
+        "second": (
+            "Je n'ai pas cette information sur le parcours professionnel ou la "
+            "formation de Bolaji. Veuillez le contacter directement.\n\n"
+            "Discussion terminee. Merci de votre interet !"
+        ),
+        "final": (
+            "Pour les questions en dehors du parcours professionnel ou de la "
+            "formation de Bolaji, veuillez le contacter directement.\n\n"
+            "Discussion terminee. Merci de votre interet !"
+        ),
+    },
+}
+
+
 def out_of_scope_node(state: dict) -> dict:
-    """Handle off-topic queries with a polite redirect."""
-    query = state.get("query", "")
+    """Handle off-topic queries with a polite redirect, in the user's language."""
+    query = state.get("original_query") or state.get("query", "")
     redirect_count = state.get("redirect_count", 0)
     session_id = state.get("session_id", "")
-    chat_history = state.get("chat_history", [])
     steps = list(state.get("reasoning_steps", []))
+
+    reply_language = _detect_reply_language(query, state.get("user_language", "en"))
+    canned = _OOS_CANNED.get(reply_language, _OOS_CANNED["English"])
 
     redirect_count += 1
     actions = []
@@ -1028,67 +1141,22 @@ def out_of_scope_node(state: dict) -> dict:
             llm = _get_llm(temperature=0.6)
             response = llm.invoke(OUT_OF_SCOPE_PROMPT.format_messages(query=query))
             answer = response.content
+            # Same validator discipline as generate: never ship the wrong
+            # language on a redirect either
+            if not _validate_answer_language(
+                answer, reply_language, state.get("user_language", "en")
+            ):
+                answer = _translate_answer(answer, reply_language)
         except Exception:
-            answer = (
-                "I can only answer questions about Bolaji's professional background, "
-                "education, or learning advice. Could you ask about one of those?"
-            )
+            answer = canned["fallback"]
     elif redirect_count == 2:
-        answer = (
-            "This is not information I have about Bolaji's professional journey or education. "
-            "Please contact him directly.\n\nChat ended. Thank you for your interest!"
-        )
+        answer = canned["second"]
         should_end = True
-        actions = [
-            {
-                "text": "Send email",
-                "type": "contact_email",
-                "url": "mailto:hello@bolablg.com",
-                "session_id": session_id,
-                "chat_history": chat_history,
-                "description": "Send an email to Bolaji",
-                "primary": True,
-                "end_chat": True,
-            },
-            {
-                "text": "Book appointment",
-                "type": "contact_booking",
-                "url": "https://calendar.app.google/Jg1r7af8Rk2jYqCV8",
-                "session_id": session_id,
-                "chat_history": chat_history,
-                "description": "Schedule a meeting with Bolaji",
-                "primary": True,
-                "end_chat": True,
-            },
-        ]
+        actions = _oos_contact_actions(session_id, end_chat=True)
     else:
-        answer = (
-            "For questions outside Bolaji's professional journey or education, "
-            "please contact him directly.\n\nChat ended. Thank you for your interest!"
-        )
+        answer = canned["final"]
         should_end = True
-        actions = [
-            {
-                "text": "Send email",
-                "type": "contact_email",
-                "url": "mailto:hello@bolablg.com",
-                "session_id": session_id,
-                "chat_history": chat_history,
-                "description": "Send an email to Bolaji",
-                "primary": True,
-                "end_chat": False,
-            },
-            {
-                "text": "Book appointment",
-                "type": "contact_booking",
-                "url": "https://calendar.app.google/Jg1r7af8Rk2jYqCV8",
-                "session_id": session_id,
-                "chat_history": chat_history,
-                "description": "Schedule a meeting with Bolaji",
-                "primary": True,
-                "end_chat": False,
-            },
-        ]
+        actions = _oos_contact_actions(session_id, end_chat=True)
 
     steps.append(
         ReasoningStep(

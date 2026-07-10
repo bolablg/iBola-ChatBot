@@ -31,6 +31,64 @@ from pipeline.update_vectorstore import update_vectorstore
 LLMS_FULL_URL = "https://www.bolablg.com/llms-full.txt"
 LOCAL_CANON_FILENAME = "90_website_canon_llms_full.txt"
 PUBLIC_FACTS_FILENAME = "public_facts.yaml"
+TIMELINE_FILENAME = "91_role_timeline.txt"
+
+_MONTHS = {
+    "jan": 1,
+    "feb": 2,
+    "mar": 3,
+    "apr": 4,
+    "may": 5,
+    "jun": 6,
+    "jul": 7,
+    "aug": 8,
+    "sep": 9,
+    "oct": 10,
+    "nov": 11,
+    "dec": 12,
+    "january": 1,
+    "february": 2,
+    "march": 3,
+    "april": 4,
+    "june": 6,
+    "july": 7,
+    "august": 8,
+    "september": 9,
+    "october": 10,
+    "november": 11,
+    "december": 12,
+}
+
+_MONTH_NAMES_EN = [
+    "",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+]
+_MONTH_NAMES_FR = [
+    "",
+    "janvier",
+    "fevrier",
+    "mars",
+    "avril",
+    "mai",
+    "juin",
+    "juillet",
+    "aout",
+    "septembre",
+    "octobre",
+    "novembre",
+    "decembre",
+]
 
 # Phrases that must never appear in the KB (see ASSESSMENT.md PART 1).
 # Checked line by line; iSheero's ongoing community role legitimately says
@@ -186,6 +244,184 @@ def generate_public_facts(canon_text, identity_text=""):
     return {k: v for k, v in facts.items() if v}
 
 
+def _parse_period(period):
+    """Parse '(Apr 2025 - Jul 2026)' style periods.
+
+    Returns ((y, m), (y, m), months_explicit) or None. 'Present' maps to
+    (9999, 12). ``months_explicit`` is False for bare-year canon periods
+    ('2023', '2019 - 2022') so rendering never invents month precision the
+    canon does not state.
+    """
+    period = period.strip()
+    match = re.match(
+        r"(?:([A-Za-z]+)\s+)?(\d{4})\s*-\s*(?:([A-Za-z]+)\s+)?(\d{4}|Present)",
+        period,
+        re.IGNORECASE,
+    )
+    if match:
+        m1, y1, m2, y2 = match.groups()
+        start = (int(y1), _MONTHS.get((m1 or "jan").lower()[:3], 1))
+        if y2.lower() == "present":
+            end = (9999, 12)
+        else:
+            end = (int(y2), _MONTHS.get((m2 or "dec").lower()[:3], 12))
+        return start, end, bool(m1 or m2 or y2.lower() == "present")
+    # 'Mar - Jun 2018' (single year, two months)
+    match = re.match(r"([A-Za-z]+)\s*-\s*([A-Za-z]+)\s+(\d{4})", period)
+    if match:
+        m1, m2, year = match.groups()
+        return (
+            (int(year), _MONTHS.get(m1.lower()[:3], 1)),
+            (int(year), _MONTHS.get(m2.lower()[:3], 12)),
+            True,
+        )
+    # Bare year '2023'
+    match = re.match(r"^(\d{4})$", period)
+    if match:
+        year = int(match.group(1))
+        return (year, 1), (year, 12), False
+    return None
+
+
+def parse_roles(canon_text):
+    """Extract (title, company, start, end, is_side_engagement) from the canon.
+
+    Employment roles come from '## Experience (full detail)'; consulting and
+    community roles from '## Other experiences' are marked side engagements so
+    the timeline never presents them as the primary role for a year.
+    """
+    roles = []
+    section = None
+    for line in canon_text.splitlines():
+        if line.startswith("## "):
+            low = line.lower()
+            if "experience (full detail)" in low:
+                section = "employment"
+            elif "other experiences" in low:
+                section = "side"
+            else:
+                section = None
+            continue
+        if section and line.startswith("### "):
+            parts = [p.strip() for p in line[4:].split("·")]
+            if len(parts) < 3:
+                continue
+            period = _parse_period(parts[-1])
+            if not period:
+                continue
+            title = parts[0]
+            company = parts[1]
+            # De-shout single-word all-caps names (GOZEM -> Gozem) but keep
+            # mixed-case acronym styles (INStaD, ITC ...) untouched.
+            if company.isupper() and " " not in company:
+                company = company.title()
+            roles.append(
+                {
+                    "title": title,
+                    "company": company,
+                    "start": period[0],
+                    "end": period[1],
+                    "months_explicit": period[2],
+                    "side": section == "side",
+                    "period_text": parts[-1],
+                }
+            )
+    return roles
+
+
+def _fmt_period(role, french=False):
+    # Bare-year canon periods ('2023', '2019 - 2022') render as the canon
+    # states them; inventing January/December would add false precision.
+    if not role.get("months_explicit", True):
+        return role["period_text"]
+    names = _MONTH_NAMES_FR if french else _MONTH_NAMES_EN
+    (y1, m1), (y2, m2) = role["start"], role["end"]
+    start = f"{names[m1]} {y1}"
+    end = (
+        ("present" if not french else "aujourd'hui")
+        if y2 == 9999
+        else f"{names[m2]} {y2}"
+    )
+    return f"{start} - {end}"
+
+
+def generate_role_timeline(canon_text):
+    """Deterministic role-timeline document (date-containment reasoning).
+
+    The graph answers dated EVENTS well but cannot map a year into a role's
+    date RANGE ("what was his role in 2023?" refused despite Head of Data
+    spanning Oct 2022 - Mar 2025). This document expands every year into its
+    containing role explicitly, in English and French, so the mapping is a
+    retrieval lookup instead of a reasoning step.
+    """
+    roles = parse_roles(canon_text)
+    employment = [r for r in roles if not r["side"]]
+    if not employment:
+        return None
+
+    lines = [
+        "BOLAJI BALOGOUN - ROLE TIMELINE (GENERATED FROM THE WEBSITE CANON)",
+        "",
+        "One line per role, most recent first. Employment roles only;",
+        "consulting and community engagements are listed separately below.",
+        "",
+        "EMPLOYMENT TIMELINE:",
+    ]
+    for r in sorted(employment, key=lambda r: r["start"], reverse=True):
+        lines.append(
+            f"- {r['title']} at {r['company']}: "
+            f"{_fmt_period(r)} ({r['period_text']})"
+        )
+    lines += ["", "SIDE ENGAGEMENTS (alongside employment, never the primary role):"]
+    for r in sorted(
+        [r for r in roles if r["side"]], key=lambda r: r["start"], reverse=True
+    ):
+        lines.append(f"- {r['title']} ({r['company']}): {_fmt_period(r)}")
+
+    lines += [
+        "",
+        "WHAT WAS BOLAJI'S ROLE IN EACH YEAR (year to containing role):",
+    ]
+    first_year = min(r["start"][0] for r in employment)
+    last_year = max(y for r in employment for y in (r["end"][0],) if y != 9999)
+    fr_lines = []
+    for year in range(first_year, last_year + 1):
+        holders = [
+            r
+            for r in employment
+            if r["start"][0] <= year <= (r["end"][0] if r["end"][0] != 9999 else year)
+        ]
+        if not holders:
+            continue
+        desc = " and then ".join(
+            f"{r['title']} at {r['company']} ({_fmt_period(r)})"
+            for r in sorted(holders, key=lambda r: r["start"])
+        )
+        lines.append(f"- In {year}, Bolaji was {desc}.")
+        desc_fr = " puis ".join(
+            f"{r['title']} chez {r['company']} ({_fmt_period(r, french=True)})"
+            for r in sorted(holders, key=lambda r: r["start"])
+        )
+        fr_lines.append(f"- En {year}, Bolaji etait {desc_fr}.")
+
+    lines += ["", "QUEL ETAIT LE POSTE DE BOLAJI CHAQUE ANNEE:"] + fr_lines
+    lines.append("")
+    return "\n".join(lines)
+
+
+def write_role_timeline(canon_text):
+    """Regenerate the timeline KB document from the canon."""
+    content = generate_role_timeline(canon_text)
+    if not content:
+        print("Timeline generation found no roles; skipping.")
+        return None
+    path = os.path.join(config.DATA_PATH, TIMELINE_FILENAME)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(content)
+    print(f"Wrote {path}")
+    return path
+
+
 def write_public_facts(canon_text):
     """Regenerate data/public_facts.yaml from the canon (+ identity doc)."""
     import yaml
@@ -220,11 +456,18 @@ def sync():
             changed = _hash(f.read()) != _hash(remote)
 
     if not changed:
-        # The canon may be unchanged while the derived facts file is missing
-        # or stale (e.g. first run after a deploy of this feature).
-        facts_path = os.path.join(config.DATA_PATH, PUBLIC_FACTS_FILENAME)
-        if not os.path.exists(facts_path):
+        # The canon may be unchanged while derived files (facts allowlist,
+        # role timeline) are missing or stale, e.g. the first run after this
+        # feature deploys. Regenerate and ingest them in that case.
+        derived_missing = not os.path.exists(
+            os.path.join(config.DATA_PATH, PUBLIC_FACTS_FILENAME)
+        ) or not os.path.exists(os.path.join(config.DATA_PATH, TIMELINE_FILENAME))
+        if derived_missing:
             write_public_facts(remote)
+            write_role_timeline(remote)
+            update_vectorstore()
+            print("Canon unchanged; regenerated missing derived files.")
+            return 0
         print("Website canon unchanged; nothing to do.")
         return 0
 
@@ -233,6 +476,7 @@ def sync():
     print(f"Wrote {local_path} ({len(remote)} chars). Updating vector store...")
 
     write_public_facts(remote)
+    write_role_timeline(remote)
     update_vectorstore()
 
     violations = scan_banned_phrases()

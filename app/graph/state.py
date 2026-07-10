@@ -36,7 +36,13 @@ class RoutingDestination(str, Enum):
 
 
 class GuardrailScoring(BaseModel):
-    """Structured output for guardrail evaluation — temperature 0.0."""
+    """Structured output for guardrail evaluation — temperature 0.0.
+
+    Also carries the condense rewrites (standalone + English retrieval form)
+    so scoring and condensation share ONE LLM call per turn: the separate
+    condense call added ~1-1.5s to every retrieval turn (measured p95 8.5s
+    vs the 6s target).
+    """
 
     score: int = Field(
         ge=0,
@@ -47,6 +53,22 @@ class GuardrailScoring(BaseModel):
         description="One of: professional, education, learning, out_of_scope"
     )
     reasoning: str = Field(description="One-sentence explanation of the score.")
+    standalone_query: str = Field(
+        default="",
+        description=(
+            "The query rewritten as a fully standalone question in its "
+            "ORIGINAL language, pronouns and ellipsis resolved against the "
+            "chat history. Equal to the query when already standalone."
+        ),
+    )
+    retrieval_query_en: str = Field(
+        default="",
+        description=(
+            "The standalone question in ENGLISH, used only to search an "
+            "English knowledge base. Equal to standalone_query when the "
+            "question is already English."
+        ),
+    )
 
 
 class GradeDocuments(BaseModel):
@@ -86,6 +108,14 @@ class CondensedQuery(BaseModel):
             "in its original language, with every pronoun and ellipsis "
             "resolved against the conversation."
         )
+    )
+    retrieval_query_en: str = Field(
+        default="",
+        description=(
+            "The standalone question translated to English, used ONLY to "
+            "search an English knowledge base. Equal to standalone_query "
+            "when the question is already in English."
+        ),
     )
 
 
@@ -224,6 +254,9 @@ class WorkflowState(TypedDict, total=False):
     rewritten_query: str
     # The user's question as asked (before condense), kept for validators
     original_query: str
+    # English-normalized query used ONLY for retrieval (the KB is mostly
+    # English; searching in English closes the FR/EN retrieval parity gap)
+    retrieval_query: str
 
     # Metadata
     agent_type: str

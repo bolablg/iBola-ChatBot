@@ -3,6 +3,8 @@ BOLAJI BALOGOUN - APPS & SIDE PROJECTS
 Portfolio URL: app.bolablg.com
 Bolaji builds side projects to solve real problems and experiment with new technologies.
 
+Quels projets personnels Bolaji a-t-il construits: le chatbot RAG agentique iBola (chat.bolablg.com), uDownloader pour telecharger videos et audios, le convertisseur de salaire Benin, et un outil d'automatisation de rapports Google Sheets.
+
 ---
 
 iBOLA - AI-POWERED PORTFOLIO CHATBOT

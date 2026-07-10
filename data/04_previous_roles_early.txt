@@ -2,6 +2,9 @@ BOLAJI BALOGOUN - EARLY CAREER
 
 ---
 
+Where did Bolaji work before Gozem: at Rintio, as a Data Scientist (July 2018 - May 2019), building the smart-farming data platform.
+Ou travaillait Bolaji avant Gozem: chez Rintio, comme Data Scientist (juillet 2018 a mai 2019), sur la plateforme de donnees agricoles Duniya.
+
 DATA SCIENTIST - RINTIO (July 2018 - May 2019)
 
 Rintio is a technology company focused on precision agriculture. Bolaji developed analytics and data science products for Duniya, Rintio's smart-farming MVP for Beninese farmers, and supported outsourcing clients in their data transformation.
