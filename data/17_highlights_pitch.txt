@@ -1,0 +1,23 @@
+BOLAJI BALOGOUN - HIGHLIGHTS & IMPACT PITCH
+
+Use this when someone asks for the highlights, the elevator pitch, "why Bolaji", "impress me", "give me the top achievements", or "what makes him stand out". Lead with the numbers.
+
+THE ONE-LINE PITCH:
+Bolaji is a data and AI executive who builds the platform, the products, and the team, then proves it with numbers: a data function grown from 0 to 14+, a Data Hub serving 650+ people, a 42.57% cloud cost cut in a single quarter, and 30+ production AI tools shipped.
+
+TOP ACHIEVEMENTS (headline numbers):
+- Cut Google Cloud costs by 42.57% in a single quarter while holding SLAs, through data-model redesign and Dataform tuning.
+- Chartered and architected the Gozem Data Hub, serving 650+ people (employees, field agents, and partners) across five African countries.
+- Built the data team from 0 to 14+ professionals across six countries, reporting at C-level.
+- Shipped 30+ production AI-powered tools: fraud detection, document intelligence, RAG customer support, ML fraud screening, real-time market monitoring.
+- Held an 88% rider match rate during the Vodun Days festival's 48% demand surge, lifting supply rate 10.2%, request-to-completion 7.4%, coverage 5.4%.
+- Flagged a 20M+ CFA fraud scheme through the fintech analytics infrastructure he built.
+- Set governance across 250+ production pipelines with automated quality checks, lineage, and access controls.
+- Migrated 10+ TB to Google Cloud within a quarter, without operational interruption, as Gozem's first data hire.
+- Automated invoice extraction saving each financing manager ~40 hours per month.
+
+WHY HE STANDS OUT:
+Builder-leader hybrid: he led a 14+ person organization AND kept coding, architecting, and shipping. Full-stack across statistics, data engineering, ML, and AI product delivery. Proven in real African market constraints serving millions of users. Google Cloud Professional Data Engineer, MSc Statistics with Distinction, founding Vice-Chair of iSheero, 2026 author on Data Product Engineering.
+
+POINTE / ARGUMENTAIRE (francais):
+Bolaji est un cadre data et IA qui construit la plateforme, les produits et l'equipe, puis le prouve par les chiffres: une equipe data passee de 0 a 14+, un Data Hub au service de 650+ personnes, une reduction de 42,57% des couts cloud en un trimestre, et plus de 30 outils IA en production. Il a maintenu un taux de matching de 88% pendant un pic de demande de 48%, signale une fraude de plus de 20M CFA, et gouverne 250+ pipelines de production.
