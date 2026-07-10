@@ -405,6 +405,23 @@ def generate_role_timeline(canon_text):
         fr_lines.append(f"- En {year}, Bolaji etait {desc_fr}.")
 
     lines += ["", "QUEL ETAIT LE POSTE DE BOLAJI CHAQUE ANNEE:"] + fr_lines
+
+    # Explicit career-start anchor: "career start / first job" asks otherwise
+    # retrieve a later role's chunk (measured defect n05: answered 2017 INStaD
+    # instead of the 2013 Pantagruel engagement).
+    all_by_start = sorted(roles, key=lambda r: r["start"])
+    if all_by_start:
+        first = all_by_start[0]
+        lines += [
+            "",
+            "CAREER START (Bolaji's first professional role):",
+            f"- Bolaji's career started in {first['start'][0]} as "
+            f"{first['title']} at {first['company']} ({_fmt_period(first)}). "
+            f"This is his first job and the beginning of his career.",
+            f"- Le parcours de Bolaji a commence en {first['start'][0]} comme "
+            f"{first['title']} chez {first['company']} "
+            f"({_fmt_period(first, french=True)}). C'est son premier emploi.",
+        ]
     lines.append("")
     return "\n".join(lines)
 
