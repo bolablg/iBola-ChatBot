@@ -187,7 +187,13 @@ except ImportError:
 
 
 class CrossEncoderReranker:
-    """Post-retrieval reranker using a cross-encoder model."""
+    """Post-retrieval reranker using a cross-encoder model.
+
+    LIMITATION: the default MS MARCO model is English-only, while the bot
+    serves French users too. Keep it disabled for FR traffic, or set
+    ``model_name`` to a multilingual cross-encoder
+    (e.g. ``cross-encoder/mmarco-mMiniLMv2-L12-H384-v1``) before enabling.
+    """
 
     def __init__(self, model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"):
         self.model = None

@@ -1,23 +1,34 @@
-BOLAJI BALOGOUN — LEADERSHIP STYLE & MANAGEMENT PHILOSOPHY
+BOLAJI BALOGOUN - LEADERSHIP STYLE & MANAGEMENT PHILOSOPHY
+
+---
+
+THREE OPERATING PRINCIPLES:
+
+Three principles run through all of Bolaji's work:
+1. Metrics before dashboards: he builds operational systems that act on metrics and patterns (automations, alerts, workflows) rather than reports that describe them.
+2. Architecture is the budget: cost discipline is designed into data models and pipelines, not bolted on afterwards. His 42.57% Google Cloud cost reduction in a single quarter came from data-model redesign, not procurement.
+3. Adoption is the deliverable: a platform, strategy, or model only counts when the finance manager, the ops lead, and the executive are using it without the data team in the room.
 
 ---
 
 LEADERSHIP PHILOSOPHY: "LEAD WITH CARE"
 
-Bolaji's leadership approach centers on genuine care for team members — prioritizing both professional growth and mental well-being. He has managed multi-cultural data science teams for over 5 years and believes this approach leads to exceptional results, fosters innovation, and helps teams overcome complex challenges collaboratively.
+Bolaji's leadership approach centers on genuine care for team members, prioritizing both professional growth and mental well-being. He managed multi-cultural data teams for over 5 years and believes this approach leads to exceptional results, fosters innovation, and helps teams overcome complex challenges collaboratively.
 
 ---
 
 MANAGEMENT EXPERIENCE:
 
-At Gozem, Bolaji manages a team of 14+ data professionals distributed across 6 countries in Sub-Saharan Africa (Togo, Benin, Cameroon, Congo, Gabon) and Singapore.
+At Gozem (through July 2026), Bolaji built the data team from 0 to 14+ professionals distributed across six countries in Sub-Saharan Africa (Togo, Benin, Cameroon, Congo, Gabon) and Singapore, spanning eight analytics domains. He coordinated end-to-end onboarding for 12 hires from 50+ evaluated candidates with 30/60/90-day ramp milestones. The hiring rubrics, interview loops, and onboarding programs he designed are still in use across the function.
 
-His management approach includes:
+His management approach included:
 - Recruiting and building distributed teams across multiple countries and cultures.
 - Introducing effective processes, mentorship programs, and continuous learning initiatives.
-- Leveraging LLM tools to boost team productivity and project delivery speed.
+- Leveraging LLM tools to boost team productivity and project delivery speed, including bringing Claude into leadership workflows and product engineering.
 - Wearing multiple hats when needed: data architect, data engineer, analytics engineer, and data governance specialist.
-- Proactively seeking solutions and enrolling in specialized courses to acquire skills for new challenges.
+- Pushing capability outward as much as upward: a self-service no-code exploration platform halved the routine query load on the central team by putting 12+ managers directly in the data.
+
+His consistent pattern: leave every organization more capable of using data without him than it was with him.
 
 ---
 
@@ -27,20 +38,20 @@ Bolaji excels at working across teams to turn messy data into strategic assets. 
 
 In Gozem's fintech division, the team was offering installment-based vehicle financing to drivers, but the data was in disarray. Bolaji:
 1. Collaborated closely with business and operations teams to understand their day-to-day struggles and goals.
-2. Effectively managed and transformed the complex financing data.
+2. Managed and transformed the complex financing data.
 3. Extracted accurate and actionable insights for decision-making.
 4. Worked with the development team to improve data collection methods.
-This cross-team collaboration turned chaotic data into a strategic asset and improved decision-making across the company.
+This cross-team collaboration turned chaotic data into a strategic asset. The governance bar he later set across 250+ production pipelines made the platform the single source of truth that closed long-standing reporting disputes between Finance, Operations, and Product.
 
 ---
 
 TECHNICAL LEADERSHIP UNDER PRESSURE:
 
 When Gozem needed scalable data infrastructure and had no dedicated data engineer, Bolaji stepped up. He:
-1. Evaluated options between building an open-source stack vs. a cloud-first approach.
+1. Evaluated options between building an open-source stack and a cloud-first approach.
 2. Chose a cloud-first approach (GCP) to minimize maintenance overhead.
-3. Self-taught BigQuery, Cloud Storage, and related tools through online courses.
-4. Deployed a fully functional cloud-based analytics infrastructure within a single quarter.
+3. Self-taught BigQuery, Cloud Storage, and related tools.
+4. Deployed a fully functional cloud-based analytics infrastructure within a single quarter, migrating 10+ TB without operational interruption.
 5. Simultaneously served as data analyst, cloud data engineer, analytics engineer, and data governance specialist.
 
 This willingness to learn and deliver under pressure is a defining trait of Bolaji's leadership style.

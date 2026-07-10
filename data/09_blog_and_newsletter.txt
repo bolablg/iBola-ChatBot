@@ -1,25 +1,36 @@
-BOLAJI BALOGOUN — BLOG & NEWSLETTER: "FREE YOUR DATA"
+BOLAJI BALOGOUN - BLOG, NEWSLETTER & PUBLICATIONS
 
 Blog URL: blog.bolablg.com (hosted on Substack)
 Newsletter name: "Free Your Data"
-Tagline: "Free data from constraints. Develop effective solutions and products."
-Bolaji writes technical blog articles about data engineering, automation, and Google Cloud. Some articles are published in French, reflecting his bilingual audience.
+Bolaji writes in English and French on data engineering, automation, AI, and Google Cloud.
 
 ---
 
-ARTICLE: Beyond standard Google Dataform — Smart templates to save BigQuery costs and Dev time
+PUBLICATION (2026): From Insight to Action: The Rise of Data Product Engineering in Scaleups
+Bolaji's 2026 piece arguing that at scaleups, product teams concentrate on the revenue line, so internal data platforms need their own product discipline. The Gozem Data Hub, which he chartered and architected to serve over 650 people, is the working proof of this thesis on Data Product Engineering.
+
+---
+
+RESEARCH PUBLICATIONS:
+
+- Participatory Research for Low-resourced Machine Translation - AfricaNLP Workshop, EACL 2021 (April 2021). arXiv:2104.02516.
+- Parallel Text Dataset for Neural Machine Translation (French-Fongbe, French-Ewe) - Zenodo (November 2020). zenodo.org/record/4266935.
+
+---
+
+ARTICLE: Beyond standard Google Dataform - Smart templates to save BigQuery costs and Dev time
 Published: October 6, 2025 (English)
-Bolaji describes how he extended Google Dataform beyond its basic capabilities by building a custom JavaScript-based template framework at Gozem. The framework automates the incremental data flow: table existence checks, staging, column comparison, dynamic partition extraction, partition-filtered merges, and scoped assertions. This approach achieved fully native data transformations inside BigQuery without external scripts or wasteful full-table scans, resulting in significant cost savings and faster development cycles.
+Bolaji describes how he extended Google Dataform beyond its basic capabilities by building a custom JavaScript-based template framework at Gozem. The framework automates the incremental data flow: table existence checks, staging, column comparison, dynamic partition extraction, partition-filtered merges, and scoped assertions. This approach achieved fully native data transformations inside BigQuery without external scripts or wasteful full-table scans, resulting in significant cost savings and faster development cycles. This smart-templates craft contributed to his FinOps results at Gozem.
 
 ---
 
-ARTICLE: Google Sheets + Python — automatically create and share data reports
+ARTICLE: Google Sheets + Python - automatically create and share data reports
 Published: May 31, 2025 (French)
 A practical tutorial on automating the creation, population, formatting, and sharing of Google Sheets reports using Python. Covers MongoDB data extraction, Google Drive and Sheets API integration, automated formatting, and scheduling via cron.
 
 ---
 
-ARTICLE: Getting started with Google Dev — create a service account to automate operations
+ARTICLE: Getting started with Google Dev - create a service account to automate operations
 Published: May 29, 2025 (French)
 A step-by-step guide to creating Google Cloud service accounts for automation. Covers project creation in Google Cloud Console, service account setup, key generation, API enablement, Google Drive folder access configuration, and Python usage with the gspread library.
 
@@ -27,4 +38,4 @@ A step-by-step guide to creating Google Cloud service accounts for automation. C
 
 ARTICLE: Where to find data for a national study
 Published: November 6, 2021 (French)
-A guide to finding national-level study data, using Benin as an example. Covers data sources including INStaD, NADA portal, Benin Data Portal, Afrobarometre, World Bank, DHS Program, ILOstat, and UNdata. Notes that Benin ranked 83rd globally on the Open Data Watch 2020 inventory with a score of 52/100.
+A guide to finding national-level study data, using Benin as an example. Covers data sources including INStaD, NADA portal, Benin Data Portal, Afrobarometre, World Bank, DHS Program, ILOstat, and UNdata.

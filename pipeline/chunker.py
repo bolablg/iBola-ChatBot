@@ -29,6 +29,7 @@ _CATEGORY_KEYWORDS = {
         "skill",
         "technology",
         "head of data",
+        "data director",
         "global data analyst",
         "data scientist",
         "consultant",

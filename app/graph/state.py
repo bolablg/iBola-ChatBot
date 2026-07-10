@@ -3,8 +3,6 @@ Agentic RAG graph state and structured output models.
 All LLM calls that require deterministic parsing use Pydantic structured outputs.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
