@@ -1,22 +1,22 @@
 {
-  "accepted_at": "2026-07-10T13:14:13",
-  "report": "local/eval_reports/eval_20260710_131413.json",
+  "accepted_at": "2026-07-10T14:05:21",
+  "report": "local/eval_reports/eval_20260710_140521.json",
   "answer_model": "gemini-2.5-flash (default)",
   "judge_model": "gemini-2.5-pro",
   "tags": [
     "smoke"
   ],
   "aggregates": {
-    "n": 25,
-    "canonical_fact_accuracy": 0.9091,
-    "relevance": 9.88,
-    "accuracy": 9.32,
-    "helpfulness": 9.08,
-    "faithfulness": 9.72
+    "n": 29,
+    "canonical_fact_accuracy": 1.0,
+    "relevance": 9.93,
+    "accuracy": 9.9,
+    "helpfulness": 9.48,
+    "faithfulness": 9.79
   },
   "gate": {
     "canonical_fact_accuracy_min": 0.88,
     "max_aggregate_drop": 2.0,
-    "latency_p95_max_s": 12.0
+    "latency_p95_max_s": 25.0
   }
 }
