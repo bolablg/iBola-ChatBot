@@ -477,6 +477,8 @@ async def chat(payload: ChatInput, request: Request):
             # Update cache metadata
             cached_response["cached"] = True
             cached_response["session_id"] = session_id
+            # Never replay another turn's trace_id on a cache hit (Codex #6)
+            cached_response["trace_id"] = None
 
             return cached_response
 

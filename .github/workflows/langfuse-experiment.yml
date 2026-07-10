@@ -1,0 +1,65 @@
+name: Langfuse Experiment Gate
+
+# ============================================================
+# PART 7.4: PR regression gate via langfuse/experiment-action,
+# complementing (not replacing) PART 5's in-repo eval gate. Runs
+# the golden dataset through the graph as a Langfuse experiment so
+# runs are comparable month over month in the Langfuse UI.
+#
+# GATED ON PROVISIONING: no-ops until the LANGFUSE_PUBLIC_KEY
+# secret exists. Owner follow-up to activate:
+#   1. gh secret set LANGFUSE_PUBLIC_KEY / LANGFUSE_SECRET_KEY
+#   2. python scripts/sync_golden_to_langfuse.py   (seed the dataset)
+#   3. verify shape: npx langfuse-cli api dataset-items \
+#        list --dataset-name ibola-golden --limit 5
+#   4. open a PR to confirm the gate runs.
+# ============================================================
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  langfuse-experiment:
+    runs-on: ubuntu-latest
+    env:
+      LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+    steps:
+      - name: Skip when Langfuse is not provisioned
+        if: env.LANGFUSE_PUBLIC_KEY == ''
+        run: echo "LANGFUSE_PUBLIC_KEY not set; experiment gate inactive (see workflow header)."
+
+      - uses: actions/checkout@v4
+        if: env.LANGFUSE_PUBLIC_KEY != ''
+
+      - uses: actions/setup-python@v5
+        if: env.LANGFUSE_PUBLIC_KEY != ''
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        if: env.LANGFUSE_PUBLIC_KEY != ''
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Sync golden set into the Langfuse dataset
+        if: env.LANGFUSE_PUBLIC_KEY != ''
+        env:
+          LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+          LANGFUSE_HOST: ${{ secrets.LANGFUSE_BASE_URL }}
+        run: python scripts/sync_golden_to_langfuse.py
+
+      - name: Run experiment against the golden dataset
+        if: env.LANGFUSE_PUBLIC_KEY != ''
+        uses: langfuse/experiment-action@main
+        with:
+          langfuse_public_key: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+          langfuse_secret_key: ${{ secrets.LANGFUSE_SECRET_KEY }}
+          langfuse_base_url: ${{ secrets.LANGFUSE_BASE_URL }}
+          experiment_path: eval/langfuse_experiment.py
+          dataset_name: ibola-golden
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
