@@ -5,7 +5,9 @@ set -euo pipefail
 TARGETS="app/ tests/ pipeline/ utils/"
 
 # Get changed .py files relative to main (or all if no git)
-CHANGED=$(git diff --name-only --diff-filter=d origin/main...HEAD -- '*.py' 2>/dev/null || echo "")
+# Working-tree deletions are not in the main...HEAD diff, so drop paths
+# that no longer exist before handing the list to the tools.
+CHANGED=$(git diff --name-only --diff-filter=d origin/main...HEAD -- '*.py' 2>/dev/null | while read -r f; do [ -f "$f" ] && echo "$f"; done || echo "")
 
 if [ -z "$CHANGED" ]; then
   echo "No changed .py files vs main — running full lint on $TARGETS"

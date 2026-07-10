@@ -1,5 +1,5 @@
 """
-AgenticRAGService — production wrapper around the LangGraph workflow.
+AgenticRAGService: production wrapper around the LangGraph workflow.
 
 Provides a ``process_query`` interface identical to the legacy orchestrator so
 ``main.py`` can swap between them with minimal changes.
@@ -21,6 +21,16 @@ from app.services.google_sheets_logger import google_sheets_logger
 logger = logging.getLogger("ibola.graph")
 
 
+def _prompt_versions() -> Dict[str, str]:
+    """Prompt versions for trace payloads (answers tie back to prompt text)."""
+    try:
+        from app.graph.prompts import PROMPT_VERSIONS
+
+        return PROMPT_VERSIONS
+    except Exception:
+        return {}
+
+
 class AgenticRAGService:
     """Wraps the LangGraph agentic RAG workflow with session management.
 
@@ -33,7 +43,7 @@ class AgenticRAGService:
     def __init__(self):
         self.workflow = create_rag_workflow()
         # Per-session state (redirect counts, language, etc.)
-        # WARNING: in-memory — lost on cold start / scale-to-zero.
+        # WARNING: in-memory: lost on cold start / scale-to-zero.
         self.session_data: Dict[str, Dict[str, Any]] = {}
 
     # ------------------------------------------------------------------
@@ -100,6 +110,15 @@ class AgenticRAGService:
                 user_language=user_language,
                 chat_history=chat_history,
                 contact_type=contact_type,
+            )
+
+        # Resume/CV requests get quick-reply actions (the schema existed but
+        # was unused on this high-intent turn)
+        if self._detect_resume_intent(user_input):
+            return self._resume_response(
+                session_id=session_id,
+                user_language=user_language,
+                chat_history=chat_history,
             )
 
         # Conversational pleasantries (thank you, goodbye, etc.)
@@ -249,6 +268,7 @@ class AgenticRAGService:
                     "grounding_checked": final_state.get("grounding_checked", False),
                     "unsupported_claims": final_state.get("unsupported_claims", []),
                     "latency_s": round(elapsed, 3),
+                    "prompt_versions": _prompt_versions(),
                 },
                 steps=final_state.get("reasoning_steps", []),
             )
@@ -326,9 +346,9 @@ class AgenticRAGService:
         """Build a response for contact or booking intents.
 
         ``contact_type``:
-          - "email": generic contact — email button first, booking secondary.
+          - "email": generic contact: email button first, booking secondary.
             ``agent_type`` returned is "contact".
-          - "booking": user asked to schedule/book — booking button first,
+          - "booking": user asked to schedule/book: booking button first,
             email secondary. ``agent_type`` returned is "booking".
         """
         is_french = user_language.lower().startswith("fr")
@@ -337,10 +357,10 @@ class AgenticRAGService:
         if is_french and is_booking:
             answer = random.choice(
                 [
-                    "Avec plaisir ! Réservez un créneau sur l'agenda de Bolaji ci-dessous — ou envoyez-lui un email si vous préférez.",
-                    "Parfait — choisissez un créneau de réunion avec Bolaji ci-dessous.",
+                    "Avec plaisir ! Réservez un créneau sur l'agenda de Bolaji ci-dessous: ou envoyez-lui un email si vous préférez.",
+                    "Parfait: choisissez un créneau de réunion avec Bolaji ci-dessous.",
                     "Planifions cet appel ! Sélectionnez un horaire qui vous convient ci-dessous.",
-                    "Bolaji sera ravi de discuter — réservez un créneau ci-dessous.",
+                    "Bolaji sera ravi de discuter: réservez un créneau ci-dessous.",
                     "Voici l'agenda de Bolaji pour planifier votre rendez-vous.",
                 ]
             )
@@ -349,22 +369,22 @@ class AgenticRAGService:
                 [
                     "Vous pouvez envoyer un email à Bolaji ou réserver un créneau via les options ci-dessous.",
                     "Bien sûr ! Contactez Bolaji par email ou planifiez un appel rapide ci-dessous.",
-                    "Avec plaisir — choisissez l'option qui vous convient le mieux ci-dessous.",
+                    "Avec plaisir: choisissez l'option qui vous convient le mieux ci-dessous.",
                     "Excellente idée ! Envoyez un message à Bolaji ou réservez un créneau sur son agenda.",
                     "Voici les meilleurs moyens de contacter Bolaji directement.",
-                    "Ravi de vous aider à entrer en contact — utilisez l'une des options ci-dessous.",
+                    "Ravi de vous aider à entrer en contact: utilisez l'une des options ci-dessous.",
                     "Bolaji sera heureux de vous entendre ! Email ou rendez-vous ci-dessous.",
-                    "Vous êtes à un clic — envoyez-lui un email ou réservez un créneau.",
+                    "Vous êtes à un clic: envoyez-lui un email ou réservez un créneau.",
                     "Mettons-vous en relation ! Choisissez email ou un créneau de réunion ci-dessous.",
-                    "Parfait — voici comment joindre Bolaji directement.",
+                    "Parfait: voici comment joindre Bolaji directement.",
                 ]
             )
         elif is_booking:
             answer = random.choice(
                 [
-                    "Great — book a time on Bolaji's calendar below. You can also email him if you prefer.",
+                    "Great: book a time on Bolaji's calendar below. You can also email him if you prefer.",
                     "Let's get that meeting on the calendar. Pick a slot below.",
-                    "Perfect — grab a time that works for you on Bolaji's calendar below.",
+                    "Perfect: grab a time that works for you on Bolaji's calendar below.",
                     "Happy to help you schedule. Pick an available slot below.",
                     "Here's Bolaji's calendar to book your meeting.",
                 ]
@@ -374,14 +394,14 @@ class AgenticRAGService:
                 [
                     "You can email Bolaji directly or book a meeting from the options below.",
                     "Sure! Reach out to Bolaji via email or schedule a quick call below.",
-                    "Absolutely — pick the option that works best for you below.",
+                    "Absolutely: pick the option that works best for you below.",
                     "Great idea! You can drop Bolaji a message or book time on his calendar.",
                     "Here are the best ways to connect with Bolaji directly.",
-                    "Happy to help you get in touch — use either option below.",
+                    "Happy to help you get in touch: use either option below.",
                     "Bolaji would love to hear from you! Email or book a meeting below.",
-                    "You're one click away — email Bolaji or grab a spot on his calendar.",
+                    "You're one click away: email Bolaji or grab a spot on his calendar.",
                     "Let's get you connected! Choose email or a meeting slot below.",
-                    "Perfect — here's how to reach Bolaji directly.",
+                    "Perfect: here's how to reach Bolaji directly.",
                 ]
             )
 
@@ -439,7 +459,7 @@ class AgenticRAGService:
                 "or book a conversation below.",
                 "Absolutely! Bolaji is actively exploring impactful data and AI leadership "
                 "opportunities. Share the role details via email or schedule a chat below.",
-                "Great timing — Bolaji is open to the right opportunity in AI, data, or "
+                "Great timing: Bolaji is open to the right opportunity in AI, data, or "
                 "technical leadership. Reach out with details using the options below.",
                 "Yes, Bolaji welcomes conversations about ambitious roles in data and AI. "
                 "The best way forward is to send the details or book a quick call.",
@@ -447,7 +467,7 @@ class AgenticRAGService:
                 "roles. Email the opportunity or book a meeting to discuss further.",
                 "Bolaji is open to meaningful opportunities in AI and data leadership. "
                 "Feel free to share the details or schedule a conversation below.",
-                "Yes — Bolaji is looking for impactful roles in data engineering, AI, and "
+                "Yes: Bolaji is looking for impactful roles in data engineering, AI, and "
                 "technical leadership. Send the role info or book time to connect.",
                 "Absolutely. Bolaji is selectively exploring senior data and AI roles. "
                 "Drop the details via email or grab a meeting slot below.",
@@ -474,6 +494,93 @@ class AgenticRAGService:
         return response
 
     @staticmethod
+    def _detect_resume_intent(message: str) -> bool:
+        """Detect requests for Bolaji's resume/CV (short, direct asks only)."""
+        lower = message.lower().strip()
+        strong = [
+            "send me his resume",
+            "send me your resume",
+            "share his resume",
+            "download his resume",
+            "download resume",
+            "his cv",
+            "your cv",
+            "envoyer son cv",
+            "telecharger son cv",
+            "télécharger son cv",
+        ]
+        if any(s in lower for s in strong):
+            return True
+        return len(lower.split()) <= 5 and (
+            "resume" in lower.split() or lower.split() == ["cv"] or "cv?" in lower
+        )
+
+    @staticmethod
+    def _resume_response(
+        session_id: str,
+        user_language: str,
+        chat_history: Optional[List[Tuple[str, str]]] = None,
+    ) -> Dict[str, Any]:
+        """Quick-reply actions for resume/CV requests.
+
+        The full profile lives on the website; a resume conversation goes
+        through email so Bolaji can tailor it.
+        """
+        is_french = user_language.lower().startswith("fr")
+        answer = (
+            "Le profil complet de Bolaji est sur bolablg.com. Pour recevoir son "
+            "CV adapte a votre besoin, envoyez-lui un email ou reservez un "
+            "creneau ci-dessous."
+            if is_french
+            else "Bolaji's full profile is at bolablg.com. To receive a resume "
+            "tailored to your role, email him or book a slot below."
+        )
+        actions = [
+            {
+                "text": "View full profile",
+                "type": "view_profile",
+                "url": "https://www.bolablg.com",
+                "session_id": session_id,
+                "chat_history": chat_history or [],
+                "description": "Open Bolaji's website profile",
+                "primary": True,
+                "end_chat": False,
+            },
+            {
+                "text": "Send email",
+                "type": "contact_email",
+                "url": f"mailto:{config.CONTACT_EMAIL}",
+                "session_id": session_id,
+                "chat_history": chat_history or [],
+                "description": "Request the resume by email",
+                "primary": True,
+                "end_chat": False,
+            },
+            {
+                "text": "Book appointment",
+                "type": "contact_booking",
+                "url": config.CALENDAR_BOOKING_URL,
+                "session_id": session_id,
+                "chat_history": chat_history or [],
+                "description": "Schedule a meeting with Bolaji",
+                "primary": False,
+                "end_chat": False,
+            },
+        ]
+        return {
+            "answer": answer,
+            "actions": actions,
+            "agent_type": "resume",
+            "confidence": 1.0,
+            "language": user_language,
+            "redirect_count": 0,
+            "session_id": session_id,
+            "should_end_chat": False,
+            "response_time": 0.0,
+            "evidence": [],
+        }
+
+    @staticmethod
     def _detect_opportunity_intent(message: str) -> bool:
         """Detect recruiting / job-offer intent.
 
@@ -488,7 +595,7 @@ class AgenticRAGService:
 
         import re as _re
 
-        # Strong signals — multi-word phrases that clearly indicate
+        # Strong signals: multi-word phrases that clearly indicate
         # recruiting / business intent. Match regardless of query length.
         strong_signals = [
             "hiring",
@@ -510,7 +617,7 @@ class AgenticRAGService:
         if any(signal in lower for signal in strong_signals):
             return True
 
-        # Weak signals — single words that overlap with career questions.
+        # Weak signals: single words that overlap with career questions.
         # Only match in short non-question messages (≤8 words) where the
         # user is likely pitching, not asking about Bolaji's career.
         question_starters = (
@@ -568,7 +675,7 @@ class AgenticRAGService:
         """Detect contact/booking intent.
 
         Only triggers the fast-path widget when the user clearly wants to
-        reach Bolaji — not when they ask knowledge questions that happen to
+        reach Bolaji: not when they ask knowledge questions that happen to
         contain words like 'book' (e.g. 'what book would you recommend?')
         or 'email' (e.g. 'does he write email pipelines?').
         """
@@ -577,7 +684,7 @@ class AgenticRAGService:
         lower = message.lower().strip()
         word_count = len(lower.split())
 
-        # Strong intent phrases — match at any length
+        # Strong intent phrases: match at any length
         strong_email = [
             "contact bolaji",
             "send bolaji an email",
@@ -616,7 +723,7 @@ class AgenticRAGService:
         if any(s in lower for s in strong_booking):
             return "booking"
 
-        # Weak signals — only for SHORT non-question messages (≤6 words).
+        # Weak signals: only for SHORT non-question messages (≤6 words).
         # These are likely direct requests ("contact", "email him", "book a call").
         question_starters = (
             "what",
@@ -725,7 +832,7 @@ class AgenticRAGService:
                 "Anytime! I'm here if you want to explore more about "
                 "Bolaji's skills, projects, or career journey.",
                 "You're welcome! There's plenty more to share about Bolaji "
-                "— just ask away.",
+                "- just ask away.",
                 "My pleasure! Feel free to keep exploring Bolaji's "
                 "experience, education, or portfolio.",
                 "Glad that was useful! I'm here whenever you have more "
@@ -900,7 +1007,7 @@ class AgenticRAGService:
                 session_id,
             )
 
-        # Fallback — shouldn't happen
+        # Fallback: shouldn't happen
         del session["lead_capture"]
         return self._lead_response(
             "Something went wrong. Please try again.", session_id

@@ -117,21 +117,36 @@ def check_facts(answer, row):
 
 
 class InProcessTarget:
-    """Runs questions through the real graph in this process."""
+    """Runs questions through the real graph in this process.
+
+    ``history`` (list of [user, bot] pairs from the golden row) makes the
+    question a multi-turn follow-up: the condense step must resolve its
+    pronouns against these fixed prior turns.
+    """
 
     def __init__(self):
         from app.graph.service import AgenticRAGService
 
         self.service = AgenticRAGService()
 
-    def ask(self, question, lang="en"):
+    def ask(self, question, lang="en", history=None):
         session_id = f"eval-{uuid.uuid4().hex[:12]}"
-        result = self.service.process_query(question, [], session_id, lang, {})
+        chat_history = [tuple(pair) for pair in (history or [])]
+        result = self.service.process_query(
+            question, chat_history, session_id, lang, {}
+        )
         return result
 
 
 class HTTPTarget:
-    """Runs questions against a deployed instance's /ask-agentic endpoint."""
+    """Runs questions against a deployed instance's /ask-agentic endpoint.
+
+    Multi-turn rows replay their prior user turns into the same session first
+    (the server stores history per session), then ask the follow-up. Note this
+    is END-TO-END replay: the assistant turns in the session come from the
+    live bot, not from the golden row's fixed history (only in-process mode
+    pins the exact history).
+    """
 
     def __init__(self, base_url):
         import httpx
@@ -139,25 +154,36 @@ class HTTPTarget:
         self.base_url = base_url.rstrip("/")
         self.client = httpx.Client(timeout=60)
 
-    def ask(self, question, lang="en"):
+    def _post(self, question, session_id, lang):
         resp = self.client.post(
             f"{self.base_url}/ask-agentic",
             json={
                 "user_input": question,
-                "session_id": f"eval-{uuid.uuid4().hex[:12]}",
+                "session_id": session_id,
                 "user_language": lang,
             },
         )
         resp.raise_for_status()
         return resp.json()
 
+    def ask(self, question, lang="en", history=None):
+        session_id = f"eval-{uuid.uuid4().hex[:12]}"
+        for prior_user, _prior_bot in history or []:
+            self._post(prior_user, session_id, lang)
+        return self._post(question, session_id, lang)
+
 
 class Judge:
     def __init__(self, model=JUDGE_MODEL):
         from google import genai
 
+        api_key = os.environ.get("GEMINI_API_KEY")
+        if not api_key:
+            import config  # loads .env
+
+            api_key = config.GEMINI_API_KEY
         self.model = model
-        self.client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+        self.client = genai.Client(api_key=api_key)
 
     def score(self, question, gold, answer, context):
         prompt = (
@@ -181,7 +207,11 @@ class Judge:
 def run_one(target, judge, row):
     start = time.time()
     try:
-        result = target.ask(row["question"], lang=row.get("lang", "en"))
+        result = target.ask(
+            row["question"],
+            lang=row.get("lang", "en"),
+            history=row.get("history"),
+        )
         error = None
     except Exception as exc:
         result = {"answer": "", "evidence": []}

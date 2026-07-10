@@ -154,24 +154,72 @@ class TestLegacyPathsRetired:
         )
         assert "get_agentic_service" in source
 
-    def test_legacy_agent_prompts_have_no_canonical_facts(self):
-        for agent_file in (
+    def test_dead_prompt_stacks_stay_deleted(self):
+        """The first-person agent stack and keyword guardrail are brand and
+        ethics hazards (scripted feelings, stale availability copy); they were
+        deleted in the PART 3 persona consolidation and must not return."""
+        for dead_file in (
+            "app/agent.py",
+            "app/guardrails.py",
+            "app/agents/orchestrator.py",
             "app/agents/professional_agent.py",
             "app/agents/education_agent.py",
             "app/agents/learning_agent.py",
             "app/agents/redirect_agent.py",
+            "app/agents/classification_agent.py",
         ):
-            path = Path(agent_file)
-            if not path.exists():
-                continue
-            source = path.read_text(encoding="utf-8").lower()
+            assert not Path(
+                dead_file
+            ).exists(), f"dead prompt stack revived: {dead_file}"
+
+    def test_surviving_agents_have_no_profile_facts(self):
+        for agent_file in ("app/agents/collector_agent.py", "app/agents/retrievers.py"):
+            source = Path(agent_file).read_text(encoding="utf-8").lower()
             for marker in (
-                "canonical short description",
                 "head of data",
                 "data director",
+                "cotonou",
                 "master of science in statistics",
                 "open to builder",
             ):
                 assert (
                     marker not in source
                 ), f"baked profile fact '{marker}' in {agent_file}"
+
+    def test_one_persona_third_person_only(self):
+        """No prompt may instruct first-person impersonation."""
+        import subprocess
+
+        result = subprocess.run(
+            ["grep", "-ri", r"first person\|use I\b", "app/"],
+            capture_output=True,
+            text=True,
+        )
+        offending = [
+            line
+            for line in result.stdout.splitlines()
+            if "third person" not in line.lower()
+        ]
+        assert not offending, f"first-person persona instructions found: {offending}"
+
+    def test_prompt_registry_is_single_source(self):
+        """Every graph prompt lives in app/graph/prompts.py with a version."""
+        from app.graph import prompts
+
+        assert prompts.PROMPT_VERSIONS
+        for name in (
+            "guardrail",
+            "condense",
+            "batch_grade",
+            "rewrite",
+            "generate_professional",
+            "verify_grounding",
+            "out_of_scope",
+            "translate",
+        ):
+            assert name in prompts.PROMPT_VERSIONS, f"unversioned prompt: {name}"
+
+        nodes_source = Path("app/graph/nodes.py").read_text(encoding="utf-8")
+        assert (
+            "ChatPromptTemplate.from_messages" not in nodes_source
+        ), "prompt defined outside the registry (app/graph/prompts.py)"

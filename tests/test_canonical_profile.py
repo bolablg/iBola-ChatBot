@@ -199,7 +199,12 @@ class TestNoStaleCodePaths:
         assert "_welcome_prompt_response" not in source
 
     def test_recency_rule_prefers_most_recent_end_date(self):
-        source = Path("app/graph/nodes.py").read_text(encoding="utf-8")
-        assert "MOST RECENT END DATE" in source
-        assert "always refer to his CURRENT ROLE" not in source
-        assert "Never present an ended role as current" in source
+        from app.graph.prompts import GENERATE_SYSTEM_PROMPTS
+        from app.graph.state import AgentCategory
+
+        rule = GENERATE_SYSTEM_PROMPTS[AgentCategory.PROFESSIONAL]
+        assert "most recent end date" in rule
+        assert "always refer to his CURRENT ROLE" not in rule
+        assert "never present an ended role as current" in rule.lower()
+        # The rotting clause is gone: recency comes from latest_year metadata
+        assert "'Present' outranks all others" not in rule

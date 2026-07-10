@@ -228,9 +228,20 @@ class IntelligentChunker:
             "section_header": header,
             "category": category,
             "word_count": len(text.split()),
+            # Structured recency signal: the most recent year mentioned
+            # (9999 for ongoing "Present" engagements). Temporal queries
+            # rank chunks by this instead of prose rules or source-name lists.
+            "latest_year": self._latest_year(text),
         }
 
         return Document(page_content=prefixed_content, metadata=chunk_metadata)
+
+    @staticmethod
+    def _latest_year(text: str) -> int:
+        if re.search(r"\bpresent\b", text, re.IGNORECASE):
+            return 9999
+        years = [int(y) for y in re.findall(r"\b(?:19|20)\d{2}\b", text)]
+        return max(years) if years else 0
 
     def _detect_sections(self, content: str) -> List[Dict[str, Any]]:
         """Detect document sections by structural patterns."""

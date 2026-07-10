@@ -1,5 +1,5 @@
 """
-Collector Agent — LLM-based conversation analysis and lead qualification.
+Collector Agent: LLM-based conversation analysis and lead qualification.
 
 Uses a single structured LLM call per turn to analyze the full conversation
 context and detect:
@@ -128,7 +128,7 @@ EXTRACTION_PROMPT = ChatPromptTemplate.from_messages(
             "system",
             (
                 "Extract any lead information from the user's message. "
-                "Only extract what is explicitly stated — never invent. "
+                "Only extract what is explicitly stated: never invent. "
                 "Leave fields empty if not mentioned."
             ),
         ),
@@ -165,8 +165,8 @@ _FOLLOW_UPS = {
             "fr": "Au fait, puis-je connaître votre nom ? Bolaji apprécie de savoir qui s'intéresse à son parcours.",
         },
         "context": {
-            "en": "Are you researching for a specific purpose — academic, hiring, or personal interest?",
-            "fr": "Faites-vous cette recherche dans un but précis — académique, recrutement, ou intérêt personnel ?",
+            "en": "Are you researching for a specific purpose: academic, hiring, or personal interest?",
+            "fr": "Faites-vous cette recherche dans un but précis: académique, recrutement, ou intérêt personnel ?",
         },
     },
     "experience_deep": {
@@ -254,7 +254,7 @@ class CollectorAgent:
         # Step 2: If not worth collecting, return analysis only (no follow-up)
         if not analysis.should_collect:
             if session["active"] and session["collected"]:
-                # Was collecting but score dropped — send what we have
+                # Was collecting but score dropped: send what we have
                 self._send_summary(
                     session_id, session, chat_history, user_language, analysis
                 )
@@ -415,7 +415,7 @@ class CollectorAgent:
             return
 
         if not google_chat_alert.webhook_url:
-            logger.warning("Google Chat webhook not configured — lead not sent")
+            logger.warning("Google Chat webhook not configured: lead not sent")
             return
 
         # Build conversation summary
@@ -477,7 +477,7 @@ class CollectorAgent:
 
         message = {
             "text": (
-                f"{score_icon} *Lead Alert — Score {lead_score}/100*\n\n"
+                f"{score_icon} *Lead Alert: Score {lead_score}/100*\n\n"
                 f"*Type:* {user_type.title()}\n"
                 f"*Engagement:* {engagement.title()}\n"
                 f"*Intent:* {intent_label}\n\n"
@@ -488,7 +488,7 @@ class CollectorAgent:
                 f"*Language:* {user_language}\n"
                 f"*Time:* {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
                 f"*Recent Conversation:*\n```\n{conv_summary}\n```\n\n"
-                f"*Action:* {'Follow up ASAP' if lead_score >= 80 else 'Review and decide' if lead_score >= 50 else 'Low priority — monitor'}"
+                f"*Action:* {'Follow up ASAP' if lead_score >= 80 else 'Review and decide' if lead_score >= 50 else 'Low priority: monitor'}"
             )
         }
 

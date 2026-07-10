@@ -2,7 +2,7 @@
 LangGraph workflow definition for the agentic RAG pipeline.
 
 Graph topology:
-  guardrail ──┬── (score >= 60) ──► retrieve ──► grade_documents ──┬── (has relevant) ──► generate ──► verify_grounding ──► END
+  guardrail ──┬── (score >= 60) ──► condense_query ──► retrieve ──► grade_documents ──┬── (has relevant) ──► generate ──► verify_grounding ──► END
               │                                                    │
               │                                                    ├── (no relevant, attempts < max) ──► rewrite_query ──► retrieve
               │                                                    │
@@ -19,6 +19,7 @@ from typing import Any, Dict
 from langgraph.graph import END, StateGraph
 
 from app.graph.nodes import (
+    condense_query_node,
     generate_node,
     grade_documents_node,
     guardrail_node,
@@ -75,6 +76,7 @@ def create_rag_workflow():
 
     # --- Add nodes ---
     graph.add_node("guardrail", guardrail_node)
+    graph.add_node("condense_query", condense_query_node)
     graph.add_node("retrieve", retrieve_node)
     graph.add_node("grade_documents", grade_documents_node)
     graph.add_node("rewrite_query", rewrite_query_node)
@@ -86,12 +88,15 @@ def create_rag_workflow():
     graph.set_entry_point("guardrail")
 
     # --- Edges ---
+    # Condense-first: pronoun/elliptical follow-ups become standalone
+    # queries BEFORE the first retrieval (largest measured defect cluster).
     graph.add_conditional_edges(
         "guardrail",
         route_after_guardrail,
-        {"retrieve": "retrieve", "out_of_scope": "out_of_scope"},
+        {"retrieve": "condense_query", "out_of_scope": "out_of_scope"},
     )
 
+    graph.add_edge("condense_query", "retrieve")
     graph.add_edge("retrieve", "grade_documents")
 
     graph.add_conditional_edges(

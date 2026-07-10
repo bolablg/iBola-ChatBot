@@ -77,6 +77,18 @@ class QueryRewrite(BaseModel):
     )
 
 
+class CondensedQuery(BaseModel):
+    """Structured output for condense-first standalone rewriting, temp 0."""
+
+    standalone_query: str = Field(
+        description=(
+            "The follow-up question rewritten as a fully standalone question "
+            "in its original language, with every pronoun and ellipsis "
+            "resolved against the conversation."
+        )
+    )
+
+
 class GeneratedAnswer(BaseModel):
     """Structured generation output."""
 
@@ -97,6 +109,13 @@ class GroundingVerdict(BaseModel):
 
     is_grounded: bool = Field(
         description="True only if every material claim is supported by the context."
+    )
+    addresses_question: bool = Field(
+        default=True,
+        description=(
+            "True only if the answer addresses the specific entity or metric "
+            "the question asked about (not an adjacent fact)."
+        ),
     )
     unsupported_claims: List[str] = Field(
         default_factory=list,
@@ -203,6 +222,8 @@ class WorkflowState(TypedDict, total=False):
     retrieval_attempts: int
     max_retrieval_attempts: int
     rewritten_query: str
+    # The user's question as asked (before condense), kept for validators
+    original_query: str
 
     # Metadata
     agent_type: str

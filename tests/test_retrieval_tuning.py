@@ -7,53 +7,58 @@ generation context.
 from langchain_core.documents import Document
 
 from app.graph.nodes import _select_context_docs, _temporal_boost
+from pipeline.chunker import IntelligentChunker
 
 
-def _doc(content, source):
-    return Document(page_content=content, metadata={"source": source})
+def _doc(content, source, latest_year=None):
+    metadata = {"source": source}
+    if latest_year is None:
+        latest_year = IntelligentChunker._latest_year(content)
+    metadata["latest_year"] = latest_year
+    return Document(page_content=content, metadata=metadata)
 
 
 class TestTemporalBoost:
-    def test_temporal_query_floats_current_status_first(self):
+    def test_temporal_query_ranks_by_latest_year(self):
         docs = [
-            _doc("Head of Data era projects...", "13_gozem_internal_projects.txt"),
-            _doc("Bolaji is open to new roles.", "16_current_status.txt"),
-            _doc("Skills and tools...", "05_skills_and_tools.txt"),
-            _doc(
-                "Data Director April 2025 - July 2026",
-                "02_last_role_gozem_data_director.txt",
-            ),
+            _doc("Head of Data era, October 2022 - March 2025.", "13.txt"),
+            _doc("Bolaji left Gozem in July 2026 and is open to roles.", "16.txt"),
+            _doc("Skills and tools overview.", "05.txt"),
+            _doc("Data Director April 2025 - July 2026.", "02.txt"),
         ]
         boosted = _temporal_boost("What is Bolaji's latest role?", docs)
         sources = [d.metadata["source"] for d in boosted]
-        assert sources[0] == "16_current_status.txt"
-        assert sources[1] == "02_last_role_gozem_data_director.txt"
+        # 2026 chunks first (stable order within the year), then 2025, then 0
+        assert sources[:2] == ["16.txt", "02.txt"]
+        assert sources[2] == "13.txt"
 
     def test_french_temporal_query_boosts(self):
         docs = [
-            _doc("Skills...", "05_skills_and_tools.txt"),
-            _doc("Statut actuel...", "16_current_status.txt"),
+            _doc("Competences et outils.", "05.txt"),
+            _doc("Mandat termine en juillet 2026.", "16.txt"),
         ]
         boosted = _temporal_boost("Ou travaille Bolaji actuellement ?", docs)
-        assert boosted[0].metadata["source"] == "16_current_status.txt"
+        assert boosted[0].metadata["source"] == "16.txt"
 
     def test_non_temporal_query_preserves_order(self):
         docs = [
-            _doc("Skills...", "05_skills_and_tools.txt"),
-            _doc("Status...", "16_current_status.txt"),
+            _doc("Skills from 2019.", "05.txt"),
+            _doc("Status July 2026.", "16.txt"),
         ]
         assert _temporal_boost("What tools does Bolaji use?", docs) == docs
 
-    def test_canon_chunk_with_recent_end_date_is_boosted(self):
+    def test_present_engagements_rank_first(self):
         docs = [
-            _doc("Old Rintio work from 2018.", "90_website_canon_llms_full.txt"),
-            _doc(
-                "Data Director, Gozem, through July 2026.",
-                "90_website_canon_llms_full.txt",
-            ),
+            _doc("Data Director through July 2026.", "02.txt"),
+            _doc("iSheero, Dec 2021 - Present.", "07.txt"),
         ]
-        boosted = _temporal_boost("Where does Bolaji work now?", docs)
-        assert "July 2026" in boosted[0].page_content
+        boosted = _temporal_boost("What is Bolaji doing now?", docs)
+        assert boosted[0].metadata["source"] == "07.txt"
+
+    def test_chunker_extracts_latest_year(self):
+        assert IntelligentChunker._latest_year("April 2025 - July 2026") == 2026
+        assert IntelligentChunker._latest_year("Dec 2021 - Present") == 9999
+        assert IntelligentChunker._latest_year("no dates here") == 0
 
 
 class TestContextSelection:
