@@ -20,6 +20,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   langfuse-experiment:
     runs-on: ubuntu-latest
@@ -61,5 +65,10 @@ jobs:
           langfuse_base_url: ${{ secrets.LANGFUSE_BASE_URL }}
           experiment_path: eval/langfuse_experiment.py
           dataset_name: ibola-golden
+          github_token: ${{ github.token }}
+          # Advisory until proven stable in CI: a regression comments on the
+          # PR but does not block the merge (PART 5's gate is the hard gate).
+          should_fail_on_regression: "false"
+          should_fail_on_script_error: "false"
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
