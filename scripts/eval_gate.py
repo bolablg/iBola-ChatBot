@@ -103,6 +103,11 @@ def main():
     if p95_max is not None and p95_now is not None and p95_now > p95_max:
         failures.append(f"latency_p95_s {p95_now} > gate maximum {p95_max}")
 
+    ft_max = gate.get("first_token_p95_max_s")
+    ft_now = agg.get("first_token_p95_s")
+    if ft_max is not None and ft_now is not None and ft_now > ft_max:
+        failures.append(f"first_token_p95_s {ft_now} > gate maximum {ft_max}")
+
     if failures:
         print(f"EVAL GATE FAILED (baseline: {baseline_path.name}):")
         for failure in failures:
