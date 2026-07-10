@@ -195,9 +195,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- Build feedback row (safe DOM) ---
-    const createFeedbackRow = (idx) => {
+    const createFeedbackRow = (idx, traceId) => {
         const fb = document.createElement('div');
         fb.classList.add('msg-feedback');
+        if (traceId) fb.dataset.traceId = traceId;
 
         const upBtn = document.createElement('button');
         upBtn.classList.add('feedback-btn');
@@ -222,6 +223,51 @@ document.addEventListener('DOMContentLoaded', () => {
         fb.appendChild(upBtn);
         fb.appendChild(downBtn);
         return fb;
+    };
+
+    // One-tap reason chips shown inline only after a thumbs-down (no modal,
+    // no required text). Values must match the /feedback allow-list.
+    const REASON_CHIPS = [
+        ['wrong-info', 'Wrong info'],
+        ['didnt-answer', "Didn't answer"],
+        ['too-vague', 'Too vague'],
+        ['not-relevant', 'Not relevant'],
+    ];
+
+    const postScore = async (scoreName, value, traceId, comment) => {
+        try {
+            await fetch('/feedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    score_name: scoreName,
+                    value: value,
+                    session_id: sessionId,
+                    trace_id: traceId || null,
+                    comment: comment || null,
+                }),
+            });
+        } catch (e) { /* silent: feedback is best-effort */ }
+    };
+
+    const showReasonChips = (container, traceId) => {
+        const wrap = document.createElement('div');
+        wrap.classList.add('feedback-reasons');
+        REASON_CHIPS.forEach(([val, label]) => {
+            const chip = document.createElement('button');
+            chip.classList.add('reason-chip');
+            chip.textContent = label;
+            chip.addEventListener('click', () => {
+                postScore('user-thumbs-reason', val, traceId);
+                while (container.firstChild) container.removeChild(container.firstChild);
+                const thanks = document.createElement('span');
+                thanks.classList.add('feedback-thanks');
+                thanks.textContent = 'Thanks for your feedback';
+                container.appendChild(thanks);
+            });
+            wrap.appendChild(chip);
+        });
+        container.appendChild(wrap);
     };
 
     // --- Create message row with avatar ---
@@ -276,7 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (sender === 'bot' && !opts.noFeedback) {
-            content.appendChild(createFeedbackRow(msgIndex++));
+            content.appendChild(createFeedbackRow(msgIndex++, opts.traceId));
         }
 
         chatMessages.insertBefore(row, typingIndicator);
@@ -314,7 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     content.appendChild(renderMarkdown(text));
 
                     if (sender === 'bot' && !opts.noFeedback) {
-                        content.appendChild(createFeedbackRow(msgIndex++));
+                        content.appendChild(createFeedbackRow(msgIndex++, opts.traceId));
                     }
                     resolve();
                 }
@@ -326,32 +372,33 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Feedback ---
     const handleFeedback = async (btn, container) => {
         const score = parseFloat(btn.dataset.score);
-        const idx = parseInt(btn.dataset.idx);
+        const traceId = container.dataset.traceId || null;
 
-        container.querySelectorAll('.feedback-btn').forEach(b => b.classList.remove('active'));
+        container.querySelectorAll('.feedback-btn').forEach(b => {
+            b.classList.remove('active');
+            b.disabled = true;
+        });
         btn.classList.add('active');
         trackEvent('feedback_given', {
-            score: score,
-            message_index: idx,
             session_id: sessionId,
             type: score > 0 ? 'thumbs_up' : 'thumbs_down',
         });
 
-        setTimeout(() => {
-            while (container.firstChild) container.removeChild(container.firstChild);
-            const thanks = document.createElement('span');
-            thanks.classList.add('feedback-thanks');
-            thanks.textContent = 'Thanks for your feedback';
-            container.appendChild(thanks);
-        }, 600);
+        // Explicit BOOLEAN thumbs score attached to this turn's trace
+        postScore('user-thumbs', score, traceId);
 
-        try {
-            await fetch('/feedback', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ session_id: sessionId, message_index: idx, score }),
-            });
-        } catch (e) { /* silent */ }
+        if (score > 0) {
+            setTimeout(() => {
+                while (container.firstChild) container.removeChild(container.firstChild);
+                const thanks = document.createElement('span');
+                thanks.classList.add('feedback-thanks');
+                thanks.textContent = 'Thanks for your feedback';
+                container.appendChild(thanks);
+            }, 600);
+        } else {
+            // Thumbs-down: reveal reason chips inline for a one-tap reason
+            showReasonChips(container, traceId);
+        }
     };
 
     // --- Action Buttons ---
@@ -411,6 +458,37 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- End Chat ---
+    // Session-end CSAT (😞😐🙂), shown once for meaningful sessions only
+    // (>=2 user exchanges), never on every visit. Attaches at session level.
+    let csatShown = false;
+    const maybeShowCsat = () => {
+        if (csatShown || msgIndex < 2) return;
+        csatShown = true;
+        const wrap = document.createElement('div');
+        wrap.classList.add('csat-row');
+        const label = document.createElement('span');
+        label.classList.add('csat-label');
+        label.textContent = 'How was this chat?';
+        wrap.appendChild(label);
+        [['1', '😞'], ['2', '😐'], ['3', '🙂']].forEach(
+            ([val, emoji]) => {
+                const b = document.createElement('button');
+                b.classList.add('csat-btn');
+                b.textContent = emoji;
+                b.setAttribute('aria-label', `Rating ${val} of 3`);
+                b.addEventListener('click', () => {
+                    postScore('session-csat', val, null);
+                    wrap.querySelectorAll('.csat-btn').forEach(x => (x.disabled = true));
+                    b.classList.add('active');
+                    label.textContent = 'Thanks!';
+                });
+                wrap.appendChild(b);
+            }
+        );
+        chatMessages.insertBefore(wrap, typingIndicator);
+        scrollToBottom();
+    };
+
     const endChat = () => {
         chatEnded = true;
         chatApp.classList.add('chat-ended');
@@ -418,6 +496,7 @@ document.addEventListener('DOMContentLoaded', () => {
         userInput.placeholder = 'Chat ended';
         sendBtn.disabled = true;
         trackEvent('chat_ended', { session_id: sessionId });
+        maybeShowCsat();
     };
 
     // --- Textarea Auto-Grow ---
@@ -465,7 +544,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (res.ok) {
                 const data = await res.json();
-                if (data.answer) await typeMessage(data.answer, 'bot');
+                // Retain the rated turn's trace_id so feedback attaches to it
+                if (data.answer) await typeMessage(data.answer, 'bot', { traceId: data.trace_id });
                 if (data.actions && data.actions.length > 0) addActionButtons(data.actions);
                 if (data.should_end_chat && !chatEnded) endChat();
                 trackEvent('bot_response', {
