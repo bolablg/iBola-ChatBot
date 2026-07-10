@@ -123,7 +123,7 @@ BATCH_GRADE_PROMPT = ChatPromptTemplate.from_messages(
             (
                 "You grade document relevance. Given a question and numbered "
                 "documents, return the indices (0-based) of documents that help "
-                "answer the question. Be generous — if a document is partially "
+                "answer the question. Be generous: if a document is partially "
                 "relevant, include it. Return an empty list if none are relevant."
             ),
         ),
@@ -164,7 +164,7 @@ REWRITE_PROMPT = ChatPromptTemplate.from_messages(
 # ---------------------------------------------------------------------------
 
 _LANGUAGE_RULE = (
-    "LANGUAGE RULE (CRITICAL — never violate):\n"
+    "LANGUAGE RULE (CRITICAL, never violate):\n"
     "- The reply language is given explicitly in the request. Write the ENTIRE "
     "answer in that language. Never mix languages within a single response.\n"
     "- Keep technical terms (Python, BigQuery, LangGraph, etc.) in their original "
