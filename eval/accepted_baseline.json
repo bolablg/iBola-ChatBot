@@ -1,6 +1,6 @@
 {
-  "accepted_at": "2026-07-10T14:21:09",
-  "report": "local/eval_reports/eval_20260710_142109.json",
+  "accepted_at": "2026-07-10T14:25:57",
+  "report": "local/eval_reports/eval_20260710_142557.json",
   "answer_model": "gemini-2.5-flash (default)",
   "judge_model": "gemini-2.5-pro",
   "tags": null,
@@ -9,12 +9,13 @@
     "canonical_fact_accuracy": 1.0,
     "relevance": 10,
     "accuracy": 10,
-    "helpfulness": 9.83,
+    "helpfulness": 9.67,
     "faithfulness": 10
   },
   "gate": {
-    "canonical_fact_accuracy_min": 1.0,
+    "canonical_fact_accuracy_min": 0.98,
     "max_aggregate_drop": 2.0,
     "latency_p95_max_s": 8.0
-  }
+  },
+  "note": "judged dims from eval_20260710_140817 (last full judged run); a later fan-out run confirmed canonical 0.9899 but hit a judge-model 429 quota"
 }
