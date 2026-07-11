@@ -790,10 +790,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const wrap = document.getElementById('rail-tryit');
         const title = document.getElementById('rail-tryit-title');
         const cta = document.getElementById('rail-tryit-cta');
+        const img = document.getElementById('rail-tryit-img');
         if (!wrap || !title) return;
         const list = [
-            { title: 'Salaire Bénin: a brut-to-net salary simulator', url: 'https://app.bolablg.com/salaire_benin', cta: 'Test the app' },
-            { title: 'uDownloader, a Python package', url: 'https://pypi.org/project/uDownloader/', cta: 'Try on PyPI' },
+            {
+                title: 'Salaire Bénin: a brut-to-net salary simulator',
+                url: 'https://app.bolablg.com/salaire_benin',
+                cta: 'Test the app',
+                image: 'https://app.bolablg.com/images/salaire_benin.png',
+            },
+            {
+                title: 'uDownloader, a Python package',
+                url: 'https://pypi.org/project/uDownloader/',
+                cta: 'Try on PyPI',
+                image: 'https://files.bolablg.com/images/uDownloader-Logo.png',
+            },
         ];
         for (let i = list.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -803,14 +814,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const show = () => {
             title.style.opacity = '0';
             if (cta) cta.style.opacity = '0';
+            if (img) img.style.opacity = '0';
             setTimeout(() => {
                 const item = list[idx % list.length];
                 title.textContent = item.title;
                 wrap.href = item.url;
                 if (cta) cta.textContent = item.cta;
+                if (img) { img.src = item.image; img.alt = item.title; }
                 wrap.hidden = false;
                 title.style.opacity = '1';
                 if (cta) cta.style.opacity = '1';
+                if (img) img.style.opacity = '1';
                 idx += 1;
             }, 400);
         };
