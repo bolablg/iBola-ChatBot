@@ -1,0 +1,28 @@
+{
+  "en": [
+    "I build data platforms, AI products, and the teams that ship them, so businesses run on data, not slides.",
+    "Cut Google Cloud costs by 42.57% in a single quarter while holding SLAs.",
+    "Chartered and architected the Gozem Data Hub, serving 650+ people across five African countries.",
+    "Built the data team from 0 to 14+ professionals across six countries, reporting at C-level.",
+    "Shipped 30+ production AI tools: fraud detection, document intelligence, and RAG customer support.",
+    "Held an 88% rider match rate during a 48% demand surge at the Vodun Days festival.",
+    "Flagged a 20M+ CFA fraud scheme through the fintech analytics infrastructure he built.",
+    "Set governance across 250+ production pipelines with automated quality checks and lineage.",
+    "Migrated 10+ TB to Google Cloud within a quarter, with no operational interruption.",
+    "Automated invoice extraction, saving each financing manager about 40 hours a month.",
+    "A builder-leader hybrid: he led a 14+ person org and kept coding, architecting, and shipping.",
+    "Google Cloud Certified Professional Data Engineer and MSc Statistics with Distinction.",
+    "2026 author on Data Product Engineering and founding Vice-Chair of iSheero."
+  ],
+  "fr": [
+    "Je construis les plateformes data, les produits IA et les équipes qui les livrent, pour que les entreprises tournent sur des données, pas des slides.",
+    "Réduction de 42,57% des coûts Google Cloud en un seul trimestre, tout en respectant les SLA.",
+    "Data Hub de Gozem architecturé et mis au service de 650+ personnes dans cinq pays africains.",
+    "Équipe data passée de 0 à 14+ professionnels dans six pays, avec un reporting au niveau C.",
+    "Plus de 30 outils IA en production: détection de fraude, intelligence documentaire, support RAG.",
+    "Taux de matching de 88% maintenu pendant un pic de demande de 48% aux Vodun Days.",
+    "Fraude de plus de 20M CFA signalée grâce à l'infrastructure analytique fintech qu'il a bâtie.",
+    "Gouvernance de 250+ pipelines de production: contrôles qualité automatisés et traçabilité.",
+    "Google Cloud Certified Professional Data Engineer et MSc en Statistiques avec Distinction."
+  ]
+}

@@ -27,6 +27,27 @@ app_logger = get_logger("main")
 # Replace default logging with our service
 logger = app_logger
 
+
+def _read_version() -> str:
+    """Read the release version from the project-root VERSION file.
+
+    Single source of truth: the same file drives git tags on deploy, so the
+    API version and /health never drift from the released tag. Falls back to
+    the LLM_APP_VERSION env or "unknown" if the file is absent (e.g. a slim
+    container that omitted it)."""
+    version_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "VERSION")
+    try:
+        with open(version_path, encoding="utf-8") as fh:
+            version = fh.read().strip()
+            if version:
+                return version
+    except OSError:
+        pass
+    return os.getenv("APP_VERSION", "unknown")
+
+
+APP_VERSION = _read_version()
+
 app = FastAPI(
     title="iBola Multi-Agent Chatbot API",
     description="""
@@ -46,7 +67,7 @@ app = FastAPI(
     - **Learning Agent**: Advice on skill development
     - **Redirect Agent**: Polite handling of off-topic questions
     """,
-    version="2.0.0",
+    version=APP_VERSION,
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
@@ -91,6 +112,30 @@ async def robots_txt():
 async def sitemap_xml():
     """Serve sitemap.xml file for SEO."""
     return FileResponse("sitemap.xml", media_type="application/xml")
+
+
+@app.get("/manifest.json", include_in_schema=False)
+async def web_manifest():
+    """PWA manifest (PART 8.3). Served at root so scope covers the whole app."""
+    return FileResponse("static/manifest.json", media_type="application/manifest+json")
+
+
+@app.get("/sw.js", include_in_schema=False)
+async def service_worker():
+    """PWA service worker (PART 8.3), served from root for origin-wide scope.
+
+    Served with no-store so a new Cloud Run revision's worker is detected on
+    the next navigation, and Service-Worker-Allowed=/ so a file physically
+    under /static could also claim root scope.
+    """
+    return FileResponse(
+        "static/sw.js",
+        media_type="text/javascript",
+        headers={
+            "Cache-Control": "no-store, max-age=0",
+            "Service-Worker-Allowed": "/",
+        },
+    )
 
 
 # The legacy /chat endpoint now runs the same LangGraph agentic pipeline as
@@ -361,7 +406,10 @@ def read_root():
     # For more complex interactions between the parent page and the iframe,
     # you can use the `postMessage` API to send messages securely between them.
     headers = {
-        "Content-Security-Policy": "frame-ancestors 'self' https://bolablg.com https://*.bolablg.com https://ibola-chatbot-1055950842890.us-central1.run.app"
+        "Content-Security-Policy": "frame-ancestors 'self' https://bolablg.com https://*.bolablg.com https://ibola-chatbot-1055950842890.us-central1.run.app",
+        # Revalidate the app shell so a new Cloud Run revision is picked up
+        # without a hard refresh (PART 8.3 PWA freshness).
+        "Cache-Control": "no-cache",
     }
     return FileResponse("static/index.html", headers=headers)
 
@@ -622,7 +670,7 @@ async def health_check():
         health_data = {
             "status": "healthy",
             "timestamp": datetime.now().isoformat(),
-            "version": "2.0.0",
+            "version": APP_VERSION,
             "system": {
                 "memory_usage": f"{memory.percent:.1f}%",
                 "cpu_usage": f"{cpu_percent:.1f}%",
