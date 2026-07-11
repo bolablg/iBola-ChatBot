@@ -108,6 +108,14 @@
   --shadow-card: none;
 }
 
+/* Logo mark is ink-on-paper; invert it in dark mode so it stays ink-on-dark
+   (mirrors the accent inversion). Applies to the header, welcome, typing, and
+   per-message bot avatars, in standalone and embed (.dark-mode) modes. */
+.dark-mode .brand-mark,
+.dark-mode .welcome-avatar,
+.dark-mode .typing-avatar,
+.dark-mode .msg-avatar img { filter: invert(1); }
+
 /* --- Reset --- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
