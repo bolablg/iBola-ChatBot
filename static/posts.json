@@ -1,0 +1,20 @@
+{
+  "posts": [
+    {
+      "title": "Beyond standard Google Dataform: smart templates to cut BigQuery cost and dev time",
+      "url": "https://blog.bolablg.com/p/beyond-standard-google-dataform-smart"
+    },
+    {
+      "title": "Google Sheets + Python: automatically create and share data reports",
+      "url": "https://blog.bolablg.com/p/google-sheets-python-creer-et-partager"
+    },
+    {
+      "title": "Getting started with Google Dev: a service account to automate operations",
+      "url": "https://blog.bolablg.com/p/google-dev-service-account"
+    },
+    {
+      "title": "Where to find data for a national study, with Benin as the example",
+      "url": "https://blog.bolablg.com/p/source-de-donnees-etude-nationale-exemple-benin"
+    }
+  ]
+}
