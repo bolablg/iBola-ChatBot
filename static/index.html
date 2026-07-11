@@ -1,19 +1,19 @@
 <!DOCTYPE html>
-<html lang="fr" itemscope itemtype="https://schema.org/WebApplication">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iBola Chatbot - AI Assistant</title>
+    <title>iBola · Ask about Bolaji BALOGOUN's work</title>
 
     <!-- SEO Meta Tags -->
-    <meta name="description" content="Interactive AI chatbot by Bolaji BALOGOUN. Experience intelligent conversations with advanced AI technology to learn about his professional life.">
-    <meta name="keywords" content="AI chatbot, Bolaji BALOGOUN, data science, artificial intelligence, machine learning, chatbot, conversational AI, AI assistant">
+    <meta name="description" content="iBola is Bolaji BALOGOUN's AI assistant. Ask about his experience, skills, projects, and availability; every answer is grounded in his professional profile.">
+    <meta name="keywords" content="Bolaji BALOGOUN, iBola, AI assistant, data and AI leader, data engineering, experience, skills, projects, hire">
     <meta name="author" content="Bolaji BALOGOUN">
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
     <link rel="canonical" href="https://chat.bolablg.com/">
     <link rel="home" href="https://bolablg.com">
 
-    <meta name="language" content="fr-FR">
+    <meta name="language" content="en-US">
     <meta name="geo.region" content="BJ">
     <meta name="geo.country" content="Benin">
     <meta name="distribution" content="global">
@@ -31,22 +31,22 @@
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="BOLABLG">
-    <meta property="og:title" content="iBola Chatbot - AI Assistant by Bolaji BALOGOUN">
-    <meta property="og:description" content="Experience interactive conversation about Bolaji BALOGOUN professional journey. Powered by cutting-edge AI technology.">
+    <meta property="og:title" content="iBola · Ask about Bolaji BALOGOUN's work">
+    <meta property="og:description" content="Bolaji BALOGOUN's AI assistant. Ask about his experience, skills, projects, and availability; answers are grounded in his professional profile.">
     <meta property="og:image" content="https://app.bolablg.com/images/app_bolablg.png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="iBola Chatbot - AI Assistant Interface">
+    <meta property="og:image:alt" content="iBola, Bolaji BALOGOUN's AI assistant">
     <meta property="og:url" content="https://chat.bolablg.com/">
-    <meta property="og:locale" content="fr_FR">
-    <meta property="og:locale:alternate" content="en_US">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="fr_FR">
 
     <!-- Twitter Cards -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="@bolablg">
     <meta name="twitter:creator" content="@bolablg">
-    <meta name="twitter:title" content="iBola Chatbot - AI Assistant by Bolaji BALOGOUN">
-    <meta name="twitter:description" content="Experience interactive conversation about Bolaji BALOGOUN professional journey. Powered by cutting-edge AI technology.">
+    <meta name="twitter:title" content="iBola · Ask about Bolaji BALOGOUN's work">
+    <meta name="twitter:description" content="Bolaji BALOGOUN's AI assistant. Ask about his experience, skills, projects, and availability; answers are grounded in his professional profile.">
     <meta name="twitter:image" content="https://app.bolablg.com/images/app_bolablg.png">
 
     <!-- Favicon -->
@@ -64,28 +64,20 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="iBola">
 
-    <!-- JSON-LD Structured Data -->
+    <!-- JSON-LD: one SoftwareApplication node sharing the portfolio's @id so
+         it merges with the Person's subjectOf node (PART 9). No invented ratings. -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "iBola Chatbot",
-      "description": "Interactive AI chatbot for intelligent conversations on Bolaji BALOGOUN professional journey.",
+      "@type": "SoftwareApplication",
+      "@id": "https://chat.bolablg.com/#app",
+      "name": "iBola",
       "url": "https://chat.bolablg.com/",
       "applicationCategory": "BusinessApplication",
       "operatingSystem": "Web Browser",
-      "author": {
-        "@type": "Person",
-        "name": "Bolaji BALOGOUN",
-        "alternateName": ["Momboladji BALOGOUN", "Bola BALOGOUN"],
-        "url": "https://bolablg.com",
-        "jobTitle": "Data Science & AI Engineer",
-        "sameAs": [
-          "https://x.com/bolablg",
-          "https://github.com/bolablg",
-          "https://linkedin.com/in/bolablg"
-        ]
-      },
+      "description": "AI assistant answering questions about Bolaji BALOGOUN's experience, skills, projects, and availability.",
+      "author": { "@id": "https://www.bolablg.com/#person" },
+      "about": { "@id": "https://www.bolablg.com/#person" },
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
       "isPartOf": { "@type": "WebSite", "@id": "https://bolablg.com", "name": "BOLABLG", "url": "https://bolablg.com" }
     }
@@ -110,6 +102,14 @@
     </script>
 </head>
 <body>
+    <!-- Crawlable intro so the page is not an empty JS shell; links back to the
+         portfolio (bidirectional linking) (PART 9). -->
+    <p class="visually-hidden">
+        iBola is the AI assistant of <a href="https://bolablg.com">Bolaji BALOGOUN</a>,
+        a data and AI leader who builds data platforms, AI products, and the teams
+        that ship them. Ask iBola about his professional experience, skills, projects,
+        and availability; every answer is grounded in his profile.
+    </p>
     <div class="app-shell">
     <!-- Left rail: about + suggested questions (desktop >=1100px only) -->
     <aside class="chat-rail chat-rail--left" aria-label="About Bolaji BALOGOUN and iBola">
