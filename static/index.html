@@ -103,6 +103,19 @@
     </script>
 </head>
 <body>
+    <div class="app-shell">
+    <!-- Left rail: about + suggested questions (desktop >=1100px only) -->
+    <aside class="chat-rail chat-rail--left" aria-label="About and suggested questions">
+        <div class="rail-section">
+            <p class="rail-eyebrow">01 / About</p>
+            <p class="rail-note">iBola answers questions about Bolaji BALOGOUN's work, grounded in his profile. Every answer lists the sections it drew from, on the right.</p>
+        </div>
+        <div class="rail-section">
+            <p class="rail-eyebrow">02 / Try asking</p>
+            <ol class="rail-suggestions" id="rail-suggestions"></ol>
+        </div>
+    </aside>
+
     <div class="chat-app" id="chat-app">
         <!-- Header -->
         <header class="chat-header" role="banner">
@@ -170,6 +183,25 @@
                 </div>
             </div>
         </footer>
+    </div>
+
+    <!-- Right rail: quick actions + answer sources (desktop >=1100px only) -->
+    <aside class="chat-rail chat-rail--right" aria-label="Quick actions and answer sources">
+        <div class="rail-section">
+            <p class="rail-eyebrow">Quick actions</p>
+            <div class="rail-actions">
+                <a class="rail-btn rail-btn--primary" href="https://calendar.google.com/calendar/appointments/schedules/AcZssZ3YeidR5Og4YSGZIlxUIlDAf0AiRA6N8-MAzr-Sy55BtbKhBLXkfa8M_P_92eokXRnayLVlEXiW?gv=true" target="_blank" rel="noopener">Book 30 min</a>
+                <a class="rail-btn" href="mailto:hello@bolablg.com">Email</a>
+                <a class="rail-btn" href="https://www.bolablg.com" target="_blank" rel="noopener">Resume &amp; profile</a>
+            </div>
+        </div>
+        <div class="rail-section">
+            <p class="rail-eyebrow">Answer sources</p>
+            <div class="rail-sources" id="answer-sources">
+                <p class="rail-hint">The profile sections behind each answer appear here, linked to bolablg.com.</p>
+            </div>
+        </div>
+    </aside>
     </div>
 
     <!-- Booking Modal -->
