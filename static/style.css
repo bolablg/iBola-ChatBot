@@ -108,6 +108,15 @@
   --shadow-card: none;
 }
 
+/* Original logo mark desaturated to the monochrome palette so the blue tile
+   reads as neutral ink alongside the paper/ink UI. Slight contrast bump keeps
+   the tile deep and the letterforms crisp. Applies to the header, welcome,
+   typing, and per-message bot avatars in both light and dark. */
+.brand-mark,
+.welcome-avatar,
+.typing-avatar,
+.msg-avatar img { filter: grayscale(1) contrast(1.15); }
+
 /* --- Reset --- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
