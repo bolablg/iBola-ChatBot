@@ -284,7 +284,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (sender === 'bot') {
             const img = document.createElement('img');
-            img.src = 'https://files.bolablg.com/images/ji_fav_192.png';
+            img.src = '/static/logo.svg';
             img.alt = 'iBola';
             img.width = 28;
             img.height = 28;
