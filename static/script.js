@@ -1,5 +1,5 @@
 // ============================================================
-// iBola Chatbot — ChatGPT-Style Frontend
+// iBola Chatbot, portfolio design system frontend
 // Vanilla JS, markdown rendering, suggestions, SSE, feedback
 // ============================================================
 
