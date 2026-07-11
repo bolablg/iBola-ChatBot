@@ -64,6 +64,7 @@ def _timeout_response(session_id: str, user_language: str) -> Dict[str, Any]:
         "redirect_count": 0,
         "session_id": session_id,
         "should_end_chat": False,
+        "answer_sources": [],
     }
 
 
@@ -90,7 +91,7 @@ def _sse_event(data: dict, event: str = "message") -> str:
 
 
 # ---------------------------------------------------------------------------
-# /ask-agentic — full LangGraph agentic pipeline
+# /ask-agentic: full LangGraph agentic pipeline
 # ---------------------------------------------------------------------------
 
 
@@ -147,7 +148,7 @@ async def ask_agentic(payload: AskInput, request: Request):
             },
         )
 
-    # Non-streaming — run sync workflow in a thread to avoid event-loop
+    # Non-streaming: run sync workflow in a thread to avoid event-loop
     # conflicts with the google-genai SDK's internal async HTTP client.
     import asyncio
 
@@ -288,6 +289,10 @@ async def _stream_agentic(
             "confidence": result.get("confidence"),
             "redirect_count": result.get("redirect_count", 0),
             "actions": result.get("actions", []),
+            # PART 8.2: portfolio receipts for the "Answer sources" rail. The
+            # JSON path already carries these; the SSE done event must too so
+            # the streaming client can render the same rail.
+            "answer_sources": result.get("answer_sources", []),
             "trace_id": result.get("trace_id"),
         },
         "done",
@@ -298,7 +303,7 @@ async def _stream_agentic(
 
 
 # ---------------------------------------------------------------------------
-# /ask — simple RAG (skip agent routing, direct retrieval + generation)
+# /ask: simple RAG (skip agent routing, direct retrieval + generation)
 # ---------------------------------------------------------------------------
 
 

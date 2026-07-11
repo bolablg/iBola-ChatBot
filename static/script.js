@@ -1,5 +1,5 @@
 // ============================================================
-// iBola Chatbot — ChatGPT-Style Frontend
+// iBola Chatbot, portfolio design system frontend
 // Vanilla JS, markdown rendering, suggestions, SSE, feedback
 // ============================================================
 
@@ -15,6 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatApp = document.getElementById('chat-app');
     const welcomeScreen = document.getElementById('welcome-screen');
     const suggestionsGrid = document.getElementById('suggestions-grid');
+    const railSuggestions = document.getElementById('rail-suggestions');
+    const answerSourcesEl = document.getElementById('answer-sources');
     const modalOverlay = document.getElementById('modal-overlay');
     const modalIframe = document.getElementById('modal-iframe');
     const modalClose = document.getElementById('modal-close');
@@ -284,7 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (sender === 'bot') {
             const img = document.createElement('img');
-            img.src = 'https://files.bolablg.com/images/ji_fav_192.png';
+            img.src = '/static/logo.svg';
             img.alt = 'iBola';
             img.width = 28;
             img.height = 28;
@@ -551,6 +553,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Retain the rated turn's trace_id so feedback attaches to it
                 if (data.answer) await typeMessage(data.answer, 'bot', { traceId: data.trace_id });
                 if (data.actions && data.actions.length > 0) addActionButtons(data.actions);
+                renderAnswerSources(data.answer_sources);
                 if (data.should_end_chat && !chatEnded) endChat();
                 trackEvent('bot_response', {
                     intent: data.intent || 'unknown',
@@ -597,22 +600,40 @@ document.addEventListener('DOMContentLoaded', () => {
         subtitle: "Ask me anything about Bolaji's professional life",
     };
 
-    const renderSuggestions = () => {
-        if (!suggestionsGrid) return;
-        while (suggestionsGrid.firstChild) suggestionsGrid.removeChild(suggestionsGrid.firstChild);
+    const askSuggestion = (text) => {
+        trackEvent('suggestion_clicked', { suggestion_text: text });
+        userInput.value = text;
+        chatForm.dispatchEvent(new Event('submit', { cancelable: true }));
+    };
 
+    const renderSuggestions = () => {
         const items = suggestions;
-        items.forEach(text => {
-            const btn = document.createElement('button');
-            btn.classList.add('suggestion-card');
-            btn.textContent = text;
-            btn.addEventListener('click', () => {
-                trackEvent('suggestion_clicked', { suggestion_text: text });
-                userInput.value = text;
-                chatForm.dispatchEvent(new Event('submit', { cancelable: true }));
+
+        // Welcome-card grid (shown on mobile / narrow viewports).
+        if (suggestionsGrid) {
+            while (suggestionsGrid.firstChild) suggestionsGrid.removeChild(suggestionsGrid.firstChild);
+            items.forEach(text => {
+                const btn = document.createElement('button');
+                btn.classList.add('suggestion-card');
+                btn.textContent = text;
+                btn.addEventListener('click', () => askSuggestion(text));
+                suggestionsGrid.appendChild(btn);
             });
-            suggestionsGrid.appendChild(btn);
-        });
+        }
+
+        // Left-rail editorial list (shown on desktop >=1100px).
+        if (railSuggestions) {
+            while (railSuggestions.firstChild) railSuggestions.removeChild(railSuggestions.firstChild);
+            items.forEach(text => {
+                const li = document.createElement('li');
+                const btn = document.createElement('button');
+                btn.classList.add('rail-suggestion');
+                btn.textContent = text;
+                btn.addEventListener('click', () => askSuggestion(text));
+                li.appendChild(btn);
+                railSuggestions.appendChild(li);
+            });
+        }
 
         // Update welcome text
         const texts = welcomeTexts;
@@ -622,7 +643,195 @@ document.addEventListener('DOMContentLoaded', () => {
         if (subtitleEl) subtitleEl.textContent = texts.subtitle;
     };
 
-    // --- Placeholder per language ---
+    // --- Answer sources rail (PART 8.2) ---
+    // Render the normalized answer_sources receipts into the right rail so
+    // recruiters see which profile sections grounded the answer, linked to
+    // bolablg.com. No-op in embed (the rail element does not exist there).
+    const renderAnswerSources = (sources) => {
+        if (!answerSourcesEl) return;
+        while (answerSourcesEl.firstChild) answerSourcesEl.removeChild(answerSourcesEl.firstChild);
+
+        if (!Array.isArray(sources) || sources.length === 0) {
+            const hint = document.createElement('p');
+            hint.className = 'rail-hint';
+            hint.textContent = 'This answer did not draw on a specific profile section.';
+            answerSourcesEl.appendChild(hint);
+            return;
+        }
+
+        sources.forEach(src => {
+            const a = document.createElement('a');
+            a.className = 'rail-source';
+            a.href = src.url || 'https://www.bolablg.com';
+            a.target = '_blank';
+            a.rel = 'noopener';
+            a.addEventListener('click', () => {
+                trackEvent('answer_source_clicked', { source_id: src.id, session_id: sessionId });
+            });
+
+            const label = document.createElement('span');
+            label.className = 'rail-source-label';
+            const name = document.createElement('span');
+            name.textContent = src.label || 'Profile';
+            label.appendChild(name);
+            // retrieval_rank is already 1-based; show it directly, and skip the
+            // sentinel used for evidence that carried no rank.
+            if (Number.isInteger(src.rank) && src.rank > 0 && src.rank < 100) {
+                const rank = document.createElement('span');
+                rank.className = 'rail-source-rank';
+                rank.textContent = `#${src.rank}`;
+                label.appendChild(rank);
+            }
+            a.appendChild(label);
+
+            if (src.section) {
+                const section = document.createElement('span');
+                section.className = 'rail-source-section';
+                section.textContent = src.section;
+                a.appendChild(section);
+            }
+            answerSourcesEl.appendChild(a);
+        });
+    };
+
+    // --- Rotating profile quotes ---
+    // Short verifiable quotes cut from the bolablg.com canon. Shown in the left
+    // and right desktop rails (a different quote in each) and, on mobile where
+    // the rails are hidden, in the welcome card. Rotates slowly. No-op in embed.
+    const QUOTE_INTERVAL_MS = 150000; // 150s per the owner's pacing
+    let quoteTimer = null;
+
+    const initQuotes = async () => {
+        // Quotes live only in the desktop rails (never the central column).
+        // Each target rotates independently via its own offset into the list.
+        const targets = [
+            { wrap: document.getElementById('rail-quote-left'), text: document.getElementById('rail-quote-left-text'), offset: 0 },
+            { wrap: document.getElementById('rail-quote-right'), text: document.getElementById('rail-quote-right-text'), offset: 0 },
+        ].filter(t => t.wrap && t.text);
+        if (!targets.length) return;
+
+        let list = [];
+        try {
+            const res = await fetch('/static/quotes.json');
+            if (!res.ok) return;
+            const data = await res.json();
+            list = (data[userLanguage] || data.en || []).slice();
+        } catch (err) {
+            return;
+        }
+        if (!list.length) return;
+
+        // Fisher-Yates shuffle so the order differs each visit.
+        for (let i = list.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [list[i], list[j]] = [list[j], list[i]];
+        }
+        // Offset the right rail by half the list so left and right differ.
+        const right = targets.find(t => t.wrap.id === 'rail-quote-right');
+        if (right && list.length > 1) right.offset = Math.floor(list.length / 2);
+
+        let idx = 0;
+        const show = () => {
+            targets.forEach(t => {
+                t.text.style.opacity = '0';
+                setTimeout(() => {
+                    t.text.textContent = list[(idx + t.offset) % list.length];
+                    t.wrap.hidden = false;
+                    t.text.style.opacity = '1';
+                }, 400);
+            });
+            idx += 1;
+        };
+        show();
+        quoteTimer = setInterval(show, QUOTE_INTERVAL_MS);
+    };
+
+    // --- Rotating writing CTA (left rail) ---
+    // Bolaji's writing titles as read-CTAs, rotating like the quotes. Links to
+    // the actual posts on blog.bolablg.com. No-op in embed (no rail).
+    const initPosts = async () => {
+        const wrap = document.getElementById('rail-post');
+        const title = document.getElementById('rail-post-title');
+        if (!wrap || !title) return;
+        let list = [];
+        try {
+            const res = await fetch('/static/posts.json');
+            if (!res.ok) return;
+            const data = await res.json();
+            list = (data.posts || []).slice();
+        } catch (err) {
+            return;
+        }
+        if (!list.length) return;
+        for (let i = list.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [list[i], list[j]] = [list[j], list[i]];
+        }
+        let idx = 0;
+        const show = () => {
+            title.style.opacity = '0';
+            setTimeout(() => {
+                const post = list[idx % list.length];
+                title.textContent = post.title;
+                if (post.url) wrap.href = post.url;
+                wrap.hidden = false;
+                title.style.opacity = '1';
+                idx += 1;
+            }, 400);
+        };
+        show();
+        setInterval(show, QUOTE_INTERVAL_MS);
+    };
+
+    // --- Rotating "Try it" CTA (right rail) ---
+    // Cycles between Bolaji's shippable things (the Salaire Benin app and the
+    // uDownloader PyPI package), one at a time on the 150s cadence.
+    const initTryit = () => {
+        const wrap = document.getElementById('rail-tryit');
+        const title = document.getElementById('rail-tryit-title');
+        const cta = document.getElementById('rail-tryit-cta');
+        const img = document.getElementById('rail-tryit-img');
+        if (!wrap || !title) return;
+        const list = [
+            {
+                title: 'Salaire Bénin: a brut-to-net salary simulator',
+                url: 'https://app.bolablg.com/salaire_benin',
+                cta: 'Test the app',
+                image: 'https://app.bolablg.com/images/salaire_benin.png',
+            },
+            {
+                title: 'uDownloader, a Python package',
+                url: 'https://pypi.org/project/uDownloader/',
+                cta: 'Try on PyPI',
+                image: 'https://files.bolablg.com/images/uDownloader-Logo.png',
+            },
+        ];
+        for (let i = list.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [list[i], list[j]] = [list[j], list[i]];
+        }
+        let idx = 0;
+        const show = () => {
+            title.style.opacity = '0';
+            if (cta) cta.style.opacity = '0';
+            if (img) img.style.opacity = '0';
+            setTimeout(() => {
+                const item = list[idx % list.length];
+                title.textContent = item.title;
+                wrap.href = item.url;
+                if (cta) cta.textContent = item.cta;
+                if (img) { img.src = item.image; img.alt = item.title; }
+                wrap.hidden = false;
+                title.style.opacity = '1';
+                if (cta) cta.style.opacity = '1';
+                if (img) img.style.opacity = '1';
+                idx += 1;
+            }, 400);
+        };
+        show();
+        setInterval(show, QUOTE_INTERVAL_MS);
+    };
+
     // --- Init ---
     const init = async () => {
         userLanguage = 'en';
@@ -636,6 +845,9 @@ document.addEventListener('DOMContentLoaded', () => {
             );
         } else {
             renderSuggestions();
+            initQuotes();
+            initPosts();
+            initTryit();
         }
 
         userInput.focus();

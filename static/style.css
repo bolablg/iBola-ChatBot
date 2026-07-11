@@ -1,71 +1,120 @@
 /* ============================================================
-   iBola Chatbot — ChatGPT-Inspired Design
-   Full-viewport, flat messages, centered content column
+   iBola Chatbot, Portfolio Design System (bolablg.com)
+   Paper-tone monochrome, hairline rules, self-hosted type.
+   Tokens mirror bolablg_com/assets/css/tokens.css so the chat
+   reads as one design family with the portfolio it sits inside.
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* Self-hosted type (no CDN): Inter Tight (UI/chat) + JetBrains Mono
+   (mono-microcopy). Latin + Latin-ext cover EN and FR. Variable
+   weight 400-700 in a single face each. */
+@font-face {
+  font-family: 'Inter Tight';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/static/fonts/inter-tight-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Inter Tight';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/static/fonts/inter-tight-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/static/fonts/jetbrains-mono-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/static/fonts/jetbrains-mono-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
 
-/* --- Design Tokens --- */
+/* --- Design Tokens (portfolio: light) --- */
 :root {
-  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-chat: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  --font-ui: 'Inter Tight', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-chat: 'Inter Tight', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
 
-  --bg-primary: #ffffff;
-  --bg-secondary: #f7f7f8;
-  --bg-tertiary: #ececf1;
-  --bg-input: #ffffff;
-  --bg-code: #f6f8fa;
-  --bg-hover: rgba(0, 0, 0, 0.04);
+  --bg-primary: #fafaf7;
+  --bg-secondary: #f0eee9;
+  --bg-tertiary: #e6e6df;
+  --bg-input: #fafaf7;
+  --bg-code: #f0eee9;
+  --bg-hover: rgba(17, 17, 17, 0.05);
 
-  --text-primary: #1a1a2e;
-  --text-secondary: #6e6e80;
-  --text-tertiary: #8e8ea0;
-  --text-on-accent: #ffffff;
+  --text-primary: #111111;
+  --text-secondary: #5a5a55;
+  --text-tertiary: #9a9a92;
+  --text-on-accent: #fafaf7;
 
-  --border: #e5e5e5;
-  --border-focus: #2563EB;
+  --border: #c8c8c0;
+  --border-focus: #111111;
 
-  --accent: #2563EB;
-  --accent-hover: #1D4ED8;
-  --accent-subtle: rgba(37, 99, 235, 0.08);
+  /* Accent is ink; the rationed brand hue (--accent-hi) appears only on
+     hover/focus, mirroring the portfolio's single-accent discipline. */
+  --accent: #111111;
+  --accent-hover: #2419ff;
+  --accent-subtle: rgba(17, 17, 17, 0.06);
 
-  --shadow-input: 0 0 0 1px var(--border), 0 2px 8px rgba(0, 0, 0, 0.04);
-  --shadow-input-focus: 0 0 0 2px var(--accent), 0 2px 8px rgba(37, 99, 235, 0.1);
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+  /* Depth is hairline rules, not shadows. */
+  --shadow-input: 0 0 0 1px var(--border);
+  --shadow-input-focus: 0 0 0 1.5px var(--accent);
+  --shadow-card: none;
 
-  --radius-sm: 6px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 8px;
   --radius-full: 9999px;
 
-  --transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition: 200ms cubic-bezier(0.22, 1, 0.36, 1);
   --content-width: 768px;
 }
 
 .dark-mode {
-  --bg-primary: #1a1a2e;
-  --bg-secondary: #212134;
-  --bg-tertiary: #2a2a3e;
-  --bg-input: #212134;
-  --bg-code: #2a2a3e;
-  --bg-hover: rgba(255, 255, 255, 0.06);
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #141413;
+  --bg-tertiary: #1f1f1e;
+  --bg-input: #141413;
+  --bg-code: #141413;
+  --bg-hover: rgba(250, 250, 247, 0.06);
 
-  --text-primary: #ececf1;
-  --text-secondary: #b4b4c0;
-  --text-tertiary: #8e8ea0;
+  --text-primary: #fafaf7;
+  --text-secondary: #9a9a92;
+  --text-tertiary: #5a5a55;
+  /* Accent inverts to paper in dark, so on-accent text inverts to ink. */
+  --text-on-accent: #0a0a0a;
 
-  --border: #3a3a4e;
-  --border-focus: #3B82F6;
+  --border: #2a2a28;
+  --border-focus: #fafaf7;
 
-  --accent: #3B82F6;
-  --accent-hover: #2563EB;
-  --accent-subtle: rgba(59, 130, 246, 0.12);
+  --accent: #fafaf7;
+  --accent-hover: #6c63ff;
+  --accent-subtle: rgba(250, 250, 247, 0.08);
 
-  --shadow-input: 0 0 0 1px var(--border), 0 2px 8px rgba(0, 0, 0, 0.2);
-  --shadow-input-focus: 0 0 0 2px var(--accent), 0 2px 8px rgba(59, 130, 246, 0.15);
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-input: 0 0 0 1px var(--border);
+  --shadow-input-focus: 0 0 0 1.5px var(--accent);
+  --shadow-card: none;
 }
+
+/* Logo mark (concept 3) is ink-on-paper to match the design. Invert it in dark
+   mode so it stays legible (paper tile, ink Ji), mirroring the accent inversion.
+   Applies to the header, welcome, typing, and per-message bot avatars. */
+.dark-mode .brand-mark,
+.dark-mode .welcome-avatar,
+.dark-mode .typing-avatar,
+.dark-mode .msg-avatar img { filter: invert(1); }
 
 /* --- Reset --- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -125,10 +174,11 @@ body {
 }
 
 .brand-name {
-  font-size: 16px;
-  font-weight: 700;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 600;
   color: var(--text-primary);
-  letter-spacing: -0.02em;
+  letter-spacing: var(--tracking-mono, 0.03em);
 }
 
 /* Hidden in default ChatGPT mode, shown in embed */
@@ -163,6 +213,9 @@ body {
 /* --- Main Chat Area --- */
 .chat-main {
   flex: 1;
+  /* min-height:0 lets this flex child scroll instead of growing the column
+     (required inside the desktop rails grid, harmless elsewhere). */
+  min-height: 0;
   overflow-y: auto;
   scroll-behavior: smooth;
   overscroll-behavior: contain;
@@ -225,9 +278,10 @@ body {
   background: var(--bg-primary);
   cursor: pointer;
   text-align: left;
-  font-family: var(--font-ui);
-  font-size: 13.5px;
-  line-height: 1.4;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  letter-spacing: var(--tracking-mono, 0.02em);
+  line-height: 1.45;
   color: var(--text-secondary);
   transition: all var(--transition);
   -webkit-appearance: none;
@@ -297,7 +351,7 @@ body {
 
 .msg-avatar--user {
   background: var(--accent);
-  color: white;
+  color: var(--text-on-accent);
   border-radius: var(--radius-sm);
 }
 
@@ -362,7 +416,7 @@ body {
 .msg-content a {
   color: var(--accent);
   text-decoration: underline;
-  text-decoration-color: rgba(37, 99, 235, 0.3);
+  text-decoration-color: var(--text-tertiary);
   text-underline-offset: 2px;
 }
 
@@ -392,7 +446,7 @@ body {
   height: 26px;
   border: none;
   background: transparent;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   cursor: pointer;
   border-radius: var(--radius-sm);
   display: flex;
@@ -421,7 +475,7 @@ body {
 
 .feedback-thanks {
   font-size: 11px;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   font-weight: 500;
   padding-left: 4px;
 }
@@ -441,12 +495,14 @@ body {
 }
 
 .reason-chip {
-  border: 1px solid var(--border, #d0d0d0);
+  border: 1px solid var(--border, #c8c8c0);
   background: transparent;
-  color: var(--text-secondary, #555);
-  font-size: 12px;
+  color: var(--text-secondary, #5a5a55);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: var(--tracking-mono, 0.03em);
   padding: 5px 10px;
-  border-radius: 14px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all var(--transition);
   min-height: 32px;
@@ -473,8 +529,10 @@ body {
 }
 
 .csat-label {
-  font-size: 12px;
-  color: var(--text-secondary, #555);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: var(--tracking-mono, 0.03em);
+  color: var(--text-secondary, #5a5a55);
   font-weight: 500;
 }
 
@@ -576,7 +634,7 @@ body {
   color: var(--accent);
   background: var(--accent-subtle);
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.12);
+  box-shadow: none;
 }
 
 .action-btn:active {
@@ -590,16 +648,16 @@ body {
 
 .action-btn--primary {
   background: var(--accent);
-  color: white;
+  color: var(--text-on-accent);
   border-color: var(--accent);
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+  box-shadow: none;
 }
 
 .action-btn--primary:hover {
   background: var(--accent-hover);
-  color: white;
+  color: var(--text-on-accent);
   border-color: var(--accent-hover);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  box-shadow: none;
 }
 
 /* Side-by-side on wider screens */
@@ -635,7 +693,7 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 8px 12px 8px 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: none;
   transition: all var(--transition);
 }
 
@@ -668,7 +726,7 @@ body {
   border-radius: var(--radius-sm);
   border: none;
   background: var(--accent);
-  color: white;
+  color: var(--text-on-accent);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -702,9 +760,10 @@ body {
 .powered-by {
   text-align: center;
   padding: 8px 0 0;
+  font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--text-tertiary);
-  letter-spacing: 0.02em;
+  color: var(--text-secondary);
+  letter-spacing: var(--tracking-mono, 0.05em);
 }
 
 .powered-by a {
@@ -792,8 +851,8 @@ body {
 }
 
 /* ============================================================
-   iMessage Style — Embed / Iframe Mode (html.minimal)
-   Compact bubble chat for widget embedding
+   Embed / Iframe Mode (html.minimal)
+   Compact paper-tone bubble chat for widget embedding
    ============================================================ */
 
 html.minimal body { display: block; padding: 0; margin: 0; }
@@ -830,8 +889,10 @@ html.minimal .brand-status {
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 11px;
-  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: var(--tracking-mono, 0.04em);
+  color: var(--text-secondary);
   font-weight: 500;
 }
 
@@ -894,19 +955,19 @@ html.minimal .msg-content {
   font-size: 14.5px;
   line-height: 1.45;
   white-space: pre-wrap;
-  border-radius: 18px;
+  border-radius: var(--radius-md);
 }
 
 html.minimal .msg-row--bot .msg-content {
   background: var(--bg-tertiary);
   color: var(--text-primary);
-  border-radius: 18px 18px 18px 6px;
+  border-radius: var(--radius-md) var(--radius-md) var(--radius-md) var(--radius-sm);
 }
 
 html.minimal .msg-row--user .msg-content {
   background: var(--accent);
   color: var(--text-on-accent);
-  border-radius: 18px 18px 6px 18px;
+  border-radius: var(--radius-md) var(--radius-md) var(--radius-sm) var(--radius-md);
   text-align: left;
 }
 
@@ -915,15 +976,15 @@ html.minimal .msg-content p { margin-bottom: 6px; }
 html.minimal .msg-content p:last-child { margin-bottom: 0; }
 html.minimal .msg-content ul, html.minimal .msg-content ol { margin: 4px 0 6px; }
 
-/* Links in user bubbles */
-html.minimal .msg-row--user .msg-content a { color: rgba(255,255,255,0.9); }
+/* Links in user bubbles: on-accent so they invert with the bubble in dark. */
+html.minimal .msg-row--user .msg-content a { color: var(--text-on-accent); }
 
 /* Consecutive message spacing */
 html.minimal .msg-row + .msg-row { margin-top: 3px; }
 html.minimal .msg-row--bot + .msg-row--bot { margin-top: 1px; }
-html.minimal .msg-row--bot + .msg-row--bot .msg-content { border-radius: 18px 18px 18px 6px; }
+html.minimal .msg-row--bot + .msg-row--bot .msg-content { border-radius: var(--radius-md) var(--radius-md) var(--radius-md) var(--radius-sm); }
 html.minimal .msg-row--user + .msg-row--user { margin-top: 1px; }
-html.minimal .msg-row--user + .msg-row--user .msg-content { border-radius: 18px 18px 6px 18px; }
+html.minimal .msg-row--user + .msg-row--user .msg-content { border-radius: var(--radius-md) var(--radius-md) var(--radius-sm) var(--radius-md); }
 
 /* Different sender = more gap */
 html.minimal .msg-row--bot + .msg-row--user,
@@ -956,7 +1017,7 @@ html.minimal .typing-avatar { display: none; }
 html.minimal .typing-dots {
   background: var(--bg-tertiary);
   padding: 10px 16px;
-  border-radius: 18px 18px 18px 6px;
+  border-radius: var(--radius-md) var(--radius-md) var(--radius-md) var(--radius-sm);
 }
 
 /* --- Embed Actions: compact, no offset --- */
@@ -970,7 +1031,7 @@ html.minimal .action-btn {
   font-size: 13px;
   padding: 10px 16px;
   min-height: 44px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
 }
 
 /* --- Embed Input: pill style --- */
@@ -982,7 +1043,7 @@ html.minimal .chat-input-area {
 html.minimal .input-wrapper { max-width: none; }
 
 html.minimal .input-row {
-  border-radius: 22px;
+  border-radius: var(--radius-md);
   padding: 4px 4px 4px 16px;
   box-shadow: none;
   border: 1px solid var(--border);
@@ -999,7 +1060,7 @@ html.minimal #user-input {
 html.minimal .send-btn {
   width: 30px;
   height: 30px;
-  border-radius: 50%;
+  border-radius: var(--radius-sm);
 }
 
 html.minimal .send-btn svg {
@@ -1028,6 +1089,259 @@ html.minimal.dark-mode .typing-dots,
 html.minimal .dark-mode .typing-dots {
   background: var(--bg-tertiary);
 }
+
+/* ============================================================
+   PART 8.2: Desktop margin rails (>=1100px, never in embed)
+   Left: about + suggested questions. Right: quick actions +
+   answer sources. Collapse below 1100px and in html.minimal.
+   ============================================================ */
+.app-shell { display: block; }
+.chat-rail { display: none; }
+
+@media (min-width: 1100px) {
+  html:not(.minimal) .app-shell {
+    display: grid;
+    grid-template-columns: minmax(240px, 280px) minmax(0, 1fr) minmax(260px, 320px);
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+  }
+  html:not(.minimal) .app-shell .chat-app {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  html:not(.minimal) .chat-rail {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    height: 100%;
+    overflow-y: auto;
+    padding: 24px;
+    background: var(--bg-primary);
+  }
+  html:not(.minimal) .chat-rail--left { border-right: 1px solid var(--border); }
+  html:not(.minimal) .chat-rail--right { border-left: 1px solid var(--border); }
+
+  /* Three equal thirds per rail: content vertically centered in each, with the
+     two dividers landing on the 1/3 and 2/3 lines. */
+  html:not(.minimal) .chat-rail .rail-section {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 0;
+  }
+  html:not(.minimal) .chat-rail .rail-divider { flex: 0 0 auto; margin: 0; }
+
+  /* The example questions stay in the center welcome card on all viewports;
+     the rotating quotes live only in the rails, never the central column. */
+}
+
+.rail-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 4px 0;
+}
+
+.rail-quote-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  transition: opacity 400ms ease;
+}
+
+.rail-quote-text::before { content: "\201C"; }
+.rail-quote-text::after { content: "\201D"; }
+
+.rail-quote-cap {
+  margin-top: 10px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+/* Rotating writing CTA (left rail) */
+.rail-post { display: block; text-decoration: none; }
+
+.rail-post-title {
+  display: block;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  transition: opacity 400ms ease, color var(--transition);
+}
+
+.rail-post-cta {
+  display: inline-block;
+  margin-top: 10px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.rail-post:hover .rail-post-title { color: var(--text-primary); }
+.rail-post:hover .rail-post-cta { color: var(--accent-hover); }
+
+/* Illustration for the rotating Try it CTA (remote images, contained). */
+.rail-tryit-img {
+  display: block;
+  width: 100%;
+  height: 120px;
+  object-fit: contain;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 8px;
+  margin-bottom: 12px;
+  transition: opacity 400ms ease;
+}
+
+.rail-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.rail-note {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.rail-note strong { color: var(--text-primary); font-weight: 600; }
+.rail-note + .rail-note { margin-top: 18px; }
+
+.rail-suggestions {
+  list-style: none;
+  counter-reset: rail-q;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rail-suggestions .rail-suggestion {
+  counter-increment: rail-q;
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 13.5px;
+  line-height: 1.4;
+  transition: color var(--transition);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.rail-suggestions .rail-suggestion::before {
+  content: counter(rail-q, decimal-leading-zero);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+.rail-suggestions .rail-suggestion:hover,
+.rail-suggestions .rail-suggestion:focus-visible {
+  color: var(--accent-hover);
+  outline: none;
+}
+
+.rail-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rail-btn {
+  font-family: var(--font-ui);
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  transition: all var(--transition);
+}
+
+.rail-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-subtle);
+}
+
+.rail-btn--primary {
+  background: var(--accent);
+  color: var(--text-on-accent);
+  border-color: var(--accent);
+}
+
+.rail-btn--primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  color: var(--text-on-accent);
+}
+
+.rail-sources { display: flex; flex-direction: column; gap: 2px; }
+
+.rail-hint {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-tertiary);
+}
+
+.rail-source {
+  display: block;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+  text-decoration: none;
+  color: var(--text-primary);
+}
+
+.rail-source:first-child { border-top: none; }
+
+.rail-source .rail-source-label {
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.rail-source .rail-source-rank {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+
+.rail-source .rail-source-section {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.rail-source:hover .rail-source-label { color: var(--accent-hover); }
 
 /* --- Responsive --- */
 @media (max-width: 640px) {
