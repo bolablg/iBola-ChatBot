@@ -105,14 +105,17 @@
 <body>
     <div class="app-shell">
     <!-- Left rail: about + suggested questions (desktop >=1100px only) -->
-    <aside class="chat-rail chat-rail--left" aria-label="About and suggested questions">
+    <aside class="chat-rail chat-rail--left" aria-label="About Bolaji BALOGOUN and iBola">
         <div class="rail-section">
-            <p class="rail-eyebrow">01 / About</p>
-            <p class="rail-note">iBola answers questions about Bolaji BALOGOUN's work, grounded in his profile. Every answer lists the sections it drew from, on the right.</p>
+            <p class="rail-eyebrow">About</p>
+            <p class="rail-note">Bolaji BALOGOUN is a data and AI leader who builds data platforms, AI products, and the teams that ship them. iBola is his AI assistant: ask about his work and it answers from his profile.</p>
         </div>
+        <hr class="rail-divider">
         <div class="rail-section">
-            <p class="rail-eyebrow">02 / Try asking</p>
-            <ol class="rail-suggestions" id="rail-suggestions"></ol>
+            <figure class="rail-quote" id="rail-quote-left" hidden>
+                <blockquote class="rail-quote-text" id="rail-quote-left-text"></blockquote>
+                <figcaption class="rail-quote-cap">From the profile</figcaption>
+            </figure>
         </div>
     </aside>
 
@@ -186,7 +189,7 @@
     </div>
 
     <!-- Right rail: quick actions + answer sources (desktop >=1100px only) -->
-    <aside class="chat-rail chat-rail--right" aria-label="Quick actions and answer sources">
+    <aside class="chat-rail chat-rail--right" aria-label="Quick actions">
         <div class="rail-section">
             <p class="rail-eyebrow">Quick actions</p>
             <div class="rail-actions">
@@ -195,11 +198,12 @@
                 <a class="rail-btn" href="https://www.bolablg.com" target="_blank" rel="noopener">Resume &amp; profile</a>
             </div>
         </div>
+        <hr class="rail-divider">
         <div class="rail-section">
-            <p class="rail-eyebrow">Answer sources</p>
-            <div class="rail-sources" id="answer-sources">
-                <p class="rail-hint">The profile sections behind each answer appear here, linked to bolablg.com.</p>
-            </div>
+            <figure class="rail-quote" id="rail-quote-right" hidden>
+                <blockquote class="rail-quote-text" id="rail-quote-right-text"></blockquote>
+                <figcaption class="rail-quote-cap">From the profile</figcaption>
+            </figure>
         </div>
     </aside>
     </div>

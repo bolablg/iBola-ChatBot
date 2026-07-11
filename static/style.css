@@ -1125,8 +1125,33 @@ html.minimal .dark-mode .typing-dots {
   html:not(.minimal) .chat-rail--left { border-right: 1px solid var(--border); }
   html:not(.minimal) .chat-rail--right { border-left: 1px solid var(--border); }
 
-  /* On desktop the suggestions live in the left rail, not the welcome card. */
-  html:not(.minimal) #welcome-screen .suggestions-grid { display: none; }
+  /* The example questions stay in the center welcome card on all viewports;
+     the rotating quotes live only in the rails, never the central column. */
+}
+
+.rail-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 4px 0;
+}
+
+.rail-quote-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  transition: opacity 400ms ease;
+}
+
+.rail-quote-text::before { content: "\201C"; }
+.rail-quote-text::after { content: "\201D"; }
+
+.rail-quote-cap {
+  margin-top: 10px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
 }
 
 .rail-eyebrow {
