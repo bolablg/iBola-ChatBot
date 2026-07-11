@@ -4,20 +4,14 @@
         xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
         http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 
-  <!-- Main chatbot page -->
+  <!-- Canonical chatbot page (single-URL app). The portfolio backlink lives in
+       robots.txt and the crawlable HTML intro, not as a cross-domain sitemap
+       entry (sitemaps should list only same-host URLs). -->
   <url>
     <loc>https://chat.bolablg.com/</loc>
-    <lastmod>2025-01-08</lastmod>
+    <lastmod>2026-07-11</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
-  </url>
-
-  <!-- Link to main website -->
-  <url>
-    <loc>https://bolablg.com/</loc>
-    <lastmod>2025-01-08</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
   </url>
 
 </urlset>
