@@ -1169,6 +1169,9 @@ html.minimal .dark-mode .typing-dots {
   color: var(--text-secondary);
 }
 
+.rail-note strong { color: var(--text-primary); font-weight: 600; }
+.rail-note + .rail-note { margin-top: 18px; }
+
 .rail-suggestions {
   list-style: none;
   counter-reset: rail-q;
