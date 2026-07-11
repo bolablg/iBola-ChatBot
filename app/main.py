@@ -406,7 +406,10 @@ def read_root():
     # For more complex interactions between the parent page and the iframe,
     # you can use the `postMessage` API to send messages securely between them.
     headers = {
-        "Content-Security-Policy": "frame-ancestors 'self' https://bolablg.com https://*.bolablg.com https://ibola-chatbot-1055950842890.us-central1.run.app"
+        "Content-Security-Policy": "frame-ancestors 'self' https://bolablg.com https://*.bolablg.com https://ibola-chatbot-1055950842890.us-central1.run.app",
+        # Revalidate the app shell so a new Cloud Run revision is picked up
+        # without a hard refresh (PART 8.3 PWA freshness).
+        "Cache-Control": "no-cache",
     }
     return FileResponse("static/index.html", headers=headers)
 
