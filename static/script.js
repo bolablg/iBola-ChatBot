@@ -286,7 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (sender === 'bot') {
             const img = document.createElement('img');
-            img.src = 'https://files.bolablg.com/images/ji_fav_192.png';
+            img.src = '/static/logo.svg';
             img.alt = 'iBola';
             img.width = 28;
             img.height = 28;
@@ -746,6 +746,43 @@ document.addEventListener('DOMContentLoaded', () => {
         quoteTimer = setInterval(show, QUOTE_INTERVAL_MS);
     };
 
+    // --- Rotating writing CTA (left rail) ---
+    // Bolaji's writing titles as read-CTAs, rotating like the quotes. Links to
+    // the actual posts on blog.bolablg.com. No-op in embed (no rail).
+    const initPosts = async () => {
+        const wrap = document.getElementById('rail-post');
+        const title = document.getElementById('rail-post-title');
+        if (!wrap || !title) return;
+        let list = [];
+        try {
+            const res = await fetch('/static/posts.json');
+            if (!res.ok) return;
+            const data = await res.json();
+            list = (data.posts || []).slice();
+        } catch (err) {
+            return;
+        }
+        if (!list.length) return;
+        for (let i = list.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [list[i], list[j]] = [list[j], list[i]];
+        }
+        let idx = 0;
+        const show = () => {
+            title.style.opacity = '0';
+            setTimeout(() => {
+                const post = list[idx % list.length];
+                title.textContent = post.title;
+                if (post.url) wrap.href = post.url;
+                wrap.hidden = false;
+                title.style.opacity = '1';
+                idx += 1;
+            }, 400);
+        };
+        show();
+        setInterval(show, QUOTE_INTERVAL_MS);
+    };
+
     // --- Init ---
     const init = async () => {
         userLanguage = 'en';
@@ -760,6 +797,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             renderSuggestions();
             initQuotes();
+            initPosts();
         }
 
         userInput.focus();
