@@ -1,5 +1,5 @@
 // ============================================================
-// iBola Chat Widget — Embeddable on any website
+// iBola Chat Widget, embeddable on any website
 //
 // Usage: Add this to any page:
 //   <script src="https://chat.bolablg.com/static/embed.js" defer></script>
@@ -8,7 +8,7 @@
 //   data-position="bottom-right"  (bottom-right | bottom-left)
 //   data-theme="auto"             (auto | light | dark)
 //   data-open="false"             (auto-open on load)
-//   data-accent="#2563EB"         (accent color)
+//   data-accent="#111111"         (launcher color; defaults to portfolio ink)
 // ============================================================
 
 (function () {
@@ -29,7 +29,7 @@
         position: (scriptTag && scriptTag.dataset.position) || 'bottom-right',
         theme: (scriptTag && scriptTag.dataset.theme) || 'auto',
         autoOpen: (scriptTag && scriptTag.dataset.open) === 'true',
-        accent: (scriptTag && scriptTag.dataset.accent) || '#2563EB',
+        accent: (scriptTag && scriptTag.dataset.accent) || '#111111',
     };
 
     // Build widget DOM
@@ -79,7 +79,9 @@
         #ibola-chat-widget .ibola-trigger svg {
             width: 24px;
             height: 24px;
-            fill: white;
+            /* Paper icon on the ink launcher. data-accent is expected to be a
+               dark color (portfolio ink by default) so the icon stays legible. */
+            fill: #fafaf7;
             transition: transform 200ms ease;
         }
 
@@ -93,7 +95,7 @@
             height: 600px;
             max-height: calc(100vh - 100px);
             max-width: calc(100vw - 40px);
-            border-radius: 16px;
+            border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 12px 48px rgba(0,0,0,0.15);
             border: 1px solid rgba(0,0,0,0.08);
@@ -121,7 +123,7 @@
                 height: calc(100vh - 80px);
                 bottom: 68px;
                 right: -10px;
-                border-radius: 12px;
+                border-radius: 8px;
             }
         }
     `;

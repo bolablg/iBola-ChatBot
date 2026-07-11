@@ -24,8 +24,9 @@
     <meta name="MobileOptimized" content="width">
 
     <!-- Theme color -->
-    <meta name="theme-color" content="#2563EB">
-    <meta name="msapplication-TileColor" content="#2563EB">
+    <meta name="theme-color" content="#fafaf7" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)">
+    <meta name="msapplication-TileColor" content="#fafaf7">
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
@@ -92,6 +93,8 @@
         gtag('config', 'G-9QJQFSQE9C');
     </script>
 
+    <link rel="preload" href="/static/fonts/inter-tight-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/static/fonts/jetbrains-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="/static/style.css">
     <script>
         if (window.location.search.includes('embed=true') || window !== window.parent) {
