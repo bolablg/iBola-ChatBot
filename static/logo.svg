@@ -1,12 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
-  <title id="title">iBola messaging bot logo concept 2</title>
-  <desc id="desc">Royal-blue speech-bubble bot mark with white rounded Ji letterforms preserved as the core.</desc>
+  <title id="title">iBola robot logo concept 4</title>
+  <desc id="desc">Blue Ji speech-bubble tile with a minimal centered antenna and solid white i dot.</desc>
   <path fill="#0055AA" d="M60 0h392c33.1 0 60 26.9 60 60v344c0 33.1-26.9 60-60 60H205l-77.8 40.8c-14.3 7.5-30-7.8-22.8-22.3L113.5 464H60c-33.1 0-60-26.9-60-60V60C0 26.9 26.9 0 60 0Z"/>
-  <path d="M82 360V128c0-17.7 14.3-32 32-32h284c17.7 0 32 14.3 32 32v232c0 17.7-14.3 32-32 32H224l-48 30 14-30h-76c-17.7 0-32-14.3-32-32Z" fill="none" stroke="#FFFFFF" stroke-width="14" stroke-linejoin="round"/>
+  <path fill="#FFFFFF" d="M248 0h16v24h-16V0Zm8 24a23 23 0 1 1 0 46a23 23 0 1 1 0-46Z"/>
   <path fill="#FFFFFF" d="M244.5 94C222.7 94 205 111.7 205 133.5v168.4c0 23.1-6.7 41.4-19.7 53-12 10.7-28.8 13.2-49.2 6.9-18.2-5.6-32.9 4.4-36.5 22.1-4.4 21.6 10.5 39.4 34.1 50.2 29.7 13.6 63.7 14 90.3 3.6 40.5-15.9 60.5-52.9 60.5-112.6V133.5C284.5 111.7 266.8 94 244.5 94Z"/>
   <rect x="326.5" y="180" width="77.5" height="262" rx="38.75" fill="#FFFFFF"/>
   <circle cx="366" cy="116" r="46" fill="#FFFFFF"/>
-  <path d="M366 70V38" fill="none" stroke="#FFFFFF" stroke-width="16" stroke-linecap="round"/>
-  <circle cx="366" cy="30" r="13" fill="#FFFFFF"/>
-  <circle cx="366" cy="116" r="11" fill="#0055AA"/>
 </svg>
