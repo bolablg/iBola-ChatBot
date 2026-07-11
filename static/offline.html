@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>iBola, offline</title>
+  <style>
+    :root { color-scheme: light dark; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter Tight', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: #fafaf7;
+      color: #111111;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+      -webkit-font-smoothing: antialiased;
+    }
+    .mark { width: 56px; height: 56px; margin-bottom: 24px; }
+    h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 8px; }
+    p { font-size: 15px; line-height: 1.6; color: #5a5a55; max-width: 420px; }
+    .eyebrow {
+      font-family: ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
+      font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+      color: #9a9a92; margin-top: 20px;
+    }
+    button {
+      margin-top: 24px; font: inherit; font-weight: 600; font-size: 14px;
+      padding: 10px 18px; border-radius: 8px; border: 1px solid #111111;
+      background: #111111; color: #fafaf7; cursor: pointer;
+    }
+    @media (prefers-color-scheme: dark) {
+      body { background: #0a0a0a; color: #fafaf7; }
+      p { color: #9a9a92; }
+      button { background: #fafaf7; color: #0a0a0a; border-color: #fafaf7; }
+    }
+  </style>
+</head>
+<body>
+  <img class="mark" src="/static/logo.svg" alt="iBola" width="56" height="56">
+  <h1>You are offline</h1>
+  <p>iBola needs a connection to answer from Bolaji's profile. Check your network and try again.</p>
+  <button onclick="location.reload()">Retry</button>
+  <p class="eyebrow">iBola, chat.bolablg.com</p>
+</body>
+</html>

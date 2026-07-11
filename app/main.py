@@ -114,6 +114,30 @@ async def sitemap_xml():
     return FileResponse("sitemap.xml", media_type="application/xml")
 
 
+@app.get("/manifest.json", include_in_schema=False)
+async def web_manifest():
+    """PWA manifest (PART 8.3). Served at root so scope covers the whole app."""
+    return FileResponse("static/manifest.json", media_type="application/manifest+json")
+
+
+@app.get("/sw.js", include_in_schema=False)
+async def service_worker():
+    """PWA service worker (PART 8.3), served from root for origin-wide scope.
+
+    Served with no-store so a new Cloud Run revision's worker is detected on
+    the next navigation, and Service-Worker-Allowed=/ so a file physically
+    under /static could also claim root scope.
+    """
+    return FileResponse(
+        "static/sw.js",
+        media_type="text/javascript",
+        headers={
+            "Cache-Control": "no-store, max-age=0",
+            "Service-Worker-Allowed": "/",
+        },
+    )
+
+
 # The legacy /chat endpoint now runs the same LangGraph agentic pipeline as
 # /ask-agentic. The legacy orchestrator (app/agents/orchestrator.py) baked
 # profile facts into prompts and bypassed the guardrail flow; no endpoint may
@@ -382,7 +406,10 @@ def read_root():
     # For more complex interactions between the parent page and the iframe,
     # you can use the `postMessage` API to send messages securely between them.
     headers = {
-        "Content-Security-Policy": "frame-ancestors 'self' https://bolablg.com https://*.bolablg.com https://ibola-chatbot-1055950842890.us-central1.run.app"
+        "Content-Security-Policy": "frame-ancestors 'self' https://bolablg.com https://*.bolablg.com https://ibola-chatbot-1055950842890.us-central1.run.app",
+        # Revalidate the app shell so a new Cloud Run revision is picked up
+        # without a hard refresh (PART 8.3 PWA freshness).
+        "Cache-Control": "no-cache",
     }
     return FileResponse("static/index.html", headers=headers)
 
