@@ -108,14 +108,13 @@
   --shadow-card: none;
 }
 
-/* Original logo mark desaturated to the monochrome palette so the blue tile
-   reads as neutral ink alongside the paper/ink UI. Slight contrast bump keeps
-   the tile deep and the letterforms crisp. Applies to the header, welcome,
-   typing, and per-message bot avatars in both light and dark. */
-.brand-mark,
-.welcome-avatar,
-.typing-avatar,
-.msg-avatar img { filter: grayscale(1) contrast(1.15); }
+/* Logo mark (concept 3) is ink-on-paper to match the design. Invert it in dark
+   mode so it stays legible (paper tile, ink Ji), mirroring the accent inversion.
+   Applies to the header, welcome, typing, and per-message bot avatars. */
+.dark-mode .brand-mark,
+.dark-mode .welcome-avatar,
+.dark-mode .typing-avatar,
+.dark-mode .msg-avatar img { filter: invert(1); }
 
 /* --- Reset --- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1153,6 +1152,30 @@ html.minimal .dark-mode .typing-dots {
   text-transform: uppercase;
   color: var(--text-tertiary);
 }
+
+/* Rotating writing CTA (left rail) */
+.rail-post { display: block; text-decoration: none; }
+
+.rail-post-title {
+  display: block;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  transition: opacity 400ms ease, color var(--transition);
+}
+
+.rail-post-cta {
+  display: inline-block;
+  margin-top: 10px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.rail-post:hover .rail-post-title { color: var(--text-primary); }
+.rail-post:hover .rail-post-cta { color: var(--accent-hover); }
 
 .rail-eyebrow {
   font-family: var(--font-mono);

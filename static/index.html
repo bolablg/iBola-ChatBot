@@ -50,6 +50,7 @@
     <meta name="twitter:image" content="https://app.bolablg.com/images/app_bolablg.png">
 
     <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/static/logo.svg">
     <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
     <link rel="shortcut icon" type="image/x-icon" href="/static/favicon.ico">
@@ -118,13 +119,21 @@
                 <figcaption class="rail-quote-cap">From the profile</figcaption>
             </figure>
         </div>
+        <hr class="rail-divider">
+        <div class="rail-section">
+            <p class="rail-eyebrow">Writing</p>
+            <a class="rail-post" id="rail-post" href="https://blog.bolablg.com" target="_blank" rel="noopener" hidden>
+                <span class="rail-post-title" id="rail-post-title"></span>
+                <span class="rail-post-cta">Read on the blog</span>
+            </a>
+        </div>
     </aside>
 
     <div class="chat-app" id="chat-app">
         <!-- Header -->
         <header class="chat-header" role="banner">
             <div class="header-brand">
-                <img class="brand-mark" src="https://files.bolablg.com/images/ji_fav_192.png" alt="iBola" width="28" height="28">
+                <img class="brand-mark" src="/static/logo.svg" alt="iBola" width="28" height="28">
                 <div class="brand-text">
                     <span class="brand-name">iBola</span>
                     <div class="brand-status">
@@ -147,7 +156,7 @@
         <main class="chat-main" id="chat-main" role="log" aria-label="Chat messages" aria-live="polite">
             <!-- Welcome Screen -->
             <div id="welcome-screen">
-                <img class="welcome-avatar" src="https://files.bolablg.com/images/ji_fav_192.png" alt="iBola Assistant">
+                <img class="welcome-avatar" src="/static/logo.svg" alt="iBola Assistant">
                 <h1 class="welcome-title" id="welcome-title">How can I help you?</h1>
                 <p class="welcome-subtitle" id="welcome-subtitle">Ask me anything about Bolaji's professional life</p>
                 <div class="suggestions-grid" id="suggestions-grid"></div>
@@ -156,7 +165,7 @@
             <!-- Messages -->
             <div class="chat-messages" id="chat-messages">
                 <div class="typing-indicator" id="typing-indicator" aria-label="Assistant is typing">
-                    <img class="typing-avatar" src="https://files.bolablg.com/images/ji_fav_192.png" alt="" width="28" height="28">
+                    <img class="typing-avatar" src="/static/logo.svg" alt="" width="28" height="28">
                     <div class="typing-dots">
                         <span class="typing-dot"></span>
                         <span class="typing-dot"></span>
@@ -205,6 +214,14 @@
                 <blockquote class="rail-quote-text" id="rail-quote-right-text"></blockquote>
                 <figcaption class="rail-quote-cap">From the profile</figcaption>
             </figure>
+        </div>
+        <hr class="rail-divider">
+        <div class="rail-section">
+            <p class="rail-eyebrow">Try it</p>
+            <div class="rail-actions">
+                <a class="rail-btn" href="https://app.bolablg.com/salaire_benin" target="_blank" rel="noopener">Salaire Bénin app</a>
+                <a class="rail-btn" href="https://pypi.org/project/uDownloader/" target="_blank" rel="noopener">uDownloader on PyPI</a>
+            </div>
         </div>
     </aside>
     </div>
