@@ -17,6 +17,7 @@ from app.graph.state import AgentCategory, GraphState, ReasoningStep
 from app.graph.workflow import create_rag_workflow
 from app.services.google_chat_alert import google_chat_alert
 from app.services.google_sheets_logger import google_sheets_logger
+from app.services.source_map import build_answer_sources
 
 logger = logging.getLogger("ibola.graph")
 
@@ -248,6 +249,9 @@ class AgenticRAGService:
             "should_end_chat": final_state.get("should_end_chat", False),
             "response_time": round(elapsed, 3),
             "evidence": evidence,
+            # PART 8.2: normalized portfolio receipts for the "Answer sources"
+            # rail. Deduplicated by section, linkable to bolablg.com.
+            "answer_sources": build_answer_sources(evidence),
             "unsupported_claims": final_state.get("unsupported_claims", []),
             "trace_id": trace_id,
         }
@@ -378,6 +382,7 @@ class AgenticRAGService:
             "session_id": session_id,
             "should_end_chat": False,
             "evidence": [],
+            "answer_sources": [],
             "trace_id": None,
         }
 
@@ -487,6 +492,7 @@ class AgenticRAGService:
             "should_end_chat": False,
             "response_time": 0.0,
             "evidence": [],
+            "answer_sources": [],
             "trace_id": None,
         }
 
@@ -606,6 +612,7 @@ class AgenticRAGService:
             "should_end_chat": False,
             "response_time": 0.0,
             "evidence": [],
+            "answer_sources": [],
             "trace_id": None,
         }
 
@@ -667,6 +674,7 @@ class AgenticRAGService:
             "should_end_chat": False,
             "response_time": 0.0,
             "evidence": [],
+            "answer_sources": [],
             "trace_id": None,
         }
 
@@ -770,6 +778,7 @@ class AgenticRAGService:
             "should_end_chat": False,
             "response_time": 0.0,
             "evidence": [],
+            "answer_sources": [],
             "trace_id": None,
         }
 
@@ -1088,6 +1097,7 @@ class AgenticRAGService:
             "should_end_chat": pleasantry_type == "goodbye",
             "response_time": 0.0,
             "evidence": [],
+            "answer_sources": [],
             "trace_id": None,
         }
 
@@ -1290,5 +1300,6 @@ class AgenticRAGService:
             "should_end_chat": False,
             "response_time": 0.0,
             "evidence": [],
+            "answer_sources": [],
             "trace_id": None,
         }

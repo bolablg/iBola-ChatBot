@@ -15,6 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatApp = document.getElementById('chat-app');
     const welcomeScreen = document.getElementById('welcome-screen');
     const suggestionsGrid = document.getElementById('suggestions-grid');
+    const railSuggestions = document.getElementById('rail-suggestions');
+    const answerSourcesEl = document.getElementById('answer-sources');
     const modalOverlay = document.getElementById('modal-overlay');
     const modalIframe = document.getElementById('modal-iframe');
     const modalClose = document.getElementById('modal-close');
@@ -551,6 +553,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Retain the rated turn's trace_id so feedback attaches to it
                 if (data.answer) await typeMessage(data.answer, 'bot', { traceId: data.trace_id });
                 if (data.actions && data.actions.length > 0) addActionButtons(data.actions);
+                renderAnswerSources(data.answer_sources);
                 if (data.should_end_chat && !chatEnded) endChat();
                 trackEvent('bot_response', {
                     intent: data.intent || 'unknown',
@@ -597,22 +600,40 @@ document.addEventListener('DOMContentLoaded', () => {
         subtitle: "Ask me anything about Bolaji's professional life",
     };
 
-    const renderSuggestions = () => {
-        if (!suggestionsGrid) return;
-        while (suggestionsGrid.firstChild) suggestionsGrid.removeChild(suggestionsGrid.firstChild);
+    const askSuggestion = (text) => {
+        trackEvent('suggestion_clicked', { suggestion_text: text });
+        userInput.value = text;
+        chatForm.dispatchEvent(new Event('submit', { cancelable: true }));
+    };
 
+    const renderSuggestions = () => {
         const items = suggestions;
-        items.forEach(text => {
-            const btn = document.createElement('button');
-            btn.classList.add('suggestion-card');
-            btn.textContent = text;
-            btn.addEventListener('click', () => {
-                trackEvent('suggestion_clicked', { suggestion_text: text });
-                userInput.value = text;
-                chatForm.dispatchEvent(new Event('submit', { cancelable: true }));
+
+        // Welcome-card grid (shown on mobile / narrow viewports).
+        if (suggestionsGrid) {
+            while (suggestionsGrid.firstChild) suggestionsGrid.removeChild(suggestionsGrid.firstChild);
+            items.forEach(text => {
+                const btn = document.createElement('button');
+                btn.classList.add('suggestion-card');
+                btn.textContent = text;
+                btn.addEventListener('click', () => askSuggestion(text));
+                suggestionsGrid.appendChild(btn);
             });
-            suggestionsGrid.appendChild(btn);
-        });
+        }
+
+        // Left-rail editorial list (shown on desktop >=1100px).
+        if (railSuggestions) {
+            while (railSuggestions.firstChild) railSuggestions.removeChild(railSuggestions.firstChild);
+            items.forEach(text => {
+                const li = document.createElement('li');
+                const btn = document.createElement('button');
+                btn.classList.add('rail-suggestion');
+                btn.textContent = text;
+                btn.addEventListener('click', () => askSuggestion(text));
+                li.appendChild(btn);
+                railSuggestions.appendChild(li);
+            });
+        }
 
         // Update welcome text
         const texts = welcomeTexts;
@@ -620,6 +641,57 @@ document.addEventListener('DOMContentLoaded', () => {
         const subtitleEl = document.getElementById('welcome-subtitle');
         if (titleEl) titleEl.textContent = texts.title;
         if (subtitleEl) subtitleEl.textContent = texts.subtitle;
+    };
+
+    // --- Answer sources rail (PART 8.2) ---
+    // Render the normalized answer_sources receipts into the right rail so
+    // recruiters see which profile sections grounded the answer, linked to
+    // bolablg.com. No-op in embed (the rail element does not exist there).
+    const renderAnswerSources = (sources) => {
+        if (!answerSourcesEl) return;
+        while (answerSourcesEl.firstChild) answerSourcesEl.removeChild(answerSourcesEl.firstChild);
+
+        if (!Array.isArray(sources) || sources.length === 0) {
+            const hint = document.createElement('p');
+            hint.className = 'rail-hint';
+            hint.textContent = 'This answer did not draw on a specific profile section.';
+            answerSourcesEl.appendChild(hint);
+            return;
+        }
+
+        sources.forEach(src => {
+            const a = document.createElement('a');
+            a.className = 'rail-source';
+            a.href = src.url || 'https://www.bolablg.com';
+            a.target = '_blank';
+            a.rel = 'noopener';
+            a.addEventListener('click', () => {
+                trackEvent('answer_source_clicked', { source_id: src.id, session_id: sessionId });
+            });
+
+            const label = document.createElement('span');
+            label.className = 'rail-source-label';
+            const name = document.createElement('span');
+            name.textContent = src.label || 'Profile';
+            label.appendChild(name);
+            // retrieval_rank is already 1-based; show it directly, and skip the
+            // sentinel used for evidence that carried no rank.
+            if (Number.isInteger(src.rank) && src.rank > 0 && src.rank < 100) {
+                const rank = document.createElement('span');
+                rank.className = 'rail-source-rank';
+                rank.textContent = `#${src.rank}`;
+                label.appendChild(rank);
+            }
+            a.appendChild(label);
+
+            if (src.section) {
+                const section = document.createElement('span');
+                section.className = 'rail-source-section';
+                section.textContent = src.section;
+                a.appendChild(section);
+            }
+            answerSourcesEl.appendChild(a);
+        });
     };
 
     // --- Placeholder per language ---
