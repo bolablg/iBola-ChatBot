@@ -1,0 +1,25 @@
+{
+  "name": "iBola",
+  "short_name": "iBola",
+  "description": "Bolaji BALOGOUN's AI assistant. Ask about his work; answers are grounded in his profile.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#fafaf7",
+  "theme_color": "#fafaf7",
+  "icons": [
+    {
+      "src": "/static/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
