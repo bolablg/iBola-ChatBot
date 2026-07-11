@@ -21,7 +21,7 @@ Query ──┬──▶ BM25 (keyword) ──┐
 ### Vector Search (ChromaDB MMR)
 - Uses Maximum Marginal Relevance for diversity
 - `k=8` results, `fetch_k=24` candidates
-- Embeddings: Google Generative AI `embedding-001`
+- Embeddings: `gemini-embedding-001` via the sync `google.genai` client
 
 ### Reciprocal Rank Fusion (RRF)
 - Formula: `RRF_score = Σ 1/(rank_constant + rank_i)` for each ranked list
@@ -29,10 +29,11 @@ Query ──┬──▶ BM25 (keyword) ──┐
 - Handles deduplication by content hash
 
 ### Cross-Encoder Reranker
-- Model: `cross-encoder/ms-marco-MiniLM-L-6-v2`
+- Model: `BAAI/bge-reranker-v2-m3` (multilingual, serves EN and FR traffic)
+- Opt-in via `ENABLE_CROSS_ENCODER_RERANKER=true` (off by default to avoid startup latency)
 - Applied after RRF fusion when result count > `top_k`
 - Scores each (query, document) pair for precise relevance
-- Graceful degradation: returns unranked results if model unavailable
+- Graceful degradation: returns unranked results if model unavailable or disabled
 
 ## Configuration
 
@@ -42,7 +43,8 @@ Query ──┬──▶ BM25 (keyword) ──┐
 | `SEARCH_USE_RERANKER` | `true` | Enable cross-encoder reranking |
 | `SEARCH_RRF_RANK_CONSTANT` | `60` | RRF rank constant |
 | `SEARCH_VECTOR_TOP_K` | `8` | Number of results to return |
-| `SEARCH_RERANKER_MODEL` | `cross-encoder/ms-marco-MiniLM-L-6-v2` | Reranker model |
+| `SEARCH_RERANKER_MODEL` | `BAAI/bge-reranker-v2-m3` | Reranker model (multilingual) |
+| `ENABLE_CROSS_ENCODER_RERANKER` | `false` | Load the cross-encoder reranker at startup |
 
 ## Fallback Chain
 
