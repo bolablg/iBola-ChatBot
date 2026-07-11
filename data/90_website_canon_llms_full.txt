@@ -1,15 +1,15 @@
 # Bolaji BALOGOUN · Head of Data & AI (full content)
 
-> I build data platforms, AI products, and the teams that ship them, so businesses run on data, not slides.
+> I build data platforms, AI products, and the teams that ship them, so businesses run on data, not slides. Read on, or ask iBola, my AI assistant: chat.bolablg.com.
 
-Single-file full version. Structured guide: https://www.bolablg.com/llms.txt · Biography: https://www.bolablg.com/bio.md
+Single-file full version. Structured guide: https://www.bolablg.com/llms.txt · Biography: https://www.bolablg.com/bio.md · Interactive Q&A: https://chat.bolablg.com
 
 ## Biography
 
 # Bolaji Balogoun · Biography
 
 *Head of Data & AI · Data platform architect · Statistician by training, builder by temperament.*
-*This is the long-form biography. For the structured site guide, see [llms.txt](https://www.bolablg.com/llms.txt). Last updated: July 2026.*
+*This is the long-form biography. For the structured site guide, see [llms.txt](https://www.bolablg.com/llms.txt). For interactive Q&A, ask [iBola](https://chat.bolablg.com), his AI assistant. Last updated: July 2026.*
 
 > **TL;DR**: Bolaji Balogoun is a data and AI executive based in Little Rock, Arkansas (US), working in French and English. He builds governed, cost-disciplined cloud data platforms, production AI and analytics products, and the teams that run them, with leadership experience across French-speaking Africa. Most recently, he was Data Director at Gozem through July 2026, where he owned the data function end to end and co-led AI strategy.
 
@@ -57,7 +57,7 @@ Three principles run through everything above. **Metrics before dashboards**: he
 - **Equivalent titles**: Data & AI Director · Director of Data & Analytics · Director of Data Engineering · Director of Data Platform · Head of Analytics & AI · Senior Manager, Data Engineering / Data Platform / Data & Analytics
 - **Languages**: English (full professional) · French (native)
 - **Based in**: Little Rock, AR, US (GMT-5) · open to selected projects, consulting, and speaking across the US, Canada, France, and Sub-Saharan Africa
-- **Contact**: hello@bolablg.com · [LinkedIn](https://linkedin.com/in/bolablg) · [GitHub](https://github.com/bolablg) · [Site](https://www.bolablg.com)
+- **Contact**: hello@bolablg.com · [LinkedIn](https://linkedin.com/in/bolablg) · [GitHub](https://github.com/bolablg) · [Site](https://www.bolablg.com) · [Ask iBola](https://chat.bolablg.com)
 
 
 ## Experience (full detail)
