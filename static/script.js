@@ -783,6 +783,41 @@ document.addEventListener('DOMContentLoaded', () => {
         setInterval(show, QUOTE_INTERVAL_MS);
     };
 
+    // --- Rotating "Try it" CTA (right rail) ---
+    // Cycles between Bolaji's shippable things (the Salaire Benin app and the
+    // uDownloader PyPI package), one at a time on the 150s cadence.
+    const initTryit = () => {
+        const wrap = document.getElementById('rail-tryit');
+        const title = document.getElementById('rail-tryit-title');
+        const cta = document.getElementById('rail-tryit-cta');
+        if (!wrap || !title) return;
+        const list = [
+            { title: 'Salaire Bénin: a brut-to-net salary simulator', url: 'https://app.bolablg.com/salaire_benin', cta: 'Test the app' },
+            { title: 'uDownloader, a Python package', url: 'https://pypi.org/project/uDownloader/', cta: 'Try on PyPI' },
+        ];
+        for (let i = list.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [list[i], list[j]] = [list[j], list[i]];
+        }
+        let idx = 0;
+        const show = () => {
+            title.style.opacity = '0';
+            if (cta) cta.style.opacity = '0';
+            setTimeout(() => {
+                const item = list[idx % list.length];
+                title.textContent = item.title;
+                wrap.href = item.url;
+                if (cta) cta.textContent = item.cta;
+                wrap.hidden = false;
+                title.style.opacity = '1';
+                if (cta) cta.style.opacity = '1';
+                idx += 1;
+            }, 400);
+        };
+        show();
+        setInterval(show, QUOTE_INTERVAL_MS);
+    };
+
     // --- Init ---
     const init = async () => {
         userLanguage = 'en';
@@ -798,6 +833,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderSuggestions();
             initQuotes();
             initPosts();
+            initTryit();
         }
 
         userInput.focus();

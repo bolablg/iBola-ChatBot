@@ -1115,14 +1115,25 @@ html.minimal .dark-mode .typing-dots {
   html:not(.minimal) .chat-rail {
     display: flex;
     flex-direction: column;
-    gap: 32px;
+    gap: 0;
     height: 100%;
     overflow-y: auto;
-    padding: 28px 24px;
+    padding: 24px;
     background: var(--bg-primary);
   }
   html:not(.minimal) .chat-rail--left { border-right: 1px solid var(--border); }
   html:not(.minimal) .chat-rail--right { border-left: 1px solid var(--border); }
+
+  /* Three equal thirds per rail: content vertically centered in each, with the
+     two dividers landing on the 1/3 and 2/3 lines. */
+  html:not(.minimal) .chat-rail .rail-section {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 0;
+  }
+  html:not(.minimal) .chat-rail .rail-divider { flex: 0 0 auto; margin: 0; }
 
   /* The example questions stay in the center welcome card on all viewports;
      the rotating quotes live only in the rails, never the central column. */
