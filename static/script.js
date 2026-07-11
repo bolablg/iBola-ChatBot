@@ -286,7 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (sender === 'bot') {
             const img = document.createElement('img');
-            img.src = 'https://files.bolablg.com/images/ji_fav_192.png';
+            img.src = '/static/logo.svg';
             img.alt = 'iBola';
             img.width = 28;
             img.height = 28;
@@ -694,7 +694,144 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // --- Placeholder per language ---
+    // --- Rotating profile quotes ---
+    // Short verifiable quotes cut from the bolablg.com canon. Shown in the left
+    // and right desktop rails (a different quote in each) and, on mobile where
+    // the rails are hidden, in the welcome card. Rotates slowly. No-op in embed.
+    const QUOTE_INTERVAL_MS = 150000; // 150s per the owner's pacing
+    let quoteTimer = null;
+
+    const initQuotes = async () => {
+        // Quotes live only in the desktop rails (never the central column).
+        // Each target rotates independently via its own offset into the list.
+        const targets = [
+            { wrap: document.getElementById('rail-quote-left'), text: document.getElementById('rail-quote-left-text'), offset: 0 },
+            { wrap: document.getElementById('rail-quote-right'), text: document.getElementById('rail-quote-right-text'), offset: 0 },
+        ].filter(t => t.wrap && t.text);
+        if (!targets.length) return;
+
+        let list = [];
+        try {
+            const res = await fetch('/static/quotes.json');
+            if (!res.ok) return;
+            const data = await res.json();
+            list = (data[userLanguage] || data.en || []).slice();
+        } catch (err) {
+            return;
+        }
+        if (!list.length) return;
+
+        // Fisher-Yates shuffle so the order differs each visit.
+        for (let i = list.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [list[i], list[j]] = [list[j], list[i]];
+        }
+        // Offset the right rail by half the list so left and right differ.
+        const right = targets.find(t => t.wrap.id === 'rail-quote-right');
+        if (right && list.length > 1) right.offset = Math.floor(list.length / 2);
+
+        let idx = 0;
+        const show = () => {
+            targets.forEach(t => {
+                t.text.style.opacity = '0';
+                setTimeout(() => {
+                    t.text.textContent = list[(idx + t.offset) % list.length];
+                    t.wrap.hidden = false;
+                    t.text.style.opacity = '1';
+                }, 400);
+            });
+            idx += 1;
+        };
+        show();
+        quoteTimer = setInterval(show, QUOTE_INTERVAL_MS);
+    };
+
+    // --- Rotating writing CTA (left rail) ---
+    // Bolaji's writing titles as read-CTAs, rotating like the quotes. Links to
+    // the actual posts on blog.bolablg.com. No-op in embed (no rail).
+    const initPosts = async () => {
+        const wrap = document.getElementById('rail-post');
+        const title = document.getElementById('rail-post-title');
+        if (!wrap || !title) return;
+        let list = [];
+        try {
+            const res = await fetch('/static/posts.json');
+            if (!res.ok) return;
+            const data = await res.json();
+            list = (data.posts || []).slice();
+        } catch (err) {
+            return;
+        }
+        if (!list.length) return;
+        for (let i = list.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [list[i], list[j]] = [list[j], list[i]];
+        }
+        let idx = 0;
+        const show = () => {
+            title.style.opacity = '0';
+            setTimeout(() => {
+                const post = list[idx % list.length];
+                title.textContent = post.title;
+                if (post.url) wrap.href = post.url;
+                wrap.hidden = false;
+                title.style.opacity = '1';
+                idx += 1;
+            }, 400);
+        };
+        show();
+        setInterval(show, QUOTE_INTERVAL_MS);
+    };
+
+    // --- Rotating "Try it" CTA (right rail) ---
+    // Cycles between Bolaji's shippable things (the Salaire Benin app and the
+    // uDownloader PyPI package), one at a time on the 150s cadence.
+    const initTryit = () => {
+        const wrap = document.getElementById('rail-tryit');
+        const title = document.getElementById('rail-tryit-title');
+        const cta = document.getElementById('rail-tryit-cta');
+        const img = document.getElementById('rail-tryit-img');
+        if (!wrap || !title) return;
+        const list = [
+            {
+                title: 'Salaire Bénin: a brut-to-net salary simulator',
+                url: 'https://app.bolablg.com/salaire_benin',
+                cta: 'Test the app',
+                image: 'https://app.bolablg.com/images/salaire_benin.png',
+            },
+            {
+                title: 'uDownloader, a Python package',
+                url: 'https://pypi.org/project/uDownloader/',
+                cta: 'Try on PyPI',
+                image: 'https://files.bolablg.com/images/uDownloader-Logo.png',
+            },
+        ];
+        for (let i = list.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [list[i], list[j]] = [list[j], list[i]];
+        }
+        let idx = 0;
+        const show = () => {
+            title.style.opacity = '0';
+            if (cta) cta.style.opacity = '0';
+            if (img) img.style.opacity = '0';
+            setTimeout(() => {
+                const item = list[idx % list.length];
+                title.textContent = item.title;
+                wrap.href = item.url;
+                if (cta) cta.textContent = item.cta;
+                if (img) { img.src = item.image; img.alt = item.title; }
+                wrap.hidden = false;
+                title.style.opacity = '1';
+                if (cta) cta.style.opacity = '1';
+                if (img) img.style.opacity = '1';
+                idx += 1;
+            }, 400);
+        };
+        show();
+        setInterval(show, QUOTE_INTERVAL_MS);
+    };
+
     // --- Init ---
     const init = async () => {
         userLanguage = 'en';
@@ -708,6 +845,9 @@ document.addEventListener('DOMContentLoaded', () => {
             );
         } else {
             renderSuggestions();
+            initQuotes();
+            initPosts();
+            initTryit();
         }
 
         userInput.focus();

@@ -108,14 +108,13 @@
   --shadow-card: none;
 }
 
-/* Original logo mark desaturated to the monochrome palette so the blue tile
-   reads as neutral ink alongside the paper/ink UI. Slight contrast bump keeps
-   the tile deep and the letterforms crisp. Applies to the header, welcome,
-   typing, and per-message bot avatars in both light and dark. */
-.brand-mark,
-.welcome-avatar,
-.typing-avatar,
-.msg-avatar img { filter: grayscale(1) contrast(1.15); }
+/* Logo mark (concept 3) is ink-on-paper to match the design. Invert it in dark
+   mode so it stays legible (paper tile, ink Ji), mirroring the accent inversion.
+   Applies to the header, welcome, typing, and per-message bot avatars. */
+.dark-mode .brand-mark,
+.dark-mode .welcome-avatar,
+.dark-mode .typing-avatar,
+.dark-mode .msg-avatar img { filter: invert(1); }
 
 /* --- Reset --- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1116,17 +1115,91 @@ html.minimal .dark-mode .typing-dots {
   html:not(.minimal) .chat-rail {
     display: flex;
     flex-direction: column;
-    gap: 32px;
+    gap: 0;
     height: 100%;
     overflow-y: auto;
-    padding: 28px 24px;
+    padding: 24px;
     background: var(--bg-primary);
   }
   html:not(.minimal) .chat-rail--left { border-right: 1px solid var(--border); }
   html:not(.minimal) .chat-rail--right { border-left: 1px solid var(--border); }
 
-  /* On desktop the suggestions live in the left rail, not the welcome card. */
-  html:not(.minimal) #welcome-screen .suggestions-grid { display: none; }
+  /* Three equal thirds per rail: content vertically centered in each, with the
+     two dividers landing on the 1/3 and 2/3 lines. */
+  html:not(.minimal) .chat-rail .rail-section {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 0;
+  }
+  html:not(.minimal) .chat-rail .rail-divider { flex: 0 0 auto; margin: 0; }
+
+  /* The example questions stay in the center welcome card on all viewports;
+     the rotating quotes live only in the rails, never the central column. */
+}
+
+.rail-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 4px 0;
+}
+
+.rail-quote-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  transition: opacity 400ms ease;
+}
+
+.rail-quote-text::before { content: "\201C"; }
+.rail-quote-text::after { content: "\201D"; }
+
+.rail-quote-cap {
+  margin-top: 10px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+/* Rotating writing CTA (left rail) */
+.rail-post { display: block; text-decoration: none; }
+
+.rail-post-title {
+  display: block;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  transition: opacity 400ms ease, color var(--transition);
+}
+
+.rail-post-cta {
+  display: inline-block;
+  margin-top: 10px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.rail-post:hover .rail-post-title { color: var(--text-primary); }
+.rail-post:hover .rail-post-cta { color: var(--accent-hover); }
+
+/* Illustration for the rotating Try it CTA (remote images, contained). */
+.rail-tryit-img {
+  display: block;
+  width: 100%;
+  height: 120px;
+  object-fit: contain;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 8px;
+  margin-bottom: 12px;
+  transition: opacity 400ms ease;
 }
 
 .rail-eyebrow {
@@ -1143,6 +1216,9 @@ html.minimal .dark-mode .typing-dots {
   line-height: 1.6;
   color: var(--text-secondary);
 }
+
+.rail-note strong { color: var(--text-primary); font-weight: 600; }
+.rail-note + .rail-note { margin-top: 18px; }
 
 .rail-suggestions {
   list-style: none;
