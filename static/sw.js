@@ -67,21 +67,24 @@ self.addEventListener('fetch', (event) => {
 
   // Never intercept API / feedback / SSE: streaming and POSTs must hit network.
   if (BYPASS_PREFIXES.some((p) => url.pathname.startsWith(p))) return;
-  if ((req.headers.get('accept') || '').includes('text/event-stream')) return;
+  if ((req.headers.get('accept') || '').toLowerCase().includes('text/event-stream')) return;
 
   // Navigations: network-first, fall back to cached shell then offline page.
+  // cache:'no-cache' forces a conditional revalidation so a new Cloud Run
+  // revision's HTML is never served stale from the browser HTTP cache.
   if (req.mode === 'navigate') {
     event.respondWith(
-      fetch(req).catch(() =>
+      fetch(req, { cache: 'no-cache' }).catch(() =>
         caches.match(req).then((cached) => cached || caches.match('/static/offline.html'))
       )
     );
     return;
   }
 
-  // Static assets: network-first, refresh the versioned cache, fall back to it.
+  // Static assets: network-first (revalidated), refresh the versioned cache,
+  // fall back to it offline.
   event.respondWith(
-    fetch(req)
+    fetch(req, { cache: 'no-cache' })
       .then((res) => {
         if (res && res.status === 200 && res.type === 'basic') {
           const copy = res.clone();
