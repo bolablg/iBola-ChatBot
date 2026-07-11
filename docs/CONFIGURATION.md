@@ -3,8 +3,8 @@
 ## Overview
 
 The project supports two configuration approaches:
-- **`app/settings.py`** — Modern, type-safe configuration via `pydantic-settings` (recommended)
-- **`config.py`** — Legacy flat configuration (backward compatible)
+- **`app/settings.py`**: Modern, type-safe configuration via `pydantic-settings` (recommended)
+- **`config.py`**: Legacy flat configuration (backward compatible)
 
 Both load from `.env` files and environment variables.
 
@@ -20,11 +20,11 @@ Both load from `.env` files and environment variables.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `GCP_PROJECT_ID` | — | Google Cloud project ID |
+| `GCP_PROJECT_ID` | - | Google Cloud project ID |
 | `GCP_SA_CREDENTIALS_PATH` | `_conf/ibola_agent_sa.json` | Service account key path |
-| `GCHAT_WEBHOOK_URL` | — | Google Chat webhook for alerts |
-| `REDIRECT_LOG_SHEET_ID` | — | Google Sheets ID for redirect logging |
-| `GOOGLE_OAUTH_CREDENTIALS_PATH` | — | OAuth credentials path |
+| `GCHAT_WEBHOOK_URL` | - | Google Chat webhook for alerts |
+| `REDIRECT_LOG_SHEET_ID` | - | Google Sheets ID for redirect logging |
+| `GOOGLE_OAUTH_CREDENTIALS_PATH` | - | OAuth credentials path |
 
 ### Server
 
@@ -46,7 +46,7 @@ Both load from `.env` files and environment variables.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `LLM_MODEL_NAME` | `gemini-2.5-pro` | Model name |
+| `LLM_MODEL_NAME` | `gemini-2.5-flash` | Model name |
 | `LLM_GUARDRAIL_TEMPERATURE` | `0.0` | Temperature for guardrail scoring |
 | `LLM_GRADING_TEMPERATURE` | `0.0` | Temperature for document grading |
 | `LLM_REWRITE_TEMPERATURE` | `0.3` | Temperature for query rewriting |
@@ -59,7 +59,9 @@ Both load from `.env` files and environment variables.
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `SEARCH_USE_HYBRID` | `true` | Enable BM25 alongside vector search |
-| `SEARCH_USE_RERANKER` | `true` | Enable cross-encoder reranking |
+| `SEARCH_USE_RERANKER` | `true` | Allow cross-encoder reranking in the search pipeline |
+| `SEARCH_RERANKER_MODEL` | `BAAI/bge-reranker-v2-m3` | Reranker model (multilingual) |
+| `ENABLE_CROSS_ENCODER_RERANKER` | `false` | Load the cross-encoder at startup (off by default: adds startup latency) |
 | `SEARCH_RRF_RANK_CONSTANT` | `60` | RRF fusion constant |
 | `SEARCH_VECTOR_TOP_K` | `8` | Results to return |
 
@@ -68,9 +70,9 @@ Both load from `.env` files and environment variables.
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `LANGFUSE_ENABLED` | `false` | Enable Langfuse tracing |
-| `LANGFUSE_PUBLIC_KEY` | — | Langfuse public key |
-| `LANGFUSE_SECRET_KEY` | — | Langfuse secret key |
-| `LANGFUSE_HOST` | `https://cloud.langfuse.com` | Langfuse server URL |
+| `LANGFUSE_PUBLIC_KEY` | - | Langfuse public key |
+| `LANGFUSE_SECRET_KEY` | - | Langfuse secret key |
+| `LANGFUSE_HOST` | `https://cloud.langfuse.com` | Langfuse server URL (also accepts the `LANGFUSE_BASE_URL` alias) |
 
 ### Cache
 
@@ -78,7 +80,7 @@ Both load from `.env` files and environment variables.
 |----------|---------|-------------|
 | `CACHE_RESPONSE_TTL` | `1800` | Response cache TTL in seconds |
 | `CACHE_SESSION_TTL` | `3600` | Session cache TTL |
-| `CACHE_REDIS_URL` | — | Redis URL (falls back to in-memory) |
+| `CACHE_REDIS_URL` | - | Redis URL (falls back to in-memory) |
 
 ## Configuration Hierarchy
 
