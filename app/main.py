@@ -27,6 +27,27 @@ app_logger = get_logger("main")
 # Replace default logging with our service
 logger = app_logger
 
+
+def _read_version() -> str:
+    """Read the release version from the project-root VERSION file.
+
+    Single source of truth: the same file drives git tags on deploy, so the
+    API version and /health never drift from the released tag. Falls back to
+    the LLM_APP_VERSION env or "unknown" if the file is absent (e.g. a slim
+    container that omitted it)."""
+    version_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "VERSION")
+    try:
+        with open(version_path, encoding="utf-8") as fh:
+            version = fh.read().strip()
+            if version:
+                return version
+    except OSError:
+        pass
+    return os.getenv("APP_VERSION", "unknown")
+
+
+APP_VERSION = _read_version()
+
 app = FastAPI(
     title="iBola Multi-Agent Chatbot API",
     description="""
@@ -46,7 +67,7 @@ app = FastAPI(
     - **Learning Agent**: Advice on skill development
     - **Redirect Agent**: Polite handling of off-topic questions
     """,
-    version="2.0.0",
+    version=APP_VERSION,
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
@@ -622,7 +643,7 @@ async def health_check():
         health_data = {
             "status": "healthy",
             "timestamp": datetime.now().isoformat(),
-            "version": "2.0.0",
+            "version": APP_VERSION,
             "system": {
                 "memory_usage": f"{memory.percent:.1f}%",
                 "cpu_usage": f"{cpu_percent:.1f}%",
