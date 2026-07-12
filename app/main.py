@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, validator
 
@@ -393,8 +393,54 @@ class ErrorResponse(BaseModel):
     timestamp: str = Field(..., description="Error timestamp")
 
 
+# --- Share-tag (Open Graph) localization -------------------------------------
+# English is the default document. French share tags are served only when a
+# locale-aware client asks for them: Facebook's crawler appends ?fb_locale=fr_FR
+# (the locale declared by og:locale:alternate), and manual/testing links can use
+# ?hl=fr / ?lang=fr. LinkedIn does not negotiate locale, so it always gets the
+# English default. Keying off query params (not Accept-Language) keeps the shell
+# cache-safe: no Vary header needed.
+_OG_EN_TITLE = "Chat with iBola · Bolaji BALOGOUN's AI assistant"
+_OG_FR_TITLE = "Discutez avec iBola · l’assistant IA de Bolaji BALOGOUN"
+_OG_EN_DESC = (
+    "Bolaji BALOGOUN's AI assistant. Ask about his experience, skills, "
+    "projects, and availability; answers are grounded in his professional profile."
+)
+_OG_FR_DESC = (
+    "L’assistant IA de Bolaji BALOGOUN. Posez-lui vos questions sur son "
+    "expérience, ses compétences, ses projets et sa disponibilité ; les "
+    "réponses s’appuient sur son profil professionnel."
+)
+
+
+def _wants_french(request: Request) -> bool:
+    """True when a query param (fb_locale/hl/lang/locale) requests French."""
+    for key in ("fb_locale", "hl", "lang", "locale"):
+        val = request.query_params.get(key)
+        if val and val.lower().startswith("fr"):
+            return True
+    return False
+
+
+def _french_index_html() -> str:
+    """index.html with the share tags swapped to French (og:locale flipped)."""
+    with open("static/index.html", encoding="utf-8") as fh:
+        html = fh.read()
+    html = html.replace(_OG_EN_TITLE, _OG_FR_TITLE)
+    html = html.replace(_OG_EN_DESC, _OG_FR_DESC)
+    html = html.replace(
+        '<meta property="og:locale" content="en_US">',
+        '<meta property="og:locale" content="fr_FR">',
+    )
+    html = html.replace(
+        '<meta property="og:locale:alternate" content="fr_FR">',
+        '<meta property="og:locale:alternate" content="en_US">',
+    )
+    return html
+
+
 @app.get("/", tags=["App"])
-def read_root():
+def read_root(request: Request):
     # Set Content-Security-Policy to allow embedding in iframes on specified domains.
     # This is a more modern and flexible alternative to X-Frame-Options.
     # Note on secure cookies for iframes:
@@ -411,6 +457,8 @@ def read_root():
         # without a hard refresh (PART 8.3 PWA freshness).
         "Cache-Control": "no-cache",
     }
+    if _wants_french(request):
+        return HTMLResponse(_french_index_html(), headers=headers)
     return FileResponse("static/index.html", headers=headers)
 
 

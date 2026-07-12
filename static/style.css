@@ -132,11 +132,21 @@
 /* --- Reset --- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+html, body {
+  height: 100%;
+}
+
 body {
   font-family: var(--font-ui);
   background: var(--bg-primary);
   color: var(--text-primary);
+  /* Lock the body to the *dynamic* viewport so it never grows past the
+     visible area on iOS Safari (100vh = the taller layout viewport, which
+     pushes the fixed header up under the notch when the page scrolls). The
+     chat-main scrolls internally, so the page itself must not scroll. */
   min-height: 100vh;
+  min-height: 100dvh;
+  overflow: hidden;
   transition: background var(--transition), color var(--transition);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -155,8 +165,12 @@ body {
 
 /* --- Header --- */
 .chat-header {
-  height: 52px;
-  padding: 0 16px;
+  min-height: 52px;
+  /* Push below the notch/status bar and clear the rounded corners; without
+     the top inset the brand and welcome avatar collide with the status bar. */
+  padding-top: env(safe-area-inset-top);
+  padding-right: calc(16px + env(safe-area-inset-right));
+  padding-left: calc(16px + env(safe-area-inset-left));
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -247,6 +261,9 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  /* Fill the scrollable main so justify-content actually centers the welcome
+     card vertically instead of pinning it to the top with dead space below. */
+  min-height: 100%;
   padding: 80px 24px 40px;
   text-align: center;
   max-width: var(--content-width);
@@ -687,7 +704,7 @@ body {
 
 /* --- Input Area --- */
 .chat-input-area {
-  padding: 12px 16px 20px;
+  padding: 12px calc(16px + env(safe-area-inset-right)) 20px calc(16px + env(safe-area-inset-left));
   background: var(--bg-primary);
   transition: background var(--transition);
   flex-shrink: 0;
@@ -769,10 +786,12 @@ body {
   stroke-linejoin: round;
 }
 
-/* --- Powered-by --- */
+/* --- Powered-by (footer) --- */
 .powered-by {
   text-align: center;
-  padding: 8px 0 0;
+  margin-top: 14px;
+  padding: 12px 0 0;
+  border-top: 1px solid var(--border);
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--text-secondary);
@@ -873,6 +892,7 @@ html.minimal body { display: block; padding: 0; margin: 0; }
 html.minimal .chat-app {
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   border-radius: 0;
 }
 
