@@ -85,6 +85,13 @@ Problem: Business and operational teams alongside some external partners across 
 Solution: Architected and led development of the Data Hub web app: data exploration environments, data-driven applications, AI-powered tools, operational workflows, and self-service analytics modules. Modeled the micro-services database and platform authentication. Built role-based access governance with 3 access tiers (user, service_admin, platform_admin) crossed with 3 team roles (viewer, worker, manager), supporting over 650 people (internal employees, field agents, and external partners) collaborating across Benin, Togo, Gabon, Cameroon, and Congo. Onboarded 2 engineers who shipped 2 additional self-service apps onto the platform.
 Tools: Python · BigQuery · Google Cloud Storage · Cloud Functions · AWS EC2 · Docker · RBAC · Claude Code
 
+#### AI-ready metrics layer & data-warehouse MCP
+
+Result: KPI reporting decentralized to business users, removing the data team as the reporting bottleneck; the daily manual checks once needed to confirm generated numbers have nearly disappeared, since AI now produces them grounded and hallucination-free.
+Problem: LLM and agentic tools querying the warehouse produced inconsistent or hallucinated KPIs because metric definitions, table sources, and transformation logic were not machine-validated or exposed in a grounded way.
+Solution: Built a semantic metrics layer defining validated metrics with their table sources, transformation logic, and canonical queries, exposed through a data-warehouse MCP server, so AI agents generate KPI reports strictly from the layer instead of free-form SQL. Business users self-serve KPI reports with grounding that removes hallucination and the recurring daily verification the data team once owned.
+Tools: BigQuery · MCP · Python · Gemini · Claude · Dataform · Metrics/semantic layer
+
 #### Automated invoice data extraction
 
 Result: ~40 hours saved per financing manager per month across thousands of invoices.
