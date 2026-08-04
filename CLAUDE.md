@@ -73,7 +73,16 @@ At minimum, run `bash scripts/check.sh` for a quick pre-commit check (skips test
 
 ## Commands
 
+**Environment:** the project venv is `_chatbot_env` (Python 3.12). Activate it
+before running anything: `source _chatbot_env/bin/activate`. The system `python`/
+`uvicorn` (Homebrew 3.14) lacks the project deps and is incompatible with
+Pydantic V1, so it fails at import. Startup takes ~35s (model/index init) before
+the port opens.
+
 ```bash
+# Activate the venv first (all commands below assume it is active)
+source _chatbot_env/bin/activate
+
 # Run locally
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
