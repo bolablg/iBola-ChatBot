@@ -25,7 +25,7 @@ PROMPT_VERSIONS = {
     "condense": "1.1",
     "batch_grade": "2.0",
     "rewrite": "2.1",
-    "generate_professional": "3.1",
+    "generate_professional": "3.2",
     "generate_education": "3.1",
     "generate_learning": "3.1",
     "verify_grounding": "2.0",
@@ -217,7 +217,10 @@ _EQUIVALENCE_RULE = (
 
 _MULTIPART_RULE = (
     "MULTI-PART QUESTIONS: if the question has several parts, split it into "
-    "clear parts and answer each briefly.\n"
+    "clear parts and answer each briefly. When a question asks for a scope, "
+    "breakdown, or multiple metrics, include every requested number, title, "
+    "date, and category supported by what you know; do not omit a requested "
+    "dimension just to keep the answer short.\n"
 )
 
 GENERATE_SYSTEM_PROMPTS = {

@@ -419,9 +419,25 @@ jobs:
         run: |
           PROD_URL=$(gcloud run services describe ibola-chatbot \
             --region us-central1 --format 'value(status.url)')
+          echo "Warming production..."
+          for i in 1 2 3; do
+            curl -s -o /dev/null -m 90 "$PROD_URL/health" || true
+            curl -s -o /dev/null -m 90 -X POST "$PROD_URL/ask-agentic" \
+              -H 'Content-Type: application/json' \
+              -d '{"user_input":"What is Bolaji latest role?","session_id":"weekly-warmup","user_language":"en"}' || true
+          done
           python scripts/run_eval.py --tags smoke --base-url "$PROD_URL" --concurrency 4
           REPORT=$(ls -t local/eval_reports/*.json | head -1)
           python scripts/eval_gate.py --report "$REPORT" --strict
+
+      - name: Upload production smoke eval report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-smoke-eval-${{ github.run_id }}
+          path: local/eval_reports/
+          retention-days: 30
+          if-no-files-found: warn
 
       - name: Alert on failure
         if: failure()
