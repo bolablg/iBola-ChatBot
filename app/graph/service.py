@@ -228,6 +228,18 @@ class AgenticRAGService:
                 )
 
         evidence = self._build_evidence(final_state)
+        workflow_errors = []
+        for step in final_state.get("reasoning_steps", []):
+            if isinstance(step, dict):
+                action = step.get("action", "")
+                node = step.get("node", "unknown")
+                detail = step.get("detail", "")
+            else:
+                action = getattr(step, "action", "")
+                node = getattr(step, "node", "unknown")
+                detail = getattr(step, "detail", "")
+            if action in {"error", "fallback"}:
+                workflow_errors.append(f"{node}: {detail}"[:200])
         trace_id = self._record_trace(
             session_id=session_id,
             user_input=user_input,
@@ -253,6 +265,7 @@ class AgenticRAGService:
             # rail. Deduplicated by section, linkable to bolablg.com.
             "answer_sources": build_answer_sources(evidence),
             "unsupported_claims": final_state.get("unsupported_claims", []),
+            "workflow_errors": workflow_errors,
             "trace_id": trace_id,
         }
 

@@ -249,6 +249,28 @@ class Judge:
         } | {"rationale": str(data.get("rationale", ""))[:300]}
 
 
+def _extract_workflow_error(result):
+    """Return a concise service-side error for the eval report, if present."""
+    for key in ("error", "workflow_error"):
+        if result.get(key):
+            return str(result[key])[:200]
+
+    workflow_errors = result.get("workflow_errors") or []
+    if workflow_errors:
+        return "; ".join(str(error) for error in workflow_errors)[:200]
+
+    # Keep this compatible with older deployments that do not expose the
+    # workflow diagnostic field yet.
+    answer = result.get("answer", "")
+    if answer.startswith("I'm having trouble generating a response right now."):
+        return "generate: fallback response"
+    if answer.startswith("I'm experiencing technical difficulties."):
+        return "service: error response"
+    if answer.startswith("I'm taking longer than expected to answer right now."):
+        return "service: process timeout"
+    return None
+
+
 def run_one(target, judge, row):
     start = time.time()
     try:
@@ -257,7 +279,7 @@ def run_one(target, judge, row):
             lang=row.get("lang", "en"),
             history=row.get("history"),
         )
-        error = None
+        error = _extract_workflow_error(result)
     except Exception as exc:
         result = {"answer": "", "evidence": []}
         error = str(exc)[:200]
@@ -488,7 +510,20 @@ def main():
     if failures:
         print(f"\nFact-check failures ({len(failures)}):")
         for r in failures:
-            print(f"  {r['id']}: {r['fact_failures']} -> {r['answer'][:120]!r}")
+            detail = r["fact_failures"] or ["answer did not pass fact checks"]
+            print(f"  {r['id']}: {detail} -> {r['answer'][:120]!r}")
+
+    errors = [r for r in results if r["error"]]
+    if errors:
+        print(f"\nWorkflow errors ({len(errors)}):")
+        for r in errors:
+            print(f"  {r['id']}: {r['error']}")
+
+    judge_errors = [r for r in results if r["judge_error"]]
+    if judge_errors:
+        print(f"\nJudge errors ({len(judge_errors)}):")
+        for r in judge_errors:
+            print(f"  {r['id']}: {r['judge_error']}")
 
     if args.accept:
         # Per-tag baselines (PART 5 C1): a smoke-subset run must never
