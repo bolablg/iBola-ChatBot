@@ -1,5 +1,6 @@
-"""Regression tests for provider retries and evaluation diagnostics."""
+"""Regression tests for provider retries, cache fallback, and eval diagnostics."""
 
+import asyncio
 from unittest.mock import Mock, patch
 
 import pytest
@@ -35,6 +36,19 @@ def test_eval_surfaces_workflow_diagnostics():
     result = {"workflow_errors": ["generate: provider unavailable"]}
 
     assert _extract_workflow_error(result) == "generate: provider unavailable"
+
+
+def test_cache_service_without_cachetools_is_safe():
+    from app.services.cache_service import CacheService
+
+    with patch("app.services.cache_service.CACHE_AVAILABLE", False):
+        service = CacheService()
+
+    assert (
+        asyncio.run(service.get_localized_content("welcome:en-US", "welcome")) is None
+    )
+    assert service.get_cache_stats()["status"] == "disabled"
+    service.clear_all_caches()
 
 
 def test_professional_prompt_requires_complete_multipart_answers():
