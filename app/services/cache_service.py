@@ -32,6 +32,8 @@ class CacheService:
             print("Cache service disabled - cachetools not available")
             self.response_cache = None
             self.session_cache = None
+            self.agent_cache = None
+            self.language_cache = None
             return
 
         # Response cache: stores processed responses
