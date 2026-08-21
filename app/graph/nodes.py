@@ -9,6 +9,7 @@ Every node wraps its logic in try/except with graceful fallbacks.
 from __future__ import annotations
 
 import logging
+import time
 from typing import Any, Dict, List
 
 from langchain_core.documents import Document
@@ -69,6 +70,52 @@ _LLM_MAX_RETRIES = 1
 _LLM_MAX_OUTPUT_TOKENS = 750
 
 
+def _is_transient_llm_error(exc: Exception) -> bool:
+    """Return whether a Gemini failure is safe to retry once."""
+    status = str(getattr(exc, "status_code", getattr(exc, "code", ""))).lower()
+    if status in {"429", "503"}:
+        return True
+
+    message = str(exc).lower()
+    return any(
+        marker in message
+        for marker in (
+            "429",
+            "503",
+            "resource exhausted",
+            "resource_exhausted",
+            "rate limit",
+            "too many requests",
+            "service unavailable",
+            "temporarily unavailable",
+            "unavailable",
+            "high demand",
+        )
+    )
+
+
+def _invoke_with_retry(call, operation: str):
+    """Invoke a Gemini call with bounded retries for transient failures."""
+    for attempt in range(_LLM_MAX_RETRIES + 1):
+        try:
+            return call()
+        except Exception as exc:
+            final_attempt = attempt >= _LLM_MAX_RETRIES
+            if final_attempt or not _is_transient_llm_error(exc):
+                raise
+
+            delay = 0.5 * (2**attempt)
+            logger.warning(
+                "Transient Gemini %s failure (attempt %d/%d): %s; " "retrying in %.1fs",
+                operation,
+                attempt + 1,
+                _LLM_MAX_RETRIES + 1,
+                exc,
+                delay,
+            )
+            time.sleep(delay)
+
+
 class _SyncGeminiLLM:
     """Minimal sync Gemini wrapper compatible with LangChain prompt templates.
 
@@ -105,14 +152,17 @@ class _SyncGeminiLLM:
                 parts.append(msg)
         prompt = "\n\n".join(parts)
 
-        response = self._client.models.generate_content(
-            model=self._model,
-            contents=prompt,
-            config={
-                "temperature": self._temperature,
-                "max_output_tokens": self._max_output_tokens,
-                "thinking_config": {"thinking_budget": self._thinking_budget},
-            },
+        response = _invoke_with_retry(
+            lambda: self._client.models.generate_content(
+                model=self._model,
+                contents=prompt,
+                config={
+                    "temperature": self._temperature,
+                    "max_output_tokens": self._max_output_tokens,
+                    "thinking_config": {"thinking_budget": self._thinking_budget},
+                },
+            ),
+            "text generation",
         )
         return AIMessage(content=response.text or "")
 
@@ -142,18 +192,21 @@ class _StructuredOutput:
                 parts.append(msg)
         prompt = "\n\n".join(parts)
 
-        response = self._llm._client.models.generate_content(
-            model=self._llm._model,
-            contents=prompt,
-            config=genai.types.GenerateContentConfig(
-                response_mime_type="application/json",
-                response_schema=self._schema,
-                temperature=self._llm._temperature,
-                max_output_tokens=self._llm._max_output_tokens,
-                thinking_config=genai.types.ThinkingConfig(
-                    thinking_budget=self._llm._thinking_budget
+        response = _invoke_with_retry(
+            lambda: self._llm._client.models.generate_content(
+                model=self._llm._model,
+                contents=prompt,
+                config=genai.types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=self._schema,
+                    temperature=self._llm._temperature,
+                    max_output_tokens=self._llm._max_output_tokens,
+                    thinking_config=genai.types.ThinkingConfig(
+                        thinking_budget=self._llm._thinking_budget
+                    ),
                 ),
             ),
+            "structured generation",
         )
         data = _json.loads(response.text)
         return self._schema(**data)
@@ -1016,6 +1069,9 @@ def generate_node(state: dict) -> dict:
 
     except Exception as exc:
         logger.error("Generate node error: %s", exc)
+        steps.append(
+            ReasoningStep(node="generate", action="error", detail=str(exc)[:80])
+        )
         answer = (
             "I'm having trouble generating a response right now. "
             "Please try again, or reach out to Bolaji at hello@bolablg.com."
