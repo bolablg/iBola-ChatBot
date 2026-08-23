@@ -68,6 +68,7 @@ _lock = __import__("threading").Lock()
 _LLM_TIMEOUT_SECONDS = 15.0
 _LLM_MAX_RETRIES = 1
 _LLM_MAX_OUTPUT_TOKENS = 750
+_STRUCTURED_OUTPUT_RECOVERY_RETRIES = 1
 
 
 def _is_transient_llm_error(exc: Exception) -> bool:
@@ -192,24 +193,53 @@ class _StructuredOutput:
                 parts.append(msg)
         prompt = "\n\n".join(parts)
 
-        response = _invoke_with_retry(
-            lambda: self._llm._client.models.generate_content(
-                model=self._llm._model,
-                contents=prompt,
-                config=genai.types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    response_schema=self._schema,
-                    temperature=self._llm._temperature,
-                    max_output_tokens=self._llm._max_output_tokens,
-                    thinking_config=genai.types.ThinkingConfig(
-                        thinking_budget=self._llm._thinking_budget
+        def generate():
+            return _invoke_with_retry(
+                lambda: self._llm._client.models.generate_content(
+                    model=self._llm._model,
+                    contents=prompt,
+                    config=genai.types.GenerateContentConfig(
+                        response_mime_type="application/json",
+                        response_schema=self._schema,
+                        temperature=self._llm._temperature,
+                        max_output_tokens=self._llm._max_output_tokens,
+                        thinking_config=genai.types.ThinkingConfig(
+                            thinking_budget=self._llm._thinking_budget
+                        ),
                     ),
                 ),
-            ),
-            "structured generation",
-        )
-        data = _json.loads(response.text)
-        return self._schema(**data)
+                "structured generation",
+            )
+
+        for attempt in range(_STRUCTURED_OUTPUT_RECOVERY_RETRIES + 1):
+            try:
+                response = generate()
+
+                # The Google GenAI SDK parses structured responses into the
+                # requested Pydantic model when it can. Prefer that result so
+                # a malformed or truncated text representation is not parsed
+                # a second time by the application.
+                parsed = getattr(response, "parsed", None)
+                if isinstance(parsed, self._schema):
+                    return parsed
+                if isinstance(parsed, dict):
+                    return self._schema(**parsed)
+                if hasattr(parsed, "model_dump"):
+                    return self._schema(**parsed.model_dump())
+
+                data = _json.loads(getattr(response, "text", None))
+                return self._schema(**data)
+            except (TypeError, ValueError) as exc:
+                if attempt >= _STRUCTURED_OUTPUT_RECOVERY_RETRIES:
+                    raise
+
+                logger.warning(
+                    "Gemini structured output parse failed (attempt %d/%d): %s; "
+                    "retrying",
+                    attempt + 1,
+                    _STRUCTURED_OUTPUT_RECOVERY_RETRIES + 1,
+                    exc,
+                )
 
 
 def _get_llm(temperature: float = 0.0, thinking_budget: int = 0):
