@@ -1,13 +1,14 @@
 """Regression tests for provider retries, cache fallback, and eval diagnostics."""
 
 import asyncio
+from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 import pytest
 
-from app.graph.nodes import _invoke_with_retry
+from app.graph.nodes import _invoke_with_retry, _StructuredOutput
 from app.graph.prompts import GENERATE_SYSTEM_PROMPTS, PROMPT_VERSIONS
-from app.graph.state import AgentCategory
+from app.graph.state import AgentCategory, GeneratedAnswer
 from scripts.run_eval import _extract_workflow_error
 
 
@@ -30,6 +31,65 @@ def test_non_transient_gemini_failure_is_not_retried():
 
     assert call.call_count == 1
     sleep.assert_not_called()
+
+
+def test_structured_output_recovers_from_truncated_json():
+    class FakeModels:
+        def __init__(self):
+            self.responses = [
+                SimpleNamespace(text='{"answer":"Bolaji was Data Director'),
+                SimpleNamespace(
+                    text='{"answer":"Bolaji was Data Director at Gozem.",'
+                    '"confidence":0.9}'
+                ),
+            ]
+            self.calls = 0
+
+        def generate_content(self, **_kwargs):
+            self.calls += 1
+            return self.responses.pop(0)
+
+    models = FakeModels()
+    llm = SimpleNamespace(
+        _client=SimpleNamespace(models=models),
+        _model="test-model",
+        _temperature=0.0,
+        _max_output_tokens=750,
+        _thinking_budget=0,
+    )
+
+    result = _StructuredOutput(llm, GeneratedAnswer).invoke(["Return JSON"])
+
+    assert result == GeneratedAnswer(
+        answer="Bolaji was Data Director at Gozem.", confidence=0.9
+    )
+    assert models.calls == 2
+
+
+def test_structured_output_prefers_sdk_parsed_model():
+    parsed = GeneratedAnswer(answer="Parsed by the SDK", confidence=0.9)
+
+    class FakeModels:
+        def __init__(self):
+            self.calls = 0
+
+        def generate_content(self, **_kwargs):
+            self.calls += 1
+            return SimpleNamespace(text='{"answer":"truncated', parsed=parsed)
+
+    models = FakeModels()
+    llm = SimpleNamespace(
+        _client=SimpleNamespace(models=models),
+        _model="test-model",
+        _temperature=0.0,
+        _max_output_tokens=750,
+        _thinking_budget=0,
+    )
+
+    result = _StructuredOutput(llm, GeneratedAnswer).invoke(["Return JSON"])
+
+    assert result is parsed
+    assert models.calls == 1
 
 
 def test_eval_surfaces_workflow_diagnostics():
