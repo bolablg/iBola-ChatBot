@@ -1,4 +1,5 @@
-# Development and testing dependencies
+# Development and testing dependency inputs. The generated
+# requirements-dev.lock includes runtime and development dependencies.
 
 # Testing
 pytest==7.4.0
@@ -18,6 +19,11 @@ locust==2.15.1
 
 # Development Tools
 pre-commit==3.4.0
+
+# Security tooling used by CI
+pip-audit==2.10.1
+bandit==1.9.4
+safety==3.8.1
 
 # Documentation
 mkdocs==1.5.2

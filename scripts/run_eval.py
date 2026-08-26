@@ -271,6 +271,14 @@ def _extract_workflow_error(result):
     return None
 
 
+def _extract_workflow_warning(result):
+    """Return a concise non-fatal service warning for the eval report."""
+    warnings = result.get("workflow_warnings") or []
+    if warnings:
+        return "; ".join(str(warning) for warning in warnings)[:200]
+    return None
+
+
 def run_one(target, judge, row):
     start = time.time()
     try:
@@ -280,9 +288,11 @@ def run_one(target, judge, row):
             history=row.get("history"),
         )
         error = _extract_workflow_error(result)
+        warning = _extract_workflow_warning(result)
     except Exception as exc:
         result = {"answer": "", "evidence": []}
         error = str(exc)[:200]
+        warning = None
     latency = time.time() - start
 
     answer = result.get("answer", "")
@@ -317,6 +327,7 @@ def run_one(target, judge, row):
         "fact_failures": fact_failures,
         "scores": scores,
         "error": error,
+        "warning": warning,
         "judge_error": judge_error,
         "chars_in": len(row["question"]) + len(context),
         "chars_out": len(answer),
@@ -377,6 +388,7 @@ def aggregate(results):
     agg = {
         "n": len(results),
         "errors": sum(1 for r in results if r["error"]),
+        "warnings": sum(1 for r in results if r.get("warning")),
         "canonical_fact_accuracy": (
             round(sum(r["fact_pass"] for r in fact_rows) / len(fact_rows), 4)
             if fact_rows
@@ -453,7 +465,12 @@ def main():
         for i, future in enumerate(concurrent.futures.as_completed(futures), 1):
             result = future.result()
             results.append(result)
-            status = "OK " if result["fact_pass"] and not result["error"] else "FAIL"
+            if result["error"] or not result["fact_pass"]:
+                status = "FAIL"
+            elif result.get("warning"):
+                status = "WARN"
+            else:
+                status = "OK "
             print(
                 f"  [{i}/{len(rows)}] {status} {result['id']} "
                 f"({result['latency_s']}s)"
@@ -494,6 +511,7 @@ def main():
     for key in (
         "n",
         "errors",
+        "warnings",
         "canonical_fact_accuracy",
         "relevance",
         "accuracy",
@@ -518,6 +536,12 @@ def main():
         print(f"\nWorkflow errors ({len(errors)}):")
         for r in errors:
             print(f"  {r['id']}: {r['error']}")
+
+    warnings = [r for r in results if r.get("warning")]
+    if warnings:
+        print(f"\nWorkflow warnings ({len(warnings)}):")
+        for r in warnings:
+            print(f"  {r['id']}: {r['warning']}")
 
     judge_errors = [r for r in results if r["judge_error"]]
     if judge_errors:
