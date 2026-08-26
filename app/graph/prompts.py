@@ -29,6 +29,7 @@ PROMPT_VERSIONS = {
     "generate_education": "3.1",
     "generate_learning": "3.1",
     "verify_grounding": "2.0",
+    "structured_output_recovery": "1.0",
     "out_of_scope": "2.0",
     "translate": "1.0",
 }
@@ -336,6 +337,15 @@ VERIFY_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
     ]
 )
 
+# Used only after a provider returns malformed structured output. Keeping this
+# instruction in the registry makes the recovery call traceable and prevents
+# prompt text from being scattered across graph nodes.
+STRUCTURED_OUTPUT_RECOVERY_PROMPT = (
+    "The previous structured response was invalid or incomplete. Return exactly "
+    "one complete JSON object that matches the requested schema. Do not return "
+    "markdown, commentary, or an unfinished string."
+)
+
 # ---------------------------------------------------------------------------
 # out_of_scope
 # ---------------------------------------------------------------------------
@@ -386,6 +396,7 @@ _ALL_PROMPTS = [
     BATCH_GRADE_PROMPT,
     REWRITE_PROMPT,
     VERIFY_GROUNDING_PROMPT,
+    STRUCTURED_OUTPUT_RECOVERY_PROMPT,
     OUT_OF_SCOPE_PROMPT,
     TRANSLATE_PROMPT,
     *GENERATE_SYSTEM_PROMPTS.values(),

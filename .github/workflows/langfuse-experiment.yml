@@ -40,14 +40,15 @@ jobs:
       - uses: actions/setup-python@v5
         if: env.LANGFUSE_PUBLIC_KEY != ''
         with:
-          python-version: '3.12'
+          python-version: '3.12.14'
           cache: pip
+          cache-dependency-path: requirements.lock
 
       - name: Install dependencies
         if: env.LANGFUSE_PUBLIC_KEY != ''
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          python -m pip install --upgrade "pip==26.2.1"
+          python -m pip install --require-hashes -r requirements.lock
 
       - name: Sync golden set into the Langfuse dataset
         if: env.LANGFUSE_PUBLIC_KEY != ''

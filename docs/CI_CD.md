@@ -41,6 +41,23 @@ Triggers on push to any branch **except** `main` and `staging`.
 
 Reports are uploaded as artifacts (30-day retention).
 
+## Dependency reproducibility
+
+`requirements.txt` and `requirements-dev.txt` are resolver inputs. CI and the
+Docker image install the generated `requirements.lock` and
+`requirements-dev.lock` files with hash checking. The lock files cover direct
+and transitive dependencies for Python 3.12 across supported platforms.
+
+Regenerate them deliberately with:
+
+```bash
+bash scripts/compile_requirements.sh
+```
+
+The Gemini client is pinned to the version used by the last passing scheduled
+evaluation. Dependency updates should regenerate both locks and pass the full
+CI pipeline before promotion.
+
 ### 4. `create-prod-pr` (After security passes)
 
 - Creates a PR from `staging` to `main`

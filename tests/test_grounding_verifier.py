@@ -91,6 +91,7 @@ class TestVerifyGroundingNode:
         # Original answer untouched, no crash
         assert "answer" not in result
         assert result["grounding_checked"] is False
+        assert result["reasoning_steps"][-1].action == "warning"
 
     def test_chat_history_reaches_generation(self):
         """The last turns of conversation history must be injected into the

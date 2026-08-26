@@ -23,6 +23,7 @@ from app.graph.prompts import (
     GUARDRAIL_PROMPT,
     OUT_OF_SCOPE_PROMPT,
     REWRITE_PROMPT,
+    STRUCTURED_OUTPUT_RECOVERY_PROMPT,
     TRANSLATE_PROMPT,
     VERIFY_GROUNDING_PROMPT,
     answer_echoes_prompt,
@@ -193,11 +194,11 @@ class _StructuredOutput:
                 parts.append(msg)
         prompt = "\n\n".join(parts)
 
-        def generate():
+        def generate(prompt_text):
             return _invoke_with_retry(
                 lambda: self._llm._client.models.generate_content(
                     model=self._llm._model,
-                    contents=prompt,
+                    contents=prompt_text,
                     config=genai.types.GenerateContentConfig(
                         response_mime_type="application/json",
                         response_schema=self._schema,
@@ -213,7 +214,10 @@ class _StructuredOutput:
 
         for attempt in range(_STRUCTURED_OUTPUT_RECOVERY_RETRIES + 1):
             try:
-                response = generate()
+                attempt_prompt = prompt
+                if attempt:
+                    attempt_prompt = f"{prompt}\n\n{STRUCTURED_OUTPUT_RECOVERY_PROMPT}"
+                response = generate(attempt_prompt)
 
                 # The Google GenAI SDK parses structured responses into the
                 # requested Pydantic model when it can. Prefer that result so
@@ -234,8 +238,9 @@ class _StructuredOutput:
                     raise
 
                 logger.warning(
-                    "Gemini structured output parse failed (attempt %d/%d): %s; "
-                    "retrying",
+                    "Gemini structured output parse failed for %s (attempt %d/%d): "
+                    "%s; retrying",
+                    self._schema.__name__,
                     attempt + 1,
                     _STRUCTURED_OUTPUT_RECOVERY_RETRIES + 1,
                     exc,
@@ -1193,7 +1198,11 @@ def verify_grounding_node(state: dict) -> dict:
     except Exception as exc:
         logger.warning("Grounding verifier error (pass-through): %s", exc)
         steps.append(
-            ReasoningStep(node="verify_grounding", action="error", detail=str(exc)[:80])
+            ReasoningStep(
+                node="verify_grounding",
+                action="warning",
+                detail="structured verifier unavailable",
+            )
         )
         return {
             "grounding_checked": False,
