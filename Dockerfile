@@ -1,6 +1,6 @@
 
-# Use an official Python runtime as a parent image
-FROM python:3.12-slim
+# Use a patch-pinned official Python runtime as a parent image.
+FROM python:3.12.14-slim-bookworm
 
 # Set the working directory in the container
 WORKDIR /app
@@ -9,9 +9,10 @@ WORKDIR /app
 RUN apt-get update && apt-get -y install --no-install-recommends cron && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Copy and install requirements first (Docker layer caching)
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy and install the hash-checked lock first (Docker layer caching)
+COPY requirements.lock .
+RUN python -m pip install --no-cache-dir --upgrade "pip==26.2.1" && \
+    python -m pip install --no-cache-dir --require-hashes -r requirements.lock
 
 # Copy the rest of the application
 COPY . .

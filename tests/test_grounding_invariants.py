@@ -214,6 +214,7 @@ class TestLegacyPathsRetired:
             "rewrite",
             "generate_professional",
             "verify_grounding",
+            "structured_output_recovery",
             "out_of_scope",
             "translate",
         ):

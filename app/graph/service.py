@@ -229,6 +229,7 @@ class AgenticRAGService:
 
         evidence = self._build_evidence(final_state)
         workflow_errors = []
+        workflow_warnings = []
         for step in final_state.get("reasoning_steps", []):
             if isinstance(step, dict):
                 action = step.get("action", "")
@@ -240,6 +241,8 @@ class AgenticRAGService:
                 detail = getattr(step, "detail", "")
             if action in {"error", "fallback"}:
                 workflow_errors.append(f"{node}: {detail}"[:200])
+            elif action == "warning":
+                workflow_warnings.append(f"{node}: {detail}"[:200])
         trace_id = self._record_trace(
             session_id=session_id,
             user_input=user_input,
@@ -266,6 +269,7 @@ class AgenticRAGService:
             "answer_sources": build_answer_sources(evidence),
             "unsupported_claims": final_state.get("unsupported_claims", []),
             "workflow_errors": workflow_errors,
+            "workflow_warnings": workflow_warnings,
             "trace_id": trace_id,
         }
 

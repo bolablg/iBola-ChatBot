@@ -41,14 +41,14 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.12.14'
           cache: pip
+          cache-dependency-path: requirements-dev.lock
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
+          python -m pip install --upgrade "pip==26.2.1"
+          python -m pip install --require-hashes -r requirements-dev.lock
 
       - name: Get changed Python files
         id: changed
@@ -131,14 +131,15 @@ jobs:
       - uses: actions/setup-python@v5
         if: env.GEMINI_API_KEY != ''
         with:
-          python-version: '3.12'
+          python-version: '3.12.14'
           cache: pip
+          cache-dependency-path: requirements.lock
 
       - name: Install dependencies
         if: env.GEMINI_API_KEY != ''
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          python -m pip install --upgrade "pip==26.2.1"
+          python -m pip install --require-hashes -r requirements.lock
 
       - name: Run golden-QA smoke eval
         if: env.GEMINI_API_KEY != ''
@@ -180,13 +181,14 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.12.14'
           cache: pip
+          cache-dependency-path: requirements.lock
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          python -m pip install --upgrade "pip==26.2.1"
+          python -m pip install --require-hashes -r requirements.lock
 
       - name: Run full golden-set eval
         env:
@@ -296,15 +298,14 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.12.14'
           cache: pip
+          cache-dependency-path: requirements-dev.lock
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
-          pip install pip-audit bandit safety
+          python -m pip install --upgrade "pip==26.2.1"
+          python -m pip install --require-hashes -r requirements-dev.lock
 
       # BLOCKING (PART 5 C6): new findings fail the pipeline; reviewed
       # exceptions live in .security-allowlist with review dates.
@@ -395,8 +396,9 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.12.14'
           cache: pip
+          cache-dependency-path: requirements.lock
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -410,8 +412,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          python -m pip install --upgrade "pip==26.2.1"
+          python -m pip install --require-hashes -r requirements.lock
 
       - name: Run smoke eval against production
         env:
@@ -468,6 +470,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.14'
+          cache: pip
+          cache-dependency-path: requirements.lock
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -536,8 +544,8 @@ jobs:
             echo "Could not resolve canary URL"; exit 1
           fi
           echo "Canary URL: $CANARY_URL"
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          python -m pip install --upgrade "pip==26.2.1"
+          python -m pip install --require-hashes -r requirements.lock
           # Warm the canary first: min-instances=0 means the first request
           # cold-starts (model + index load, ~35s) and would blow the latency
           # gate on an otherwise-healthy revision. Warm, wait, then measure.

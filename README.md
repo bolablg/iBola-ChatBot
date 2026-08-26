@@ -207,7 +207,7 @@ Interactive docs at `/docs` (Swagger) and `/redoc`. Full reference: [docs/API_RE
 
 ### Prerequisites
 
-- Python 3.12
+- Python 3.12.14
 - A Google Gemini API key
 
 ### Install and run
@@ -216,7 +216,7 @@ Interactive docs at `/docs` (Swagger) and `/redoc`. Full reference: [docs/API_RE
 git clone https://github.com/bolablg/iBola-ChatBot.git
 cd iBola-ChatBot
 
-pip install -r requirements.txt
+pip install --require-hashes -r requirements.lock
 
 # Configure: copy the sample env and set GEMINI_API_KEY
 cp sample.env .env
@@ -235,6 +235,17 @@ docker compose build && docker compose up -d
 
 # Build the vector store inside the container
 docker compose run --rm app python pipeline/update_vectorstore.py
+```
+
+### Dependency locks
+
+The checked-in lock files pin direct and transitive packages with hashes. Use
+`requirements.lock` for runtime work and `requirements-dev.lock` for tests and
+security tooling. Regenerate both only when intentionally reviewing a
+dependency update:
+
+```bash
+bash scripts/compile_requirements.sh
 ```
 
 ### Environment variables
