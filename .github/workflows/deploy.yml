@@ -147,7 +147,10 @@ jobs:
           GCHAT_WEBHOOK_URL: https://test-webhook.com
           GCP_PROJECT_ID: test-project
           REDIRECT_LOG_SHEET_ID: test_sheet_id_placeholder
-        run: python scripts/run_eval.py --tags smoke --concurrency 4
+          # Eval runs need reproducible answer coverage; production keeps its
+          # independently configured generation temperature.
+          LLM_GENERATION_TEMPERATURE: "0.0"
+        run: python scripts/run_eval.py --tags smoke --concurrency 1
 
       - name: Gate against accepted baseline
         if: env.GEMINI_API_KEY != ''
@@ -195,7 +198,10 @@ jobs:
           GCHAT_WEBHOOK_URL: https://test-webhook.com
           GCP_PROJECT_ID: test-project
           REDIRECT_LOG_SHEET_ID: test_sheet_id_placeholder
-        run: python scripts/run_eval.py --concurrency 4
+          # Serialize in-process calls so provider response ordering cannot
+          # introduce avoidable variance into the accepted-baseline gate.
+          LLM_GENERATION_TEMPERATURE: "0.0"
+        run: python scripts/run_eval.py --concurrency 1
 
       - name: Gate against accepted baseline
         run: |

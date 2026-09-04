@@ -41,6 +41,7 @@ from app.graph.state import (
     RoutingDestination,
 )
 from app.services.public_facts import public_facts_block
+from app.settings import get_settings
 
 logger = logging.getLogger("ibola.graph")
 
@@ -253,8 +254,6 @@ def _get_llm(temperature: float = 0.0, thinking_budget: int = 0):
     if key not in _llms:
         with _lock:
             if key not in _llms:
-                from app.settings import get_settings
-
                 settings = get_settings()
                 _llms[key] = _SyncGeminiLLM(
                     model=settings.llm.model_name,
@@ -983,10 +982,9 @@ def _translate_answer(answer: str, reply_language: str) -> str:
 def _select_context_docs(graded_docs: List[Document]) -> List[Document]:
     """Pick the generation context: budgeted and near-duplicate-free."""
     try:
-        from app.settings import get_settings
-
-        budget = get_settings().search.generation_context_docs
-        overlap_cap = get_settings().search.context_dedup_overlap
+        settings = get_settings()
+        budget = settings.search.generation_context_docs
+        overlap_cap = settings.search.context_dedup_overlap
     except Exception:
         budget, overlap_cap = 5, 0.8
 
@@ -1007,6 +1005,67 @@ def _select_context_docs(graded_docs: List[Document]) -> List[Document]:
             continue
         selected.append(doc)
     return selected
+
+
+def _generation_requirements(query: str) -> str:
+    """Return evidence-driven completeness requirements for ambiguous career queries.
+
+    The rules intentionally describe answer shape rather than profile facts. That
+    keeps the knowledge base authoritative while stopping concise answers from
+    collapsing a documented role transition into an unhelpful abstraction.
+    """
+    normalized = query.casefold()
+    requirements = []
+
+    transition_markers = ("before", "prior", "previous", "moving into", "transition")
+    data_science_markers = ("data science", "data scientist", "data-science")
+    french_transition = "avant" in normalized and "data" in normalized
+    if (
+        any(marker in normalized for marker in transition_markers)
+        and any(marker in normalized for marker in data_science_markers)
+    ) or french_transition:
+        requirements.append(
+            "For this career-transition question, name the relevant earlier job "
+            "title and employer(s) from the knowledge, plus one concrete supported "
+            "responsibility, achievement, or outcome. Do not replace those details "
+            "with a generic summary of a background or foundation."
+        )
+
+    current_role_markers = (
+        "currently",
+        "current role",
+        "still work",
+        "still the",
+        "actuellement",
+        "poste actuel",
+        "travaille encore",
+    )
+    if any(marker in normalized for marker in current_role_markers):
+        requirements.append(
+            "For this current-or-former-role question, state the direct status "
+            "first. When the knowledge shows that the named role ended and gives a "
+            "later role or end date, include that later role and date so the "
+            "chronology is unambiguous."
+        )
+
+    skills_markers = (
+        "key skills",
+        "core skills",
+        "skills",
+        "competences",
+        "compétences",
+    )
+    if any(marker in normalized for marker in skills_markers):
+        requirements.append(
+            "For this skills-inventory question, name the core programming "
+            "language and the specific data-platform and AI/LLM tools supported by "
+            "the knowledge. Do not collapse named foundational tools into only broad "
+            "capability labels."
+        )
+
+    return "\n".join(f"- {requirement}" for requirement in requirements) or (
+        "No extra requirements beyond the system instructions."
+    )
 
 
 def generate_node(state: dict) -> dict:
@@ -1051,15 +1110,20 @@ def generate_node(state: dict) -> dict:
         "{public_facts}", public_facts_block()
     )
     today = __import__("datetime").date.today().isoformat()
+    answer_requirements = _generation_requirements(query)
 
     def _call_generate(extra_instruction: str = "") -> GeneratedAnswer:
-        llm = _get_llm(temperature=0.7, thinking_budget=_GENERATE_THINKING_BUDGET)
+        llm = _get_llm(
+            temperature=get_settings().llm.generation_temperature,
+            thinking_budget=_GENERATE_THINKING_BUDGET,
+        )
         structured_llm = llm.with_structured_output(GeneratedAnswer)
         return structured_llm.invoke(
             GENERATE_PROMPT.format_messages(
                 system_prompt=system_prompt + extra_instruction,
                 reply_language=reply_language,
                 today=today,
+                answer_requirements=answer_requirements,
                 context=context,
                 chat_history=history_str or "(none)",
                 query=query,

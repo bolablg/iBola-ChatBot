@@ -112,6 +112,19 @@ def _accent_fold(text):
     )
 
 
+def missing_required_facts(text, row):
+    """Return required fact clauses absent from text using eval's matching rules."""
+    low = _accent_fold(text.lower())
+    return [
+        clause
+        for clause in row.get("must_contain", [])
+        if not any(
+            alternative.strip() in low
+            for alternative in _accent_fold(clause.lower()).split("|")
+        )
+    ]
+
+
 # A denial in the ~25 chars immediately BEFORE a forbidden phrase makes the
 # mention a correct refusal ("does NOT live in Cotonou"), not a leak. Scoped
 # tightly and excluding "not only" (an intensifier, not a denial) so
@@ -134,12 +147,10 @@ def check_facts(answer, row, actions=None):
     forbidden thing to deny it is correct, not a leak). ``require_actions``
     passes only when the response ships quick-reply action chips.
     """
-    low = _accent_fold(answer.lower())
     failures = []
-    for clause in row.get("must_contain", []):
-        clause_f = _accent_fold(clause.lower())
-        if not any(alt.strip() in low for alt in clause_f.split("|")):
-            failures.append(f"missing: {clause}")
+    for clause in missing_required_facts(answer, row):
+        failures.append(f"missing: {clause}")
+    low = _accent_fold(answer.lower())
     for clause in row.get("must_not_contain", []):
         needle = _accent_fold(clause.lower())
         leaked = False
@@ -300,6 +311,9 @@ def run_one(target, judge, row):
     context = "\n---\n".join(
         f"[{e.get('source', '?')}] {e.get('content_preview', '')}" for e in evidence
     )
+    evidence_preview = "\n---\n".join(
+        str(e.get("content_preview", "")) for e in evidence
+    )
 
     fact_pass, fact_failures = check_facts(answer, row, actions=result.get("actions"))
 
@@ -321,6 +335,9 @@ def run_one(target, judge, row):
         "agent_type": result.get("agent_type"),
         "evidence_count": len(evidence),
         "evidence_sources": [e.get("source") for e in evidence[:5]],
+        "missing_required_facts_in_evidence_preview": missing_required_facts(
+            evidence_preview, row
+        ),
         "unsupported_claims": result.get("unsupported_claims", []),
         "latency_s": round(latency, 3),
         "fact_pass": fact_pass,
@@ -496,6 +513,9 @@ def main():
     report = {
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "answer_model": os.environ.get("LLM_MODEL_NAME", "gemini-2.5-flash (default)"),
+        "generation_temperature_override": os.environ.get(
+            "LLM_GENERATION_TEMPERATURE"
+        ),
         "judge_model": None if args.no_judge else args.judge_model,
         "target": args.base_url or "in-process",
         "tags": args.tags,
@@ -530,6 +550,9 @@ def main():
         for r in failures:
             detail = r["fact_failures"] or ["answer did not pass fact checks"]
             print(f"  {r['id']}: {detail} -> {r['answer'][:120]!r}")
+            evidence_detail = r["missing_required_facts_in_evidence_preview"]
+            if evidence_detail:
+                print(f"    Not visible in evidence preview: {evidence_detail}")
 
     errors = [r for r in results if r["error"]]
     if errors:

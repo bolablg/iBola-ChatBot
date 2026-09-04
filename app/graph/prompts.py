@@ -25,9 +25,9 @@ PROMPT_VERSIONS = {
     "condense": "1.1",
     "batch_grade": "2.0",
     "rewrite": "2.1",
-    "generate_professional": "3.2",
-    "generate_education": "3.1",
-    "generate_learning": "3.1",
+    "generate_professional": "3.4",
+    "generate_education": "3.3",
+    "generate_learning": "3.3",
     "verify_grounding": "2.0",
     "structured_output_recovery": "1.0",
     "out_of_scope": "2.0",
@@ -287,6 +287,7 @@ GENERATE_PROMPT = ChatPromptTemplate.from_messages(
             "human",
             "Reply language: {reply_language}\n"
             "Today's date: {today}\n\n"
+            "Answer requirements:\n{answer_requirements}\n\n"
             "What you know about Bolaji:\n{context}\n\n"
             "Chat history:\n{chat_history}\n\nQuestion: {query}",
         ),

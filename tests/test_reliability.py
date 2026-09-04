@@ -163,5 +163,5 @@ def test_cache_service_without_cachetools_is_safe():
 def test_professional_prompt_requires_complete_multipart_answers():
     prompt = GENERATE_SYSTEM_PROMPTS[AgentCategory.PROFESSIONAL]
 
-    assert PROMPT_VERSIONS["generate_professional"] == "3.2"
+    assert PROMPT_VERSIONS["generate_professional"] == "3.4"
     assert "include every requested number, title, date, and category" in prompt

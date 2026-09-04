@@ -150,3 +150,14 @@ class TestNegationAwareGrading:
         row = {"must_contain": ["premiere recrue"], "must_not_contain": []}
         ok, _ = check_facts("Il etait la première recrue data.", row)
         assert ok
+
+    def test_evidence_preview_diagnostic_shows_missing_required_facts(self):
+        from scripts.run_eval import missing_required_facts
+
+        row = {
+            "must_contain": ["statistician|instad|pantagruel", "data director"],
+        }
+
+        assert missing_required_facts(
+            "He worked as a statistician at INStaD.", row
+        ) == ["data director"]
