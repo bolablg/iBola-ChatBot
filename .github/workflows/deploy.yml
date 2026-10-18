@@ -309,6 +309,9 @@ jobs:
 
       # BLOCKING (PART 5 C6): new findings fail the pipeline; reviewed
       # exceptions live in .security-allowlist with review dates.
+      - name: Validate scoped security exceptions (blocking)
+        run: python scripts/check_security_exceptions.py
+
       - name: Dependency vulnerability scan (pip-audit, blocking)
         run: |
           IGNORES=$(grep -vE '^\s*#|^\s*$' .security-allowlist | sed 's/^/--ignore-vuln /' | tr '\n' ' ')

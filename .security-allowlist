@@ -49,3 +49,21 @@ PYSEC-2026-311
 PYSEC-2026-36
 PYSEC-2026-77
 PYSEC-2026-87
+
+# Time-limited exceptions (validated by scripts/check_security_exceptions.py).
+# Reviewed 2026-10-18; expire 2026-11-17 UTC. See .security-exceptions.json.
+# Recheck when changing deployment or model-loading paths.
+# Chroma is embedded via persist_directory; Docker runs only app.main:app.
+# No Chroma HTTP server, tenant authorization, or caller-selected embedding
+# model configuration is exposed. No patched Chroma release is available.
+# https://github.com/advisories/GHSA-2wm9-hf6c-p5cr
+CVE-2026-45830
+# https://github.com/advisories/GHSA-xph7-9rjv-w5fr
+CVE-2026-45831
+# https://github.com/advisories/GHSA-36p7-vc44-83pf
+CVE-2026-45833
+# NLTK is a Safety development dependency, absent from the runtime lock.
+# The project does not call NLTK model import/export APIs or accept model paths.
+# No patched NLTK release is available.
+# https://github.com/advisories/GHSA-8mgp-746c-j5xp
+CVE-2026-81726

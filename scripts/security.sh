@@ -2,6 +2,9 @@
 # Run security scans: dependency audit + static analysis on changed files.
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+python "$SCRIPT_DIR/check_security_exceptions.py"
+
 echo "=== Dependency vulnerability scan (pip-audit) ==="
 pip-audit --strict --desc 2>&1 || true
 
