@@ -5,6 +5,8 @@ public-facts injection, and leak-stripper telemetry.
 
 from unittest.mock import Mock, patch
 
+import pytest
+import yaml
 from langchain_core.documents import Document
 
 from app.graph.nodes import (
@@ -28,6 +30,19 @@ def _mock_structured(result):
     llm = Mock()
     llm.with_structured_output.return_value.invoke.return_value = result
     return llm
+
+
+@pytest.fixture
+def public_facts_file(tmp_path, monkeypatch):
+    import config
+    from app.services.public_facts import load_public_facts
+
+    monkeypatch.setattr(config, "DATA_PATH", str(tmp_path))
+    load_public_facts.cache_clear()
+    try:
+        yield tmp_path / "public_facts.yaml"
+    finally:
+        load_public_facts.cache_clear()
 
 
 class TestCondenseFirst:
@@ -148,13 +163,47 @@ class TestPolicyAsData:
         # Refusal policy: redirect-offer, never a dead end
         assert "adjacent topics" in captured["prompt"]
 
-    def test_public_facts_block_renders_generated_yaml(self):
+    @pytest.mark.parametrize(
+        "publications",
+        [["First article", "Deuxième article"], ["Updated article"], []],
+        ids=["multiple-publications", "changed-publication", "no-publications"],
+    )
+    def test_public_facts_block_renders_generated_yaml(
+        self, public_facts_file, publications
+    ):
         from app.services.public_facts import load_public_facts, public_facts_block
 
-        load_public_facts.cache_clear()
-        block = public_facts_block()
-        assert "Little Rock" in block
-        assert "Data Product Engineering" in block
+        # Website refreshes may change the facts; rendering must still work.
+        facts = {
+            "location": "Example City",
+            "nationality": "Example nationality",
+            "publications": publications,
+        }
+        public_facts_file.write_text(
+            yaml.safe_dump(facts, allow_unicode=True), encoding="utf-8"
+        )
+
+        assert load_public_facts() == facts
+        expected_lines = [
+            "- Based in: Example City",
+            "- Nationality: Example nationality",
+        ]
+        expected_lines.extend(f"- Publication: {title}" for title in publications)
+        assert public_facts_block() == "\n".join(expected_lines)
+
+    @pytest.mark.parametrize(
+        "content", [None, "", "{}"], ids=["missing", "empty", "empty-mapping"]
+    )
+    def test_public_facts_block_handles_unavailable_facts(
+        self, public_facts_file, content
+    ):
+        from app.services.public_facts import load_public_facts, public_facts_block
+
+        if content is not None:
+            public_facts_file.write_text(content, encoding="utf-8")
+
+        assert load_public_facts() == {}
+        assert public_facts_block() == "(none)"
 
 
 class TestLeakStripperTelemetry:
