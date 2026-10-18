@@ -513,9 +513,7 @@ def main():
     report = {
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "answer_model": os.environ.get("LLM_MODEL_NAME", "gemini-2.5-flash (default)"),
-        "generation_temperature_override": os.environ.get(
-            "LLM_GENERATION_TEMPERATURE"
-        ),
+        "generation_temperature_override": os.environ.get("LLM_GENERATION_TEMPERATURE"),
         "judge_model": None if args.no_judge else args.judge_model,
         "target": args.base_url or "in-process",
         "tags": args.tags,
