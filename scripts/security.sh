@@ -6,7 +6,14 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 python "$SCRIPT_DIR/check_security_exceptions.py"
 
 echo "=== Dependency vulnerability scan (pip-audit) ==="
-pip-audit --strict --desc 2>&1 || true
+AUDIT_ARGS=(--strict --desc)
+while IFS= read -r finding; do
+  case "$finding" in
+    ""|\#*) continue ;;
+    *) AUDIT_ARGS+=(--ignore-vuln "$finding") ;;
+  esac
+done < "$SCRIPT_DIR/../.security-allowlist"
+pip-audit "${AUDIT_ARGS[@]}" 2>&1
 
 echo ""
 echo "=== Static security analysis (Bandit) ==="
@@ -16,11 +23,11 @@ CHANGED=$(git diff --name-only --diff-filter=d origin/main...HEAD -- '*.py' 2>/d
 
 if [ -z "$CHANGED" ]; then
   echo "No changed .py files — scanning app/ pipeline/"
-  bandit -r app/ pipeline/ --severity-level medium -f txt || true
+  bandit -r app/ pipeline/ --severity-level medium -f txt
 else
   echo "Scanning changed files only:"
   echo "$CHANGED"
-  echo "$CHANGED" | xargs bandit --severity-level medium -f txt || true
+  echo "$CHANGED" | xargs bandit --severity-level medium -f txt
 fi
 
 echo ""

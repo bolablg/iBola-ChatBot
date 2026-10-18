@@ -1,7 +1,10 @@
 """Security exceptions must expire and stay within their reviewed package scope."""
 
 import json
+import os
+import subprocess
 from datetime import date
+from pathlib import Path
 
 import pytest
 
@@ -81,3 +84,32 @@ def test_nltk_cannot_silently_enter_runtime(exception_project):
     (root / "requirements.lock").write_text("nltk==3.10.3\n")
     with pytest.raises(ValueError, match="runtime scope changed"):
         validate_exceptions(root, date(2026, 10, 18))
+
+
+def test_installed_version_must_match_reviewed_version(exception_project, monkeypatch):
+    root, _ = exception_project
+    monkeypatch.setattr("scripts.check_security_exceptions.version", lambda _: "3.10.4")
+    with pytest.raises(ValueError, match="installed package version changed"):
+        validate_exceptions(root, date(2026, 10, 18), verify_installed=True)
+
+
+@pytest.mark.parametrize("failed_tool", ["pip-audit", "bandit"])
+def test_security_scan_failure_stops_local_ci(tmp_path, failed_tool):
+    tools = tmp_path / "bin"
+    tools.mkdir()
+    for name in ["python", "pip-audit", "bandit"]:
+        stub = tools / name
+        # Scope validation is covered above; isolate scanner exit propagation.
+        stub.write_text(f"#!/bin/sh\nexit {42 if name == failed_tool else 0}\n")
+        stub.chmod(0o755)
+    script = Path(__file__).resolve().parents[1] / "scripts" / "security.sh"
+    result = subprocess.run(
+        ["bash", str(script)],
+        cwd=tmp_path,
+        env={**os.environ, "PATH": str(tools) + os.pathsep + os.defpath},
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 42
+    assert "Security scan complete." not in result.stdout

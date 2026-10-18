@@ -3,6 +3,7 @@
 import json
 import re
 from datetime import date, datetime, timedelta, timezone
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
 MARKER = (
@@ -25,7 +26,7 @@ def _pins(path):
     return dict(re.findall(r"^([\w.-]+)==([^\s\\]+)", path.read_text(), re.MULTILINE))
 
 
-def validate_exceptions(root, today=None):
+def validate_exceptions(root, today=None, verify_installed=False):
     """Validate evidence, expiry, scanner coverage, and pinned package scope."""
     today = today or datetime.now(timezone.utc).date()
     entries = json.loads((root / ".security-exceptions.json").read_text())
@@ -60,6 +61,15 @@ def validate_exceptions(root, today=None):
             raise ValueError(f"{identifier}: invalid review date or review window")
         if dev_pins.get(entry["package"]) != entry["version"]:
             raise ValueError(f"{identifier}: package version changed; reassess scope")
+        if verify_installed:
+            try:
+                installed = version(entry["package"])
+            except PackageNotFoundError as exc:
+                raise ValueError(
+                    f"{identifier}: reviewed package is not installed"
+                ) from exc
+            if installed != entry["version"]:
+                raise ValueError(f"{identifier}: installed package version changed")
         if entry["package"] == "nltk" and "nltk" in runtime_pins:
             raise ValueError(f"{identifier}: NLTK runtime scope changed")
         if (
@@ -72,7 +82,9 @@ def validate_exceptions(root, today=None):
 
 def main():
     try:
-        count = validate_exceptions(Path(__file__).resolve().parent.parent)
+        count = validate_exceptions(
+            Path(__file__).resolve().parent.parent, verify_installed=True
+        )
     except (OSError, ValueError, TypeError) as exc:
         print(f"Security exception check FAILED: {exc}")
         return 1

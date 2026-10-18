@@ -314,6 +314,7 @@ jobs:
 
       - name: Dependency vulnerability scan (pip-audit, blocking)
         run: |
+          set -o pipefail
           IGNORES=$(grep -vE '^\s*#|^\s*$' .security-allowlist | sed 's/^/--ignore-vuln /' | tr '\n' ' ')
           pip-audit --strict --desc $IGNORES 2>&1 | tee pip-audit-report.txt
 
