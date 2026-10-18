@@ -9,7 +9,7 @@ pytest-cov==4.1.0
 pytest-html==4.1.1
 
 # Code Quality
-black==26.1.0
+black==26.3.1
 isort==5.13.2
 flake8==7.1.0
 mypy==1.11.1
@@ -19,6 +19,7 @@ locust==2.15.1
 
 # Development Tools
 pre-commit==3.4.0
+virtualenv>=21.7.13,<22
 
 # Security tooling used by CI
 pip-audit==2.10.1
@@ -26,5 +27,5 @@ bandit==1.9.4
 safety==3.8.1
 
 # Documentation
-mkdocs==1.5.2
-mkdocs-material==9.1.21
+mkdocs==1.6.1
+mkdocs-material==9.7.7

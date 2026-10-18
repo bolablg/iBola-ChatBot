@@ -1,0 +1,46 @@
+[
+  {
+    "id": "CVE-2026-45830",
+    "package": "chromadb",
+    "version": "1.5.9",
+    "reviewed_on": "2026-10-18",
+    "expires_on": "2026-11-17",
+    "affected_api": "Chroma HTTP collection APIs with tenant authorization",
+    "app_usage": "app/services/advanced_rag.py and pipeline/update_vectorstore.py use Chroma(persist_directory). Dockerfile starts uvicorn app.main:app, with no Chroma HTTP server.",
+    "reason": "No network-accessible Chroma collection or tenant endpoints execute the affected authorization path. Reassess before exposing a Chroma server.",
+    "advisory": "https://github.com/advisories/GHSA-2wm9-hf6c-p5cr"
+  },
+  {
+    "id": "CVE-2026-45831",
+    "package": "chromadb",
+    "version": "1.5.9",
+    "reviewed_on": "2026-10-18",
+    "expires_on": "2026-11-17",
+    "affected_api": "SimpleRBACAuthorizationProvider in the Chroma HTTP server",
+    "app_usage": "The application opens an embedded Chroma store through persist_directory. No Chroma HTTP server or SimpleRBACAuthorizationProvider is configured.",
+    "reason": "The deployed application does not invoke the vulnerable server authorization provider. Reassess before adding Chroma server authentication or tenant APIs.",
+    "advisory": "https://github.com/advisories/GHSA-xph7-9rjv-w5fr"
+  },
+  {
+    "id": "CVE-2026-45833",
+    "package": "chromadb",
+    "version": "1.5.9",
+    "reviewed_on": "2026-10-18",
+    "expires_on": "2026-11-17",
+    "affected_api": "Chroma HTTP collection update accepting a model repository with trust_remote_code",
+    "app_usage": "Embedded Chroma uses the configured Google embedding function. Chat inputs cannot update collection embedding-model repositories, and no Chroma HTTP server is started.",
+    "reason": "Untrusted requests cannot reach the affected collection model-configuration endpoint. Reassess before accepting embedding-model configuration or exposing Chroma HTTP APIs.",
+    "advisory": "https://github.com/advisories/GHSA-36p7-vc44-83pf"
+  },
+  {
+    "id": "CVE-2026-81726",
+    "package": "nltk",
+    "version": "3.10.3",
+    "reviewed_on": "2026-10-18",
+    "expires_on": "2026-11-17",
+    "affected_api": "NLTK model artifact import/export APIs with caller-controlled file paths",
+    "app_usage": "NLTK is a Safety development dependency absent from requirements.lock. Application, pipeline, and utility code do not call NLTK model persistence APIs.",
+    "reason": "Production does not install NLTK or expose its model-file APIs. Reassess before adding NLTK to runtime dependencies or accepting model paths.",
+    "advisory": "https://github.com/advisories/GHSA-8mgp-746c-j5xp"
+  }
+]
