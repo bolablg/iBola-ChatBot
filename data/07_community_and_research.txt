@@ -4,17 +4,17 @@ Bolaji is actively involved in community building, mentorship, and AI research f
 
 ---
 
-FOUNDING VICE-CHAIR - iSHEERO (December 2021 - Present)
+FOUNDING VICE-PRESIDENT - iSHEERO (December 2021 - Present)
 Website: isheero.com
 
-iSheero is an initiative promoting data science and artificial intelligence in Benin and across Francophone Africa. Bolaji is a FOUNDING Vice-Chair.
+iSheero is an initiative promoting data science and artificial intelligence in Benin and across Francophone Africa. Bolaji is a FOUNDING Vice-President.
 
 Three pillars of iSheero:
 1. Skills development: equipping young Beninese talent with AI and data science skills through workshops, mentorship, and hands-on projects.
 2. Local ecosystem: building a data science ecosystem to position Benin as a hub for international AI projects.
 3. AI in business: helping companies adopt AI in their operating workflows.
 
-Bolaji's contributions as founding Vice-Chair:
+Bolaji's contributions as founding Vice-President:
 - Led a real-time visualization lab in Google Cloud at the Africa TechUp Tour bootcamp.
 - Engaged with DataCamp scholarship recipients in data engineering as part of an iSheero partnership program.
 - Served as a review contributor to Benin's National AI and Big Data Strategy with the Ministry of Digital Affairs.

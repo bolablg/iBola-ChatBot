@@ -1,0 +1,29 @@
+# Public quantitative constraints. A guard may use a fact only when its
+# supporting quote is present in a retrieved chunk from the named source.
+# Evidence: E-122, candidate-confirmed October 1, 2026.
+facts:
+  - id: recommendation_delivered_order_share
+    bound: upper
+    unit: percent
+    value: '12'
+    labels:
+      en: delivered orders through recommendations
+      fr: les commandes livrées via les recommandations
+    # The placeholder binds the percentage to the stated share, not a change
+    # in order value or another recommendation metric in the same sentence.
+    metric_patterns:
+      en:
+        - '(?=.*__percentage__)(?=.*\brecommend\w*)(?=.*\b(?:share|proportion|percentage)\b)(?=.*\bdelivered\s+orders\b).*'
+        - '__percentage__\s+of\s+(?:the\s+)?(?:delivered\s+)?orders\b.*\brecommend\w*'
+        - '__percentage__.*\b(?:share|proportion|percentage)\b.*\borders\b.*\brecommend\w*'
+        - '\b(?:share|proportion|percentage)\b.*\borders\b.*\brecommend\w*.*__percentage__'
+      fr:
+        - '(?=.*__percentage__)(?=.*\brecommand\w*)(?=.*\b(?:part|proportion|pourcentage)\b)(?=.*\bcommandes\s+livrees\b).*'
+        - '__percentage__\s+(?:des|de)\s+commandes\b.*\brecommand\w*'
+        - '__percentage__.*\b(?:part|proportion|pourcentage)\b.*\bcommandes\b.*\brecommand\w*'
+        - '\b(?:part|proportion|pourcentage)\b.*\bcommandes\b.*\brecommand\w*.*__percentage__'
+    supporting_quotes:
+      12_product_analytics.txt:
+        - up to 12% of delivered orders were placed through the recommendation feature
+      18_confirmed_clarifications.txt:
+        - up to 12% of delivered orders were observed through recommendations after deployment

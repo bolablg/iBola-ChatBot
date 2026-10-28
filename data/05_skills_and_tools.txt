@@ -3,7 +3,10 @@ BOLAJI BALOGOUN - SKILLS & TOOLS WITH APPLICATION CONTEXT
 ---
 
 CORE EXPERTISE AREAS:
-Data platform engineering, data modeling, AI and LLM engineering (RAG, agentic workflows), statistical analysis, data visualization, machine learning, automation, cloud computing, FinOps, data product management, data governance, team leadership, problem-solving, cross-functional communication.
+Primary programming language: Python
+Python, advanced SQL, data platform engineering, data modeling, AI and LLM engineering (RAG, agentic workflows), statistical analysis, data visualization, machine learning, automation, cloud computing, FinOps, data product management, data governance, team leadership, problem-solving, cross-functional communication.
+
+What are Bolaji's key skills: Python (his primary programming language), advanced SQL, BigQuery, Google Cloud Platform, Airflow, Dataform, AI and LLM engineering, FinOps, and data team leadership.
 
 Quelles sont les competences cles de Bolaji: Python, SQL avance, BigQuery, Google Cloud Platform, Apache Airflow, Dataform, ingenierie IA et LLM (RAG, workflows agentiques, LangGraph, MCP), FinOps et leadership d'equipes data.
 
@@ -51,8 +54,10 @@ AI & LLM ENGINEERING:
 - Natural Language Processing: neural machine translation, text classification, language detection.
   Used at: Takwimu LAB (French-Fongbe and French-Ewe neural machine translation), iBola chatbot.
 
-- Vertex AI: managed ML platform.
-  Used at: Gozem (ML model deployment and management).
+- Vertex AI: hands-on feasibility exploration and prototyping, plus technical supervision and engineer onboarding.
+  Personal use: explored possible AI solutions and personally prototyped invoice extraction in Vertex AI Studio, testing prompts and context before production development.
+  Team work at Gozem: oversaw an ML engineer's recommendation-feature delivery and onboarded him to Vertex AI ML pipelines. Vertex AI supported the model pipeline; Google Cloud Functions hosted the API integrated into the customer mobile app.
+  His experience includes both personal use and supervision of others. Personal prototyping does not establish sole implementation of the recommendation model, API, or mobile integration. Evidence: E-122 and candidate clarification October 28, 2026.
 
 ---
 

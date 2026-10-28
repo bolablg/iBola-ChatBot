@@ -1,5 +1,16 @@
 [
   {
+    "id": "PYSEC-2026-311",
+    "package": "chromadb",
+    "version": "1.5.9",
+    "reviewed_on": "2026-10-28",
+    "expires_on": "2026-11-17",
+    "affected_api": "Chroma HTTP collection creation accepting a model repository with trust_remote_code",
+    "app_usage": "The application opens embedded Chroma with persist_directory and the configured Gemini embedding function. Docker starts app.main:app, not the Chroma HTTP server. No user-selected model repositories are accepted.",
+    "reason": "The affected HTTP collection endpoint is not exposed. No patched Chroma release is published. This previously approved legacy exception is now package-scoped and time-limited; reassess before exposing Chroma HTTP APIs or caller-controlled model configuration.",
+    "advisory": "https://github.com/advisories/GHSA-f4j7-r4q5-qw2c"
+  },
+  {
     "id": "CVE-2026-45830",
     "package": "chromadb",
     "version": "1.5.9",
@@ -31,16 +42,5 @@
     "app_usage": "Embedded Chroma uses the configured Google embedding function. Chat inputs cannot update collection embedding-model repositories, and no Chroma HTTP server is started.",
     "reason": "Untrusted requests cannot reach the affected collection model-configuration endpoint. Reassess before accepting embedding-model configuration or exposing Chroma HTTP APIs.",
     "advisory": "https://github.com/advisories/GHSA-36p7-vc44-83pf"
-  },
-  {
-    "id": "CVE-2026-81726",
-    "package": "nltk",
-    "version": "3.10.3",
-    "reviewed_on": "2026-10-18",
-    "expires_on": "2026-11-17",
-    "affected_api": "NLTK model artifact import/export APIs with caller-controlled file paths",
-    "app_usage": "NLTK is a Safety development dependency absent from requirements.lock. Application, pipeline, and utility code do not call NLTK model persistence APIs.",
-    "reason": "Production does not install NLTK or expose its model-file APIs. Reassess before adding NLTK to runtime dependencies or accepting model paths.",
-    "advisory": "https://github.com/advisories/GHSA-8mgp-746c-j5xp"
   }
 ]

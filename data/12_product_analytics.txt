@@ -4,38 +4,35 @@ These case studies are from Bolaji's tenure at Gozem (2019 - 2026).
 
 ---
 
-E-COMMERCE RECOMMENDATION SYSTEM
+E-COMMERCE RECOMMENDATION DELIVERY AND POST-DEPLOYMENT MONITORING
 
 Situation: Gozem's e-commerce business line needed personalized product recommendations to drive user engagement and sales.
 
-Action: Bolaji worked with the product team to deploy a recommendation system in Gozem's user app. After deployment, he was responsible for defining tracking events and measuring performance.
+Action: Bolaji oversaw an ML engineer's delivery of a recommendation feature in Gozem's customer mobile app and onboarded him to Vertex AI ML pipelines. The model pipeline used Vertex AI; Google Cloud Functions hosted the API integrated into the app. Bolaji collaborated with Product on event definitions and metric calculation, then monitored recommendation performance after deployment.
 
 Events defined and tracked:
 - User interaction events: clicks, views, and interactions with recommended products.
 - Purchase events: conversions and purchases from recommendations.
-- Feedback events: user ratings and reviews on recommended products.
 
 Performance metrics:
 - Click-Through Rate (CTR): percentage of users clicking on recommended products.
 - Conversion rate: percentage of users purchasing recommended products.
-- User satisfaction: analysis of user feedback and ratings on recommendation quality.
 
-Outcome: these events and metrics enabled the team to optimize the recommendation system, enhance user experience, and drive higher engagement and sales.
+Observed result: up to 12% of delivered orders were placed through the recommendation feature. This is observed order share, not a 12% incremental sales or conversion uplift. The measurement period and methodology are unspecified. Post-deployment monitoring is separate from the placement experiment below and does not by itself establish a causal effect.
+
+Evidence: candidate-confirmed E-122 and E-139 in the Job Applications evidence ledger; distinction between placement experimentation and post-deployment monitoring clarified October 28, 2026. Team delivery and Bolaji's oversight/onboarding do not establish that he personally coded the recommendation model, API, or mobile integration.
 
 ---
 
-RECOMMENDATION SYSTEM A/B TEST
+RECOMMENDATION PLACEMENT EXPERIMENT
 
-Situation: the team needed to validate whether personalized recommendations actually improved engagement and conversions.
+Situation: Product needed to decide where recommendations should appear in the customer app, comparing homepage placement, search placement, and a condition without recommendations.
 
-Action: Bolaji designed and executed an A/B test to evaluate the recommendation system.
-1. Test design: collaborated with the product team to define hypotheses and objectives, specifically whether personalized recommendations would increase engagement and conversions.
-2. Implementation: worked with developers to randomly assign users to a control group (no recommendations) and a test group (with personalized recommendations).
-3. Data analysis: compared performance across both groups on CTR, conversion rate, and user satisfaction.
+Action: Bolaji collaborated with Product on the experiment's hypotheses, user sampling, event definitions, and metric calculation. The three conditions were no recommendations, recommendations on the homepage, and recommendations during search. His latest approximate recollection was 600 users in total.
 
-Outcome: the test group showed a significant increase in CTR and conversion rates, with similar positive user feedback as the control group. Based on these results, the product team rolled out personalized recommendations to all users, driving measurably higher sales.
+Reported result: findings supported Product's decision to roll out homepage recommendations. No numerical lift, statistically significant result, exact sample count, experiment duration, or sole implementation ownership is established.
 
-This A/B test provided actionable, data-driven insights that led to a product-wide rollout.
+Evidence: E-139 and E-148, with the placement purpose clarified October 28, 2026. This experiment and the separate post-deployment monitoring answer different questions: where to place recommendations, and how the deployed feature performs.
 
 ---
 
@@ -45,4 +42,10 @@ Situation: growth reviews lacked a consistent analytical foundation across campa
 
 Action: Bolaji co-chartered the marketing analytics stack (CAC, LTV, cohort, and multi-touch attribution embedded into weekly Growth reviews), owning the end-to-end supporting data pipelines from campaign platforms.
 
-Outcome: marketing decisions grounded in a shared, governed analytical layer, building on the RFM segmentation and cohort analysis work that had supported a 9%+ quarter-over-quarter user-retention increase.
+Outcome: Marketing used a shared analytical layer for campaign and customer analysis. The approximately 9% retention improvement belongs to the separate seasonal driver-retention analysis, not to user retention or this marketing stack.
+
+---
+
+SEASONAL DRIVER-RETENTION ANALYSIS
+
+Bolaji identified driver churn associated with the agricultural season and informed an incentive response. The analysis supported an approximately 9% improvement in driver retention. A quarter-over-quarter measurement interval and a percentage-point interpretation are not established. Evidence: E-057 and conflict resolution C-006, reconfirmed as driver retention on October 28, 2026.

@@ -4,6 +4,9 @@ BOLAJI BALOGOUN - LEADERSHIP STYLE & MANAGEMENT PHILOSOPHY
 
 THREE OPERATING PRINCIPLES:
 
+What are Bolaji's leadership principles: metrics before dashboards; architecture is the budget; adoption is the deliverable. These are three operating principles. His separate leadership philosophy is to lead with care.
+Quels sont les principes de leadership de Bolaji : les metriques avant les tableaux de bord ; l'architecture est le budget ; l'adoption est le livrable. Ces trois principes de fonctionnement sont distincts de sa philosophie de management : diriger avec bienveillance.
+
 Three principles run through all of Bolaji's work:
 1. Metrics before dashboards: he builds operational systems that act on metrics and patterns (automations, alerts, workflows) rather than reports that describe them.
 2. Architecture is the budget: cost discipline is designed into data models and pipelines, not bolted on afterwards. His 42.57% Google Cloud cost reduction in a single quarter came from data-model redesign, not procurement.
@@ -28,7 +31,13 @@ His management approach included:
 - Wearing multiple hats when needed: data architect, data engineer, analytics engineer, and data governance specialist.
 - Pushing capability outward as much as upward: a self-service no-code exploration platform halved the routine query load on the central team by putting 12+ managers directly in the data.
 
-His consistent pattern: leave every organization more capable of using data without him than it was with him.
+MENTORING A GRADUATE DATA-ENGINEERING INTERN:
+
+At Gozem, Bolaji recruited a recently graduated intern and mentored him through approximately six months of regular live coding, use-case architecture discussions, independent follow-on tasks, and explanatory code review. He introduced BigQuery, Cloud Storage, Airflow, and cron jobs, coached selection of purpose-built Airflow operators, and helped replace standalone scheduled queries with Dataform dependency management. They developed reusable incremental Dataform templates together and researched unfamiliar problems together. After approximately six months, the intern could work autonomously and keep workflows running. This example does not establish a certification, promotion, or measured productivity gain. Evidence: candidate-confirmed E-114, September 28, 2026; mentoring younger engineers reaffirmed October 28, 2026.
+
+ONBOARDING EXPERIENCED ENGINEERS TO THE DATA HUB:
+
+In a separate example, Bolaji onboarded engineers, including an applied AI engineer, to the Data Hub's shared platform. He authored contribution documentation and used live coding and debugging to teach frontend integration, CI/CD, testing, and adding services to the deployed environment. Engineers deployed two microapplications before his departure. These engineers already had application-building experience. Their onboarding duration is unspecified; the graduate intern's approximately six-month mentoring period does not apply to them. Evidence: candidate-confirmed E-116, September 28, 2026.
 
 ---
 

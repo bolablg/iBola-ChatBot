@@ -31,9 +31,12 @@ STALE_PHRASES = [
     "current role: head of data",
     "alongside his current role",
     "stitch data",
+    "20m+ cfa",
+    "over 20m cfa",
+    "founding vice-chair",
 ]
 
-# Facts the KB must state somewhere (canonical as of July 2026).
+# Facts the KB must state somewhere (confirmed through October 2026).
 CANONICAL_FACTS = [
     "Data Director",
     "July 2026",
@@ -41,8 +44,8 @@ CANONICAL_FACTS = [
     "650",
     "42.57%",
     "30+ production",
-    "20M+ CFA",
-    "founding Vice-Chair",
+    "25M+ XOF",
+    "founding Vice-President",
     "0 to 14+",
     "250+",
     "Data Product Engineering in Scaleups",
@@ -162,11 +165,11 @@ class TestGoldenRetrievalQA:
         ),
         (
             "Tell me about the fraud Bolaji flagged at Gozem Money",
-            ["20m+ cfa"],
+            ["25", "xof"],
         ),
         (
             "What is Bolaji's role at iSheero?",
-            ["founding vice-chair"],
+            ["founding vice-president"],
         ),
         (
             "Is Bolaji available for new roles or consulting?",

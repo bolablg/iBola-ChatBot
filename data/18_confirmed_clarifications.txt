@@ -1,0 +1,27 @@
+BOLAJI BALOGOUN - CONFIRMED PROFILE CLARIFICATIONS
+
+Recorded October 28, 2026. This is the confirmation date, not the date of the underlying work. Sources: direct candidate clarification in the chatbot project and previously confirmed evidence E-057, E-114, E-116, E-122, E-139, E-148, and C-006 in the Job Applications candidate-evidence ledger.
+
+---
+
+RECOMMENDATION EXPERIMENT AND POST-DEPLOYMENT MONITORING
+
+Bolaji described two distinct activities at Gozem: an experiment to decide where recommendations should appear, and post-deployment analysis monitoring the deployed recommendation feature. The earlier evidence describes three conditions: no recommendations, homepage recommendations, and search recommendations. His latest approximate sample recollection was 600 users in total. Findings supported homepage rollout; no quantified lift or statistical significance is established. Separately, up to 12% of delivered orders were observed through recommendations after deployment. This order share is not incremental sales uplift or an experimental effect estimate.
+
+---
+
+DRIVER RETENTION
+
+The approximately 9% improvement concerns driver retention. Agricultural-season driver-churn analysis informed an incentive response. Earlier chatbot wording attributing that metric to users or marketing segmentation was mistaken. The measurement interval and a percentage-point interpretation are unconfirmed. The candidate's latest clarification agrees with the earlier E-057 and C-006 evidence.
+
+---
+
+HANDS-ON VERTEX AI AND TECHNICAL SUPERVISION
+
+Bolaji personally used Vertex AI to explore feasibility and prototype possible solutions. One confirmed example is invoice-extraction prototyping in Vertex AI Studio, testing prompts and context before production development. He also supervised engineers using Vertex AI, including overseeing an ML engineer's recommendation-feature delivery and onboarding him to Vertex AI ML pipelines. That model pipeline used Vertex AI, with the mobile app's API hosted on Google Cloud Functions. Both hands-on personal use and technical supervision are part of his experience; they do not establish that he personally implemented every production component.
+
+---
+
+MENTORING ENGINEERS
+
+Bolaji mentors younger engineers through hands-on technical work. He coached a graduate data-engineering intern with live coding, architecture discussions, independent tasks, and explanatory code review until the intern could operate workflows autonomously after approximately six months. Separately, he used contribution documentation, live debugging, testing, and CI/CD guidance to onboard experienced engineers to the Data Hub; those engineers deployed two microapplications. The intern's mentoring duration and junior status do not apply to the experienced engineers.

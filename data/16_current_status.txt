@@ -25,12 +25,12 @@ WHAT HE BRINGS (headline numbers from his Gozem tenure):
 - Cut Google Cloud costs by 42.57% in a single quarter while maintaining SLAs.
 - Shipped 30+ production AI-powered tools and set governance across 250+ production pipelines.
 - Co-led a group AI strategy: 49 validated use cases, 6 in implementation, near-full top-management adoption of daily AI assistance.
-- Flagged a 20M+ CFA fraud scheme through the fintech analytics infrastructure he built.
+- Flagged a 25M+ XOF fraud scheme through the fintech analytics infrastructure he built.
 
 ---
 
 CREDENTIALS:
-Google Cloud Professional Data Engineer (November 2025 - November 2027). McKinsey Forward Program (2025). MSc Statistics with Distinction. Founding Vice-Chair of iSheero. 2026 publication: From Insight to Action: The Rise of Data Product Engineering in Scaleups.
+Google Cloud Professional Data Engineer (November 2025 - November 2027). McKinsey Forward Program (2025). MSc Statistics with Distinction. Founding Vice-President of iSheero. 2026 publication: From Insight to Action: The Rise of Data Product Engineering in Scaleups.
 
 ---
 
