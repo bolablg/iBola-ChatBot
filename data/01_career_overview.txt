@@ -12,12 +12,12 @@ This was Bolaji's most recent role. He owned the data function end to end (platf
 ---
 
 PREVIOUS ROLE: Head of Data - Gozem (October 2022 - March 2025)
-Before becoming Data Director, Bolaji was Head of Data for Gozem's Sub-Saharan Africa group: governance, team scaling from 0 to 14+, FinOps, and fintech-grade analytics. He led FinOps initiatives that cut Google Cloud costs by 42.57% in a single quarter while maintaining SLAs on data freshness and integrity, led ML-based fraud screening that made field-agent payment processing 7x faster, built the fintech analytics infrastructure that surfaces ~150 incidents per month and flagged a fraud worth over 20M CFA, and onboarded 12 hires from 50+ evaluated candidates with 30/60/90-day ramp milestones.
+Before becoming Data Director, Bolaji was Head of Data for Gozem's Sub-Saharan Africa group: governance, team scaling from 0 to 14+, FinOps, and fintech-grade analytics. He led FinOps initiatives that cut Google Cloud costs by 42.57% in a single quarter while maintaining SLAs on data freshness and integrity, led ML-based fraud screening that made field-agent payment processing 7x faster, built the fintech analytics infrastructure that surfaces ~150 incidents per month and flagged a fraud worth over 25M XOF, and onboarded 12 hires from 50+ evaluated candidates with 30/60/90-day ramp milestones.
 
 ---
 
 PREVIOUS ROLE: Global Data Analyst - Gozem (November 2019 - September 2022)
-Bolaji was Gozem's first data hire. He built the analytics function from the ground up: led the cloud migration of the entire data infrastructure to Google Cloud, migrating 10+ TB within a single quarter without operational interruption into a BigQuery warehouse he designed with 50+ scheduled ETL pipelines. He drove the fraud-patterns database that delivered zero unknown financial defaults, consolidated 20+ KPIs into the daily business-health report used by country managers and top management, shipped the marketing segmentation that supported targeted campaigns and a 9%+ quarter-over-quarter user-retention increase, founded the analytics engineering function, and grew a distributed team of 4. This role is where Bolaji taught himself GCP, BigQuery, and cloud data engineering.
+Bolaji was Gozem's first data hire. He built the analytics function from the ground up: led the cloud migration of the entire data infrastructure to Google Cloud, migrating 10+ TB within a single quarter without operational interruption into a BigQuery warehouse he designed with 50+ scheduled ETL pipelines. He drove the fraud-patterns database that delivered zero unknown financial defaults, consolidated 20+ KPIs into the daily business-health report used by country managers and top management, shipped marketing segmentation supporting targeted campaigns, founded the analytics engineering function, and grew a distributed team of 4. His separate agricultural-season churn analysis informed an incentive response supporting an approximately 9% improvement in driver retention. This role is where Bolaji taught himself GCP, BigQuery, and cloud data engineering.
 
 ---
 
@@ -38,6 +38,12 @@ Bolaji designed and delivered hands-on R analytics training to about 30 agents a
 
 EARLY CAREER: Statistician - Le Pantagruel (August 2013 - October 2013)
 Bolaji designed and conducted a customer satisfaction survey with the Sales team, built a structured customer feedback database, and deployed a satisfaction scoring system. The findings shaped management policies that lifted the Net Promoter Score by 8 points and grew sales by nearly double digits in one quarter.
+
+QUESTION: What did Bolaji do before moving into data science?
+ANSWER: Before his data science career, Bolaji worked as a Statistician at Le Pantagruel in 2013 and at INStaD, Benin's national statistics institute, from September 2017 to February 2018. At Le Pantagruel he built a customer satisfaction scoring system. At INStaD he delivered hands-on R training and contributed to a national survey-funding data collection campaign covering four ministries. He moved into data science after a Big Data bootcamp at Rintio in 2018.
+
+QUESTION: Que faisait Bolaji avant de passer a la data science ?
+ANSWER: Avant sa carriere en data science, Bolaji a travaille comme Statistician chez Le Pantagruel en 2013 et a l'INStaD, l'institut national de la statistique du Benin, de septembre 2017 a fevrier 2018. Au Pantagruel, il a construit un systeme de scoring de satisfaction client. A l'INStaD, il a dispense une formation pratique en R et contribue a une collecte nationale de donnees sur le financement des enquetes dans quatre ministeres. Il est ensuite passe a la data science apres un bootcamp Big Data chez Rintio en 2018.
 
 ---
 

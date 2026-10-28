@@ -25,10 +25,13 @@ PROMPT_VERSIONS = {
     "condense": "1.1",
     "batch_grade": "2.0",
     "rewrite": "2.1",
-    "generate_professional": "3.2",
+    "generate_professional": "3.5",
     "generate_education": "3.1",
     "generate_learning": "3.1",
-    "verify_grounding": "2.0",
+    "verify_grounding": "2.4",
+    "upper_bound_clarification": "1.0",
+    "skills_completeness_clarification": "1.0",
+    "insufficient_evidence": "1.0",
     "structured_output_recovery": "1.0",
     "out_of_scope": "2.0",
     "translate": "1.0",
@@ -221,7 +224,10 @@ _MULTIPART_RULE = (
     "clear parts and answer each briefly. When a question asks for a scope, "
     "breakdown, or multiple metrics, include every requested number, title, "
     "date, and category supported by what you know; do not omit a requested "
-    "dimension just to keep the answer short.\n"
+    "dimension just to keep the answer short. When asked for an enumerated "
+    "set of principles, pillars, or steps, include every supported member of "
+    "that set. Do not substitute a general philosophy for the requested "
+    "operating principles.\n"
 )
 
 GENERATE_SYSTEM_PROMPTS = {
@@ -231,7 +237,15 @@ GENERATE_SYSTEM_PROMPTS = {
         + _LANGUAGE_RULE
         + "RULES:\n"
         "1) DEFAULT: 2-3 sentences. Pick the most impressive, relevant facts. Be precise.\n"
-        "2) Include specific numbers, tools, or achievements when available.\n"
+        "2) Include specific numbers, tools, or achievements when available. "
+        "Preserve each number's bounds, uncertainty, and scope: keep qualifiers "
+        "such as 'up to', 'at least', and 'approximately', translated faithfully "
+        "into the reply language. An upper bound is not an exact or average "
+        "value. Preserve the qualifier even when the question omits it. "
+        "An observed share is not causal or incremental uplift. For broad key "
+        "or technical skills summaries, include the primary programming "
+        "language when it is explicitly identified in the retrieved knowledge; "
+        "do not omit it in favor of secondary tools.\n"
         "3) If the user asks for more details or follows up, give up to 5 sentences.\n"
         "4) Base answers ONLY on what you know about Bolaji. Never invent facts.\n"
         "5) STRICTLY FORBIDDEN PHRASES: 'provided context', 'the context', 'in the context', "
@@ -297,6 +311,39 @@ GENERATE_PROMPT = ChatPromptTemplate.from_messages(
 # verify_grounding (claim-level grounding + topic match)
 # ---------------------------------------------------------------------------
 
+UPPER_BOUND_CLARIFICATION_TEMPLATES = {
+    "en": (
+        "For {metric}, the reported figure is up to {percentage}, "
+        "not an exact value."
+    ),
+    "fr": (
+        "Pour {metric}, le chiffre rapporté est « jusqu'à {percentage} », "
+        "pas une valeur exacte."
+    ),
+}
+
+PRIMARY_LANGUAGE_CLARIFICATION_TEMPLATES = {
+    "en": "His primary programming language is {language}.",
+    "fr": "Son langage de programmation principal est {language}.",
+}
+
+DEGREE_COMPLETENESS_CLARIFICATION_TEMPLATES = {
+    "en": "He holds {degree}.",
+    "fr": "Bolaji est titulaire du diplôme {degree}.",
+}
+
+INSUFFICIENT_EVIDENCE_ANSWERS = {
+    "en": (
+        "I don't have enough verified information to answer that. You can ask "
+        "about Bolaji's roles, projects, or education, or email {contact_email}."
+    ),
+    "fr": (
+        "Je n'ai pas assez d'informations vérifiées pour répondre. Vous pouvez "
+        "poser une question sur les postes, projets ou études de Bolaji, ou "
+        "écrire à {contact_email}."
+    ),
+}
+
 VERIFY_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
     [
         (
@@ -308,13 +355,34 @@ VERIFY_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
                 "1) Extract every MATERIAL claim in the answer: roles, employers, "
                 "dates, locations, numbers, titles, credentials, availability.\n"
                 "2) For each claim, check whether the context supports it. "
-                "Paraphrase counts as support; contradiction or absence does not.\n\n"
+                "Paraphrase counts as support; contradiction or absence does not. "
+                "For numerical claims, check the number AND its bound, uncertainty, "
+                "population, and measurement scope. Dropping 'up to', 'at least', "
+                "or 'approximately' strengthens the claim and is unsupported, "
+                "even if the question omitted that qualifier. An upper bound is "
+                "not an exact or average value; an observed share is not causal "
+                "or incremental uplift. Correct such claims by restoring the "
+                "supported qualifiers in the answer's language.\n\n"
                 "B) TOPIC MATCH:\n"
                 "3) Check that the answer addresses the SPECIFIC entity or metric "
                 "the question asked about. An answer that states a different (even "
                 "true) fact about an adjacent topic FAILS this check (e.g. asked "
                 "for a fraud amount, answered about zero defaults; asked about one "
                 "event, answered about another project).\n\n"
+                "For a broad key or technical skills summary, check that the "
+                "answer includes the primary programming language if the "
+                "context explicitly identifies one. An omission fails topic "
+                "completeness; restore only the explicitly supported language.\n\n"
+                "If the question requests an enumerated set of principles, "
+                "pillars, or steps, check that every supported member is present. "
+                "A general philosophy alone does not answer a question about "
+                "specific operating principles.\n\n"
+                "If the question asks what degree or qualification a person holds, "
+                "and the context contains a credential heading with an explicit "
+                "status of completed or awarded, the answer must include that "
+                "credential. Do not describe it as unavailable. Treat an in-progress "
+                "credential as incomplete, and do not infer completion from grades "
+                "or other details.\n\n"
                 "VERDICT:\n"
                 "- If every claim is supported AND the answer addresses the asked "
                 "topic, return is_grounded=true, addresses_question=true.\n"
@@ -400,6 +468,10 @@ _ALL_PROMPTS = [
     OUT_OF_SCOPE_PROMPT,
     TRANSLATE_PROMPT,
     *GENERATE_SYSTEM_PROMPTS.values(),
+    *UPPER_BOUND_CLARIFICATION_TEMPLATES.values(),
+    *PRIMARY_LANGUAGE_CLARIFICATION_TEMPLATES.values(),
+    *DEGREE_COMPLETENESS_CLARIFICATION_TEMPLATES.values(),
+    *INSUFFICIENT_EVIDENCE_ANSWERS.values(),
 ]
 
 

@@ -8,17 +8,30 @@ score fusion.  Falls back gracefully when dependencies are missing.
 
 from __future__ import annotations
 
+import copy
+import hashlib
+import importlib.util
+import json
 import logging
 import os
 import re
+import sys
+import threading
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
+from cachetools import TTLCache
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
 
 import config
-from utils.embedder import get_embeddings
+from utils.embedder import (
+    CONTRACT_FILENAME,
+    embedding_fingerprint,
+    get_embeddings,
+    validate_embedding_contract,
+)
 
 logger = logging.getLogger("ibola.search")
 
@@ -199,11 +212,14 @@ def reciprocal_rank_fusion(
     rank_constant: int = 60,
 ) -> List[Tuple[Document, float]]:
     """Fuse multiple ranked lists using RRF.  rank_constant=60 is standard."""
-    doc_scores: Dict[int, Tuple[Document, float]] = {}
+    doc_scores: Dict[str, Tuple[Document, float]] = {}
 
     for ranked_list in ranked_lists:
         for rank, (doc, _score) in enumerate(ranked_list):
-            doc_id = hash(doc.page_content)
+            doc_id = (
+                doc.metadata.get("chunk_id")
+                or hashlib.sha256(doc.page_content.encode()).hexdigest()
+            )
             rrf = 1.0 / (rank_constant + rank + 1)
             if doc_id in doc_scores:
                 existing_doc, existing_score = doc_scores[doc_id]
@@ -219,11 +235,9 @@ def reciprocal_rank_fusion(
 # ---------------------------------------------------------------------------
 
 try:
-    from sentence_transformers import CrossEncoder as _CrossEncoder
-
-    RERANKER_AVAILABLE = True
-except ImportError:
-    RERANKER_AVAILABLE = False
+    RERANKER_AVAILABLE = importlib.util.find_spec("sentence_transformers") is not None
+except (ImportError, ValueError):
+    RERANKER_AVAILABLE = "sentence_transformers" in sys.modules
 
 
 class CrossEncoderReranker:
@@ -254,7 +268,9 @@ class CrossEncoderReranker:
 
         self._load_attempted = True
         try:
-            self.model = _CrossEncoder(self.model_name)
+            from sentence_transformers import CrossEncoder
+
+            self.model = CrossEncoder(self.model_name)
             logger.info("Cross-encoder reranker loaded: %s", self.model_name)
         except Exception as exc:
             logger.warning("Reranker init failed: %s", exc)
@@ -299,20 +315,19 @@ class HybridSearchService:
         self.embeddings = None
         self.documents: List[Document] = []
         self._initialized = False
+        self._search_cache = TTLCache(maxsize=256, ttl=300)
+        self._search_lock = threading.RLock()
+        self._search_hits = 0
+        self._search_misses = 0
+        self._vector_errors = 0
+        self._corpus_revision = self._revision()
+        self.embedding_compatible = False
         self._initialize()
 
     def _initialize(self) -> None:
         self._load_documents()
         self._build_bm25()
-
-        try:
-            self.embeddings = get_embeddings()
-            self.vectorstore = Chroma(
-                persist_directory=self.vectorstore_path,
-                embedding_function=self.embeddings,
-            )
-        except Exception as exc:
-            logger.warning("HybridSearchService vector init failed: %s", exc)
+        self._connect_vectorstore()
 
         self._initialized = bool(self.documents or self.vectorstore is not None)
         logger.info(
@@ -321,6 +336,25 @@ class HybridSearchService:
             self.bm25_index.is_built,
             len(self.documents),
         )
+
+    def _connect_vectorstore(self) -> bool:
+        """Connect only after the persisted index matches this embedder."""
+        try:
+            validate_embedding_contract(self.vectorstore_path)
+            embeddings = get_embeddings()
+            vectorstore = Chroma(
+                persist_directory=self.vectorstore_path,
+                embedding_function=embeddings,
+            )
+            self.embeddings = embeddings
+            self.vectorstore = vectorstore
+            self.embedding_compatible = True
+            return True
+        except Exception as exc:
+            self.vectorstore = None
+            self.embedding_compatible = False
+            logger.warning("HybridSearchService vector init failed: %s", exc)
+            return False
 
     def _load_documents(self) -> None:
         """Load persisted documents without requiring an embedding provider."""
@@ -377,10 +411,52 @@ class HybridSearchService:
         category_filter: Optional[str] = None,
     ) -> List[Document]:
         """Unified search: vector MMR + BM25 + RRF + optional reranking."""
-        if not self._initialized:
-            return []
-
         try:
+            from app.settings import get_settings
+
+            settings = get_settings().search
+            # Pure retrieval inputs only. Conversation state is resolved by
+            # the graph before search and is never stored in this shared cache.
+            if not hasattr(self, "_search_cache"):
+                self._search_cache = TTLCache(maxsize=256, ttl=300)
+                self._search_lock = threading.RLock()
+                self._search_hits = self._search_misses = self._vector_errors = 0
+                self._corpus_revision = self._revision()
+            revision = self._revision()
+            with self._search_lock:
+                if revision != self._corpus_revision:
+                    try:
+                        validate_embedding_contract(self.vectorstore_path)
+                    except (OSError, ValueError):
+                        self.vectorstore = None
+                        self.embedding_compatible = False
+                    else:
+                        if self.vectorstore is None or not self.embedding_compatible:
+                            self._connect_vectorstore()
+                    self.rebuild_bm25()
+                    self._corpus_revision = revision
+                    self._initialized = bool(
+                        self.documents or self.vectorstore is not None
+                    )
+            if not self._initialized:
+                return []
+            cache_key = (
+                query,
+                top_k,
+                use_hybrid,
+                use_reranker,
+                category_filter,
+                settings.vector_fetch_k,
+                settings.bm25_top_k,
+                settings.rrf_rank_constant,
+                settings.reranker_model,
+                revision,
+            )
+            cached = self._search_cache.get(cache_key)
+            if cached is not None:
+                self._search_hits += 1
+                return copy.deepcopy(cached)
+            self._search_misses += 1
             ranked_lists: List[List[Tuple[Document, float]]] = []
 
             # 1. Vector search (MMR)
@@ -390,19 +466,20 @@ class HybridSearchService:
                     vector_docs = self.vectorstore.max_marginal_relevance_search(
                         query,
                         k=top_k,
-                        fetch_k=top_k * 3,
+                        fetch_k=max(top_k, settings.vector_fetch_k),
                     )
                     ranked_lists.append(
                         [(doc, 1.0 / (i + 1)) for i, doc in enumerate(vector_docs)]
                     )
                 except Exception as exc:
+                    self._vector_errors += 1
                     logger.warning(
                         "Vector search failed for query '%s': %s", query, exc
                     )
 
             # 2. BM25
             if use_hybrid and self.bm25_index.is_built:
-                bm25_results = self.bm25_index.search(query, top_k=top_k)
+                bm25_results = self.bm25_index.search(query, top_k=settings.bm25_top_k)
                 if bm25_results:
                     ranked_lists.append(bm25_results)
 
@@ -413,7 +490,9 @@ class HybridSearchService:
 
             # 3. Fuse
             if len(ranked_lists) > 1:
-                fused = reciprocal_rank_fusion(ranked_lists, rank_constant=60)
+                fused = reciprocal_rank_fusion(
+                    ranked_lists, rank_constant=settings.rrf_rank_constant
+                )
                 pairs = fused[: top_k * 2]
             else:
                 # Single retriever succeeded (vector OR BM25, not both).
@@ -431,7 +510,13 @@ class HybridSearchService:
             results = _annotate_retrieval(pairs)
 
             # 5. Category preference (soft, never a hard filter)
-            return _prefer_category(results, category_filter)
+            results = _prefer_category(results, category_filter)
+            # Network calls above run outside the lock so distinct queries
+            # remain concurrent. Never publish results under a newer revision.
+            with self._search_lock:
+                if revision == self._revision():
+                    self._search_cache[cache_key] = copy.deepcopy(results)
+            return results
 
         except Exception as exc:
             logger.error("Hybrid search error: %s", exc)
@@ -446,11 +531,33 @@ class HybridSearchService:
 
     def rebuild_bm25(self) -> None:
         """Rebuild BM25 index (call after vectorstore updates)."""
-        self._build_bm25()
+        self._load_documents()
+        index = BM25Index()
+        index.build(self.documents)
+        self.bm25_index = index
+        if hasattr(self, "_search_cache"):
+            self._search_cache.clear()
+
+    def _revision(self) -> str:
+        digest = hashlib.sha256(embedding_fingerprint().encode())
+        for name in (
+            ".vectorstore_state.json",
+            ".vectorstore_revision",
+            CONTRACT_FILENAME,
+        ):
+            path = Path(self.vectorstore_path) / name
+            if path.exists():
+                digest.update(path.read_bytes())
+        return digest.hexdigest()
 
     def get_stats(self) -> Dict[str, Any]:
         return {
             "initialized": self._initialized,
+            "embedding_compatible": self.embedding_compatible,
+            "embedding_fingerprint": embedding_fingerprint(),
+            "retrieval_cache_hits": self._search_hits,
+            "retrieval_cache_misses": self._search_misses,
+            "vector_errors": self._vector_errors,
             "vectorstore_path": self.vectorstore_path,
             "bm25_available": BM25_AVAILABLE,
             "bm25_indexed": self.bm25_index.is_built,

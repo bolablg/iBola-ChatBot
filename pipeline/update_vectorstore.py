@@ -6,8 +6,8 @@ Uses IntelligentChunker for section-based chunking with metadata enrichment.
 Sync semantics (source-level upsert, not append-only):
   - State keys and chunk IDs use paths RELATIVE to the data directory, so the
     store survives checkout moves and different machines.
-  - When a source file changes, its existing chunks are deleted before the new
-    chunks are added (stable IDs: ``<relative_path>::<chunk_index>``).
+  - When a source file changes, new chunks upsert stable IDs before obsolete
+    IDs are removed, so an embedding failure leaves the old source intact.
   - When a source file disappears from the data directory, its chunks and
     state entry are removed.
   - ``--rebuild`` wipes the collection and state, then re-ingests everything.
@@ -18,6 +18,7 @@ import hashlib
 import json
 import os
 import sys
+import time
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -26,7 +27,11 @@ from langchain_community.document_loaders import Docx2txtLoader, PyPDFLoader, Te
 
 import config
 from pipeline.chunker import IntelligentChunker, dedupe_chunks
-from utils.embedder import get_embeddings
+from utils.embedder import (
+    get_embeddings,
+    validate_embedding_contract,
+    write_embedding_contract,
+)
 
 VECTORSTORE_STATE_FILE = os.path.join(config.DB_PATH, ".vectorstore_state.json")
 
@@ -111,6 +116,8 @@ def update_vectorstore(rebuild=False):
     Args:
         rebuild: wipe the collection and state, then re-ingest every file.
     """
+    if not rebuild:
+        validate_embedding_contract(config.DB_PATH)
     chunker = IntelligentChunker(min_words=50, max_words=800, overlap_words=100)
     vectorstore = Chroma(
         persist_directory=config.DB_PATH, embedding_function=get_embeddings()
@@ -118,17 +125,20 @@ def update_vectorstore(rebuild=False):
 
     if rebuild:
         print("Rebuilding vector store from scratch...")
-        existing = vectorstore.get()
-        if existing.get("ids"):
-            vectorstore.delete(ids=existing["ids"])
-            print(f"  Deleted all {len(existing['ids'])} existing chunks.")
+        # Reset the collection itself so Chroma can infer a new vector
+        # dimensionality when the embedding contract has changed.
+        vectorstore.delete_collection()
+        vectorstore = Chroma(
+            persist_directory=config.DB_PATH, embedding_function=get_embeddings()
+        )
         vectorstore_state = {}
     else:
         print("Scanning for new, modified, or deleted files...")
         vectorstore_state = get_vectorstore_state()
 
-    updated = False
+    updated = rebuild
     seen = set()
+    failures = []
 
     for rel_path, abs_path in _scan_data_files():
         seen.add(rel_path)
@@ -161,30 +171,63 @@ def update_vectorstore(rebuild=False):
 
             if not all_chunks:
                 print(f"  No chunks generated from {rel_path}")
+                previous_ids = vectorstore.get(where={"source": rel_path}).get(
+                    "ids", []
+                )
+                if previous_ids:
+                    vectorstore.delete(ids=previous_ids)
+                vectorstore_state[rel_path] = file_hash
+                updated = True
                 continue
 
-            # Upsert: drop the previous chunks for this source, then add the
-            # new ones under stable, path-relative IDs.
-            _delete_source_chunks(vectorstore, rel_path)
+            # Embedding happens inside add_documents before the upsert. Keep
+            # previous chunks until that succeeds, then remove obsolete IDs.
+            previous_ids = set(
+                vectorstore.get(where={"source": rel_path}).get("ids", [])
+            )
             ids = [f"{rel_path}::{i}" for i in range(len(all_chunks))]
+            for chunk, chunk_id in zip(all_chunks, ids):
+                chunk.metadata["chunk_id"] = chunk_id
             vectorstore.add_documents(all_chunks, ids=ids)
+            obsolete_ids = previous_ids - set(ids)
+            if obsolete_ids:
+                vectorstore.delete(ids=sorted(obsolete_ids))
             vectorstore_state[rel_path] = file_hash
             updated = True
             print(f"  Processed {len(all_chunks)} chunks from {rel_path}")
 
         except Exception as e:
             print(f"Error processing {rel_path}: {e}")
+            failures.append(rel_path)
 
     # Remove chunks for source files that no longer exist on disk.
     for rel_path in list(vectorstore_state):
         if rel_path not in seen:
             print(f"Deleted file detected: {rel_path}")
-            _delete_source_chunks(vectorstore, rel_path)
-            del vectorstore_state[rel_path]
-            updated = True
+            try:
+                _delete_source_chunks(vectorstore, rel_path)
+                del vectorstore_state[rel_path]
+                updated = True
+            except Exception as e:
+                print(f"Error removing {rel_path}: {e}")
+                failures.append(rel_path)
 
+    if updated or failures:
+        # Chroma writes each successful source immediately. Publish a corpus
+        # revision even when a later source fails so search and answer caches
+        # cannot serve results from before those committed mutations.
+        revision_path = os.path.join(config.DB_PATH, ".vectorstore_revision")
+        temporary_revision = revision_path + ".tmp"
+        with open(temporary_revision, "w") as f:
+            f.write(f"{time.time_ns()}\n")
+        os.replace(temporary_revision, revision_path)
     if updated:
         save_vectorstore_state(vectorstore_state)
+    if updated and not failures:
+        write_embedding_contract(config.DB_PATH)
+    if failures:
+        raise RuntimeError("Index update failed for: " + ", ".join(failures))
+    if updated:
         print("Vector store updated.")
     else:
         print("No changes detected in vector store.")

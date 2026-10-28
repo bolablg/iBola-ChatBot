@@ -318,9 +318,6 @@ jobs:
           IGNORES=$(grep -vE '^\s*#|^\s*$' .security-allowlist | sed 's/^/--ignore-vuln /' | tr '\n' ' ')
           pip-audit --strict --desc $IGNORES 2>&1 | tee pip-audit-report.txt
 
-      - name: Dependency vulnerability scan (safety, informational)
-        run: safety check --output text 2>&1 | tee safety-report.txt || true
-
       - name: Static security analysis (Bandit, blocking)
         run: bandit -r app/ pipeline/ -f txt -o bandit-report.txt --severity-level medium
 
@@ -341,7 +338,6 @@ jobs:
           name: security-reports
           path: |
             pip-audit-report.txt
-            safety-report.txt
             bandit-report.txt
           retention-days: 30
 
@@ -377,7 +373,7 @@ jobs:
           ### Checks completed
           - [x] Lint & format (Black, isort, Flake8)
           - [x] Unit & integration tests
-          - [x] Dependency vulnerability scan (pip-audit, safety)
+          - [x] Dependency vulnerability scan (pip-audit)
           - [x] Static security analysis (Bandit)
           - [x] Filesystem vulnerability scan (Trivy)
 
