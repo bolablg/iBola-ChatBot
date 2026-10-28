@@ -33,7 +33,11 @@ Built the fraud patterns database:
 Marketing segmentation and cohort analysis:
 - Situation: marketing campaigns were broadly targeted because the team lacked a structured user profiling layer.
 - Action: built a profiling database covering riders and drivers, with RFM segmentation and cohort analysis used by Marketing for targeted campaigns.
-- Outcome: supported targeted campaigns and a 9%+ quarter-over-quarter increase in user retention.
+- Outcome: supported targeted campaigns and retention analysis. The approximately 9% retention improvement belongs to the separate seasonal driver-retention analysis, not user retention.
+
+Seasonal driver-retention analysis:
+- Action: identified driver churn associated with the agricultural season and informed an incentive response.
+- Outcome: supported an approximately 9% improvement in driver retention. The measurement interval is not confirmed as quarter-over-quarter.
 
 Business health monitoring and daily insights:
 - Situation: country managers and top management lacked a single daily lens on business health across markets.

@@ -21,6 +21,7 @@ from app.graph.prompts import (
     GENERATE_PROMPT,
     GENERATE_SYSTEM_PROMPTS,
     GUARDRAIL_PROMPT,
+    INSUFFICIENT_EVIDENCE_ANSWERS,
     OUT_OF_SCOPE_PROMPT,
     REWRITE_PROMPT,
     STRUCTURED_OUTPUT_RECOVERY_PROMPT,
@@ -1025,6 +1026,16 @@ def generate_node(state: dict) -> dict:
     # near-duplicate filter (five tight chunks beat fifty loose ones; dupes
     # waste tokens and invite hallucinated merges).
     context_docs = _select_context_docs(graded_docs)
+    if not context_docs:
+        steps.append(
+            ReasoningStep(node="generate", action="insufficient_evidence", detail="")
+        )
+        return {
+            "answer": _insufficient_answer(state),
+            "confidence": 0.0,
+            "context_documents": [],
+            "reasoning_steps": steps,
+        }
     if context_docs:
         context = "\n\n---\n\n".join(doc.page_content for doc in context_docs)
     else:
@@ -1136,23 +1147,88 @@ def generate_node(state: dict) -> dict:
 # NODE: verify_grounding
 # ===================================================================
 
+
 # Even the last-resort refusal carries the redirect-offer (policy: refusals
 # never dead-end)
-_FALLBACK_UNGROUNDED_ANSWER = (
-    "I don't have that information. I can tell you about Bolaji's roles at "
-    "Gozem, his AI projects, or his education, or you can email "
-    "hello@bolablg.com."
-)
+def _insufficient_answer(state: dict) -> str:
+    language = _detect_reply_language(
+        state.get("original_query") or state.get("query", ""),
+        state.get("user_language", "en"),
+    )
+    lang = "fr" if language == "French" else "en"
+    return INSUFFICIENT_EVIDENCE_ANSWERS[lang].format(
+        contact_email=config.CONTACT_EMAIL
+    )
 
 
 def verify_grounding_node(state: dict) -> dict:
+    """Verify claims, then preserve retrieved numeric bounds if the model missed one."""
+    from app.graph.answer_completeness import (
+        preserve_primary_language,
+        preserve_requested_degrees,
+    )
+    from app.graph.numeric_grounding import preserve_percentage_upper_bounds
+
+    docs = state.get("context_documents", []) or []
+    if not docs or state.get("agent_type") == "redirect":
+        return _verify_grounding_llm_node(state)
+    query = state.get("original_query") or state.get("query", "")
+    language = _detect_reply_language(
+        query,
+        state.get("user_language", "en"),
+    )
+    draft, primary_added = preserve_primary_language(
+        state.get("answer", ""), docs, query, language
+    )
+    draft, degree_added = preserve_requested_degrees(draft, docs, query, language)
+    # The model verifier receives the restored fact and its retrieved support.
+    verification_state = (
+        {**state, "answer": draft} if primary_added or degree_added else state
+    )
+    result = _verify_grounding_llm_node(verification_state)
+    if not result.get("grounding_checked"):
+        return result
+    answer = result.get("answer", draft)
+    guarded, fact_ids = preserve_percentage_upper_bounds(answer, docs, language)
+    _, primary_still_missing = preserve_primary_language(guarded, docs, query, language)
+    _, degree_still_missing = preserve_requested_degrees(guarded, docs, query, language)
+    if fact_ids or primary_added or degree_added:
+        result["answer"] = guarded
+        steps = list(result.get("reasoning_steps", []))
+        if primary_added and not primary_still_missing:
+            steps.append(
+                ReasoningStep(
+                    node="verify_grounding",
+                    action="primary_language_preserved",
+                    detail="explicit retrieved primary language",
+                )
+            )
+        if fact_ids:
+            steps.append(
+                ReasoningStep(
+                    node="verify_grounding",
+                    action="upper_bound_preserved",
+                    detail=", ".join(fact_ids),
+                )
+            )
+        if degree_added and not degree_still_missing:
+            steps.append(
+                ReasoningStep(
+                    node="verify_grounding",
+                    action="retrieved_degree_preserved",
+                    detail="explicit retrieved degree",
+                )
+            )
+        result["reasoning_steps"] = steps
+    return result
+
+
+def _verify_grounding_llm_node(state: dict) -> dict:
     """Claim-level verification after generate: fail closed on unsupported
     claims AND on grounded-but-wrong-topic substitutions.
 
-    Skipped for redirects and for turns with no retrieved context (those
-    answers are already refusals or deterministic). On verifier failure the
-    original answer passes through with grounding_checked=False; the verifier
-    must never take the bot down.
+    Redirects are conversational. Knowledge answers without evidence or a
+    working verifier receive a refusal, never an unverified draft.
     """
     answer = state.get("answer", "")
     agent_type = state.get("agent_type", "professional")
@@ -1179,11 +1255,14 @@ def verify_grounding_node(state: dict) -> dict:
                 ),
             )
         )
-        return {
+        result = {
             "grounding_checked": False,
             "unsupported_claims": [],
             "reasoning_steps": steps,
         }
+        if agent_type != "redirect":
+            result.update(answer=_insufficient_answer(state), confidence=0.0)
+        return result
 
     context = "\n\n---\n\n".join(doc.page_content for doc in context_docs)
 
@@ -1196,7 +1275,7 @@ def verify_grounding_node(state: dict) -> dict:
             )
         )
     except Exception as exc:
-        logger.warning("Grounding verifier error (pass-through): %s", exc)
+        logger.warning("Grounding verifier error (answer withheld): %s", exc)
         steps.append(
             ReasoningStep(
                 node="verify_grounding",
@@ -1205,6 +1284,8 @@ def verify_grounding_node(state: dict) -> dict:
             )
         )
         return {
+            "answer": _insufficient_answer(state),
+            "confidence": 0.0,
             "grounding_checked": False,
             "unsupported_claims": [],
             "reasoning_steps": steps,
@@ -1240,7 +1321,7 @@ def verify_grounding_node(state: dict) -> dict:
         verdict.unsupported_claims[:5],
     )
     return {
-        "answer": corrected or _FALLBACK_UNGROUNDED_ANSWER,
+        "answer": corrected or _insufficient_answer(state),
         "confidence": min(state.get("confidence", 0.5), 0.5),
         "grounding_checked": True,
         "unsupported_claims": verdict.unsupported_claims,

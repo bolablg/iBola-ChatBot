@@ -264,6 +264,7 @@ class AgenticRAGService:
             "should_end_chat": final_state.get("should_end_chat", False),
             "response_time": round(elapsed, 3),
             "evidence": evidence,
+            "grounding_checked": final_state.get("grounding_checked", False),
             # PART 8.2: normalized portfolio receipts for the "Answer sources"
             # rail. Deduplicated by section, linkable to bolablg.com.
             "answer_sources": build_answer_sources(evidence),
@@ -361,6 +362,7 @@ class AgenticRAGService:
             evidence.append(
                 {
                     "source": meta.get("source", meta.get("filename", "unknown")),
+                    "chunk_id": meta.get("chunk_id"),
                     "section": meta.get("section_header", ""),
                     "retrieval_rank": meta.get("retrieval_rank"),
                     "retrieval_score": meta.get("retrieval_score"),

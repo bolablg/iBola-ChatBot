@@ -1,6 +1,6 @@
 # iBola, Production Agentic RAG Chatbot
 
-[![Version](https://img.shields.io/badge/version-1.1.0-005AF0?style=for-the-badge)](https://github.com/bolablg/iBola-ChatBot/releases)
+[![Version](https://img.shields.io/badge/version-1.2.3-005AF0?style=for-the-badge)](https://github.com/bolablg/iBola-ChatBot/releases)
 [![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![LangGraph](https://img.shields.io/badge/LangGraph-0.2+-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)](https://langchain-ai.github.io/langgraph/)
 [![Gemini](https://img.shields.io/badge/Gemini-2.5_Flash-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white)](https://ai.google.dev/)
@@ -10,7 +10,7 @@
 [![Docker](https://img.shields.io/badge/Docker-container-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 ![License](https://img.shields.io/badge/license-proprietary-grey?style=for-the-badge)
 
-An agentic, multi-node Retrieval-Augmented Generation chatbot powering [chat.bolablg.com](https://chat.bolablg.com). It answers questions about Bolaji BALOGOUN's professional profile from a curated knowledge base, in English and French, with grounding verification on every answer. Built with LangGraph, Google Gemini 2.5 Flash, hybrid search (BM25 + vector MMR + RRF), and a golden-QA eval gate: a smoke subset gates every pull request and the full 117-row set runs nightly.
+An agentic, multi-node Retrieval-Augmented Generation chatbot powering [chat.bolablg.com](https://chat.bolablg.com). It answers questions about Bolaji BALOGOUN's professional profile from a curated knowledge base, in English and French, with grounding verification on every knowledge answer. Built with LangGraph, Google Gemini 2.5 Flash, hybrid search (BM25 + vector MMR + RRF), and a golden-QA eval gate: a smoke subset gates every pull request and the full 130-case set runs nightly.
 
 ---
 
@@ -68,7 +68,7 @@ Full pipeline detail: [docs/AGENTIC_RAG_PIPELINE.md](docs/AGENTIC_RAG_PIPELINE.m
 | Security guardrails | Intent-first classification, prompt-exfiltration defense, PII masking, input validation, rate limiting |
 | SSE streaming | Real-time token delivery on `/ask-agentic` |
 | Observability | Langfuse v4 tracing, typed feedback scores, Google Cloud Logging, monthly assessment job |
-| Eval gate | 117-row golden QA set, per-tag baselines, deterministic fact checks plus pinned LLM judge; smoke subset on every PR, full set nightly |
+| Eval gate | 130-case golden QA set, per-tag baselines, deterministic fact checks plus pinned LLM judge; smoke subset on every PR, full set nightly |
 
 ---
 
@@ -152,7 +152,7 @@ Full pipeline detail: [docs/AGENTIC_RAG_PIPELINE.md](docs/AGENTIC_RAG_PIPELINE.m
 │   │   ├── prompts.py          #   Versioned prompt registry + exfiltration echo guard
 │   │   └── service.py          #   AgenticRAGService (production wrapper, deterministic intents)
 │   ├── routes/
-│   │   ├── streaming.py        #   /ask-agentic (SSE), /ask (simple RAG)
+│   │   ├── streaming.py        #   /ask-agentic (SSE), /ask (verified graph response)
 │   │   └── feedback.py         #   POST /feedback (typed Langfuse scores)
 │   ├── services/               # Shared services
 │   │   ├── advanced_rag.py     #   Hybrid search: BM25 + vector MMR + RRF + reranker
@@ -169,7 +169,7 @@ Full pipeline detail: [docs/AGENTIC_RAG_PIPELINE.md](docs/AGENTIC_RAG_PIPELINE.m
 │   └── sync.py                 # Google Drive sync
 ├── data/                       # Knowledge base (00-17 profile docs, website canon, role timeline, public_facts.yaml)
 ├── eval/
-│   ├── golden.jsonl            # 117-row golden QA set (EN + FR twins, temporal, metric, security tags)
+│   ├── golden.jsonl            # Golden QA set (130 cases across EN + FR, temporal, metric, security tags)
 │   ├── accepted_baseline*.json # Per-tag accepted baselines
 │   └── langfuse_experiment.py  # PR experiment gate (Langfuse experiment-action contract)
 ├── scripts/                    # lint, format, test, security, ci-local, run_eval, eval_gate, audit_chunks, ...
@@ -187,7 +187,7 @@ Full pipeline detail: [docs/AGENTIC_RAG_PIPELINE.md](docs/AGENTIC_RAG_PIPELINE.m
 | Method | Path | Description |
 |--------|------|-------------|
 | `POST` | `/ask-agentic` | Primary. Full agentic RAG pipeline (LangGraph). Supports `stream=true` for SSE. 12s timeout. |
-| `POST` | `/ask` | Simple RAG: direct retrieval and generation, no agent routing. |
+| `POST` | `/ask` | Verified graph response with the legacy JSON response shape. |
 | `POST` | `/chat` | Chat endpoint, routed through the agentic service (kept for backward compatibility). |
 | `POST` | `/welcome` | Localized welcome messages based on browser language. |
 | `POST` | `/feedback` | Typed quality scores (thumbs, thumbs reason, session CSAT) into Langfuse. |
@@ -267,7 +267,7 @@ Full configuration reference: [docs/CONFIGURATION.md](docs/CONFIGURATION.md).
 
 ## Evaluation
 
-The golden QA set (`eval/golden.jsonl`, 117 rows) is the correctness contract. Every retrieval or generation change must show its eval delta before merge.
+The golden QA set (`eval/golden.jsonl`, 130 cases) is the correctness contract. Every retrieval or generation change must show its eval delta before merge.
 
 ```bash
 # Full run (deterministic fact checks + pinned LLM judge); report under local/eval_reports/
@@ -309,7 +309,7 @@ Main ──── merge PR ──▶ deploy canary + warm + smoke eval ──▶
 | Deploy | Docker → GCR → Cloud Run canary → smoke gate → promote |
 | Tag | Annotated git tag from the `VERSION` file |
 
-Two scheduled workflows keep the system honest: a nightly full 117-row eval and a daily KB refresh that routes the new knowledge base through the same lint, test, and eval funnel as code. See [docs/CI_CD.md](docs/CI_CD.md).
+Two scheduled workflows keep the system honest: a nightly full 130-case eval and a daily KB refresh that routes the new knowledge base through the same lint, test, and eval funnel as code. See [docs/CI_CD.md](docs/CI_CD.md).
 
 ---
 

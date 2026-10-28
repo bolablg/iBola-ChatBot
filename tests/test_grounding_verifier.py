@@ -81,15 +81,16 @@ class TestVerifyGroundingNode:
         mock_get.assert_not_called()
         assert result["grounding_checked"] is False
 
-    def test_verifier_error_passes_answer_through(self):
+    def test_verifier_error_withholds_unverified_answer(self):
         llm = Mock()
         llm.with_structured_output.return_value.invoke.side_effect = RuntimeError(
             "llm down"
         )
         with patch("app.graph.nodes._get_llm", return_value=llm):
             result = verify_grounding_node(_state())
-        # Original answer untouched, no crash
-        assert "answer" not in result
+        # The unsafe draft is never returned when verification fails.
+        assert "verified information" in result["answer"]
+        assert result["confidence"] == 0.0
         assert result["grounding_checked"] is False
         assert result["reasoning_steps"][-1].action == "warning"
 

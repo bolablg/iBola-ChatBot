@@ -24,6 +24,7 @@ sse-starlette
 
 # Caching
 redis
+cachetools
 
 # Google Cloud Services
 google-cloud-logging
@@ -56,7 +57,15 @@ ddgs
 # Document processing
 streamlit
 
-# Minimum patched versions for transitive dependencies (reviewed 2026-10-18).
+# Minimum patched versions for transitive dependencies (reviewed 2026-10-28).
+aiohttp>=3.14.4,<4
+brotli>=1.2.1,<2
+brotlicffi>=1.2.1.0,<2; platform_python_implementation != 'CPython'
+certifi>=2026.10.19
+filelock>=4.2.1,<5
+opentelemetry-api>=1.45.1,<2
+pillow>=13.0.0,<14
+setuptools>=84.1.0,<85
 langgraph-sdk>=0.4.4,<0.5
 multidict>=6.9.1,<7
 oauthlib>=4.0.0,<5

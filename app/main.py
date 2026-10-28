@@ -11,7 +11,6 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, validator
 
-from app.agents.collector_agent import collector_agent
 from app.history_store import append_history, get_history
 from app.routes.feedback import router as feedback_router
 from app.routes.streaming import router as streaming_router
@@ -559,9 +558,14 @@ async def chat(payload: ChatInput, request: Request):
             },
         )
 
-        # Check cache first for similar queries
+        history = get_history(session_id)
+        chat_history_tuples = [(h[0], h[1]) for h in history]
+        service = get_agentic_service()
+        cache_context = cache_service.response_context(
+            session_id, chat_history_tuples, service.session_data.get(session_id, {})
+        )
         cached_response = await cache_service.get_cached_response(
-            user_input, "unknown", user_language
+            user_input, "chat", user_language, context=cache_context
         )
 
         if cached_response:
@@ -575,14 +579,9 @@ async def chat(payload: ChatInput, request: Request):
             cached_response["session_id"] = session_id
             # Never replay another turn's trace_id on a cache hit (Codex #6)
             cached_response["trace_id"] = None
+            append_history(session_id, (user_input, cached_response.get("answer", "")))
 
             return cached_response
-
-        # Get chat history from the configured store
-        history = get_history(session_id)
-
-        # Convert history format for ConversationalRetrievalChain (expects list of tuples)
-        chat_history_tuples = [(h[0], h[1]) for h in history]
 
         # Collect request information for logging
         request_info = {
@@ -606,11 +605,6 @@ async def chat(payload: ChatInput, request: Request):
 
         # Calculate response time
         response_time = time.time() - start_time
-
-        # Cache the response for future similar queries
-        await cache_service.set_cached_response(
-            user_input, result.get("agent_type", "unknown"), user_language, result
-        )
 
         # Log chat interaction
         logging_service.log_chat_interaction(
@@ -646,24 +640,18 @@ async def chat(payload: ChatInput, request: Request):
                 "should_end_chat", False
             ),  # Add the missing field
             "evidence": result.get("evidence", []),
+            "grounding_checked": result.get("grounding_checked", False),
             "trace_id": result.get("trace_id"),
         }
 
-        # Run collector agent — detects opportunity intent and asks follow-up questions
-        try:
-            collector_result = collector_agent.check_and_respond(
-                user_input=user_input,
-                session_id=session_id,
-                chat_history=chat_history_tuples,
-                user_language=user_language,
-                agent_response=result.get("answer", ""),
-            )
-            if collector_result and collector_result.get("follow_up_question"):
-                response_for_frontend["answer"] += (
-                    "\n\n" + collector_result["follow_up_question"]
-                )
-        except Exception as collector_err:
-            logger.debug(f"Collector agent error (non-blocking): {collector_err}")
+        await cache_service.set_cached_response(
+            user_input,
+            "chat",
+            user_language,
+            response_for_frontend,
+            context=cache_context,
+        )
+        # The service owns lead capture; do not rewrite a verified answer.
 
         # Update the history in the store
         append_history(

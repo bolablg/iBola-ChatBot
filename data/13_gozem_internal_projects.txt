@@ -100,7 +100,7 @@ EBANKING ANALYTICS & REPORTING INFRASTRUCTURE - Gozem Money (Fintech)
 - Situation: Gozem Money needed real-time fraud monitoring, a fintech-grade data warehouse, and a reporting layer to support mobile payment operations and regulatory needs across African markets.
 - Action: Bolaji designed and supervised deployment of a micro-batch processing pipeline monitoring anomalous patterns, fraud signals, and threshold breaches. He built the fintech data warehouse for Togo operations, powered by ETL/ELT pipelines and data models as the foundational layer for financial analytics, regulatory submissions, and stakeholder dashboards (transaction volumes, product adoption, revenue, cohorts), with documented data models, reporting glossary, and metric definitions.
 - Tools: Apache Airflow, Python, MongoDB, BigQuery, Dataflow, Cloud Storage.
-- Outcome: the system surfaces about 150 incidents per month and flagged a major fraud worth over 20M CFA, while powering regulatory reporting for Gozem Money.
+- Outcome: the system surfaces about 150 incidents per month and flagged a major fraud worth over 25M XOF, while powering regulatory reporting for Gozem Money.
 
 ---
 
@@ -153,4 +153,4 @@ PRODUCT & ML INTEGRATION
 GLOBAL DATA ANALYST ERA (November 2019 - September 2022)
 ===================================================================
 
-See the dedicated Global Data Analyst file for this era: GCP/BigQuery migration (10+ TB in a quarter, 50+ ETL pipelines), operational monitoring automation (2 days to 5-15 minutes), incentive payment automation (multi-day to minutes), fraud patterns database (zero unknown financial defaults), marketing segmentation (9%+ QoQ retention increase), and the daily business-health report (20+ KPIs).
+See the dedicated Global Data Analyst file for this era: GCP/BigQuery migration (10+ TB in a quarter, 50+ ETL pipelines), operational monitoring automation (2 days to 5-15 minutes), incentive payment automation (multi-day to minutes), fraud patterns database (zero unknown financial defaults), marketing segmentation and cohort analysis, seasonal driver-retention analysis (approximately 9% improvement in driver retention, measurement interval unspecified), and the daily business-health report (20+ KPIs).

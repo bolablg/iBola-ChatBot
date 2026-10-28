@@ -55,3 +55,9 @@ DATA STACK MIGRATION (Gozem internal)
 What: led the migration of Gozem's entire data infrastructure to Google Cloud Platform as its first data hire, moving 10+ TB within a quarter without operational interruption.
 Stack: Google Cloud Storage, BigQuery, Vertex AI, Dataform, Apache Airflow.
 Outcome: a scalable, cost-effective cloud analytics platform with 50+ scheduled ETL pipelines, later optimized to cut costs by 42.57% in a single quarter.
+
+QUESTION: How much data did Bolaji migrate to Google Cloud?
+ANSWER: Bolaji migrated more than 10 TB of Gozem data to Google Cloud within one quarter, without operational interruption.
+
+QUESTION: Quel volume de donnees Bolaji a-t-il migre vers Google Cloud ?
+ANSWER: Bolaji a migre plus de 10 To de donnees de Gozem vers Google Cloud en un trimestre, sans interruption operationnelle.

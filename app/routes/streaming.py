@@ -26,15 +26,6 @@ logger = logging.getLogger("ibola.streaming")
 router = APIRouter(tags=["Streaming"])
 
 _PROCESS_TIMEOUT_SECONDS = 45.0
-_COLLECTOR_TIMEOUT_SECONDS = 4.0
-_COLLECTOR_EXCLUDED_AGENT_TYPES = {
-    "contact",
-    "booking",
-    "opportunity",
-    "lead_capture",
-    "pleasantry",
-}
-
 # Lazy-init service
 _agentic_service: Optional[AgenticRAGService] = None
 
@@ -44,11 +35,6 @@ def _get_service() -> AgenticRAGService:
     if _agentic_service is None:
         _agentic_service = AgenticRAGService()
     return _agentic_service
-
-
-def _should_run_collector(result: Dict[str, Any]) -> bool:
-    """Keep lead collection off the critical path for deterministic FAQ replies."""
-    return result.get("agent_type") not in _COLLECTOR_EXCLUDED_AGENT_TYPES
 
 
 def _timeout_response(session_id: str, user_language: str) -> Dict[str, Any]:
@@ -107,9 +93,13 @@ async def ask_agentic(payload: AskInput, request: Request):
     user_input = payload.user_input
     user_language = payload.user_language
 
-    # Check cache
+    history = get_history(session_id)
+    chat_history = [(h[0], h[1]) for h in history]
+    cache_context = cache_service.response_context(
+        session_id, chat_history, service.session_data.get(session_id, {})
+    )
     cached = await cache_service.get_cached_response(
-        user_input, "agentic", user_language
+        user_input, "agentic", user_language, context=cache_context
     )
     if cached and not payload.stream:
         cached["cached"] = True
@@ -118,10 +108,8 @@ async def ask_agentic(payload: AskInput, request: Request):
         # would misattribute this visitor's feedback to another session's trace
         # (Codex #6). Drop it: a cache hit has no trace of its own.
         cached["trace_id"] = None
+        append_history(session_id, (user_input, cached.get("answer", "")))
         return cached
-
-    history = get_history(session_id)
-    chat_history = [(h[0], h[1]) for h in history]
 
     request_info = {
         "ip_address": request.client.host if request.client else "unknown",
@@ -173,37 +161,10 @@ async def ask_agentic(payload: AskInput, request: Request):
         result = _timeout_response(session_id, user_language)
     elapsed = time.time() - start
 
-    # Run collector agent for lead detection, but never let it block the user response.
-    if _should_run_collector(result):
-        try:
-            from app.agents.collector_agent import collector_agent
-
-            collector_result = await asyncio.wait_for(
-                loop.run_in_executor(
-                    None,
-                    lambda: collector_agent.check_and_respond(
-                        user_input=user_input,
-                        session_id=session_id,
-                        chat_history=chat_history,
-                        user_language=user_language,
-                        agent_response=result.get("answer", ""),
-                    ),
-                ),
-                timeout=_COLLECTOR_TIMEOUT_SECONDS,
-            )
-            if collector_result and collector_result.get("follow_up_question"):
-                result["answer"] += "\n\n" + collector_result["follow_up_question"]
-        except asyncio.TimeoutError:
-            logger.warning(
-                "Collector agent timed out for session %s after %.1fs",
-                session_id,
-                _COLLECTOR_TIMEOUT_SECONDS,
-            )
-        except Exception:
-            logger.exception("Collector agent failed for session %s", session_id)
+    # Lead capture is owned by the service; verified answers are final.
 
     await cache_service.set_cached_response(
-        user_input, "agentic", user_language, result
+        user_input, "agentic", user_language, result, context=cache_context
     )
     append_history(session_id, (user_input, result.get("answer", "")))
 
@@ -292,6 +253,9 @@ async def _stream_agentic(
             # PART 8.2: portfolio receipts for the "Answer sources" rail. The
             # JSON path already carries these; the SSE done event must too so
             # the streaming client can render the same rail.
+            "evidence": result.get("evidence", []),
+            "grounding_checked": result.get("grounding_checked", False),
+            "unsupported_claims": result.get("unsupported_claims", []),
             "answer_sources": result.get("answer_sources", []),
             "trace_id": result.get("trace_id"),
         },
@@ -309,79 +273,9 @@ async def _stream_agentic(
 
 @router.post("/ask")
 async def ask_simple(payload: AskInput, request: Request):
-    """
-    Simple RAG: direct retrieval + generation without agent routing.
-    Faster (2-5 sec) but no guardrails, grading, or query rewriting.
-    """
-    from langchain_core.prompts import ChatPromptTemplate
-    from langchain_google_genai import ChatGoogleGenerativeAI
-
-    import config
-    from app.agents.retrievers import get_professional_retriever
-
-    user_input = payload.user_input
-    session_id = payload.session_id
-    user_language = payload.user_language
-
-    # Check cache
-    cached = await cache_service.get_cached_response(
-        user_input, "simple", user_language
+    """JSON-only compatibility endpoint using the same verified RAG pipeline."""
+    result = dict(
+        await ask_agentic(payload.model_copy(update={"stream": False}), request)
     )
-    if cached:
-        cached["cached"] = True
-        cached["session_id"] = session_id
-        cached["trace_id"] = None  # cache hit has no trace of its own
-        return cached
-
-    start = time.time()
-
-    try:
-        retriever = get_professional_retriever()
-        docs = retriever.invoke(user_input)
-        context = "\n\n".join(doc.page_content for doc in docs[:5])
-
-        llm = ChatGoogleGenerativeAI(
-            model="gemini-2.5-flash",
-            temperature=0.7,
-            google_api_key=config.GEMINI_API_KEY,
-        )
-
-        prompt = ChatPromptTemplate.from_messages(
-            [
-                (
-                    "system",
-                    "You are iBola, an AI assistant for Bolaji BALOGOUN's portfolio. "
-                    "Answer concisely (≤5 sentences). Match the user's language. "
-                    "Never mention documents or RAG.",
-                ),
-                ("human", "Context:\n{context}\n\nQuestion: {query}"),
-            ]
-        )
-
-        response = llm.invoke(prompt.format_messages(context=context, query=user_input))
-        answer = response.content
-        confidence = 0.8
-
-    except Exception as exc:
-        logger.error("Simple RAG error: %s", exc)
-        answer = "I'm having trouble right now. Please try again or contact hello@bolablg.com."
-        confidence = 0.0
-
-    elapsed = time.time() - start
-
-    result = {
-        "answer": answer,
-        "actions": [],
-        "agent_type": "simple_rag",
-        "confidence": confidence,
-        "language": user_language,
-        "redirect_count": 0,
-        "session_id": session_id,
-        "response_time": round(elapsed, 3),
-        "cached": False,
-    }
-
-    await cache_service.set_cached_response(user_input, "simple", user_language, result)
-    append_history(session_id, (user_input, answer))
-
+    result["agent_type"] = "simple_rag"
     return result

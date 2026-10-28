@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "model": "gemini-embedding-001",
+  "dimensions": 3072,
+  "document_task_type": "RETRIEVAL_DOCUMENT",
+  "query_task_type": "RETRIEVAL_QUERY",
+  "normalization": "provider_l2_default_3072"
+}

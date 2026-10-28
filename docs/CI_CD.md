@@ -35,7 +35,6 @@ Triggers on push to any branch **except** `main` and `staging`.
 | Scanner | Purpose |
 |---------|---------|
 | **pip-audit** | Python dependency CVE scanning |
-| **safety** | Secondary dependency vulnerability check |
 | **Bandit** | Static security analysis (medium+ severity) |
 | **Trivy** | Filesystem vulnerability scan (CRITICAL, HIGH) |
 
