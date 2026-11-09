@@ -423,9 +423,9 @@ Focus areas: statistical modeling, survival analysis, statistical inference on l
 - Data platforms & governance: BigQuery · ClickHouse · BigLake · Databricks · Dataplex · Unity Catalog
 - Databases & storage: PostgreSQL · MongoDB · Google Cloud Storage · AWS S3 · Delta Lake · Apache Iceberg
 - Pipelines & streaming: Airflow · Dataform · Dataflow · Apache NiFi · Lakeflow · Spark · Pub/Sub
-- Languages & frameworks: Python · SQL · R · Bash · JavaScript · Scala · React · FastAPI
+- Languages & frameworks: Python · SQL · R · Bash · Scala · FastAPI
 - Cloud & delivery: Google Cloud · Compute Engine · AWS · AWS EC2 · Cloud Run · Cloud Functions (team delivery oversight) · Docker · Artifact Registry · Git
-- Analytics & visualization: Data Studio · Looker · Superset · Metabase · Plotly · Grafana
+- Analytics & visualization: Data Studio · Looker · Superset · Metabase · Grafana
 - AI & automation: Vertex AI (team delivery oversight) · Gemini · Codex · RAG · LangGraph (familiarity) · MCP
 
 ## Contact
