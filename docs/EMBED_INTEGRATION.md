@@ -10,7 +10,7 @@ Add this single script tag before `</body>` on any page:
 <script src="https://chat.bolablg.com/static/embed.js" defer></script>
 ```
 
-A blue chat bubble appears at the bottom-right. Clicking it opens the iMessage-style chatbot in a 400x600 popup.
+A chat button appears at the bottom right. It opens a floating card that leaves the host page scrollable.
 
 ## Configuration Options
 
@@ -131,7 +131,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 Then open: `http://localhost:8000/static/test-embed.html`
 
-This test page simulates the widget embedded on a website using `localhost`.
+This test page runs the same embed script as production and loads the chat from the local server.
 
 ### Docker testing
 
@@ -143,8 +143,8 @@ Then open: `http://localhost:8080/static/test-embed.html`
 
 ## Responsive Behavior
 
-- **Desktop** (>480px): 400x600 popup, positioned at the configured corner
-- **Mobile** (<=480px): Near full-screen popup (`100vw - 20px` wide, `100vh - 80px` tall)
+- **Desktop.** The card is up to 400 × 600 pixels and opens above the launcher.
+- **Mobile and short touch screens.** The card stays inset, up to 360 pixels wide and 62% of viewport height (480 pixels maximum). It shrinks further when a host dock or a smaller visible viewport leaves less room.
 
 ## Security
 

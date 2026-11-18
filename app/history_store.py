@@ -108,3 +108,9 @@ def append_history(session_id: str, pair: Tuple[str, str]) -> None:
             logger.warning("Firestore history write failed: %s", exc)
 
     _chat_histories.setdefault(session_id, []).append(pair)
+
+
+def record_chat_turn(session_id: str, user_input: str, result: dict) -> None:
+    """Keep completed exchanges available to resolve the next question."""
+    if not result.get("_retryable"):
+        append_history(session_id, (user_input, result.get("answer", "")))

@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import re
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -17,7 +18,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from app.graph.service import AgenticRAGService
-from app.history_store import append_history, get_history
+from app.history_store import get_history, record_chat_turn
 from app.services.cache_service import cache_service
 from app.services.logging_service import logging_service
 
@@ -51,6 +52,7 @@ def _timeout_response(session_id: str, user_language: str) -> Dict[str, Any]:
         "session_id": session_id,
         "should_end_chat": False,
         "answer_sources": [],
+        "_retryable": True,
     }
 
 
@@ -108,7 +110,7 @@ async def ask_agentic(payload: AskInput, request: Request):
         # would misattribute this visitor's feedback to another session's trace
         # (Codex #6). Drop it: a cache hit has no trace of its own.
         cached["trace_id"] = None
-        append_history(session_id, (user_input, cached.get("answer", "")))
+        record_chat_turn(session_id, user_input, cached)
         return cached
 
     request_info = {
@@ -166,7 +168,8 @@ async def ask_agentic(payload: AskInput, request: Request):
     await cache_service.set_cached_response(
         user_input, "agentic", user_language, result, context=cache_context
     )
-    append_history(session_id, (user_input, result.get("answer", "")))
+    record_chat_turn(session_id, user_input, result)
+    result.pop("_retryable", None)
 
     logging_service.log_chat_interaction(
         session_id=session_id,
@@ -232,14 +235,16 @@ async def _stream_agentic(
                 "progress",
             )
 
-    # Stream the final answer in chunks (simulate token-by-token)
+    # Keep whitespace so concatenating fragments reconstructs the Markdown.
     answer = result.get("answer", "")
-    words = answer.split()
-    chunk_size = 5  # words per chunk
+    words = re.findall(r"\S+\s*|\s+", answer)
+    chunk_size = 5
     for i in range(0, len(words), chunk_size):
-        chunk = " ".join(words[i : i + chunk_size])
+        chunk = "".join(words[i : i + chunk_size])
         yield _sse_event({"token": chunk}, "token")
         await asyncio.sleep(0.02)  # Small delay for streaming effect
+
+    record_chat_turn(session_id, user_input, result)
 
     # Final event with metadata. trace_id lets the client attach feedback to
     # this exact turn (Codex #1: SSE must surface it too).
@@ -250,6 +255,7 @@ async def _stream_agentic(
             "confidence": result.get("confidence"),
             "redirect_count": result.get("redirect_count", 0),
             "actions": result.get("actions", []),
+            "should_end_chat": result.get("should_end_chat", False),
             # PART 8.2: portfolio receipts for the "Answer sources" rail. The
             # JSON path already carries these; the SSE done event must too so
             # the streaming client can render the same rail.
@@ -261,9 +267,6 @@ async def _stream_agentic(
         },
         "done",
     )
-
-    # Update history
-    append_history(session_id, (user_input, answer))
 
 
 # ---------------------------------------------------------------------------

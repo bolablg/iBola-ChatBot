@@ -1,27 +1,27 @@
-BOLAJI BALOGOUN - CURRENT STATUS & AVAILABILITY (AS OF JULY 2026)
+BOLAJI BALOGOUN - CURRENT STATUS & AVAILABILITY (AS OF NOVEMBER 2026)
 
-CURRENT STATUS: Bolaji concluded his tenure at Gozem in July 2026 after nearly seven years, ending as Data Director. He is now based in Little Rock, Arkansas, US (GMT-5), and is OPEN TO NEW OPPORTUNITIES.
+CURRENT STATUS: Bolaji concluded his tenure at Gozem in July 2026 after nearly seven years, ending as Data Director. He is now based in Little Rock, Arkansas, US (America/Chicago), and is OPEN TO NEW OPPORTUNITIES.
 
 ---
 
-WHAT IS BOLAJI DOING NOW: He is open to Director-level and Head-level data and AI roles, and to selected projects, consulting, and speaking engagements, across the United States, Canada, France, and Sub-Saharan Africa.
+WHAT IS BOLAJI DOING NOW: He is open to data engineering, architecture, analytics, and data leadership roles, as well as consulting and talks.
 Is Bolaji available for hire: Yes. His Gozem tenure ended in July 2026 and he is actively open to new roles. Contact hello@bolablg.com.
 Is Bolaji open to consulting: Yes, for selected engagements: data platform audits and roadmaps, AI strategy and adoption, and data team coaching and hiring.
-What kind of role is Bolaji looking for: Director or Head-level data and AI leadership roles in a scale-up or large company with ambitious data and AI goals, with a meaningful share of hands-on building.
+What kind of role is Bolaji looking for: Data engineering, data architecture, marketplace analytics, and data leadership roles.
 
-Que fait Bolaji actuellement: Il a termine son mandat chez Gozem en juillet 2026 (dernier poste: Data Director). Il est base a Little Rock, Arkansas, aux Etats-Unis, et est ouvert aux postes de direction Data et IA ainsi qu'a des missions de conseil aux Etats-Unis, au Canada, en France et en Afrique subsaharienne.
+Que fait Bolaji actuellement: Il a termine son mandat chez Gozem en juillet 2026 (dernier poste: Data Director). Il est base a Little Rock, Arkansas, aux Etats-Unis, et est ouvert aux postes en ingénierie, architecture, analytique et direction des données, ainsi qu'au conseil et aux conférences.
 Bolaji est-il disponible: Oui. Contactez hello@bolablg.com.
 
 ---
 
-TARGET ROLES (equivalent titles):
-Data & AI Director, Director of Data & Analytics, Director of Data Engineering, Director of Data Platform, Head of Analytics & AI, Head of Data & AI, Senior Manager for Data Engineering, Data Platform, or Data & Analytics.
+TARGET ROLES:
+Staff or Principal Data Engineer, Data Platform Engineer, Data Architect, Cloud Data Architect, Data Engineering Manager, Head of Data, Director of Data Engineering, and Director of Data Platform.
 
 ---
 
 WHAT HE BRINGS (headline numbers from his Gozem tenure):
 - Built and led a data organization from 0 to 14+ professionals across six countries, reporting at C-level.
-- Chartered the Gozem Data Hub serving over 650 people (employees, field agents, and partners) across five African countries.
+- Chartered the Gozem Data Hub serving over 700 people (employees, field agents, and partners) across five African countries.
 - Cut Google Cloud costs by 42.57% in a single quarter while maintaining SLAs.
 - Shipped 30+ production AI-powered tools and set governance across 250+ production pipelines.
 - Co-led a group AI strategy: 49 validated use cases, 6 in implementation, near-full top-management adoption of daily AI assistance.
@@ -40,4 +40,5 @@ English (full professional) and French (native). Remote-first. Open to selected 
 ---
 
 HOW TO REACH HIM:
-Email hello@bolablg.com or book a meeting at calendar.app.google/Jg1r7af8Rk2jYqCV8. LinkedIn: linkedin.com/in/bolablg.
+To request a resume, use Request resume on https://www.bolablg.com/contact/. Provide your name, email, opportunity area, role title and role details or job link. Organization is optional. Bolaji reviews the opportunity before sharing a resume.
+Email hello@bolablg.com or book a 45-minute Google Meet at https://calendar.app.google/KYm4B5iL5j3HRxav9. LinkedIn: linkedin.com/in/bolablg.

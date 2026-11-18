@@ -11,7 +11,7 @@ GOZEM DATA HUB - Central Data & AI Workspace
 - Situation: business and operational teams alongside external partners across Gozem's countries lacked a unified workspace for data and AI applications with fast iteration.
 - Action: Bolaji chartered, architected, and led development of the Data Hub web app (data.gozem.co): data exploration environments, data-driven applications, AI-powered tools, operational workflows, and self-service analytics modules. He modeled the micro-services database and platform authentication, and built role-based access governance with 3 access tiers (user, service_admin, platform_admin) crossed with 3 team roles (viewer, worker, manager). He onboarded 2 engineers who shipped 2 additional self-service apps onto the platform.
 - Tools: Python, BigQuery, Google Cloud Storage, Cloud Functions, AWS EC2, Docker, RBAC, Claude Code.
-- Outcome: over 650 people (internal employees, field agents, and external partners) across Benin, Togo, Gabon, Cameroon, and Congo collaborating on one governed platform by the end of his mandate. The Hub is the working proof of his Data Product Engineering thesis, the subject of his 2026 publication.
+- Outcome: over 700 people (internal employees, field agents, and external partners) across Benin, Togo, Gabon, Cameroon, and Congo collaborating on one governed platform by the end of his mandate. The Hub is the working proof of his Data Product Engineering thesis, the subject of his 2026 publication.
 
 ---
 
@@ -31,7 +31,7 @@ AUTOMATED INVOICE DATA EXTRACTION - Finance Automation
 - Situation: the Financing Operations team manually entered data from supplier and operational invoices in multiple formats, slowing reconciliation across Gozem's multi-country operations.
 - Action: Bolaji architected and built an automated pipeline ingesting thousands of invoices per month (PDF and image formats) using LLM-powered OCR and document intelligence. He designed an agentic workflow supporting custom schema extraction, with a validation layer flagging anomalies, integrated into Google Sheets for reconciliation.
 - Tools: LLM OCR, document intelligence, Python, Gemini, Cloud Storage, Google Sheets.
-- Outcome: roughly 40 hours saved per financing manager per month across thousands of invoices.
+- Outcome: estimated savings of 40+ hours per country Financing Manager each month.
 
 ---
 
@@ -49,7 +49,7 @@ REAL-TIME MARKET MONITORING SYSTEM - Transportation Operations
 - Situation: transportation operations had no live visibility on supply-demand imbalances during high-demand events (public holidays, major urban events), leading to slow operational response.
 - Action: Bolaji architected a minute-granularity pipeline aggregating GPS, booking, and driver-availability signals. He built supply-demand imbalance detection with threshold-based alerts, plus an operational dashboard surfacing demand-density maps, supply-gap indicators, driver engagement scores, and event KPIs, with automated Google Chat alerts.
 - Tools: MongoDB, BigQuery, Python, Apache Airflow, Looker Studio, Google Chat API.
-- Outcome: validated during the Vodun Days festival peak, a 48% peak-event demand surge with about 2,000 distinct users: the program held an 88% rider match rate, with a 10.2% improvement in supply rate, a 7.4% increase in request-to-completion rate, and a 5.4% coverage gain.
+- Outcome: on the peak day of Vodun Days, ride requests were 48% above the average for the other event days, and the rider match rate was 88%. The same comparison reported 10.2% higher supply rate and 7.4% higher request-to-completion rate. The analysis covered approximately 2,000 users and was observational.
 
 ---
 

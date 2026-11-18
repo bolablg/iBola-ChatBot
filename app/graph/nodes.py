@@ -9,6 +9,7 @@ Every node wraps its logic in try/except with graceful fallbacks.
 from __future__ import annotations
 
 import logging
+import re
 import time
 from typing import Any, Dict, List
 
@@ -488,7 +489,7 @@ _HIGHLIGHT_QUERY_PATTERN = __import__("re").compile(
     __import__("re").IGNORECASE,
 )
 _HIGHLIGHT_TERMS = (
-    "highlights impact achievements 42.57% cost reduction 650+ Data Hub "
+    "highlights impact achievements cloud cost reduction Gozem Data Hub "
     "0 to 14+ team 30+ AI tools 88% match rate why Bolaji stands out"
 )
 
@@ -530,6 +531,97 @@ def _compound_subqueries(query: str):
         return []
     # One focused sub-query per matched domain so each is retrieved on its own.
     return [f"Bolaji BALOGOUN {dom} {query}" for dom in hit]
+
+
+_CAREER_QUESTION = re.compile(
+    r"\b(?:roles?|jobs?|positions?|career|employment|rôles?|postes?|emploi|carri[eè]re)\b"
+    r"|\bwhat (?:was|did) (?:bolaji(?: balogoun)?|he) (?:doing|do)\b"
+    r"|\bque faisait (?:bolaji|il)\b",
+    re.IGNORECASE,
+)
+_JUNIOR_MENTORING_QUESTION = re.compile(
+    r"\b(?:mentor\w*|coach\w*|encadr\w*)\b.*\b(?:junior|intern|graduate|stagiaire)\b"
+    r"|\b(?:junior|intern|graduate|stagiaire)\b.*\b(?:mentor\w*|coach\w*|encadr\w*)\b",
+    re.IGNORECASE,
+)
+
+
+def _career_year(original: str, query: str) -> str | None:
+    years = set(re.findall(r"\b(?:19|20)\d{2}\b", original))
+    if len(years) == 1 and (
+        _CAREER_QUESTION.search(original) or _CAREER_QUESTION.search(query)
+    ):
+        return next(iter(years))
+    return None
+
+
+def _supplement_focused_evidence(
+    search, original: str, query: str, documents: List[Document], limit: int
+) -> List[Document]:
+    """Protect a focused lexical candidate from broad hybrid-result truncation."""
+    year = _career_year(original, query)
+    if year:
+        focused_query = f"employment role timeline {year}"
+    elif _JUNIOR_MENTORING_QUESTION.search(original):
+        focused_query = f"{original} live coding explanatory code review intern"
+    else:
+        return documents
+    index = getattr(search, "bm25_index", None)
+    if index is None or index.is_built is not True:
+        return documents
+    pairs = index.search(focused_query, top_k=limit if year else 1)
+    if year:
+        pairs = [
+            (document, score)
+            for document, score in pairs
+            if (document.metadata.get("source") or document.metadata.get("filename"))
+            == "91_role_timeline.txt"
+            and re.search(
+                rf"^- (?:In|En) {year}, ", document.page_content, re.MULTILINE
+            )
+        ][:1]
+    if not pairs:
+        return documents
+
+    from app.services.advanced_rag import _annotate_retrieval
+
+    best = _annotate_retrieval(pairs)[0]
+    best.metadata["retrieval_method"] = "bm25"
+    candidates = [best] + [
+        document for document in documents if document.page_content != best.page_content
+    ]
+    return candidates[:limit]
+
+
+def _prioritize_career_year(
+    original: str, query: str, documents: List[Document]
+) -> List[Document]:
+    """Surface an exact employment timeline entry before the grading cutoff."""
+    year = _career_year(original, query)
+    if not year:
+        return documents
+
+    entry_pattern = re.compile(rf"^- (?:In|En) {year}, [^\n]+\n?", re.MULTILINE)
+    for index, document in enumerate(documents):
+        source = document.metadata.get("source") or document.metadata.get("filename")
+        if source != "91_role_timeline.txt":
+            continue
+        header, divider, body = document.page_content.partition("\n\n")
+        if not divider:
+            header, body = "", header
+        entry = entry_pattern.search(body)
+        if entry:
+            focused = document.model_copy(
+                update={
+                    "page_content": (
+                        f"{header}{divider}{entry.group().rstrip()}\n\n"
+                        f"{body[:entry.start()]}{body[entry.end():]}"
+                    ),
+                    "metadata": document.metadata.copy(),
+                }
+            )
+            return [focused, *documents[:index], *documents[index + 1 :]]
+    return documents
 
 
 def retrieve_node(state: dict) -> dict:
@@ -583,12 +675,11 @@ def retrieve_node(state: dict) -> dict:
         # Compound questions ("role AND degree") otherwise fill the whole
         # context with the dominant sub-topic and drop the other half
         # (measured defect n09). Fan out a search per detected sub-topic and
-        # PREPEND each sub-topic's best doc so both halves survive the context
-        # budget, not just get appended past the cutoff.
+        # Prepend each sub-topic's best chunk to protect it from the context cutoff.
         subqueries = _compound_subqueries(query)
         if subqueries:
-            seen = {d.page_content for d in docs}
-            leaders = []
+            candidates = {doc.page_content: doc for doc in docs}
+            leaders: dict[str, Document] = {}
             for sub in subqueries:
                 extra = search.search(
                     sub,
@@ -597,20 +688,23 @@ def retrieve_node(state: dict) -> dict:
                     use_reranker=search_settings.use_reranker,
                     category_filter=None,
                 )
-                for d in extra:
-                    if d.page_content not in seen:
-                        leaders.append(d)  # guaranteed a front slot
-                        seen.add(d.page_content)
-                        break
-                for d in extra[1:]:
-                    if d.page_content not in seen:
-                        docs.append(d)
-                        seen.add(d.page_content)
-            # Temporal boost sorts by recency, which would re-sink the (older)
-            # education/community half; skip it when serving a compound query.
-            docs = leaders + _temporal_boost(query, docs)
+                if extra:
+                    best = extra[0]
+                    leaders.setdefault(best.page_content, best)
+                for doc in extra:
+                    candidates.setdefault(doc.page_content, doc)
+            for content in leaders:
+                candidates.pop(content)
+            # Keep focused results in front regardless of their dates.
+            docs = list(leaders.values()) + _temporal_boost(
+                query, list(candidates.values())
+            )
         else:
             docs = _temporal_boost(query, docs)
+        docs = _supplement_focused_evidence(
+            search, original, query, docs, search_settings.vector_top_k
+        )
+        docs = _prioritize_career_year(original, query, docs)
 
         return {
             "documents": docs,
@@ -686,10 +780,10 @@ def grade_documents_node(state: dict) -> dict:
         )
 
         # Filter to valid indices only
-        valid_indices = [
+        valid_indices = {
             idx for idx in result.relevant_indices if 0 <= idx < len(documents)
-        ]
-        graded = [documents[i] for i in valid_indices]
+        }
+        graded = [doc for index, doc in enumerate(documents) if index in valid_indices]
 
     except Exception:
         # Heuristic fallback: keep docs with substantial content
@@ -1162,12 +1256,12 @@ def _insufficient_answer(state: dict) -> str:
 
 
 def verify_grounding_node(state: dict) -> dict:
-    """Verify claims, then preserve retrieved numeric bounds if the model missed one."""
+    """Verify claims, then preserve retrieved numeric qualifiers."""
     from app.graph.answer_completeness import (
         preserve_primary_language,
         preserve_requested_degrees,
     )
-    from app.graph.numeric_grounding import preserve_percentage_upper_bounds
+    from app.graph.numeric_grounding import preserve_percentage_qualifiers
 
     docs = state.get("context_documents", []) or []
     if not docs or state.get("agent_type") == "redirect":
@@ -1189,10 +1283,10 @@ def verify_grounding_node(state: dict) -> dict:
     if not result.get("grounding_checked"):
         return result
     answer = result.get("answer", draft)
-    guarded, fact_ids = preserve_percentage_upper_bounds(answer, docs, language)
+    guarded, numeric_facts = preserve_percentage_qualifiers(answer, docs, language)
     _, primary_still_missing = preserve_primary_language(guarded, docs, query, language)
     _, degree_still_missing = preserve_requested_degrees(guarded, docs, query, language)
-    if fact_ids or primary_added or degree_added:
+    if numeric_facts or primary_added or degree_added:
         result["answer"] = guarded
         steps = list(result.get("reasoning_steps", []))
         if primary_added and not primary_still_missing:
@@ -1203,11 +1297,16 @@ def verify_grounding_node(state: dict) -> dict:
                     detail="explicit retrieved primary language",
                 )
             )
-        if fact_ids:
+        for qualifier, fact_ids in numeric_facts.items():
+            action = (
+                "upper_bound_preserved"
+                if qualifier == "upper"
+                else "approximate_percentage_preserved"
+            )
             steps.append(
                 ReasoningStep(
                     node="verify_grounding",
-                    action="upper_bound_preserved",
+                    action=action,
                     detail=", ".join(fact_ids),
                 )
             )
@@ -1350,7 +1449,7 @@ def _oos_contact_actions(session_id: str, end_chat: bool) -> List[Dict[str, Any]
         {
             "text": "Book appointment",
             "type": "contact_booking",
-            "url": "https://calendar.app.google/Jg1r7af8Rk2jYqCV8",
+            "url": config.CALENDAR_BOOKING_URL,
             "session_id": session_id,
             "description": "Schedule a meeting with Bolaji",
             "primary": True,

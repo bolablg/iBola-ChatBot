@@ -28,6 +28,7 @@ PROFILE_FACT_MARKERS = [
     "42%",
     "42.57",
     "650",
+    "700",
     "master of science",
     "msc",
     "statistics",

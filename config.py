@@ -93,7 +93,8 @@ SUPPORTED_LANGUAGES = [
 
 # Contact Information
 CONTACT_EMAIL = "hello@bolablg.com"
-CALENDAR_BOOKING_URL = "https://calendar.google.com/calendar/appointments/schedules/AcZssZ3YeidR5Og4YSGZIlxUIlDAf0AiRA6N8-MAzr-Sy55BtbKhBLXkfa8M_P_92eokXRnayLVlEXiW?gv=true"
+CALENDAR_BOOKING_URL = "https://calendar.app.google/KYm4B5iL5j3HRxav9"
+RESUME_REQUEST_URL = "https://www.bolablg.com/contact/#contact-direct-title"
 LINKEDIN_URL = "https://linkedin.com/in/bolablg"
 
 

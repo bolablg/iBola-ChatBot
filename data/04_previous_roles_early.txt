@@ -2,17 +2,17 @@ BOLAJI BALOGOUN - EARLY CAREER
 
 ---
 
-Where did Bolaji work before Gozem: at Rintio, as a Data Scientist (July 2018 - May 2019), building the smart-farming data platform.
-Ou travaillait Bolaji avant Gozem: chez Rintio, comme Data Scientist (juillet 2018 a mai 2019), sur la plateforme de donnees agricoles Duniya.
+Where did Bolaji work before Gozem: at Rintio, as a Data Scientist (March 2018 - May 2019, including the March - June apprenticeship), building the smart-farming data platform.
+Ou travaillait Bolaji avant Gozem: chez Rintio, comme Data Scientist (mars 2018 à mai 2019, dont la formation de mars à juin), sur la plateforme de donnees agricoles Duniya.
 
-DATA SCIENTIST - RINTIO (July 2018 - May 2019)
+DATA SCIENTIST - RINTIO (March 2018 - May 2019, including the March - June apprenticeship)
 
 Rintio is a technology company focused on precision agriculture. Bolaji developed analytics and data science products for Duniya, Rintio's smart-farming MVP for Beninese farmers, and supported outsourcing clients in their data transformation.
 
 Key achievements:
 - Designed and deployed a big data architecture combining a Hadoop data lake, an Apache Spark cluster, and ElasticSearch, ingesting 100GB+ of agricultural data from multiple sources (scraped market data, spreadsheets, PDFs, images) covering crops, fertilizers, yields, rainfall, and climate.
 - Built end-to-end ingestion and transformation pipelines turning raw agricultural data into ML-ready features for the smart-farming app.
-- Developed statistical crop yield forecast models using regression algorithms, mainly for maize with additional models for beans, achieving R squared above 80% in most cases. Forecasts powered sourcing, cycle, and pricing decisions.
+- Developed statistical crop yield forecast models using regression algorithms, mainly for maize with additional models for beans. Forecasts powered sourcing, cycle, and pricing decisions.
 - Delivered a consolidated leadership BI report in Kibana and Apache Superset covering multiple KPIs and data domains.
 - Delivered an executive data & AI training mission to Societe Generale Maroc's top management: training content and lab use cases tailored to banking applications of data and AI.
 

@@ -40,7 +40,7 @@ Accompanied by a blog article and GitHub repository.
 GOZEM DATA HUB (Gozem internal, flagship platform)
 What: the central data and AI workspace Bolaji chartered and architected at Gozem (data.gozem.co): data exploration environments, AI-powered tools, operational workflows, and self-service analytics behind role-based governance.
 Stack: Python, BigQuery, Google Cloud Storage, Cloud Functions, AWS EC2, Docker, RBAC, Claude Code.
-Outcome: served over 650 people (employees, field agents, and partners) across five African countries by the end of his mandate. Two engineers he onboarded shipped two additional self-service apps onto the platform.
+Outcome: served over 700 people (employees, field agents, and partners) across five African countries by the end of his mandate. Two engineers he onboarded shipped two additional self-service apps onto the platform.
 
 ---
 
