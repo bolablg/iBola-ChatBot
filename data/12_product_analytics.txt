@@ -18,7 +18,7 @@ Performance metrics:
 - Click-Through Rate (CTR): percentage of users clicking on recommended products.
 - Conversion rate: percentage of users purchasing recommended products.
 
-Observed result: up to 12% of delivered orders were placed through the recommendation feature. This is observed order share, not a 12% incremental sales or conversion uplift. The measurement period and methodology are unspecified. Post-deployment monitoring is separate from the placement experiment below and does not by itself establish a causal effect.
+Observed result: recommendations were associated with approximately 12% of delivered orders in the first month after deployment. The metric describes an observed share of orders. Post-deployment monitoring is separate from the placement experiment below and does not by itself establish a causal effect.
 
 Evidence: candidate-confirmed E-122 and E-139 in the Job Applications evidence ledger; distinction between placement experimentation and post-deployment monitoring clarified October 28, 2026. Team delivery and Bolaji's oversight/onboarding do not establish that he personally coded the recommendation model, API, or mobile integration.
 

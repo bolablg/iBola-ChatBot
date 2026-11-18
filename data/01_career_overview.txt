@@ -2,12 +2,12 @@ BOLAJI BALOGOUN - CAREER OVERVIEW & TIMELINE
 
 Bolaji has over a decade of professional experience in data science, data engineering, analytics, and AI, progressing from statistician to Data Director. Below is his complete career timeline, most recent first.
 
-EMPLOYMENT STATUS: Bolaji's tenure at Gozem ENDED in July 2026. His last role was Data Director at Gozem (April 2025 - July 2026). He no longer works at Gozem. He is currently based in Little Rock, Arkansas, US, and is open to Director-level and Head-level data and AI roles and selected consulting across the US, Canada, France, and Sub-Saharan Africa.
+EMPLOYMENT STATUS: Bolaji's tenure at Gozem ENDED in July 2026. His last role was Data Director at Gozem (April 2025 - July 2026). He no longer works at Gozem. He is currently based in Little Rock, Arkansas, US, and is open to data engineering, architecture, analytics, and data leadership roles and selected consulting across the US, Canada, France, and Sub-Saharan Africa.
 
 ---
 
 LATEST ROLE / MOST RECENT ROLE / LAST POSITION: Data Director - Gozem (April 2025 - July 2026, ended)
-This was Bolaji's most recent role. He owned the data function end to end (platform, products, team, governance, and FinOps) and co-led AI strategy at Gozem, the Singapore-headquartered super app operating across French-speaking Africa (Togo, Benin, Cameroon, Gabon, and Congo). He reported at C-level and oversaw a data organization of 14+ professionals spanning eight analytics domains. Key results: the Gozem Data Hub live for over 650 people (employees, field agents, and partners), 30+ production automation tools shipped across the group, 250+ pipelines under observability with automated quality checks, and a group AI strategy with 49 validated use cases of which 6 moved into implementation.
+This was Bolaji's most recent role. He owned the data function end to end (platform, products, team, governance, and FinOps) and co-led AI strategy at Gozem, the Singapore-headquartered super app operating across French-speaking Africa (Togo, Benin, Cameroon, Gabon, and Congo). He reported at C-level and oversaw a data organization of 14+ professionals spanning eight analytics domains. Key results: the Gozem Data Hub live for over 700 people (employees, field agents, and partners), 30+ production automation tools shipped across the group, 250+ pipelines under observability with automated quality checks, and a group AI strategy with 49 validated use cases of which 6 moved into implementation.
 
 ---
 
@@ -21,8 +21,8 @@ Bolaji was Gozem's first data hire. He built the analytics function from the gro
 
 ---
 
-PREVIOUS ROLE: Data Scientist - Rintio (July 2018 - May 2019)
-At Rintio, Bolaji developed analytics and data science products for Duniya, Rintio's smart-farming MVP for Beninese farmers. He deployed a big data architecture combining a Hadoop data lake, an Apache Spark cluster, and ElasticSearch processing 100GB+ of agricultural data, and built regression-based crop yield forecast models (R squared above 80%) powering sourcing, cycle, and pricing decisions. He also delivered an executive data & AI training mission to Societe Generale Maroc's top management on banking applications of data and AI.
+PREVIOUS ROLE: Data Scientist - Rintio (March 2018 - May 2019, including the March - June apprenticeship)
+At Rintio, Bolaji developed analytics and data science products for Duniya, Rintio's smart-farming MVP for Beninese farmers. He deployed a big data architecture combining a Hadoop data lake, an Apache Spark cluster, and ElasticSearch processing 100GB+ of agricultural data, and built regression-based crop yield forecast models powering sourcing, cycle, and pricing decisions. He also delivered an executive data & AI training mission to Societe Generale Maroc's top management on banking applications of data and AI.
 
 ---
 

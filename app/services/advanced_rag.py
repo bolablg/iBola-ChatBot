@@ -280,17 +280,15 @@ class CrossEncoderReranker:
         query: str,
         documents: List[Document],
         top_k: int = 5,
-    ) -> List[Tuple[Document, float]]:
+    ) -> Optional[List[Tuple[Document, float]]]:
+        """Return scores from the model, or None when it is unavailable."""
         self._ensure_model()
         if not self.model or not documents:
-            return [(doc, 1.0) for doc in documents[:top_k]]
-        try:
-            pairs = [(query, doc.page_content[:512]) for doc in documents]
-            scores = self.model.predict(pairs)
-            scored = sorted(zip(documents, scores), key=lambda x: x[1], reverse=True)
-            return [(doc, float(s)) for doc, s in scored[:top_k]]
-        except Exception:
-            return [(doc, 1.0) for doc in documents[:top_k]]
+            return None
+        pairs = [(query, doc.page_content[:512]) for doc in documents]
+        scores = self.model.predict(pairs)
+        scored = sorted(zip(documents, scores), key=lambda x: x[1], reverse=True)
+        return [(doc, float(s)) for doc, s in scored[:top_k]]
 
 
 # ---------------------------------------------------------------------------
@@ -458,6 +456,7 @@ class HybridSearchService:
                 return copy.deepcopy(cached)
             self._search_misses += 1
             ranked_lists: List[List[Tuple[Document, float]]] = []
+            cacheable = True
 
             # 1. Vector search (MMR)
             vector_docs: List[Document] = []
@@ -472,6 +471,7 @@ class HybridSearchService:
                         [(doc, 1.0 / (i + 1)) for i, doc in enumerate(vector_docs)]
                     )
                 except Exception as exc:
+                    cacheable = False
                     self._vector_errors += 1
                     logger.warning(
                         "Vector search failed for query '%s': %s", query, exc
@@ -501,20 +501,24 @@ class HybridSearchService:
 
             # 4. Optional rerank
             if use_reranker and len(pairs) > top_k:
-                pairs = self.reranker.rerank(
-                    query, [doc for doc, _ in pairs], top_k=top_k
-                )
-            else:
-                pairs = pairs[:top_k]
+                try:
+                    reranked = self.reranker.rerank(
+                        query, [doc for doc, _ in pairs], top_k=top_k
+                    )
+                    if reranked:
+                        pairs = reranked
+                except Exception as exc:
+                    cacheable = False
+                    logger.warning("Cross-encoder reranking failed: %s", exc)
 
-            results = _annotate_retrieval(pairs)
+            results = _annotate_retrieval(pairs[:top_k])
 
             # 5. Category preference (soft, never a hard filter)
             results = _prefer_category(results, category_filter)
             # Network calls above run outside the lock so distinct queries
             # remain concurrent. Never publish results under a newer revision.
             with self._search_lock:
-                if revision == self._revision():
+                if cacheable and revision == self._revision():
                     self._search_cache[cache_key] = copy.deepcopy(results)
             return results
 

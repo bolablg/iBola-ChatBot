@@ -6,7 +6,7 @@ Recorded October 28, 2026. This is the confirmation date, not the date of the un
 
 RECOMMENDATION EXPERIMENT AND POST-DEPLOYMENT MONITORING
 
-Bolaji described two distinct activities at Gozem: an experiment to decide where recommendations should appear, and post-deployment analysis monitoring the deployed recommendation feature. The earlier evidence describes three conditions: no recommendations, homepage recommendations, and search recommendations. His latest approximate sample recollection was 600 users in total. Findings supported homepage rollout; no quantified lift or statistical significance is established. Separately, up to 12% of delivered orders were observed through recommendations after deployment. This order share is not incremental sales uplift or an experimental effect estimate.
+Bolaji described two distinct activities at Gozem: an experiment to decide where recommendations should appear, and post-deployment analysis monitoring the deployed recommendation feature. The earlier evidence describes three conditions: no recommendations, homepage recommendations, and search recommendations. His latest approximate sample recollection was 600 users in total. Findings supported homepage rollout; no quantified lift or statistical significance is established. Separately, recommendations were associated with approximately 12% of delivered orders in the first month after deployment. That figure measures observed order share after launch.
 
 ---
 
@@ -18,7 +18,7 @@ The approximately 9% improvement concerns driver retention. Agricultural-season 
 
 HANDS-ON VERTEX AI AND TECHNICAL SUPERVISION
 
-Bolaji personally used Vertex AI to explore feasibility and prototype possible solutions. One confirmed example is invoice-extraction prototyping in Vertex AI Studio, testing prompts and context before production development. He also supervised engineers using Vertex AI, including overseeing an ML engineer's recommendation-feature delivery and onboarding him to Vertex AI ML pipelines. That model pipeline used Vertex AI, with the mobile app's API hosted on Google Cloud Functions. Both hands-on personal use and technical supervision are part of his experience; they do not establish that he personally implemented every production component.
+Bolaji personally used Vertex AI to explore feasibility and prototype possible solutions. One confirmed example is invoice-extraction prototyping in Vertex AI Studio, testing prompts and context before production development. He also supervised engineers using Vertex AI, including overseeing an ML engineer's recommendation-feature delivery and onboarding him to Vertex AI ML pipelines. That model pipeline used Vertex AI, with the mobile app's API hosted on Google Cloud Functions. The portfolio also records personal production use of Cloud Functions and Vertex AI. Both hands-on personal use and technical supervision are part of his experience; they do not establish that he personally implemented every production component.
 
 ---
 

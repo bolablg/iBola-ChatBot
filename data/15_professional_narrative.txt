@@ -59,11 +59,11 @@ This makes his AI profile especially important to interpret correctly. The knowl
 BUSINESS THEMES RUNNING THROUGH THE KNOWLEDGE BASE:
 
 Several themes repeat across otherwise different projects:
-- Compression of manual work into systems (2-day jobs to minutes, 40 hours per manager per month saved).
+- Compression of manual work into systems (2-day jobs to minutes, estimated invoice-processing savings of 40+ hours per country Financing Manager each month).
 - Better decision speed through better data access.
 - Cost reduction through architectural discipline (42.57% in one quarter).
 - Risk reduction through monitoring, fraud controls, and data quality (25M+ XOF fraud flagged, zero unknown defaults).
-- Democratization of insight beyond the central data team (650+ people on one platform).
+- Democratization of insight beyond the central data team (700+ people on one platform).
 - Adoption-oriented delivery instead of isolated technical output.
 
 Taken together, this suggests Bolaji creates leverage more often than he creates isolated artifacts.

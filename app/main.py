@@ -11,7 +11,7 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, validator
 
-from app.history_store import append_history, get_history
+from app.history_store import get_history, record_chat_turn
 from app.routes.feedback import router as feedback_router
 from app.routes.streaming import router as streaming_router
 from app.services.cache_service import cache_service
@@ -579,7 +579,7 @@ async def chat(payload: ChatInput, request: Request):
             cached_response["session_id"] = session_id
             # Never replay another turn's trace_id on a cache hit (Codex #6)
             cached_response["trace_id"] = None
-            append_history(session_id, (user_input, cached_response.get("answer", "")))
+            record_chat_turn(session_id, user_input, cached_response)
 
             return cached_response
 
@@ -641,6 +641,7 @@ async def chat(payload: ChatInput, request: Request):
             ),  # Add the missing field
             "evidence": result.get("evidence", []),
             "grounding_checked": result.get("grounding_checked", False),
+            "answer_sources": result.get("answer_sources", []),
             "trace_id": result.get("trace_id"),
         }
 
@@ -653,10 +654,7 @@ async def chat(payload: ChatInput, request: Request):
         )
         # The service owns lead capture; do not rewrite a verified answer.
 
-        # Update the history in the store
-        append_history(
-            session_id, (user_input, response_for_frontend.get("answer", ""))
-        )
+        record_chat_turn(session_id, user_input, result)
 
         return response_for_frontend
 

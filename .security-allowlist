@@ -2,10 +2,10 @@
 # Removed obsolete exceptions after the patched dependency update.
 # Embedded Chroma uses persist_directory and a configured Gemini embedding
 # function. No Chroma HTTP server or caller-selected model repository is exposed.
-# No fixed release is published as of 2026-10-28. See .security-exceptions.json.
+# No fixed release was published at the 2026-11-18 review. See .security-exceptions.json.
 
 # Time-limited exceptions (validated by scripts/check_security_exceptions.py).
-# Existing review expiry remains 2026-11-17 UTC.
+# Review expires 2026-12-18 UTC.
 PYSEC-2026-311
 CVE-2026-45830
 CVE-2026-45831
