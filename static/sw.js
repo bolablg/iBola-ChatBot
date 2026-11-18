@@ -12,7 +12,7 @@
 // CACHE_VERSION is bumped with the VERSION file so activating a new worker
 // purges the previous precache.
 
-const CACHE_VERSION = 'ibola-v1.2.4';
+const CACHE_VERSION = 'ibola-v1.2.5';
 
 const PRECACHE = [
   '/',

@@ -145,8 +145,7 @@
 
             #ibola-chat-widget .ibola-frame-container {
                 width: 360px;
-                height: min(480px, 62vh);
-                height: min(480px, 62dvh);
+                height: max(0px, calc(var(--ibola-viewport-height, 100vh) * 0.75 - var(--ibola-launcher-height, 44px) - var(--ibola-gap)));
                 border-radius: 12px;
             }
         }
@@ -207,6 +206,9 @@
         const visibleBottom = visibleTop + (viewport?.height ?? window.innerHeight);
         const visibleLeft = viewport?.offsetLeft ?? 0;
         const visibleRight = visibleLeft + (viewport?.width ?? window.innerWidth);
+        // The mobile height budget includes the launcher and its gap.
+        wrapper.style.setProperty('--ibola-viewport-height', `${visibleBottom - visibleTop}px`);
+        wrapper.style.setProperty('--ibola-launcher-height', `${bottom - top}px`);
 
         const layoutLeft = left - viewportShift;
         const layoutRight = right - viewportShift;
