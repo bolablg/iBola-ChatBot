@@ -437,6 +437,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (action.type === 'contact_email') {
                     window.open(action.url, '_blank');
                     sendContactAlert('email_request', action.session_id, action.chat_history);
+                } else if (action.type === 'request_resume') {
+                    window.open(action.url, '_blank', 'noopener');
                 }
             });
 

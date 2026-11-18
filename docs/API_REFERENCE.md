@@ -43,6 +43,8 @@ Full agentic RAG pipeline (LangGraph). Recommended for production use.
 - `token` — `{"token": "chunk of text"}`
 - `done` — `{"status": "done", "agent_type": "professional", "confidence": 0.85}`
 
+Concatenate `token` fragments directly to preserve the answer's Markdown spacing and line breaks. The `done` event also includes `should_end_chat`.
+
 ### `POST /ask`
 
 Simple RAG — direct retrieval + generation without agent routing. Faster (2-5s).

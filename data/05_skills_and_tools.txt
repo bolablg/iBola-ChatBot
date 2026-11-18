@@ -46,7 +46,7 @@ AI & LLM ENGINEERING:
   Used at: Gozem (a data-exploration MCP as part of pipeline observability).
 
 - Document intelligence and LLM-powered OCR.
-  Used at: Gozem (automated invoice extraction saving each financing manager roughly 40 hours per month across thousands of invoices).
+  Used at: Gozem (automated invoice extraction with estimated savings of 40+ hours per country Financing Manager each month).
 
 - Scikit-learn: classification, regression, clustering.
   Used at: Rintio (crop yield prediction models), Gozem (ML-based fraud screening that made field-agent payment processing 7x faster).
@@ -54,7 +54,7 @@ AI & LLM ENGINEERING:
 - Natural Language Processing: neural machine translation, text classification, language detection.
   Used at: Takwimu LAB (French-Fongbe and French-Ewe neural machine translation), iBola chatbot.
 
-- Vertex AI: hands-on feasibility exploration and prototyping, plus technical supervision and engineer onboarding.
+- Vertex AI and Cloud Functions: personal production use, plus technical supervision and engineer onboarding.
   Personal use: explored possible AI solutions and personally prototyped invoice extraction in Vertex AI Studio, testing prompts and context before production development.
   Team work at Gozem: oversaw an ML engineer's recommendation-feature delivery and onboarded him to Vertex AI ML pipelines. Vertex AI supported the model pipeline; Google Cloud Functions hosted the API integrated into the customer mobile app.
   His experience includes both personal use and supervision of others. Personal prototyping does not establish sole implementation of the recommendation model, API, or mobile integration. Evidence: E-122 and candidate clarification October 28, 2026.

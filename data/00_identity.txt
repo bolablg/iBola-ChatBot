@@ -1,8 +1,8 @@
 BOLAJI BALOGOUN - IDENTITY & CONTACT
 
 FULL NAME: Momboladji BALOGOUN (goes by "Bolaji")
-BRAND TITLE: Head of Data & AI
-LOCATION: Little Rock, Arkansas, United States (GMT-5)
+PROFESSIONAL PROFILE: Data Engineer and Data Architect, former Head of Data
+LOCATION: Little Rock, Arkansas, United States (America/Chicago)
 NATIONALITY: Beninese
 
 WHERE IS BOLAJI BASED: Bolaji is based in Little Rock, Arkansas, in the United States.
@@ -31,8 +31,8 @@ TAGLINE: "I build data platforms, AI products, and the teams that ship them, so 
 PERSONAL INTERESTS: Community building, continuous learning, exploring cultures, jogging, soccer, music, coffee, Real Madrid.
 
 AVAILABILITY & CAREER INTERESTS:
-Bolaji concluded his tenure at Gozem in July 2026, where his last role was Data Director. He is now open to Director-level and Head-level data and AI roles, and to selected consulting engagements, across the United States, Canada, France, and Sub-Saharan Africa.
-Equivalent target titles: Data & AI Director, Director of Data & Analytics, Director of Data Engineering, Director of Data Platform, Head of Analytics & AI, Senior Manager for Data Engineering, Data Platform, or Data & Analytics.
+Bolaji concluded his tenure at Gozem in July 2026, where his last role was Data Director. He is now open to data engineering, architecture, analytics, and data leadership roles, and to selected consulting engagements, across the United States, Canada, France, and Sub-Saharan Africa.
+Examples of target roles: Staff or Principal Data Engineer, Data Platform Engineer, Data Architect, Cloud Data Architect, Data Engineering Manager, Head of Data, or Director of Data Engineering.
 He is interested in roles that combine technical depth with strategic influence, ideally with a significant share of hands-on building (coding, architecting, shipping products).
 Ideal environment: a scale-up or large company with ambitious data and AI goals, an established organization that needs someone to build or transform its data function.
 Contact hello@bolablg.com to discuss opportunities.
@@ -54,7 +54,7 @@ What makes Bolaji different from other senior data and AI candidates:
 4. Real-world African market expertise: he built production systems across six countries with real infrastructure constraints, multilingual contexts, and distributed teams, serving millions of real users daily.
 
 Why interview Bolaji for a senior data or AI role:
-He combines 10+ years of hands-on technical depth (Python, SQL, GCP, Airflow, LLMs, agentic AI) with proven leadership of a team he grew from 0 to 14+. He chartered the Gozem Data Hub serving over 650 people, cut Google Cloud costs by 42.57% in a single quarter, shipped 30+ production AI tools (RAG chatbots, document intelligence, fraud screening, market monitoring), and set governance across 250+ production pipelines. He is equally comfortable writing BigQuery SQL, designing system architecture, mentoring engineers, or presenting to executive leadership.
+He combines 10+ years of hands-on technical depth (Python, SQL, GCP, Airflow, LLMs, agentic AI) with proven leadership of a team he grew from 0 to 14+. He chartered the Gozem Data Hub serving over 700 people, cut Google Cloud costs by 42.57% in a single quarter, shipped 30+ production AI tools (RAG chatbots, document intelligence, fraud screening, market monitoring), and set governance across 250+ production pipelines. He is equally comfortable writing BigQuery SQL, designing system architecture, mentoring engineers, or presenting to executive leadership.
 
 ---
 
@@ -67,4 +67,4 @@ Best first engagements:
 - Data platform audit and roadmap: a 2-4 week assessment of your current data stack with a concrete modernization plan.
 - AI strategy and adoption: use-case cataloguing, vendor scan, and an adoption framework grounded in his Gozem group AI strategy playbook.
 - Data team coaching and hiring: help structure your data function, design interview processes, and coach your existing team.
-Contact hello@bolablg.com or book a meeting at calendar.app.google/Jg1r7af8Rk2jYqCV8 to discuss.
+Contact hello@bolablg.com or book a meeting at https://calendar.app.google/KYm4B5iL5j3HRxav9 to discuss.

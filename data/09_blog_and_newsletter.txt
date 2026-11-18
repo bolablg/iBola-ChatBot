@@ -6,10 +6,15 @@ Bolaji writes in English and French on data engineering, automation, AI, and Goo
 
 ---
 
+ARTICLE (OCTOBER 2026): From files to reliable tables: The promise of open table formats
+Bolaji explains how Iceberg, Delta Lake, and Hudi turn raw files into consistent, shareable tables. https://blog.bolablg.com/p/open-table-format-from-lake-files-to-reliable-tables
+
+---
+
 PUBLICATION (2026): From Insight to Action: The Rise of Data Product Engineering in Scaleups
-Bolaji's 2026 piece arguing that at scaleups, product teams concentrate on the revenue line, so internal data platforms need their own product discipline. The Gozem Data Hub, which he chartered and architected to serve over 650 people, is the working proof of this thesis on Data Product Engineering.
-What did Bolaji publish in 2026: From Insight to Action: The Rise of Data Product Engineering in Scaleups.
-Qu'a publie Bolaji en 2026: From Insight to Action: The Rise of Data Product Engineering in Scaleups, son article sur le Data Product Engineering dans les scaleups.
+Bolaji's 2026 piece arguing that at scaleups, product teams concentrate on the revenue line, so internal data platforms need their own product discipline. The Gozem Data Hub, which he chartered and architected to serve over 700 people, is the working proof of this thesis on Data Product Engineering.
+What did Bolaji publish in 2026: From files to reliable tables: The promise of open table formats, and From Insight to Action: The Rise of Data Product Engineering in Scaleups.
+Qu'a publié Bolaji en 2026 : From files to reliable tables: The promise of open table formats et From Insight to Action: The Rise of Data Product Engineering in Scaleups.
 
 ---
 

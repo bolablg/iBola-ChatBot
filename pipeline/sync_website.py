@@ -212,14 +212,23 @@ def generate_public_facts(canon_text, identity_text=""):
         match = re.search(pattern, text, re.IGNORECASE)
         return match.group(group).strip() if match else None
 
+    contact = canon_text.rpartition("\n## Contact\n")[2] or canon_text
+    contact = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", contact)
+    employment = [role for role in parse_roles(canon_text) if not role["side"]]
+    latest = max(employment, key=lambda role: role["start"], default=None)
     facts = {
-        "location": _find(r"Based in:\s*\*{0,2}([^\n·]+?)(?:\s*·|\n)", canon_text)
-        or _find(r"Based in:\s*(.+)", canon_text),
-        "languages": _find(r"\*\*Languages\*\*:\s*(.+)", canon_text),
-        "availability": _find(r"open to (selected [^\n]+?)(?:\n|$)", canon_text),
-        "most_recent_role": _find(r"\*\*Most recent role\*\*:\s*([^(\n]+)", canon_text),
-        "contact_email": _find(r"Email:\s*(\S+@\S+)", canon_text),
-        "linkedin": _find(r"LinkedIn:\s*(\S+)", canon_text),
+        "location": _find(r"Based in:\s*\*{0,2}([^\n·]+)", contact),
+        "languages": _find(r"\*\*Languages\*\*:\s*(.+)", canon_text)
+        or _find(r"\bBolaji speaks ([^.\n]+)\.", canon_text),
+        "availability": _find(r"Availability:\s*(.+)", contact)
+        or _find(r"open to (selected [^\n]+?)(?:\n|$)", canon_text),
+        "most_recent_role": (
+            f"{latest['title']} at {latest['company']} ({latest['period_text']})"
+            if latest
+            else _find(r"\*\*Most recent role\*\*:\s*([^(\n]+)", canon_text)
+        ),
+        "contact_email": _find(r"Email:\s*(\S+@\S+)", contact),
+        "linkedin": _find(r"LinkedIn:\s*(\S+)", contact),
         "website": "https://www.bolablg.com",
         "nationality": _find(r"NATIONALITY:\s*(.+)", identity_text),
         "publications": [],
@@ -299,6 +308,13 @@ def parse_roles(canon_text):
                 section = "employment"
             elif "other experiences" in low:
                 section = "side"
+            elif low in {
+                "## big data bootcamp",
+                "## contributions",
+                "## team achievements",
+            }:
+                # Embedded case content uses these headings inside the role lists.
+                continue
             else:
                 section = None
             continue
@@ -472,26 +488,13 @@ def sync():
         with open(local_path, encoding="utf-8") as f:
             changed = _hash(f.read()) != _hash(remote)
 
-    if not changed:
-        # The canon may be unchanged while derived files (facts allowlist,
-        # role timeline) are missing or stale, e.g. the first run after this
-        # feature deploys. Regenerate and ingest them in that case.
-        derived_missing = not os.path.exists(
-            os.path.join(config.DATA_PATH, PUBLIC_FACTS_FILENAME)
-        ) or not os.path.exists(os.path.join(config.DATA_PATH, TIMELINE_FILENAME))
-        if derived_missing:
-            write_public_facts(remote)
-            write_role_timeline(remote)
-            update_vectorstore()
-            print("Canon unchanged; regenerated missing derived files.")
-            return 0
-        print("Website canon unchanged; nothing to do.")
-        return 0
+    if changed:
+        with open(local_path, "w", encoding="utf-8") as f:
+            f.write(remote)
+        print(f"Wrote {local_path} ({len(remote)} chars). Updating vector store...")
 
-    with open(local_path, "w", encoding="utf-8") as f:
-        f.write(remote)
-    print(f"Wrote {local_path} ({len(remote)} chars). Updating vector store...")
-
+    # Reconcile derivatives and index state even when a previous run wrote the
+    # canon successfully but failed to finish indexing. Unchanged sources skip embeddings.
     write_public_facts(remote)
     write_role_timeline(remote)
     update_vectorstore()
@@ -505,10 +508,11 @@ def sync():
             print(f"  - {line}")
         return 1
 
-    _send_alert(
-        "KB updated from website canon",
-        [f"Ingested {LLMS_FULL_URL}", f"Local file: {LOCAL_CANON_FILENAME}"],
-    )
+    if changed:
+        _send_alert(
+            "KB updated from website canon",
+            [f"Ingested {LLMS_FULL_URL}", f"Local file: {LOCAL_CANON_FILENAME}"],
+        )
     return 0
 
 

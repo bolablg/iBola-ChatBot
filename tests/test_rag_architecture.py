@@ -188,6 +188,64 @@ def test_vector_retrieval_recovers_after_a_valid_index_revision(tmp_path, monkey
     assert service.embedding_compatible is True
 
 
+@pytest.fixture
+def hybrid_service(tmp_path, monkeypatch):
+    from app.services import advanced_rag as module
+
+    monkeypatch.setattr(module.HybridSearchService, "_initialize", lambda self: None)
+    monkeypatch.setenv("ENABLE_CROSS_ENCODER_RERANKER", "false")
+    service = module.HybridSearchService(str(tmp_path))
+    service._initialized = True
+    service.vectorstore = Mock()
+    lexical = Document(page_content="Keyword match", metadata={"chunk_id": "lexical"})
+    dense = Document(page_content="Semantic match", metadata={"chunk_id": "dense"})
+    service.vectorstore.max_marginal_relevance_search.return_value = [dense]
+    service.bm25_index = Mock(is_built=True)
+    service.bm25_index.search.return_value = [(lexical, 0.5)]
+    return service
+
+
+def test_vector_recovery_retries_the_same_query_after_bm25_fallback(hybrid_service):
+    vector_search = hybrid_service.vectorstore.max_marginal_relevance_search
+    vector_search.side_effect = [
+        RuntimeError("embedding failed"),
+        vector_search.return_value,
+    ]
+
+    fallback = hybrid_service.search("same query", top_k=2)
+    recovered = hybrid_service.search("same query", top_k=2)
+
+    assert [doc.metadata["chunk_id"] for doc in fallback] == ["lexical"]
+    assert [doc.metadata["chunk_id"] for doc in recovered] == ["dense", "lexical"]
+    assert hybrid_service.search("same query", top_k=2) == recovered
+    assert vector_search.call_count == 2
+
+
+def test_disabled_reranker_preserves_fused_evidence_score(hybrid_service):
+    fused = hybrid_service.search("query", top_k=1, use_reranker=False)
+    with_reranker = hybrid_service.search("query", top_k=1, use_reranker=True)
+
+    assert with_reranker == fused
+    assert 0 < with_reranker[0].metadata["retrieval_score"] < 1.0
+
+
+def test_reranker_failure_preserves_scores_and_allows_retry(hybrid_service):
+    model = Mock()
+    model.predict.side_effect = [RuntimeError("prediction failed"), [0.1, 0.9]]
+    hybrid_service.reranker.enabled = True
+    hybrid_service.reranker._load_attempted = True
+    hybrid_service.reranker.model = model
+    fused = hybrid_service.search("query", top_k=1, use_reranker=False)
+
+    assert hybrid_service.search("query", top_k=1) == fused
+    recovered = hybrid_service.search("query", top_k=1)
+
+    assert recovered[0].metadata["chunk_id"] == "lexical"
+    assert recovered[0].metadata["retrieval_score"] == 0.9
+    assert hybrid_service.search("query", top_k=1) == recovered
+    assert model.predict.call_count == 2
+
+
 def test_generation_without_evidence_does_not_call_model():
     from app.graph.nodes import generate_node
 

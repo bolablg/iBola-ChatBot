@@ -1,4 +1,5 @@
 import types
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 from langchain_core.documents import Document
@@ -42,7 +43,27 @@ def test_contact_requests_bypass_workflow_and_return_actions():
     assert result["agent_type"] == "contact"
     assert len(result["actions"]) == 2
     assert any(action["type"] == "contact_email" for action in result["actions"])
-    assert any(action["type"] == "contact_booking" for action in result["actions"])
+    booking = next(a for a in result["actions"] if a["type"] == "contact_booking")
+    assert booking["url"] == "https://calendar.app.google/KYm4B5iL5j3HRxav9"
+    index = Path(__file__).resolve().parents[1] / "static" / "index.html"
+    assert f'href="{booking["url"]}"' in index.read_text(encoding="utf-8")
+    assert "Book 45 min" in index.read_text(encoding="utf-8")
+
+
+def test_resume_requests_direct_visitors_to_the_portfolio_form():
+    AgenticRAGService, _, _ = _import_agentic_modules()
+    service = AgenticRAGService()
+    service.workflow = Mock()
+
+    result = service.process_query("Can I get his resume?", [], "resume-test", "en", {})
+
+    service.workflow.invoke.assert_not_called()
+    assert result["agent_type"] == "resume"
+    assert "reviews the opportunity" in result["answer"]
+    assert result["actions"][0]["type"] == "request_resume"
+    assert result["actions"][0]["url"] == (
+        "https://www.bolablg.com/contact/#contact-direct-title"
+    )
 
 
 def test_profile_questions_route_through_rag_workflow():

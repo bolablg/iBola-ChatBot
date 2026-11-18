@@ -1,11 +1,19 @@
 # Bolaji BALOGOUN · Data Engineer · Data Architect (full content)
 
-> Data Engineer · Data Architect building production data platforms, operational data products, and governed automation.
+> Data Engineer · Data Architect based in Little Rock, AR. Experience in Google Cloud (GCP) data platforms, marketplace analytics, and data leadership.
+
+Resume requests: use the site's “Request resume” form. Provide your name, email, opportunity area, role title and role details or job link. Organization is optional. Bolaji receives the request and reviews the opportunity before sharing a resume.
 
 Single-file full version. Structured guide: https://www.bolablg.com/llms.txt · Biography: https://www.bolablg.com/bio.md · Interactive Q&A: https://chat.bolablg.com
 
-Equivalent job titles: Staff Data Engineer · Principal Data Engineer · Senior Data Engineer · Data Platform Engineer · Data Platform Architect · Data Architect · Cloud Data Architect · Data Engineering Manager · Head of Data · Director of Data Engineering · Data Director.
-Geographic scope: United States · five African operating countries · Gozem headquarters in Singapore.
+Target role families: Staff Data Engineer · Principal Data Engineer · Senior Data Engineer · Data Platform Engineer · Data Platform Architect · Data Architect · Cloud Data Architect · Data Engineering Manager · Senior Manager (Data Engineering / Data Platform / Data & Analytics) · Head of Data · Head of Analytics & AI · Head of Data & Analytics · Head of Data Engineering · Director of Data & Analytics · Director of Data Engineering · Director of Data Platform · Data & AI Director · Data Director.
+Based in Little Rock, Arkansas. Prior Gozem operating markets: Togo, Benin, Cameroon, Gabon, and Congo. Gozem headquarters: Singapore.
+
+## Explore by focus
+- [Engineering & architecture](https://www.bolablg.com/engineering-architecture/)
+- [Marketplace analytics](https://www.bolablg.com/marketplace-analytics/)
+- [Data leadership](https://www.bolablg.com/data-leadership/)
+- [Skills in practice](https://www.bolablg.com/skills/)
 
 ## Biography
 
@@ -13,33 +21,41 @@ Geographic scope: United States · five African operating countries · Gozem hea
 
 *Data Engineer · Data Architect.*
 
-Former Head of Data with a decade across data science and advanced analytics, including over seven years building production data pipelines and platforms. Bolaji combines Staff-level engineering depth with experience leading teams and data functions, from cloud migration and high-volume pipelines to operational data products, governance, and cost-disciplined architecture.
+Bolaji is a Data Engineer, Data Architect, and former Head of Data based in Little Rock, Arkansas, United States. His work spans Google Cloud data platforms, marketplace analytics, and data leadership, including strategy, technical roadmaps, governance, and FinOps.
 
 ## Platform engineering and leadership
 
-Bolaji was Gozem’s first data hire. As Global Data Analyst, he built the analytical function from the ground up, migrated tens of terabytes to GCP and BigQuery through 50+ pipelines in one quarter without interruption, and delivered foundations for operations, finance, marketing, and fraud-pattern monitoring. He later led the data function as Head of Data, growing the team from 4 to 14+ and owning governance, FinOps, analytics engineering, and fintech data products. As Data Director through July 2026, he owned the data function end to end and co-led Gozem’s AI strategy.
+Bolaji was Gozem’s first data hire. As Global Data Analyst, he built the analytics function, led the migration to Google Cloud and BigQuery, and automated more than 50 analytical and operational workflows. He later led the data function as Head of Data, growing the team from 4 to 14+ and overseeing governance, FinOps, analytics engineering, and fintech data products. As Data Director through July 2026, he led multidisciplinary data teams supporting five African operating countries and co-led Gozem’s AI strategy.
 
 ## Data products at operating scale
 
-Bolaji built and deployed the [Gozem Data Hub](https://data.gozem.co), a governed platform serving 650+ employees, field agents, and partners across five African operating countries, with Singapore as headquarters. He personally coded 17 of its initial 19 microservices; two engineers coded one service each, with Bolaji deploying one and reviewing and fixing the other before deployment. He designed database schemas and persistence models, authored contribution documentation, and used live debugging to onboard engineers to service integration and CI/CD. The platform combined React, FastAPI, Nginx, MongoDB, Redis, NATS, BigQuery, Google Cloud Storage, Docker Compose, Artifact Registry, and shared Python utilities.
+Bolaji architected and led the development of the [Gozem Data Hub](https://www.bolablg.com/experience/gozem-director/#data-hub), a governed operational and analytics platform adopted by 700+ employees, field agents, and partners across five African countries. It provided self-service access to operational applications, analytics, AI tools, and automation. The published case documents React, FastAPI, AWS EC2, BigQuery, MongoDB, Nginx, Docker, Google Cloud Storage, Artifact Registry, and Python.
 
-The Data Hub powered application-serving pipelines, operational workflows, data exploration, and self-service analytics beyond dashboards. Bolaji implemented centralized authentication and routing, JWT and API-key access, scoped role-based permissions, service-to-service tokens, OTP and refresh-token hashing, and rate limiting. He also set up health checks, retries, stale-execution recovery, rollback controls, targeted test suites, security checks, and GitLab CI/CD gates. The work supported 250+ pipelines with quality checks, lineage, access controls, and service-level monitoring.
+The data team monitored more than 250 pipelines. Bolaji established governance, observability, and reliability standards across 300+ workflow orchestration, transformation, and metrics-layer assets.
+
+## Workload and measurement scope
+
+At Gozem, batch workloads averaged approximately 5 TB of daily upserts into existing modeled tables. A separate streaming workload averaged 45 million telemetry and operational events per day; that event count was not all company activity and was not included in the batch measure. The platform contained nearly 300 Dataform models and Airflow DAGs combined, a different population from the 250+ monitored pipelines.
+
+## Marketplace analytics and product decisions
+
+As Head of Data, Bolaji oversaw delivery of the e-commerce recommendation engine and worked with Product on hypotheses, event definitions, and metrics. The ML engineering team implemented the system. A three-group A/B test with approximately 600 users compared no recommendations, homepage recommendations, and recommendations during search. Product chose the homepage after the test showed the strongest engagement and conversion there. In the first month after deployment, recommendations were associated with approximately 12% of delivered orders.
 
 ## Applied AI, automation, and reliability
 
-Bolaji co-led Gozem’s AI strategy and shipped 30+ production AI and automation tools across document intelligence, RAG support, fraud alerts, monitoring, and agentic workflows. He personally prototyped invoice extraction in Vertex AI Studio, testing prompts and context before building the production service with extraction validation, retries, and human review. The invoice workflow processed thousands of paper invoices and reduced the work from one to one and a half weeks to less than one day, saving approximately 40 hours per month for each Financing Manager. A real-time market monitoring program maintained an 88% rider match rate during a 48% demand surge and supported a 10.2% peak-event supply-rate lift.
+Bolaji co-led Gozem’s AI strategy. The group shipped 30+ production automation tools during his Data Director mandate. He prototyped invoice extraction in Vertex AI Studio and built a workflow with validation and human review. Estimated savings were 40+ hours per country Financing Manager each month. The Vodun Days command center gave Operations minute-level visibility into driver supply. On the peak day, ride requests were 48% above the average for the other event days and the rider match rate was 88%.
 
 He also built application-ready data flows from MongoDB, BigQuery, Google Cloud Storage, and Sheets, plus a near-real-time MongoDB CDC pipeline that published change events through Pub/Sub, processed them in Dataflow, updated BigQuery, and supported real-time visualization in Looker Studio. These systems paired data products with operational services and decision workflows.
 
 ## FinOps and analytical serving
 
-As Head of Data, Bolaji redesigned Dataform dependencies, incremental models, shared marts, partitions, MERGE patterns, and assertions. He introduced job-metadata categorization and cost monitoring that reduced Google Cloud costs by 42.57% in one quarter while preserving data freshness and integrity. He also deployed Metabase and ClickHouse on AWS EC2, then used Airflow to replicate selected BigQuery tables and partitions into ClickHouse with use-case-specific history windows of three to 18 months for lower-cost analytical serving.
+As Head of Data, Bolaji led Dataform adoption, dependency-aware orchestration, incremental modeling, partitioning and clustering optimization, and BigQuery workload monitoring. Recorded Google Cloud costs fell by 42.57% in one quarter while data freshness and reliability requirements were maintained. In the separate [Advanced Dataform framework project](https://www.bolablg.com/projects/dataform-modeling-lab/), one documented model definition went from about 150 lines to 20 lines of configuration.
 
 ## Earlier work and advisory practice
 
-At Rintio, Bolaji built a production Hadoop and Apache Spark data stack with Elasticsearch to process hundreds of gigabytes of agricultural data from multiple sources. He developed crop-yield prediction models, primarily for maize with additional models for beans, achieving R² above 80% in most cases. The farmer-facing web-application MVP combined predictive features with Apache Superset visualizations and was still in testing when he left. He also delivered an executive data and AI training mission for Société Générale Maroc.
+At Rintio, Bolaji built a production Hadoop and Apache Spark data stack with Elasticsearch to process hundreds of gigabytes of agricultural data from multiple sources. He developed crop-yield prediction models, primarily for maize with additional models for beans. The farmer-facing web-application MVP combined predictive features with Apache Superset visualizations and was still in testing when he left. He also delivered an executive data and AI training mission for Société Générale Maroc.
 
-As a Data Management Consultant with the International Trade Centre, he designed and delivered data-management and data-strategy training for 15 early-stage ECOWAS startups, covering market analysis, marketing campaigns, and team-performance tracking. He coached five founders individually, and later cohorts reused the training materials. He co-founded Takwimu LAB, whose low-resource African-language NLP work won the AI4D Africa Award in 2020 and reached the AfricaNLP workshop at EACL 2021. He is also Founding Vice-President of [iSheero](https://www.isheero.com/), where he designed and delivered a hands-on Google Cloud streaming module using Pub/Sub, Dataflow, BigQuery, and Looker Studio, and contributed to the review of Benin’s national AI and Big Data strategy.
+As a Data Management Consultant with the International Trade Centre, he designed and delivered data-management and data-strategy training for 15 early-stage ECOWAS startups, covering market analysis, marketing campaigns, and team-performance tracking. He advised five founders individually. He co-founded Takwimu LAB, whose low-resource African-language NLP work earned a Zindi challenge award in 2020 and was presented at the AfricaNLP workshop at EACL 2021. He is also Founding Vice-President of [iSheero](https://www.isheero.com/), where he delivered a hands-on Google Cloud streaming module and contributed to the review of Benin’s national Big Data strategy roadmap.
 
 ## Credentials and working languages
 
@@ -50,7 +66,7 @@ As a Data Management Consultant with the International Trade Centre, he designed
 - MSc in Applied Statistics, Distinction, University of Abomey-Calavi, 2018
 - BSc in Statistics and Econometrics, University of Abomey-Calavi, 2013
 
-Bolaji is a native French speaker with full professional proficiency in English. He is based in Little Rock, Arkansas, United States, and is open to the job market. His Databricks, Delta Lake, Lakeflow, and Unity Catalog experience is through projects and labs.
+Bolaji speaks French natively and uses English professionally. He is open to data roles, consulting, and talks. His Databricks, Delta Lake, Lakeflow, and Unity Catalog experience is through projects and labs.
 
 ## Contact
 
@@ -64,313 +80,320 @@ Bolaji is a native French speaker with full professional proficiency in English.
 
 ### Data Director · GOZEM · Apr 2025 - Jul 2026
 
-Owned data platform engineering and internal data products (the Data Hub and 30+ automation tools) and co-led AI strategy across Gozem's footprint: five African operating countries with Singapore as headquarters.
+Led multidisciplinary data teams including data engineering, analytics, data science, and machine learning across operations in five African countries. Directed enterprise data platform strategy, internal data products development, governance, and cloud FinOps, while co-leading the company’s global AI strategy and implementation.
 
-Mandate: 14+ data professionals · TG · BJ · CM · GA · CG · Gozem Data Hub
-- Gozem Data Hub live for 650+ people (employees, field agents, and partners)
+Mandate: 14+ data professionals · Togo · Benin · Cameroon · Gabon · Congo · Gozem Data Hub
+- Gozem Data Hub adopted by 700+ people (employees, field agents, and partners)
 - 30+ production automation tools shipped across the group
-- 250+ pipelines under observability with automated quality checks
+- 250+ pipelines under monitoring
 
-#### Gozem AI Strategy knowledge base
+#### AI strategy & investment portfolio
 
-Result: 49 validated use cases catalogued; 6 in implementation, with near-full top-management adoption of daily AI assistance.
-Problem: Gozem needed a coherent AI strategy spanning operations, logistics, driver management, ecommerce, vehicle financing, customer experience, and fintech, backed by a structured view of the AI vendor and tooling landscape.
-Solution: Documented internal AI needs across 9 business units (Transport, Ecommerce, Financing, Finance, Data, Product, Marketing, Operations, Sales) with 50+ stakeholders contributing. Conducted a structured market scan covering 133 tools and vendors across 38 categories: AI vendors, foundation model providers, and automation platforms relevant to Gozem's stack. Catalogued 49 validated use cases. Built an adoption framework around the 6 moved into implementation: content creation and daily assistance (near-full adoption by top management), coding and code review (rolling out with the product team), classifier and others (in use by the data team). Each use case ships with its agentic workflow architecture.
-Tools: Data collection and analysis · Internal stakeholders interviews · Market data scraping · LLM-powered tools profiling · Strategic framework documentation
+Result: Turned fragmented AI experimentation into a structured enterprise roadmap, identifying 49 opportunities and advancing 6 high-priority initiatives into implementation.
+Problem: Gozem needed a scalable approach to evaluate AI opportunities across multiple business lines while navigating a rapidly evolving technology landscape. Leadership required a structured framework to prioritize initiatives by business value, compare solution providers, and align AI investments with operational and growth objectives.
+Solution: Partnered with more than 50 stakeholders across nine business units to identify AI opportunities, document business requirements, and assess existing grassroots AI adoption across the organization. Combined internal usage patterns, stakeholder input, and market intelligence to build on practices employees had already adopted.
 
-#### Gozem Data Hub: Central data & AI workspace
+Built a centralized AI portfolio management system cataloging 49 use cases and 133 vendors across 38 technology categories. Designed an impact-scoring framework incorporating productivity, employee experience, and business value (EBITDA) metrics to prioritize opportunities and support executive decision-making. Produced adoption roadmaps, vendor assessments, and implementation recommendations for selected initiatives.
+Tools: Google Forms · Google Sheets · LLM · Python · Git
 
-Result: Architected and built the platform, personally coding 17 of its initial 19 microservices; the governed workspace served 650+ employees, field agents, and partners across 5 countries.
-Problem: Business and operational teams alongside some external partners across Gozem's countries lacked a unified workspace for data and AI applications with fast iteration.
-Solution: Architected and built the Data Hub, personally coding 17 of its initial 19 microservices. Two engineers each coded one service; I deployed one and reviewed and fixed the other before deployment. Designed database schemas, persistence models, centralized authentication, routing, and scoped access controls. Beyond the initial microservices, documented the shared architecture and contribution process, then used live debugging to onboard engineers to service/frontend integration, CI/CD, and code review. The platform supported data-driven applications, operational workflows, automation, data exploration, and self-service analytics for people collaborating across Benin, Togo, Gabon, Cameroon, and Congo.
-Tools: React · FastAPI · Nginx · MongoDB · Redis · BigQuery · Google Cloud Storage · NATS · Docker Compose · Artifact Registry · Shared Python utilities
+#### Gozem Data Hub: operational apps & analytics platform
 
-#### Application-serving data pipelines
+Result: Unified analytics, AI, and operational tools into a single platform serving 700+ stakeholders across five countries.
+Problem: As Gozem evolved from a startup into a scale-up, the demand for operational applications, automation workflows, analytics products, and AI-powered tools grew rapidly across the organization.
 
-Result: Delivered application-ready datasets for internal operational applications, services, and microservices, extending the platform beyond BI outputs.
-Problem: Operational tools required governed, application-ready data from systems with different storage patterns, not dashboard-only extracts.
-Solution: Designed Airflow-orchestrated pipelines sourcing MongoDB, BigQuery, Google Cloud Storage, and Google Sheets. Modeled the database schemas and persistence layers for data-intensive services, including data generated by application use and operational workflows.
-Tools: Apache Airflow · MongoDB · BigQuery · Google Cloud Storage · Google Sheets · Data modeling
+Product and engineering teams remained primarily focused on revenue-generating marketplace initiatives, limiting their capacity to support the growing number of operational use cases. Many requests to the Data team recurred, including ad hoc analyses, data extractions, and operational workflows that required intervention from analysts and engineers.
 
-#### Platform delivery and reliability controls
+The Data team also lacked a shared environment for its growing portfolio of tools, applications, analytics assets, and AI services. It had two goals.
 
-Result: Established repeatable service delivery with health monitoring, recoverable job execution, security gates, staged images, and rollback to prior images.
-Problem: A multi-service operational platform needed consistent release and runtime controls without overstating test coverage or disaster-recovery maturity.
-Solution: Implemented service health checks, dependency and restart controls, execution logs, configurable retries, and stale-execution recovery. Established GitLab CI/CD with linting, targeted pytest suites, security and container scans, multi-architecture image builds, Artifact Registry publication, staged promotion, and rollback to previously published images.
-Tools: GitLab CI/CD · Docker · Artifact Registry · Pytest · Trivy · Prometheus
+1. Give operational teams direct access to data products, analytics, and tools to reduce recurring requests to the Data team.
+2. Establish a common platform for the Data team to quickly design, deploy, and govern applications, automation, and AI solutions at scale.
+Solution: Architected and led the development of **Gozem Data Hub**, a centralized data and AI workspace for delivering self-service products across the organization.
 
-#### Governed KPI reporting & data-warehouse MCP
+The platform brought operational applications, analytics tools, AI solutions, automation workflows, and data exploration into one environment with shared standards for authentication, authorization, deployment, and governance.
 
-Result: Business users gained a shared path to KPI reports built from documented metric definitions and canonical warehouse queries.
-Problem: Business users and AI-assisted workflows needed consistent KPI definitions, source tables, transformation logic, and query paths across the warehouse.
-Solution: Documented validated metrics with their source tables, transformation logic, and canonical queries; exposed the data warehouse through an MCP server and reusable BigQuery/Dataform views consumed by Looker Studio. This gave business users a shared reporting path grounded in documented sources.
-Tools: BigQuery · MCP · Python · Dataform · Looker Studio
+The Data team used reusable architecture and AI-assisted engineering workflows to deliver production applications for operational teams. These applications moved a large share of analytical and operational requests from manual tickets to self-service tools that business users could operate directly.
 
-#### Automated invoice data extraction
+Business teams could independently access insights, applications, and AI tools, and the Data team had more time for higher-value initiatives.
+Tools: React · FastAPI · AWS EC2 · BigQuery · MongoDB · Nginx · Docker · Google Cloud Storage · Artifact Registry · Python
 
-Result: ~40 hours saved per financing manager per month across thousands of invoices.
-Problem: Financing Operations team manually entered data from supplier and operational invoices in multiple formats, slowing reconciliation across Gozem's multi-country operations.
-Solution: Prototyped the invoice-extraction use case in Vertex AI Studio, testing prompts and context before production development. Architected and built an automated pipeline ingesting thousands of invoices per month (PDF and image formats) using LLM-powered OCR and document intelligence. Designed an agentic workflow supporting custom schema extraction, with validation to flag anomalies, retry handling, and human review, integrated into Google Sheets for reconciliation. Saved an average of 40 hours per financing manager per month.
-Tools: Vertex AI Studio (prototyping) · LLM OCR · Document Intelligence · Python · Cloud Storage · Google Sheets
+#### Enterprise metrics governance & AI-ready semantic layer
 
-#### RAG-powered customer support chatbot
+Result: Established a single source of truth for business metrics across analytics, reporting, and AI-powered workflows.
+Problem: As Gozem expanded its analytics footprint across multiple business domains and countries, the risk of inconsistent metric interpretation increased. KPI definitions, transformation logic, aggregation rules, dimensions, and query implementations were often embedded across dashboards, SQL queries, reports, and undocumented team knowledge.
 
-Result: Resolvable support requests handled autonomously; complex cases escalated to Zendesk with conversation summaries preserving context.
-Problem: Customer support faced rising request volumes, with human agents spending too much time on resolvable cases and losing context when complex cases needed escalation.
-Solution: Oversaw development of a multi-agent Retrieval-Augmented Generation chatbot handling Gozem support requests autonomously, routing resolvable cases to the chatbot and escalating complex cases to Zendesk. Added automatic conversation summarization to preserve context for human handoff.
-Tools: RAG · Vector DB · Python · Zendesk
+At the same time, emerging AI-powered analytics workflows created new requirements. Business users needed trusted natural-language access to data, while AI agents required a reliable understanding of business concepts, metrics, and relationships to generate accurate insights.
 
-#### Real-time market monitoring system
+The organization needed a foundation capable of serving both humans and AI systems with a consistent interpretation of business performance.
+Solution: Designed and implemented the foundation of an enterprise metrics governance framework covering KPI definitions, source systems, transformation dependencies, aggregation behavior, available dimensions, lineage, and canonical calculation methods.
 
-Result: +10.2% supply rate, +7.4% request-to-completion, +5.4% coverage at the Vodun Days festival peak (~2,000 users).
-Problem: Transportation operations had no live visibility on supply-demand imbalances during high-demand events (public holidays, major urban events), leading to slow operational response.
-Solution: Architected a minute-granularity pipeline aggregating GPS, booking, and driver-availability signals. Built supply-demand imbalance detection with threshold-based alerts, plus an operational dashboard surfacing demand-density maps, supply-gap indicators, driver engagement scores, and event KPIs. Implemented automated Google Chat alerts and validated during the Vodun Days festival peak: 10.2% improvement in supply rate, 7.4% increase in request-to-completion rate, and 5.4% coverage gain across ~2,000 distinct users.
-Tools: MongoDB · BigQuery · Python · Apache Airflow · Looker Studio · Google Chat API
+Created a centralized metrics catalog documenting how each KPI is derived, whether from raw operational data or transformed analytical models, including supporting business context, relationships between metrics, valid dimensions, joins, and calculation formulas.
 
-- Architected and deployed **Gozem Data Hub**, a centralized platform serving over 650 people (internal employees, field agents, and external partners) with self-service analytics, AI and automation products, and data-driven applications for operations and business decisions.
-- Built line-of-business and operations apps (driver inspection, invoice extraction, external-acquisition agent performance monitoring, custom dashboard publisher, and others) used daily across Gozem's operations.
-- Built G-Force, a mobile-first web application giving external acquisition agents visibility into submissions, validation status, rejection reasons, and payments, with approximately twice-daily synchronization.
-- Co-shaped Gozem's AI strategy and shipped 30+ production AI and automation tools spanning fraud alerts, data extraction, and market monitoring; introduced AI-assisted engineering workflows to leadership and product engineering.
-- Built observability across 250+ pipelines (Dataform, Airflow, cron jobs) with automated data-quality checks, discrepancy alerts catching incomplete data and duplicates, performance tracking on exceptional events, and a data-exploration MCP.
+Standardized KPI computation through reusable BigQuery and Dataform assets powering reporting and analytical applications, ensuring consistent metric definitions across dashboards, analyses, and operational workflows.
+
+Introduced governed AI access to warehouse data through an MCP-enabled BigQuery integration in Claude. Selected senior users could query enterprise data using natural language within their existing Google Cloud IAM permissions.
+
+This work also laid the foundations for an AI-ready semantic layer capable of supporting future copilots, autonomous agents, self-service analytics experiences, and automated decision-support systems.
+Tools: BigQuery · Dataform · MCP · Claude · Python · Looker Studio · Google Cloud IAM
+
+#### AI-powered invoice processing for financing operations
+
+Result: Automated monthly invoice reconciliation, with estimated savings of 40+ hours per country Financing Manager each month.
+Problem: Gozem's vehicle financing business enabled drivers to acquire motorcycles and vehicles through installment-based financing. Across multiple countries, manufacturer dealerships and service partners performed maintenance and operational services and submitted monthly invoices covering hundreds or thousands of financed vehicles.
+
+Before approving supplier payments, Financing Managers manually reviewed invoices, identified vehicle-level charges, prepared payment requests, and reconciled maintenance expenses against collections already received from drivers. They worked across invoice formats, built reconciliation tables, and cross-checked operational and payment records to verify that driver collections covered the charges before payment.
+
+The process took Financing Managers approximately one week each month in every operating country.
+Solution: Identified maintenance reconciliation as a high-impact automation opportunity and validated the extraction approach through rapid prototyping in Vertex AI Studio.
+
+Designed and implemented an AI-powered document intelligence workflow capable of extracting vehicle-level maintenance records from scanned supplier invoices, then automatically matching them against financing and collections data already maintained by the data team.
+
+Built an agentic workflow incorporating schema-driven extraction, validation rules, anomaly detection, confidence scoring, exception handling, and human-review mechanisms. Integrated the solution into existing payment preparation and reconciliation workflows through Gozem Data Hub, allowing Financing Managers to focus on reviewing and validating charges rather than manually transcribing invoice data and constructing reconciliation tables.
+
+The solution transformed a process that previously required approximately one week of effort each month per country Financing Manager into a largely automated workflow, saving an estimated 40+ hours per month per country, accelerating payment-request preparation, strengthening maintenance-cost recovery controls, and improving the scalability of vehicle financing operations across multiple markets.
+Tools: Vertex AI Studio · Gemini · Python · Google Cloud Storage · Google Sheets · Docker · Git · FastAPI
+
+#### Operational command center for public events
+
+Result: Supported near-real-time marketplace operations during Vodun Days. On the peak day, ride requests were 48% above the average for the other event days, and the rider match rate was 88%.
+Problem: As the official transportation partner for a public festival (Vodun Days), Gozem faced a high-visibility operational challenge in a city where it did not normally operate. Some drivers were mobilized from neighboring regions to support expected demand. Operations lacked historical references, and the real-time visibility required to monitor marketplace conditions, anticipate supply shortages, and coordinate interventions during the event's busiest periods.
+Solution: Designed and delivered a minute-level monitoring system that combined GPS telemetry, booking activity, driver availability, and marketplace performance signals. Built a unified dashboard with demand-density maps, supply-gap indicators, driver engagement metrics, and event KPIs, and set up automated Google Chat alerts.
+
+The command center helped Operations detect emerging supply constraints, coordinate drivers, and respond to changing demand in near real time. The peak-day analysis covered approximately **2,000 users**. Compared with other days' average, the analysis reported a **10.2% increase in supply rate** and a **7.4% increase in request-to-completion rate**. The figures are observational.
+Tools: BigQuery · Google Chat · Looker Studio · Python · Apache Airflow · Webhooks
+
+#### G-Force Board: analytics app for acquisition partners
+
+Result: Replaced support-driven status inquiries with a self-service platform serving 500+ acquisition agents
+Problem: Gozem relied on a large network of external acquisition agents to support growth across multiple markets through its G-Force program. Agents depended on Operations and Support for updates on submission status, validation progress, payment eligibility, rejection reasons, and processing delays. These requests added work for both teams and slowed acquisition operations.
+Solution: Designed and built **G-Force Board**, a mobile-first reporting web application in Gozem Data Hub. Agents could track submissions, assessment and validation status, rejection details, payments, pending earnings, and processing timelines.
+
+Implemented automated data synchronization, retries, and CI/CD to keep operational data available. Giving partners direct access to this information reduced their reliance on Support, helped them resolve issues faster, and supported acquisition operations across Gozem's markets.
+Tools: React · FastAPI · BigQuery · Python · Google Cloud Storage · Git · MongoDB · Apache Airflow
+
+- Architected and delivered **Gozem Data Hub**, a unified analytics and AI platform adopted by over **700 internal and external stakeholders**, accelerating enterprise-wide self-service analytics, applied AI adoption, and data-driven operational execution.
+- Designed and delivered data-intensive applications and tools that streamlined field acquisition, driver compliance, invoice processing, and access to operational insights.
+- Co-developed the company’s data and AI strategy portfolio, combining business opportunities, technology evaluations, market intelligence, delivery roadmaps, and best practices in a framework used to align investments with operational and growth objectives.
+- Led the evolution of the Google Cloud data platform for enterprise analytics and marketplace monitoring. Batch upserts to existing modeled warehouse tables averaged approximately **5 TB per day**, and distinct streaming workloads averaged **45 million telemetry and operational events per day**.
+- Established data governance, observability, and reliability standards covering **300+ assets** across workflow orchestration, data transformation, and the metrics layer.
 
 ### Head of Data · GOZEM · Oct 2022 - Mar 2025
 
-Owned the data function for Gozem's Sub-Saharan Africa group: governance, team scaling from 4 to 14+, FinOps, and fintech-grade analytics.
+Owned and expanded the data function across Africa, overseeing organizational growth, data governance, analytics, platform modernization, FinOps, financial intelligence, and risk analytics to support the company's transition from startup to scale-up.
 
-#### Dataform modernization and BigQuery FinOps
+#### Data platform modernization and FinOps transformation
 
-Result: Reduced Google Cloud costs by 42.57% in one quarter while maintaining data freshness and integrity expectations.
-Problem: Scheduled BigQuery queries had grown into a costly transformation estate with limited dependency control, repeated computation, and weak visibility into which workloads drove spend.
-Solution: Led the migration to production Dataform modeling with explicit dependencies, incremental models, shared intermediate marts, partition-aware MERGE logic, and scoped assertions. Analyzed BigQuery job metadata, separated ingestion, transformation, reporting, and direct-analysis workloads, then targeted the models, schedules, and queries responsible for avoidable cost.
-Tools: BigQuery · Dataform · SQL · BigQuery job metadata · Incremental modeling
+Result: Reduced Google Cloud costs by **42.57% in one quarter** while sustaining platform reliability and growing analytics adoption.
+Problem: As Gozem scaled across multiple countries and business units, analytics demand, reporting needs, and data volumes grew significantly. BigQuery transformation workloads relied heavily on scheduled queries with limited dependency management and visibility into cost drivers, leading to duplicated computation, increasing cloud expenditure, and growing operational complexity.
+Solution: Established data platform observability and FinOps governance by analyzing BigQuery workload metadata to categorize ingestion, transformation, reporting, and ad hoc analytical activities. Identified the primary drivers of platform spend and led a modernization program spanning Dataform adoption, dependency-aware orchestration, incremental processing, partitioning and clustering optimization, reusable intermediate data models, and warehouse improvements tailored to workload access patterns.
 
-#### Production orchestration on self-hosted Airflow
+Implemented monitoring and cost-allocation dashboards to guide ongoing optimization while maintaining data freshness and reliability as analytics usage grew.
+Tools: Google BigQuery · Dataform · SQL · Google Cloud Platform · Looker Studio · Apache Airflow
 
-Result: Replaced cron-based orchestration with a production scheduler supporting dependency-aware execution and operational monitoring.
-Problem: Cron jobs could trigger recurring work, but did not provide the dependency management, recovery controls, and shared operational view required as the pipeline estate expanded.
-Solution: Designed and deployed self-hosted Apache Airflow on AWS EC2 as the production orchestrator, migrated scheduled workloads from cron, and used DAG-level dependencies, retries, and monitoring to operate data workflows consistently.
-Tools: Apache Airflow · AWS EC2 · Python · Cron
+#### Scaling the data organization for multi-country growth
 
-#### Lower-cost analytical serving with ClickHouse
+Result: Grew the Data organization from 4 to 14+ professionals and matured it into a business-aligned function supporting multi country and business growth.
+Problem: As Gozem transitioned from startup to scale-up, growing analytics demand, platform complexity, operational reporting requirements, and business specialization created the need for a larger and more structured data organization. The team needed to plan for new capabilities, specialize roles, formalize hiring and governance, and coordinate with business stakeholders.
+Solution: Assessed organizational capability gaps and designed the operating model for the data function across Analytics, Data Engineering, and Data Science. Defined role charters, hiring plans, career expectations, competency frameworks, and team structures based on business priorities and anticipated growth.
 
-Result: Created a bounded-history serving path for recurring dashboards, reducing direct analytical pressure on BigQuery.
-Problem: Interactive Metabase dashboards repeatedly querying the central warehouse increased BigQuery demand even when each use case needed only a limited history window.
-Solution: Deployed open-source Metabase and ClickHouse on AWS EC2. Built Airflow replication workflows that moved selected BigQuery tables or partitions into ClickHouse with use-case-specific history windows ranging from three to eighteen months.
-Tools: ClickHouse · Metabase · Apache Airflow · BigQuery · AWS EC2
+Partnered with HR on workforce planning, hiring business cases, candidate evaluation frameworks, technical assessments, interviews, hiring decisions, onboarding, and performance management. Used **Breezy HR** to manage recruiting.
 
-#### Data team capacity expansion
+Centralized the data team's requests in **Asana** and built dashboards from exported request data. The dashboards tracked request volume, demand sources, work categories, delivery times, team utilization, and capacity trends. Used these measures to inform staffing, prioritization, coaching, and resource allocation.
 
-Result: 12 hires onboarded end-to-end from 50+ evaluated candidates, with 30/60/90-day ramp milestones.
-Problem: The data team capacity needed to scale across African operations to support growing operational and BI needs, requiring 2 senior hires alongside a data engineer owning pipelines and platform.
-Solution: Authored the job scopes, technical requirements, and business cases justifying the senior hires to the leadership. Designed and ran technical interviews and assessments, evaluated 50+ candidates, negotiated offers end-to-end, and coordinated onboarding for 12 total hires with tooling access, team integration, and 30/60/90-day ramp milestones.
-Tools: Team capacity planning · Hiring pipeline management · Team productivity tools · Candidate evaluation · Onboarding
+Introduced a domain-based partnership with business leaders that clarified data ownership, strengthened governance, and set clear accountability for KPIs. Made the data team part of recurring operational, strategic, and Growth decisions.
+Tools: Breezy HR · Google Workspace · Asana · BigQuery · Looker Studio
 
-#### Data science use-case knowledge base
+#### Data projects benchmarking for business growth
 
-Result: 100+ use cases catalogued; top 15 adapted with Gozem-specific feasibility and outcome assessments.
-Problem: The data team needed a curated reference of proven use cases to prioritize roadmaps, drawing inspiration from how Gojek, Grab, and Uber operate at scale and adapting to Gozem's Sub-Saharan markets.
-Solution: Catalogued 100+ use cases across demand forecasting, driver scoring, fraud detection, surge pricing, and route optimization. Selected the top 15 and adapted each with Gozem-specific feasibility, data availability, and applicability assessments. Defined success metrics, technical challenges, infrastructure requirements, and estimated business value, structured as a living reference for the data and product teams.
-Tools: Research & development · Market analysis · Use-case design · Proof of concept development
+Result: Created an assessment framework to help leadership evaluate and prioritize high impact data initiatives based on business value, feasibility, data availability, and implementation readiness.
+Problem: As Gozem expanded its transportation, delivery, commerce, and financial services businesses, leadership needed a structured way to identify data and AI opportunities that companies such as Uber, Lyft, Grab, and Gojek had applied at scale. Gozem needed to assess which initiatives fit its markets, data maturity, technology stack, and organizational capacity.
+Solution: Established a process combining industry research, technical analysis, and business evaluation. Collected and analyzed data and AI use cases from engineering blogs, case studies, technical publications, conference talks, and public documentation from mobility, delivery, and fintech platforms.
 
-#### Ebanking analytics and reporting infrastructure
+Built a central knowledge base documenting business context, implementation approaches, success metrics, technology requirements, reported business outcomes, and operational considerations. Assessed which initiatives were feasible given Gozem's available data, platform capabilities, team capacity, and markets.
 
-Result: ~150 incidents surfaced per month; flagged a fraud worth more than 25M XOF; fintech warehouse powering regulatory reporting.
-Problem: Gozem Money (fintech vertical) needed real-time fraud monitoring, a fintech-grade data warehouse, and a reporting layer to support mobile payment operations and regulatory needs across African markets.
-Solution: Designed and supervised deployment of a micro-batch processing pipeline monitoring anomalous patterns, fraud signals, and threshold breaches. The system surfaces ~150 incidents per month and flagged a major fraud worth more than 25M XOF. Built the fintech data warehouse for Togo operations, powered by ETL/ELT pipelines and data models as the foundational layer for financial analytics, regulatory submissions, and stakeholder dashboards (transaction volumes, product adoption, revenue, cohorts). Established data quality pipelines and documented data models, reporting glossary, and metric definitions.
-Tools: Apache Airflow · Python · MongoDB · BigQuery · Dataflow · Cloud Storage
+Partnered with executive leadership and business stakeholders to evaluate expected business value, implementation complexity, infrastructure requirements, talent needs, and fit with company priorities. The prioritized portfolio informed Data and Product roadmaps, proof-of-concept work, and future investment decisions.
+Tools: Python · Google Sheets · LLM · Google Workspace
 
-#### Self-service no-code data exploration platform
+#### Payments intelligence and fraud monitoring
 
-Result: 12+ active manager users; routine query load on the central data team halved.
-Problem: Non-technical users across operations, finance, product, and customer support depended on the central data team for routine reporting and ad-hoc queries, creating a bottleneck.
-Solution: Assessed data literacy and exploration needs across all Gozem markets. Coordinated configuration of a no-code query and exploration layer (Metabase) integrated with Gozem's central data warehouse. Adoption reached 12+ active manager users, halving routine query volume on the central data team.
-Tools: Metabase · BigQuery · Looker Studio
+Result: Established Gozem Money's analytics and risk foundations, identifying tens of millions of XOF in potential losses while supporting financial and regulatory reporting.
+Problem: As Gozem launched Gozem Money, its digital payments and money transfer business, it needed a data platform that could scale to support transaction monitoring, fraud prevention, financial reporting, and regulatory obligations. The company needed to detect external fraud attempts and internal misuse of payment processes while building reliable reporting from scratch.
+Solution: Led the design and implementation of the Gozem Money data architecture across ingestion, transformation, storage, reporting, and monitoring. Built the Togo payments warehouse and ELT pipelines that supplied data for financial analytics, operational reporting, and regulatory reporting.
 
-#### Delivery agent incentive automation
+Designed and supervised fraud monitoring that combined rule-based screening, anomaly detection, transaction threshold monitoring, and investigative analytics. Worked with Product, Operations, and leadership to identify emerging fraud patterns, investigate suspicious activity, and turn findings into new controls, alerts, and process safeguards.
 
-Result: Incentive-related ticket volume cut nearly in half; support disputes resolved within 24h.
-Problem: Delivery-agent positioning across high-demand zones was unmanaged, and incentive payments required manual finance intervention plus heavy customer-support load to resolve disputes.
-Solution: Modeled demand by zone, time-of-day, and event type to identify underserved areas. Designed a performance framework (acceptance rate, completion rate, zone presence, quality scores) and end-to-end payment automation from incentive calculation through disbursement instructions. Built a justification database with pre-computed data points enabling support to resolve cases within 24h. Cut incentive-related ticket volume nearly in half through pre-emptive payment automation.
-Tools: BigQuery · Python · Airflow · Google Sheets
+Set up an ongoing process to document newly discovered fraud schemes and operational risks and use them to update monitoring. Added data quality checks, governed metric definitions, and documented reporting logic to support reliable reporting and compliance readiness as the business grew.
+Tools: BigQuery · Dataform · Apache Airflow · Webhooks · Google Cloud Storage
 
-- Built and mentored the data science and analytics team from 4 to 14+ across Sub-Saharan Africa, establishing data catalog practices and a domain-oriented data governance framework with domain leads.
-- Led FinOps initiatives delivering a 42.57% reduction in Google Cloud costs in a single quarter through data model redesign, BigQuery warehouse schema optimization, orchestration optimization, cost monitoring, and ETL/ELT pipeline tuning, while maintaining SLA on data freshness and integrity.
-- Led the development of ML-based fraud screening and financial transaction monitoring pipelines, reducing field agent payment processing time by 7× and delivering a Group Financial Closing Database for enterprise-wide performance monitoring.
-- Co-developed a domain-oriented data governance framework with the team, delivering a KPI framework with definitions, data source documentation, and table descriptions across the group.
-- Co-chartered the marketing analytics stack (CAC, LTV, cohort, and multi-touch attribution embedded into weekly Growth reviews), owning the end-to-end supporting data pipelines from campaign platforms.
-- Integrated analytics and ML features into mobile apps and internal platforms with Product and Business teams, including dynamic surge pricing for transportation and an extension of the agent incentive automation use case.
+#### Data-driven incentive optimization for delivery operations
+
+Result: Automated incentive management for delivery operations, improving marketplace coverage, payment processing, and dispute resolution workflows.
+Problem: As delivery volumes grew, agent coverage across high-demand zones varied, limiting marketplace efficiency and service quality. Teams had to calculate incentives, coordinate disbursements, and investigate payout disputes manually, adding work as the program grew.
+Solution: Partnered with Operations and business leaders to design incentive programs around agent availability, order fulfillment, service quality, and geographic coverage. Analyzed demand by zone, time period, and operational event to identify where incentives could help match agent supply to demand.
+
+Built a workflow that evaluated agent performance against configurable rules, calculated eligible rewards, generated payment instructions, and kept historical records for audits and dispute review. Worked with Product and Engineering to progressively integrate incentive logic into internal tools so teams could run and test new incentive programs.
+Tools: BigQuery · Apache Airflow · Google Drive · Google Sheets · Webhooks
+
+#### E-commerce recommendation engine and personalization
+
+Result: Delivered a production recommendation engine. In the first month after launch, recommendations were associated with approximately 12% of delivered orders.
+Problem: As Gozem expanded its e-commerce offering, Product needed a scalable way to improve product discovery, engagement, and conversion. The team needed to choose a recommendation strategy, identify useful behavioral features, put machine learning pipelines into production, and test where to show recommendations in the customer journey.
+Solution: Led the recommendation engine initiative from concept to deployment. Partnered with Data Science, ML Engineering, and Product to evaluate approaches used by leading technology platforms and choose one suited to Gozem's customer behavior, available data, and business objectives.
+
+Guided the design of behavioral and transactional features based on customer interactions, purchases, browsing activity, and product relationships. Oversaw the team's implementation of feature engineering workflows, Vertex AI training pipelines, model evaluation, deployment pipelines, and serverless inference services integrated into the mobile app.
+
+Worked with Product to define tracking events, success metrics, and the experiment design. Product used the results to select the homepage placement for rollout. The A/B test involved approximately 600 users across three groups: no recommendations, homepage recommendations, and recommendations during search. The team observed the strongest engagement and conversion on the homepage. The 12% figure measures the share of delivered orders associated with recommendations in the first month after deployment.
+Tools: Vertex AI · BigQuery · Python · Cloud Run · Cloud Functions · Google Cloud Platform
+
+- Scaled the Data organization from 4 to 14+ professionals across Analytics, Data Engineering, and Data Science, leading capability planning, organizational design, recruitment, talent development, and performance management to support the company's transition from startup to scale-up.
+- Led the evolution of the company's data platform to support scale-up growth, introducing FinOps governance, workload observability, modern orchestration, and warehouse optimization practices. Delivered a **42.57% reduction in Google Cloud costs** in one quarter while supporting increasing analytics consumption and operational reporting needs across the organization.
+- Partnered with executive leadership to build the company's financial intelligence and risk analytics capabilities, delivering board reporting frameworks, standardized monthly closing datasets, fraud monitoring systems, and operational performance reporting across multiple countries and business units.
+- Led the standardization of enterprise data assets and business metrics, introducing stewardship processes, KPI definition frameworks, documentation standards, and domain ownership models that improved data trust, organizational alignment, and analytics scalability across the group.
+- Designed and delivered the company's growth analytics framework, integrating marketing, product, and operational data to enable attribution modeling, CAC and LTV measurement, cohort analysis, customer segmentation, and retention monitoring used to guide acquisition, retention, and growth investments.
+- Partnered with business and product leaders to operationalize advanced analytics and machine learning capabilities, delivering automated incentive programs, predictive retention models, and dynamic pricing solutions that scaled across multiple business units.
 
 ### Global Data Analyst · GOZEM · Nov 2019 - Sep 2022
 
-First data hire: built Gozem's analytics function from the ground up: GCP/BigQuery migration, monitoring automation, fraud-pattern detection, and marketing segmentation.
+First data hire: built Gozem's analytics function from the ground up, leading the GCP/BigQuery migration, automating reporting, detecting fraud patterns, and enabling marketplace intelligence at scale.
 
-#### Cloud migration to GCP & BigQuery warehouse
+#### Building Gozem's modern analytics foundation
 
-Result: Migrated tens of terabytes in one quarter without interruption; the BigQuery warehouse and 50+ scheduled pipelines became the analytical foundation.
-Problem: The data infrastructure ran on legacy batch processes that couldn't keep up with growing operational and analytical needs across countries.
-Solution: Led the cloud migration of the entire data infrastructure to GCP, designing a BigQuery-based data warehouse with 50+ scheduled ETL pipelines and migrating tens of terabytes within a quarter without interruption.
-Tools: GCP · BigQuery · Python · Cron · Scheduled BigQuery queries
+Result: Established the analytical foundation that supported the company's expansion, reducing reliance on manual reporting while enabling faster, more accessible, and more consistent decision-making across functions.
+Problem: Legacy data processes relied heavily on manual reporting and could no longer support the growing operational, analytical, and insights demands of a rapidly expanding business.
+Solution: Designed and led the migration of the analytics infrastructure to Google Cloud and BigQuery, establishing a centralized data warehouse and automated data pipelines. Integrated reporting directly into tools already used across the organization, enabling self-service access to trusted data, automated dashboard refreshes, and significantly faster delivery of business insights.
+Tools: GCP · BigQuery · Python · Linux · Cron · Looker Studio · Google Sheets
 
-#### Operational monitoring automation
+#### Marketplace intelligence for driver retention
 
-Result: Replaced a 2-day manual job with a 5–15 minute automated cycle for operational scenarios.
-Problem: Operations monitoring relied on a manual recurring job to spot business scenarios across markets, taking up to 2 days of analyst work per cycle and creating detection lag.
-Solution: Automated the operational monitoring workflow within the first 6 months of the role. Python jobs querying PostgreSQL surfaced supply gaps, driver behaviour anomalies, fraudulent trip patterns, and other scenarios into Google Sheets for the operations team, replacing a 2-day manual job with a 5-15 minute automated cycle.
-Tools: Python · PostgreSQL · Google Sheets
+Result: Identified the root cause of seasonal driver churn and enabled a targeted incentive program that helped maintain marketplace participation during critical periods while creating a scalable process for payout execution and dispute resolution.
+Problem: Recurring periods of driver attrition were impacting marketplace performance. Internal operational and performance data revealed the symptom but failed to explain the underlying cause, making it difficult for business leaders to design an effective response.
+Solution: Combined operational data analysis with external market research, stakeholder interviews, and contextual data collection to investigate driver behavior. Discovered that many drivers temporarily left the platform during agricultural seasons to pursue farm-related income opportunities. Translated these findings into a data-driven incentive strategy, collaborated with business leaders to validate the program design, and built the data products, allocation logic, and automation required to execute payouts at scale while ensuring full auditability.
+Tools: BigQuery · Python · SQL · Looker Studio · Google Sheets · Cron · Linux
 
-#### Incentive payment automation
+#### Customer intelligence & lifecycle analytics
 
-Result: Reduced a multi-day manual payment process to minutes, with structured logs and dispute trails for finance and support.
-Problem: The agent and partner incentive payment process took multiple days, with manual reviews creating delays, errors, and a heavy load on the finance team.
-Solution: Built automated data pipelines for incentive payments combining structured operational data and near-real-time monitoring. Reduced a multi-day manual process to minutes, with structured logs and dispute trails for finance and support.
-Tools: BigQuery · Python · Airflow · Looker Studio
+Result: Enabled more targeted acquisition, retention, and re-engagement strategies by giving Marketing a comprehensive view of customer behavior through segmentation, cohort analysis, and lifecycle intelligence.
+Problem: Marketing lacked a structured understanding of customer behavior and lifecycle stages, making it difficult to personalize campaigns, identify retention opportunities, and measure long-term engagement patterns.
+Solution: Designed and built a customer intelligence platform combining rider and driver profiling, RFM segmentation, and cohort analysis. Transformed transactional and operational data into actionable customer segments and behavioral insights, helping teams identify high-value users, understand retention drivers, and tailor engagement strategies throughout the customer lifecycle.
+Tools: BigQuery · Python · scikit-learn · Looker Studio · Google Sheets
 
-#### Fraud patterns database & daily monitoring
+#### Business intelligence & market performance insights
 
-Result: Surfaced collection anomalies the same day they appeared and established groundwork for later ML-based fraud screening.
-Problem: Financial defaults from undetected fraud patterns were eroding margins, with no central knowledge base of known schemes or systematic daily collection monitoring.
-Solution: Implemented a fraud patterns database fed by automated daily collection monitoring, surfacing anomalies the same day they appeared and laying the groundwork for the later ML-based fraud screening pipeline.
-Tools: BigQuery · Python · Looker Studio
+Result: Enabled leadership teams to proactively manage business performance through recurring insights, KPI monitoring, root-cause analysis, and actionable recommendations across multiple markets.
+Problem: As the business expanded, leaders needed more than operational reporting. They required a reliable understanding of performance drivers, emerging risks, and market trends to support timely decision-making across countries.
+Solution: Built and operated an end-to-end business intelligence capability covering data ingestion, modeling, reporting, monitoring, and insight generation. Partnered with business leaders to define KPIs, investigated performance variances and anomalies, and translated operational data into recurring market-health assessments, recommendations, and decision-support materials presented to country managers and senior leadership.
+Tools: BigQuery · SQL · Python · Looker Studio · Google Sheets
 
-#### Marketing segmentation & cohort analysis
+- Established the company's analytics foundations by translating operational challenges into KPIs, reporting frameworks, monitoring systems, and recurring market intelligence that enabled more informed decision-making across the business.
+- Modernized the data platform by migrating to Google Cloud and BigQuery, accelerating access to insights, enabling self-service reporting through familiar tools, and reducing reliance on manual analytical processes.
+- Automated 50+ analytical and operational workflows across Operations, Finance, Marketing, and Support, eliminating repetitive manual work and allowing teams to focus on higher-value activities.
+- Partnered with business leaders to analyze market dynamics, operational performance, and driver behavior, helping shape incentive programs while building the automation and controls required to execute them at scale.
+- Built customer profiling, segmentation, and cohort analysis capabilities that strengthened campaign targeting, improved retention analysis, and enabled more data-driven marketing decisions.
+- Established an automated fraud monitoring capability that surfaced suspicious patterns within hours rather than days, strengthening risk visibility and laying the foundation for future ML-driven fraud detection.
 
-Result: Gave Marketing structured rider and driver profiles, cohorts, and campaign signals for targeted analysis.
-Problem: Marketing campaigns were broadly targeted because the team lacked a structured user profiling layer, leading to low engagement and inefficient spend.
-Solution: Built a profiling database covering riders and drivers, with RFM segmentation (recency, frequency, monetary) and cohort analysis used by Marketing for targeted campaigns. Translated cohort behavior into operational signals across retention, monetization, and re-engagement, supporting rider retention and growth.
-Tools: BigQuery · Python · Looker Studio
+### Data Scientist · RINTIO · Mar 2018 - May 2019
 
-#### Product and marketing data ingestion
+Completed a four-month hands-on bootcamp in data engineering, machine learning, and big data infrastructure, then designed and built the data platform, analytics architecture, and crop-yield forecasting models behind Duniya, a smart-farming MVP web application for farmers in Benin.
 
-Result: Centralized product events, experiment data, and advertising performance in BigQuery for recurring product and campaign decisions.
-Problem: Product and Marketing teams lacked a shared analytical path across application behavior, A/B tests, campaign delivery, and audience profiles.
-Solution: Built ingestion workflows from Firebase and Google Analytics, Google Ads, and Facebook/Meta Ads into BigQuery. Modeled the data for product analytics, A/B-test analysis, campaign performance, user profiling, and product-development decisions.
-Tools: Firebase · Google Analytics · Google Ads · Facebook/Meta Ads · BigQuery
+- Completed a four-month Big Data apprenticeship covering data engineering, machine learning, and distributed processing technologies, then applied these skills to build predictive analytics solutions for the agricultural sector.
+- Designed and operationalized the data foundation behind Duniya, integrating diverse agricultural datasets into scalable machine-learning workflows and analytics-ready assets.
+- Developed crop-yield forecasting models for maize and beans, transforming agricultural data into actionable insights for planning and productivity improvement.
+- Contributed to the development of Duniya, a smart-farming MVP combining predictive analytics and self-service data visualization to support data-driven decision-making for farmers in Benin.
+- Collaborated on Data & AI consulting engagements by assessing client needs, co-designing tailored training curricula, creating practical workshops and demonstrations, and helping organizations identify opportunities to leverage data and AI in their operations.
 
-#### Seasonal driver-retention analysis
+## Big Data Bootcamp
 
-Result: Supported an approximately 9% improvement in driver retention through season-aware incentive decisions.
-Problem: Driver availability and retention varied with the regional agricultural season, but incentive planning did not account for the timing and strength of that effect.
-Solution: Analyzed driver activity against the regional agricultural calendar, identified the seasonal retention pattern, and translated the findings into incentive recommendations for Operations.
-Tools: BigQuery · Python · Cohort analysis · Google Sheets
-
-#### Business health monitoring & daily insights
-
-Result: Consolidated 20+ KPIs into a daily report used by country managers and top management for operational decisions.
-Problem: Country managers and top management lacked a single daily lens on business health across markets, with no consolidated KPI rhythm or recurring insight delivery.
-Solution: Built business health dashboards in Google Sheets, transitioning to Looker Studio and Tableau after the BigQuery migration. Consolidated 20+ KPIs into a daily report spanning all business areas. Presented insights daily to country managers and top management, surfacing trends and anomalies for operational decisions.
-Tools: Google Sheets · Looker Studio · Tableau · BigQuery
-
-- Led cloud migration to GCP, replacing legacy batch processing with a BigQuery-based data warehouse and scheduled ETL pipelines.
-- Built more than 50 Python workflows during the Global Data Analyst period for analytical and operational automation serving Operations, Finance, and Marketing, separate from the migration's 50+ ETL pipelines.
-- Built automated data pipelines for incentive payments, reducing a multi-day manual process to minutes through structured operational data and near real-time monitoring.
-- Implemented a fraud patterns database with automated daily collection monitoring, surfacing anomalies the same day they appeared and laying groundwork for later ML-based fraud screening.
-- Founded the analytics engineering function and grew a distributed team of 4, delivering automated dashboards, KPI reporting, and weekly market insights.
-- Refined Marketing segmentation and cohort analysis through a user profiling database, supporting targeted campaigns and retention analysis.
-
-### Data Scientist · RINTIO · Jul 2018 - May 2019
-
-Built data infrastructure and crop-yield forecasting for Duniya, Rintio's farmer-facing smart-farming MVP for Beninese farmers.
-
-#### Big data platform for precision agriculture
-
-Problem: Agricultural data arrived in varied formats and needed a unified storage and compute layer for analysis and product development.
-Solution: Designed and deployed a production data stack combining a Hadoop data lake, an Apache Spark cluster, and Elasticsearch. Processed hundreds of gigabytes of agricultural data from multiple sources and built ingestion and transformation pipelines to produce ML-ready features.
-Tools: Hadoop · Apache Spark · Elasticsearch · Python
-
-#### Crop yield forecast models
-
-Problem: The farmer-facing smart-farming MVP required crop-yield forecasts based on agricultural data.
-Solution: Developed regression-based crop-yield forecast models, primarily for maize with additional models for beans. Achieved R² above 80% in most cases.
-Tools: Python · scikit-learn · Apache Spark
-
-#### Farmer-facing smart-farming web-application MVP
-
-Problem: The product needed to present crop-yield predictions alongside agricultural data visualizations for farmers.
-Solution: Developed crop-yield models for a farmer-facing web-application MVP that combined predictive features with Apache Superset visualizations. The application was still in testing when I left.
-Tools: Apache Superset
-
-#### Data & AI executive training for Société Générale Maroc
-
-Problem: Société Générale Maroc's top management needed structured exposure to data and AI applications in banking to inform strategic priorities.
-Solution: Designed training content and developed lab use cases tailored to banking applications of data and AI, delivered to Société Générale Maroc's top management in a single training mission.
-Tools: Training content design · Lab use case development · Python
-
-- Designed and deployed a production data stack using Hadoop, Apache Spark and Elasticsearch, processing hundreds of gigabytes of agricultural data from multiple sources into ML-ready features.
-- Built regression-based crop-yield forecast models, primarily for maize with additional models for beans; achieved R² above 80% in most cases.
-- Developed crop-yield models for a farmer-facing smart-farming web-application MVP combining predictive features with Apache Superset visualizations; the application was still in testing when I left.
-- Delivered an executive data & AI training mission to Société Générale Maroc's top management, covering banking-specific use cases and hands-on labs.
+The [Rintio Big Data Bootcamp](https://web.facebook.com/bigdatabootcamp) was a four-month apprenticeship from March to June 2018. It covered Spark, Hive, Python, and SQL and included hands-on projects in data visualization and large-scale processing.
 
 ### Statistician · INStaD · Sep 2017 - Feb 2018
 
+Delivered hands-on R analytics training to public-sector staff and contributed to the collection of national research-funding data across multiple ministries for Benin's national statistics institute (INStaD).
 
-
-#### R training programme for agency staff
-
-Problem: Agency departments needed practical exposure to advanced analytics tools but lacked accessible, hands-on training material tailored to their day-to-day workflows.
-Solution: Designed and delivered hands-on R analytics training to ~30 agents from 2 departments over a 1-week seminar (2 sessions). Left agency staff with reusable training materials.
-Tools: R · RStudio · Markdown
-
-#### Survey funding data collection at public ministries
-
-Problem: Benin's national research financing knowledge base was incomplete, particularly on survey-related funding flows across public institutions, limiting visibility for policy and planning.
-Solution: Contributed to INStaD's national survey funding data collection campaign by covering the statistics departments of 4 ministries. Collected and reported research financing records to enrich the agency's national knowledge base.
-Tools: R · Excel · Field data collection
-
-- Designed and delivered hands-on R analytics training to ~30 agents across 2 departments over a 1-week seminar.
-- Contributed to a national survey funding data collection campaign at INStaD, covering 4 ministries' statistics departments.
+- Trained approximately 30 public-sector professionals in R programming and data analysis through two hands-on sessions during a one-week seminar.
+- Supported the development of INStaD's national research-funding repository by collecting, validating, and consolidating funding data from four ministerial statistics departments.
 
 ### Statistician · Le PANTAGRUEL · Aug 2013 - Oct 2013
 
+Led a data-driven customer satisfaction improvement initiative, partnering with Sales leadership to uncover the drivers of customer sentiment and translate customer feedback into measurable business improvements.
+
+- Designed and executed a customer satisfaction research program, building the survey methodology, feedback collection process, and customer analytics dataset.
+- Analyzed 1,000+ customer responses through exploratory analysis, segmentation, cross-tabulation, and regression techniques to identify improvement opportunities.
+- Delivered evidence-based recommendations to executive and operational stakeholders, contributing to initiatives that were later associated with an approximately 9-point increase in NPS.
+- Operationalized the findings through a customer satisfaction scoring framework and enabled Sales teams to incorporate customer experience metrics into performance reviews and day-to-day decision-making.
+
+## Projects and case studies
+
+### Advanced Dataform framework · 2025
+
+Built an enterprise Dataform framework that extends native BigQuery modeling capabilities with cost-efficient incremental processing, automated schema management, and reusable engineering patterns.
+Project page: https://www.bolablg.com/projects/dataform-modeling-lab/
+Result: Reduced a model definition from approximately **150 lines to 20 lines of configuration** in the documented example, while standardizing cost-efficient, production-ready BigQuery patterns across pipelines.
+Problem: Google Cloud Dataform simplified pipeline orchestration, but the existing setup still relied on full-table assertions, custom partition-aware MERGE logic, manual schema changes, and external orchestration for some steps. That added BigQuery scans and maintenance work as workloads grew.
+Solution: Extended Google Cloud Dataform with a reusable modeling framework that standardizes advanced BigQuery engineering patterns across pipelines. The framework automates incremental processing, schema evolution, partition and clustering management, and partition-scoped data quality checks. This turned complex pipeline requirements into reusable model configurations, reducing unnecessary BigQuery scans and reliance on external orchestration.
+Tools: Dataform · BigQuery · JavaScript
 
 
-#### Customer satisfaction survey & scoring system
+### iBola · 2025
 
-Problem: Sales had no structured feedback mechanism: client perceptions were anecdotal, NPS untracked, and there was no way to translate satisfaction signals into operational decisions.
-Solution: Designed and conducted a customer satisfaction survey with the Sales team, delivering a structured client feedback database. Built and deployed a satisfaction scoring system, then trained Sales to use it for ongoing performance reviews. Findings shaped management policies that lifted NPS by approximately 9 points.
-Tools: Excel · Survey design · Statistical scoring
+Built iBola, a bilingual AI assistant that transforms my professional journey into a searchable knowledge base and interactive experience.
+Project page: https://www.bolablg.com/projects/ibola/
+Result: Delivered a bilingual portfolio chatbot with automated evaluation and regression testing to continuously monitor answer quality and factual accuracy.
+Problem: Traditional portfolios require visitors to manually navigate projects, experience, and content, making it difficult to quickly find specific information or validate claims against published materials.
+Solution: Designed a retrieval-augmented AI assistant powered by a LangGraph workflow that combines semantic and keyword search, grounds responses in portfolio content, validates claims against retrieved evidence, and continuously evaluates answer quality through automated regression testing and versioned benchmarks.
+Tools: LangGraph · Gemini · Langfuse · Google Cloud Run
 
-- Designed and conducted a customer satisfaction survey with the Sales team, delivering a structured client feedback database.
-- Findings translated into management policies that lifted NPS by approximately 9 points.
-- Built and deployed a customer satisfaction scoring system, then trained the Sales team to use it in performance reviews.
 
 ## Other experiences (advisory · community)
 
-### Data Management Consultant · International Trade Centre - ITC (UN Agency) · 2023
+### Data management Consultant · International Trade Centre - ITC (WTO) · 2023
 
-As a Data Management Consultant, designed and delivered data-management and data-strategy training for 15 early-stage ECOWAS startups under the UN ITC Netherlands Trust Fund V program.
+Strengthen data-management capabilities of 15 early-stage West African startups, designing and delivering a practical framework for data-driven decision-making, operational performance tracking, and growth planning.
 
-- Created reusable training materials covering market analysis, marketing campaigns and team-performance tracking to support startup competitiveness and internal operational efficiency. Later cohorts reused the materials.
-- Delivered the workshops to 15 startups from Benin and other ECOWAS countries, and coached five founders individually on their data-management challenges.
+- Developed a reusable data-management training toolkit covering market intelligence, marketing performance measurement, a KPI framework, and operational reporting, enabling startups to establish foundational data practices and supporting subsequent program cohorts.
+- Facilitated workshops for founders and leadership teams across 15 ECOWAS startups and provided one-on-one advisory support to five founders, helping translate data-management principles into solutions for their specific business challenges.
 
-### Founding Vice-President of iSheero · iSheero · Dec 2021 - Present
+### Founding Vice-President · iSheero · Dec 2021 - Present
 
-iSHEERO is an initiative promoting data science and AI in Benin and across Francophone Africa, built on three pillars:
-- Skills development: equipping young Beninese talent with AI skills.
-- Local ecosystem: building a data science ecosystem to position Benin as a hub for international AI projects.
-- AI in business: helping companies adopt AI in their operating workflows.
+Co-founded iSHEERO to help grow Benin's AI and data ecosystem through workforce development, ecosystem partnerships, and practical adoption of data-driven technologies across organizations and government institutions.
 
-Contributions as Founding Vice-President:
-- Designed and delivered a hands-on Google Cloud real-time streaming module using Pub/Sub, Dataflow, BigQuery, and Looker Studio at the Africa TechUp Tour bootcamp.
-- Engaged with DataCamp scholarship recipients in data engineering as part of an iSHEERO partnership program.
-- Contributed to the review of Benin's national big data strategy roadmap, with the Ministry of Digital Affairs.
-- Co-trained directors of information systems (DSIs) across Ministry of Finance departments in data science.
+## Contributions
 
-To learn more about our activities, events and team, visit our website.
+- ### Google Cloud streaming bootcamp
+
+  Designed and delivered a hands-on Google Cloud real-time streaming module using Pub/Sub, Dataflow, BigQuery, and Looker Studio at the Africa TechUp Tour bootcamp.
+
+- ### DataCamp scholarship program
+
+  Engaged with DataCamp scholarship recipients in data engineering as part of an iSHEERO partnership program.
+
+- ### National Big Data strategy
+
+  Contributed to the review of Benin's national big data strategy roadmap, with the Ministry of Digital Affairs.
+
+- ### Ministry of Finance training
+
+  Co-trained directors of information systems (DSIs) across Ministry of Finance departments in data science.
 
 ### Chair of Takwimu LAB · Takwimu LAB · 2019 - 2022
 
 
-Co-founded Takwimu LAB, a community for AI and Data Science learners in Francophone Africa, building hands-on programs from online learning paths. Led research on low-resource African languages, collecting, labeling, and publishing parallel text datasets for Neural Machine Translation (French-Fongbé, French-Ewe). Built a prototype English-Fongbé Neural ML Translation app through the AI4D-Africa Network with UNESCO support.
+Co-founded and chaired Takwimu LAB, combining talent development and AI research to advance African language technologies. Led community learning programs while contributing to award-winning NLP datasets, international research publications, and machine translation initiatives supported by AI4D Africa and UNESCO.
 
-Recognition includes the Zindi Africa Award for the AI4D-African Dataset Challenge (2020). Co-organized a machine translation challenge on Zindi Africa. Published findings via the AI4D African Language Program, presented at the AfricaNLP Workshop during EACL 2021.
-- Parallel text dataset for Neural Machine Translation (French-Fongbé, French-Ewe) published November 2020: https://zenodo.org/record/4266935
-- AI4D African Language Program, April 2021. Accepted and presented at the AfricaNLP Workshop, EACL2021 Conference. arXiv:2104.02516 [cs.CL]
+## Team achievements
 
-### Big Data Bootcamp · RINTIO Big Data Bootcamp · Mar - Jun 2018
+- ![Illustration for the 2020 AI4D dataset challenge](/images/takwimu/award.webp)
 
-Intensive 4-month program covering Data Engineering, Machine Learning, and Big Data infrastructure (Spark, Hive, Python, SQL), with hands-on projects on data visualization and large-scale processing.
+  **Zindi challenge award**\
+  Named among the January 2020 winners of the AI4D African Language Dataset Challenge. [Zindi results](https://zindi.world/competitions/ai4d-african-language-dataset-challenge)
 
-Key project: **Duniya Data**, a collaborative agricultural insights app applying data science to farming practices, built with peers under mentor guidance.
+- ![Zenodo wordmark with French to Fongbé and French to Ewe labels](/images/takwimu/dataset.webp)
+
+  **Parallel text dataset**\
+  Published French–Fongbé and French–Ewe data for neural machine translation in November 2020. [Zenodo dataset](https://zenodo.org/records/4266935)
+
+- ![Title and author list on the first page of the AI4D African Language Program paper](/images/takwimu/paper.webp)
+
+  **AI4D African Language Program**\
+  Co-authored the April 2021 paper presented at the AfricaNLP Workshop at EACL 2021. [arXiv:2104.02516](https://arxiv.org/abs/2104.02516)
 
 ## Education
 
@@ -399,40 +422,54 @@ Focus areas: statistical modeling, survival analysis, statistical inference on l
 - Apache Airflow Hands-on Certificate · Udemy · Feb 2024
 - McKinsey.org Forward Program · McKinsey & Company · Jul 2025
 
+## Articles
+
+- [From files to reliable tables: The promise of open table formats](https://blog.bolablg.com/p/open-table-format-from-lake-files-to-reliable-tables) · Oct 2026 · Substack · How Iceberg, Delta Lake, Hudi... turn raw files into consistent, shareable tables.
+- [From insight to action: The rise of Data Product Engineering in scaleups](https://blog.bolablg.com/p/data-product-engineering-from-insight-to-action) · May 2026 · Substack · How operational analytics evolved into internal products at Gozem, and how AI-assisted engineering changed the economics of building them.
+- [Beyond standard Google Dataform: Smart templates to save BigQuery costs & Dev time](https://blog.bolablg.com/p/beyond-standard-google-dataform-smart) · Oct 2025 · Substack · An extended all-in-one data modeling framework with Google Cloud Dataform
+- [💼 Salaire Brut vs Net au Bénin 🇧🇯 ](https://www.linkedin.com/posts/bolablg_calculette-salaire-b%C3%A9nin-2025-activity-7337795641210769408-8KID) · Jun 2025 · LinkedIn · A calculator for comparing gross and net pay in Benin. (In French)
+- [Google Sheets + Python: créer et partager automatiquement des rapports de données](https://blog.bolablg.com/p/google-sheets-python-creer-et-partager) · May 2025 · Substack · How to use Python or R to create, edit, and share Google Sheets reports automatically. (In French)
+- [Débuter avec Google Dev: crée un service account pour automatiser tes opérations](https://blog.bolablg.com/p/google-dev-service-account) · May 2025 · Substack · How to set up a Google service account to read a spreadsheet from a Drive folder automatically. (In French)
+- [Où trouver des données pour une étude nationale ?](https://blog.bolablg.com/p/source-de-donnees-etude-nationale-exemple-benin) · Nov 2021 · Substack · Where to look for data for a national study, using Benin as an example. (In French)
+
 ## Publications
 
-- Participatory Research for Low-resourced Machine Translation · AfricaNLP Workshop, EACL 2021 · Apr 2021 · https://arxiv.org/abs/2104.02516
+- AI4D – African Language Program · Participatory research for low-resourced African languages · AfricaNLP Workshop, EACL 2021 · Apr 2021 · https://arxiv.org/abs/2104.02516
 - Parallel Text Dataset for Neural Machine Translation (French-Fongbé, French-Ewe) · Zenodo · Nov 2020 · https://zenodo.org/record/4266935
 
-## Recognition
+## Talks
 
-- CAF2025 speaker: Super Apps & Data Protection · On Gozem's super-app approach to data protection · 2025
-- WakeUp Champ podcast guest · On the path from statistics to data science leadership · 2023
-- Zindi Africa Award · AI4D African Dataset Challenge (Takwimu LAB) · 2020
+- [CAF2025 speaker: Super Apps & Data Protection](https://www.linkedin.com/posts/bolablg_cnin-caf2025-gozem-activity-7346194799705669632-nj9z) · On Gozem's super-app approach to data protection · 2025
+- [WakeUp Champ podcast guest](https://www.facebook.com/reel/1038710197493572) · On the path from statistics to data science leadership · 2023
 
 ## Proof points
 
 - ~5 TB · Batch upserts/day (average)
-- 45M · Streaming events/day (average)
-- ~300 · Dataform models & Airflow DAGs
+- 45M · Streaming telemetry & operational events/day (average)
+- ~300 · Dataform models & Airflow DAGs (combined)
 - −42.57% · GCP cost in one quarter
-- 650+ · Data Hub employees, field agents & partners
+- 700+ · Data Hub employees, field agents & partners
 
 ## Tech stack
 
-- Data platforms & governance: BigQuery · ClickHouse · BigLake · Databricks · Dataplex · Unity Catalog
+Bolaji personally uses Cloud Functions and Vertex AI in production.
+
+
+- Data platforms & governance: BigQuery · ClickHouse · BigLake · Databricks (projects and labs) · Dataplex · Unity Catalog
 - Databases & storage: PostgreSQL · MongoDB · Google Cloud Storage · AWS S3 · Delta Lake · Apache Iceberg
 - Pipelines & streaming: Airflow · Dataform · Dataflow · Apache NiFi · Lakeflow · Spark · Pub/Sub
-- Languages & frameworks: Python · SQL · R · Bash · JavaScript · Scala · React · FastAPI
-- Cloud & delivery: Google Cloud · Compute Engine · AWS · AWS EC2 · Cloud Run · Cloud Functions (team delivery oversight) · Docker · Artifact Registry · Git
-- Analytics & visualization: Data Studio · Looker · Superset · Metabase · Plotly · Grafana
-- AI & automation: Vertex AI (team delivery oversight) · Gemini · Codex · RAG · LangGraph (familiarity) · MCP
+- Languages & frameworks: Python · SQL · R · Bash · Scala · FastAPI
+- Cloud & delivery: Google Cloud · Compute Engine · AWS · AWS EC2 · Cloud Run · Cloud Functions · Docker · Artifact Registry · Git
+- Analytics & visualization: Data Studio · Superset · Metabase · Grafana
+- AI & automation: Vertex AI · Gemini · Codex · RAG · LangGraph (iBola project) · MCP
 
 ## Contact
 
 - Email: hello@bolablg.com
+- [Book a conversation](https://calendar.app.google/KYm4B5iL5j3HRxav9) · 45 minutes via Google Meet.
+- Scheduling note: Life happens. If you need to cancel or reschedule, a quick heads-up and 3 hours' notice whenever possible is greatly appreciated.
 - LinkedIn: https://linkedin.com/in/bolablg
 - GitHub: https://github.com/bolablg
 - Blog: https://blog.bolablg.com
 - Based in: Little Rock, AR, US (America/Chicago)
-- Availability: Open to market.
+- Availability: Open to data engineering, architecture, analytics, and data leadership roles.

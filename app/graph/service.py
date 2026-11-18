@@ -403,6 +403,7 @@ class AgenticRAGService:
             "evidence": [],
             "answer_sources": [],
             "trace_id": None,
+            "_retryable": True,
         }
 
     @staticmethod
@@ -743,48 +744,30 @@ class AgenticRAGService:
         user_language: str,
         chat_history: Optional[List[Tuple[str, str]]] = None,
     ) -> Dict[str, Any]:
-        """Quick-reply actions for resume/CV requests.
-
-        The full profile lives on the website; a resume conversation goes
-        through email so Bolaji can tailor it.
-        """
+        """Direct resume requests to the portfolio contact page."""
         is_french = user_language.lower().startswith("fr")
         answer = (
-            "Le profil complet de Bolaji est sur bolablg.com. Pour recevoir son "
-            "CV adapte a votre besoin, envoyez-lui un email ou reservez un "
-            "creneau ci-dessous."
+            "Sur la page Contact, sélectionnez « Request resume » et décrivez "
+            "le poste. Bolaji examinera votre demande avant de partager son CV."
             if is_french
-            else "Bolaji's full profile is at bolablg.com. To receive a resume "
-            "tailored to your role, email him or book a slot below."
+            else "Select ‘Request resume’ on the portfolio’s Contact page and "
+            "include details about the role. Bolaji reviews the opportunity "
+            "before sharing a resume."
         )
         actions = [
             {
-                "text": "View full profile",
-                "type": "view_profile",
-                "url": "https://www.bolablg.com",
+                "text": "Demander le CV" if is_french else "Request resume",
+                "type": "request_resume",
+                "url": config.RESUME_REQUEST_URL,
                 "session_id": session_id,
-                "description": "Open Bolaji's website profile",
+                "description": (
+                    "Ouvrir la page Contact du portfolio"
+                    if is_french
+                    else "Open the portfolio Contact page"
+                ),
                 "primary": True,
                 "end_chat": False,
-            },
-            {
-                "text": "Send email",
-                "type": "contact_email",
-                "url": f"mailto:{config.CONTACT_EMAIL}",
-                "session_id": session_id,
-                "description": "Request the resume by email",
-                "primary": True,
-                "end_chat": False,
-            },
-            {
-                "text": "Book appointment",
-                "type": "contact_booking",
-                "url": config.CALENDAR_BOOKING_URL,
-                "session_id": session_id,
-                "description": "Schedule a meeting with Bolaji",
-                "primary": False,
-                "end_chat": False,
-            },
+            }
         ]
         return {
             "answer": answer,

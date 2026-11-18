@@ -15,6 +15,8 @@ from typing import List, Optional
 from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from config import CALENDAR_BOOKING_URL
+
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
@@ -154,10 +156,7 @@ class AppSettings(BaseSettings):
 
     # --- Contact ---
     contact_email: str = "hello@bolablg.com"
-    calendar_booking_url: str = (
-        "https://calendar.google.com/calendar/appointments/schedules/"
-        "AcZssZ3YeidR5Og4YSGZIlxUIlDAf0AiRA6N8-MAzr-Sy55BtbKhBLXkfa8M_P_92eokXRnayLVlEXiW?gv=true"
-    )
+    calendar_booking_url: str = CALENDAR_BOOKING_URL
     linkedin_url: str = "https://linkedin.com/in/bolablg"
 
     # --- Sub-settings ---

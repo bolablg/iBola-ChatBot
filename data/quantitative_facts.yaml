@@ -1,29 +1,26 @@
-# Public quantitative constraints. A guard may use a fact only when its
-# supporting quote is present in a retrieved chunk from the named source.
-# Evidence: E-122, candidate-confirmed October 1, 2026.
+# Preserve a qualifier only when a current retrieved source supports it.
 facts:
   - id: recommendation_delivered_order_share
-    bound: upper
+    bound: approximate
     unit: percent
     value: '12'
-    labels:
-      en: delivered orders through recommendations
-      fr: les commandes livrées via les recommandations
-    # The placeholder binds the percentage to the stated share, not a change
-    # in order value or another recommendation metric in the same sentence.
     metric_patterns:
       en:
-        - '(?=.*__percentage__)(?=.*\brecommend\w*)(?=.*\b(?:share|proportion|percentage)\b)(?=.*\bdelivered\s+orders\b).*'
-        - '__percentage__\s+of\s+(?:the\s+)?(?:delivered\s+)?orders\b.*\brecommend\w*'
-        - '__percentage__.*\b(?:share|proportion|percentage)\b.*\borders\b.*\brecommend\w*'
-        - '\b(?:share|proportion|percentage)\b.*\borders\b.*\brecommend\w*.*__percentage__'
+        - '^(?!.*\b(?:caus\w*|generat\w*|attribut\w*)\b)(?=.*__percentage__)(?=.*\brecommend\w*)(?=.*\bdelivered\s+orders\b)(?=.*\bfirst\s+month\b)(?=.*\b(?:associated|linked|observed|share)\b).*'
       fr:
-        - '(?=.*__percentage__)(?=.*\brecommand\w*)(?=.*\b(?:part|proportion|pourcentage)\b)(?=.*\bcommandes\s+livrees\b).*'
-        - '__percentage__\s+(?:des|de)\s+commandes\b.*\brecommand\w*'
-        - '__percentage__.*\b(?:part|proportion|pourcentage)\b.*\bcommandes\b.*\brecommand\w*'
-        - '\b(?:part|proportion|pourcentage)\b.*\bcommandes\b.*\brecommand\w*.*__percentage__'
+        - '^(?!.*\b(?:caus\w*|gener\w*|provoqu\w*|attribu\w*)\b)(?=.*__percentage__)(?=.*\brecommand\w*)(?=.*\bcommandes\s+livrees\b)(?=.*\bpremier\s+mois\b)(?=.*\b(?:associe\w*|lie\w*|observe\w*|part)\b).*'
+    clause_continuations:
+      fr:
+        - 'au cours du premier mois suivant leur deploiement'
     supporting_quotes:
       12_product_analytics.txt:
-        - up to 12% of delivered orders were placed through the recommendation feature
+        - recommendations were associated with approximately 12% of delivered orders in the first month after deployment.
       18_confirmed_clarifications.txt:
-        - up to 12% of delivered orders were observed through recommendations after deployment
+        - recommendations were associated with approximately 12% of delivered orders in the first month after deployment.
+      90_website_canon_llms_full.txt:
+        - In the first month after deployment, recommendations were associated with approximately 12% of delivered orders.
+        - In the first month after launch, recommendations were associated with approximately 12% of delivered orders.
+    # The site's metric definition omits the qualifier but supplies no evidence of exactness.
+    shorthand_quotes:
+      90_website_canon_llms_full.txt:
+        - The 12% figure measures the share of delivered orders associated with recommendations in the first month after deployment.

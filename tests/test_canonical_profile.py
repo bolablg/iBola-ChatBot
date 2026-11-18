@@ -27,7 +27,7 @@ STALE_PHRASES = [
     "currently works at gozem",
     "still employed at gozem",
     "he is still at gozem",
-    "head of data & analytics",
+    "is currently head of data & analytics",
     "current role: head of data",
     "alongside his current role",
     "stitch data",
@@ -36,12 +36,12 @@ STALE_PHRASES = [
     "founding vice-chair",
 ]
 
-# Facts the KB must state somewhere (confirmed through October 2026).
+# Facts the KB must state somewhere (confirmed through November 2026).
 CANONICAL_FACTS = [
     "Data Director",
     "July 2026",
     "Little Rock",
-    "650",
+    "700+",
     "42.57%",
     "30+ production",
     "25M+ XOF",
@@ -149,7 +149,7 @@ class TestGoldenRetrievalQA:
         ),
         (
             "How many people use the Gozem Data Hub?",
-            ["650"],
+            ["700"],
         ),
         (
             "How much did Bolaji cut Google Cloud costs?",
