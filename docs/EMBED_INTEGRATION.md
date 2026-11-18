@@ -144,7 +144,7 @@ Then open: `http://localhost:8080/static/test-embed.html`
 ## Responsive Behavior
 
 - **Desktop.** The card is up to 400 × 600 pixels and opens above the launcher.
-- **Mobile and short touch screens.** The card stays inset, up to 360 pixels wide and 62% of viewport height (480 pixels maximum). It shrinks further when a host dock or a smaller visible viewport leaves less room.
+- **Mobile and short touch screens.** The card stays inset and up to 360 pixels wide. The card, launcher and gap together use 75% of the visible viewport height. The card shrinks further when a host dock or safe-area inset leaves less room. Opening the keyboard or changing orientation recalculates the available space.
 
 ## Security
 
