@@ -77,7 +77,9 @@ def main():
     failures = []
 
     if agg.get("judge_errors"):
-        failures.append(f"{agg['judge_errors']} question(s) were not judged successfully")
+        failures.append(
+            f"{agg['judge_errors']} question(s) were not judged successfully"
+        )
 
     for row in report.get("results", []):
         if "recruiter_regression" in row.get("tags", []) and not row.get("fact_pass"):

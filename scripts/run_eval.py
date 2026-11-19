@@ -151,6 +151,7 @@ def check_facts(answer, row, actions=None, result=None):
             failures.append("missing retrieved evidence")
     if row.get("must_mark_unknown"):
         from app.services.evidence_policy import documentation_limits
+
         for target in documentation_limits(answer, row["must_mark_unknown"]):
             failures.append(f"missing explicit documentation limit: {target}")
     for clause in row.get("must_contain", []):
@@ -245,7 +246,9 @@ class Judge:
 
             api_key = config.GEMINI_API_KEY
         self.model = model
-        self.client = genai.Client(api_key=api_key, http_options={"retry_options":{"attempts":1}})
+        self.client = genai.Client(
+            api_key=api_key, http_options={"retry_options": {"attempts": 1}}
+        )
 
     def score(self, question, gold, answer, context):
         prompt = (
@@ -257,13 +260,17 @@ class Judge:
         for attempt in range(2):
             try:
                 response = self.client.models.generate_content(
-                    model=self.model, contents=prompt,
-                    config={"temperature":0.0,"response_mime_type":"application/json"},
+                    model=self.model,
+                    contents=prompt,
+                    config={
+                        "temperature": 0.0,
+                        "response_mime_type": "application/json",
+                    },
                 )
                 break
             except Exception as exc:
-                code = getattr(exc,"code",getattr(exc,"status_code",None))
-                if str(code) not in {"429","503"} or attempt:
+                code = getattr(exc, "code", getattr(exc, "status_code", None))
+                if str(code) not in {"429", "503"} or attempt:
                     raise
                 time.sleep(0.5)
         data = json.loads(response.text)
