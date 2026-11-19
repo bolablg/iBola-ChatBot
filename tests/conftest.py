@@ -18,6 +18,9 @@ os.environ["GCHAT_WEBHOOK_URL"] = "https://test-webhook.com"
 os.environ["GCP_PROJECT_ID"] = "test-project"
 os.environ["LOG_LEVEL"] = "DEBUG"
 os.environ["DISABLE_RATE_LIMITING"] = "true"
+os.environ["LANGFUSE_ENABLED"] = "false"
+os.environ["LANGFUSE_PUBLIC_KEY"] = ""
+os.environ["LANGFUSE_SECRET_KEY"] = ""
 
 
 # Mock Google Generative AI services to prevent API calls

@@ -119,7 +119,7 @@ def test_final_verifier_correction_remains_final(
     }
     with patch("app.graph.nodes._get_llm", return_value=llm):
         result = verify_grounding_node(state)
-    messages = llm.with_structured_output.return_value.invoke.call_args[0][0]
+    messages = llm.with_structured_output.return_value.invoke.call_args_list[0].args[0]
     answer_to_verify = messages[-1].content.partition("Answer to verify:\n")[2]
     assert "Rust" in answer_to_verify
     if verifier_drops_language:
@@ -286,8 +286,9 @@ def test_degree_completion_does_not_override_verifier_correction():
     }
     with patch("app.graph.nodes._get_llm", return_value=llm):
         result = verify_grounding_node(state)
-    assert result["grounding_checked"] is True
-    assert result["answer"] == "Bolaji's last role was Data Director."
+    assert result["grounding_checked"] is False
+    assert "Data Director" not in result["answer"]
+    assert llm.with_structured_output.return_value.invoke.call_count == 2
 
 
 def test_does_not_add_degrees_when_not_requested_or_not_retrieved():

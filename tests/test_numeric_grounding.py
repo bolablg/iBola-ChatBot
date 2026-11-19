@@ -138,7 +138,9 @@ def test_guard_runs_after_both_verifier_outcomes(metric, model_corrects):
         unsupported_claims=["unqualified percentage"] if model_corrects else [],
     )
     llm = Mock()
-    llm.with_structured_output.return_value.invoke.return_value = verdict
+    llm.with_structured_output.return_value.invoke.side_effect = (
+        [verdict, GroundingVerdict(is_grounded=True)] if model_corrects else [verdict]
+    )
     state = {
         "answer": draft,
         "query": "What share of tasks was completed?",

@@ -642,6 +642,7 @@ async def chat(payload: ChatInput, request: Request):
             "evidence": result.get("evidence", []),
             "grounding_checked": result.get("grounding_checked", False),
             "answer_sources": result.get("answer_sources", []),
+            "provenance": result.get("provenance", {}),
             "trace_id": result.get("trace_id"),
         }
 
@@ -700,11 +701,13 @@ async def health_check():
 
         # Get cache statistics
         cache_stats = cache_service.get_cache_stats()
+        from app.services.provenance import runtime_provenance
 
         health_data = {
             "status": "healthy",
             "timestamp": datetime.now().isoformat(),
             "version": APP_VERSION,
+            "provenance": runtime_provenance(),
             "system": {
                 "memory_usage": f"{memory.percent:.1f}%",
                 "cpu_usage": f"{cpu_percent:.1f}%",

@@ -28,6 +28,8 @@ Project: "Duniya Data", leveraging data insights to enhance agricultural practic
 
 PROFESSIONAL CERTIFICATIONS:
 
+Documented credentials include Google Cloud Professional Data Engineer (November 2025, expires November 2027), McKinsey.org Forward Program (July 2025), and the Apache Airflow certificate from Udemy (February 2024). The IBM credentials are listed below.
+
 Quelles certifications Bolaji possede-t-il: Google Cloud Professional Data Engineer (novembre 2025 a novembre 2027), le programme McKinsey Forward de McKinsey & Company (juillet 2025), et une certification Apache Airflow d'Udemy (fevrier 2024).
 
 Google Cloud Professional Data Engineer - Google Cloud (November 2025, expires November 2027)

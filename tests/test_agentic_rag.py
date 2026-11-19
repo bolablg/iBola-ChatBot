@@ -102,7 +102,7 @@ def test_opportunity_prompt_bypasses_workflow_with_contact_actions():
     service.workflow = Mock()
 
     result = service.process_query(
-        "I am hiring for a senior AI role. Can Bolaji be interested?",
+        "We are hiring for a senior AI role.",
         [],
         "opportunity-test",
         "en",
@@ -111,7 +111,8 @@ def test_opportunity_prompt_bypasses_workflow_with_contact_actions():
 
     service.workflow.invoke.assert_not_called()
     assert result["agent_type"] == "opportunity"
-    assert "bolaji" in result["answer"].lower()
+    assert result["answer"]
+    assert result["evidence"] == []
     assert any(action["type"] == "contact_email" for action in result["actions"])
 
 

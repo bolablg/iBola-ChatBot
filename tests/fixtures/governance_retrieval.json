@@ -1,0 +1,46 @@
+{
+  "query": "Describe one documented case where he reconciled conflicting metric definitions or reporting needs across country teams. What governance, quality checks and access safeguards did he personally establish, and what changed for the people using the reports?",
+  "draft": "He standardized metric definitions with BigQuery and Dataform.",
+  "documents": [
+    {
+      "page_content": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN · Data Engineer · Data Architect (full content) | Section: Enterprise metrics governance & AI-ready semantic layer | Parent context: Bolaji BALOGOUN · Biography > Data Director · GOZEM · Apr 2025 - Jul 2026\n\nResult: Established a single source of truth for business metrics across analytics, reporting, and AI-powered workflows.\nProblem: As Gozem expanded its analytics footprint across multiple business domains and countries, the risk of inconsistent metric interpretation increased. KPI definitions, transformation logic, aggregation rules, dimensions, and query implementations were often embedded across dashboards, SQL queries, reports, and undocumented team knowledge.\n\nAt the same time, emerging AI-powered analytics workflows created new requirements. Business users needed trusted natural-language access to data, while AI agents required a reliable understanding of business concepts, metrics, and relationships to generate accurate insights.\n\nThe organization needed a foundation capable of serving both humans and AI systems with a consistent interpretation of business performance.\nSolution: Designed and implemented the foundation of an enterprise metrics governance framework covering KPI definitions, source systems, transformation dependencies, aggregation behavior, available dimensions, lineage, and canonical calculation methods.\n\nCreated a centralized metrics catalog documenting how each KPI is derived, whether from raw operational data or transformed analytical models, including supporting business context, relationships between metrics, valid dimensions, joins, and calculation formulas.\n\nStandardized KPI computation through reusable BigQuery and Dataform assets powering reporting and analytical applications, ensuring consistent metric definitions across dashboards, analyses, and operational workflows.\n\nIntroduced governed AI access to warehouse data through an MCP-enabled BigQuery integration in Claude. Selected senior users could query enterprise data using natural language within their existing Google Cloud IAM permissions.\n\nThis work also laid the foundations for an AI-ready semantic layer capable of supporting future copilots, autonomous agents, self-service analytics experiences, and automated decision-support systems.\nTools: BigQuery · Dataform · MCP · Claude · Python · Looker Studio · Google Cloud IAM",
+      "metadata": {
+        "source": "90_website_canon_llms_full.txt",
+        "chunk_id": "90_website_canon_llms_full.txt::15",
+        "section_header": "Enterprise metrics governance & AI-ready semantic layer",
+        "scope_context": "Data Director · GOZEM · Apr 2025 - Jul 2026",
+        "evidence_type": "published"
+      }
+    },
+    {
+      "page_content": "Source: 13_gozem_internal_projects.txt | Title: BOLAJI BALOGOUN - INTERNAL PROJECTS LED AT GOZEM (2019 - 2026, tenure ended July 2026) | Section: DATA GOVERNANCE & KPI FRAMEWORK | Parent context: BOLAJI BALOGOUN - INTERNAL PROJECTS LED AT GOZEM (2019 - 2026, tenure ended July 2026) > HEAD OF DATA ERA (October 2022 - March 2025)\n\n- Action: Bolaji co-developed a domain-oriented data governance framework with the team, delivering a KPI framework with definitions, data source documentation, and table descriptions across the group, and established data catalog practices with a domain-oriented data mesh strategy.\n- Outcome: KPI frameworks and metric dictionaries adopted across all five markets.",
+      "metadata": {
+        "source": "13_gozem_internal_projects.txt",
+        "chunk_id": "13_gozem_internal_projects.txt::15",
+        "section_header": "DATA GOVERNANCE & KPI FRAMEWORK",
+        "scope_context": "HEAD OF DATA ERA (October 2022 - March 2025)",
+        "evidence_type": "curated"
+      }
+    },
+    {
+      "page_content": "Source: 11_leadership_style.txt | Title: BOLAJI BALOGOUN - LEADERSHIP STYLE & MANAGEMENT PHILOSOPHY | Section: CROSS-FUNCTIONAL COLLABORATION: | Parent context: BOLAJI BALOGOUN - LEADERSHIP STYLE & MANAGEMENT PHILOSOPHY\n\nBolaji excels at working across teams to turn messy data into strategic assets. A concrete example:\n\nIn Gozem's fintech division, the team was offering installment-based vehicle financing to drivers, but the data was in disarray. Bolaji:\n1. Collaborated closely with business and operations teams to understand their day-to-day struggles and goals.\n2. Managed and transformed the complex financing data.\n3. Extracted accurate and actionable insights for decision-making.\n4. Worked with the development team to improve data collection methods.\nThis cross-team collaboration turned chaotic data into a strategic asset. The governance bar he later set across 250+ production pipelines made the platform the single source of truth that closed long-standing reporting disputes between Finance, Operations, and Product.",
+      "metadata": {
+        "source": "11_leadership_style.txt",
+        "chunk_id": "11_leadership_style.txt::5",
+        "section_header": "CROSS-FUNCTIONAL COLLABORATION:",
+        "scope_context": "",
+        "evidence_type": "curated"
+      }
+    },
+    {
+      "page_content": "Source: 13_gozem_internal_projects.txt | Title: BOLAJI BALOGOUN - INTERNAL PROJECTS LED AT GOZEM (2019 - 2026, tenure ended July 2026) | Section: PIPELINE OBSERVABILITY & DATA-EXPLORATION MCP | Parent context: BOLAJI BALOGOUN - INTERNAL PROJECTS LED AT GOZEM (2019 - 2026, tenure ended July 2026) > DATA DIRECTOR ERA (April 2025 - July 2026)\n\n- Situation: 250+ production pipelines (Dataform, Airflow, cron jobs) needed systematic quality assurance and accessible exploration.\n- Action: Bolaji built observability across the pipelines with automated data-quality checks, discrepancy alerts catching incomplete data and duplicates, performance tracking on exceptional events, and a data-exploration MCP.\n- Tools: Dataform, Apache Airflow, BigQuery, Python, MCP.\n- Outcome: 250+ pipelines under observability with automated quality checks, SLAs, lineage, and access controls, making the platform the single source of truth that closed long-standing reporting disputes between Finance, Operations, and Product.",
+      "metadata": {
+        "source": "13_gozem_internal_projects.txt",
+        "chunk_id": "13_gozem_internal_projects.txt::6",
+        "section_header": "PIPELINE OBSERVABILITY & DATA-EXPLORATION MCP",
+        "scope_context": "DATA DIRECTOR ERA (April 2025 - July 2026)",
+        "evidence_type": "curated"
+      }
+    }
+  ]
+}

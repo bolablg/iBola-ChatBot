@@ -16,7 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const welcomeScreen = document.getElementById('welcome-screen');
     const suggestionsGrid = document.getElementById('suggestions-grid');
     const railSuggestions = document.getElementById('rail-suggestions');
-    const answerSourcesEl = document.getElementById('answer-sources');
     const modalOverlay = document.getElementById('modal-overlay');
     const modalIframe = document.getElementById('modal-iframe');
     const modalClose = document.getElementById('modal-close');
@@ -28,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let chatEnded = false;
     let msgIndex = 0;
     let hasUserSent = false;
+    let requestInFlight = false;
 
     // --- Analytics helper ---
     const trackEvent = (name, params) => {
@@ -327,6 +327,14 @@ document.addEventListener('DOMContentLoaded', () => {
             content.textContent = text;
         }
 
+        if (sender === 'bot' && Array.isArray(opts.answerSources)) {
+            const receipts = document.createElement('div');
+            receipts.className = 'answer-sources';
+            receipts.setAttribute('aria-label', 'Answer sources');
+            renderAnswerSources(opts.answerSources, receipts);
+            content.appendChild(receipts);
+        }
+
         if (sender === 'bot' && !opts.noFeedback) {
             content.appendChild(createFeedbackRow(msgIndex++, opts.traceId));
         }
@@ -336,43 +344,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return content;
     };
 
-    // --- Typing Animation ---
+    // Display the completed, verified answer without a second artificial delay.
     const typeMessage = (text, sender = 'bot', opts = {}) => {
-        return new Promise(resolve => {
-            if (sender === 'user' && !hasUserSent) {
-                hasUserSent = true;
-                hideWelcomeScreen();
-            }
-
-            showTyping();
-
-            const { row, content } = createMessageRow(sender);
-            content.classList.add('msg-content--plain', 'msg-content--streaming');
-
-            chatMessages.insertBefore(row, typingIndicator);
-            hideTyping();
-
-            let i = 0;
-            const speed = opts.speed || 20;
-            const tick = () => {
-                content.textContent = text.slice(0, ++i);
-                scrollToBottom();
-                if (i < text.length) {
-                    setTimeout(tick, speed);
-                } else {
-                    // Replace with rendered markdown
-                    content.classList.remove('msg-content--plain', 'msg-content--streaming');
-                    content.textContent = '';
-                    content.appendChild(renderMarkdown(text));
-
-                    if (sender === 'bot' && !opts.noFeedback) {
-                        content.appendChild(createFeedbackRow(msgIndex++, opts.traceId));
-                    }
-                    resolve();
-                }
-            };
-            tick();
-        });
+        hideTyping();
+        return Promise.resolve(addMessage(text, sender, opts));
     };
 
     // --- Feedback ---
@@ -524,7 +499,9 @@ document.addEventListener('DOMContentLoaded', () => {
     chatForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const text = userInput.value.trim();
-        if (!text || chatEnded) return;
+        if (!text || chatEnded || requestInFlight) return;
+        requestInFlight = true;
+        sendBtn.disabled = true;
 
         addMessage(text, 'user', { plain: true });
         userInput.value = '';
@@ -553,9 +530,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (res.ok) {
                 const data = await res.json();
                 // Retain the rated turn's trace_id so feedback attaches to it
-                if (data.answer) await typeMessage(data.answer, 'bot', { traceId: data.trace_id });
+                if (data.answer) await typeMessage(data.answer, 'bot', { traceId: data.trace_id, answerSources: data.answer_sources });
                 if (data.actions && data.actions.length > 0) addActionButtons(data.actions);
-                renderAnswerSources(data.answer_sources);
                 if (data.should_end_chat && !chatEnded) endChat();
                 trackEvent('bot_response', {
                     intent: data.intent || 'unknown',
@@ -570,6 +546,9 @@ document.addEventListener('DOMContentLoaded', () => {
             hideTyping();
             addMessage('Connection error. Please check your internet and try again.', 'bot', { noFeedback: true });
             trackEvent('bot_error', { error: 'network' });
+        } finally {
+            requestInFlight = false;
+            sendBtn.disabled = chatEnded;
         }
     });
 
@@ -645,54 +624,36 @@ document.addEventListener('DOMContentLoaded', () => {
         if (subtitleEl) subtitleEl.textContent = texts.subtitle;
     };
 
-    // --- Answer sources rail (PART 8.2) ---
-    // Render the normalized answer_sources receipts into the right rail so
-    // recruiters see which profile sections grounded the answer, linked to
-    // bolablg.com. No-op in embed (the rail element does not exist there).
-    const renderAnswerSources = (sources) => {
-        if (!answerSourcesEl) return;
-        while (answerSourcesEl.firstChild) answerSourcesEl.removeChild(answerSourcesEl.firstChild);
-
-        if (!Array.isArray(sources) || sources.length === 0) {
-            const hint = document.createElement('p');
-            hint.className = 'rail-hint';
-            hint.textContent = 'This answer did not draw on a specific profile section.';
-            answerSourcesEl.appendChild(hint);
-            return;
-        }
-
+    // Keep receipts beside their answer, including in the embedded chat.
+    const renderAnswerSources = (sources, container) => {
+        if (!Array.isArray(sources)) return;
         sources.forEach(src => {
-            const a = document.createElement('a');
-            a.className = 'rail-source';
-            a.href = src.url || 'https://www.bolablg.com';
-            a.target = '_blank';
-            a.rel = 'noopener';
-            a.addEventListener('click', () => {
-                trackEvent('answer_source_clicked', { source_id: src.id, session_id: sessionId });
-            });
-
+            let url = null;
+            try {
+                const parsed = new URL(src.url);
+                if (parsed.protocol === 'https:' && parsed.hostname === 'www.bolablg.com') url = parsed.href;
+            } catch (_) { /* Curated evidence can have no public equivalent. */ }
+            const receipt = document.createElement(url ? 'a' : 'span');
+            receipt.className = 'rail-source';
+            if (url) {
+                receipt.href = url;
+                receipt.target = '_blank';
+                receipt.rel = 'noopener';
+                receipt.addEventListener('click', () => {
+                    trackEvent('answer_source_clicked', { source_id: src.id, session_id: sessionId });
+                });
+            }
             const label = document.createElement('span');
             label.className = 'rail-source-label';
-            const name = document.createElement('span');
-            name.textContent = src.label || 'Profile';
-            label.appendChild(name);
-            // retrieval_rank is already 1-based; show it directly, and skip the
-            // sentinel used for evidence that carried no rank.
-            if (Number.isInteger(src.rank) && src.rank > 0 && src.rank < 100) {
-                const rank = document.createElement('span');
-                rank.className = 'rail-source-rank';
-                rank.textContent = `#${src.rank}`;
-                label.appendChild(rank);
-            }
-            a.appendChild(label);
-
+            label.textContent = src.label || 'Source';
+            receipt.appendChild(label);
             if (src.section) {
                 const section = document.createElement('span');
                 section.className = 'rail-source-section';
                 section.textContent = src.section;
-                a.appendChild(section);
+                receipt.appendChild(section);
             }
-            answerSourcesEl.appendChild(a);
+            container.appendChild(receipt);
         });
     };
 

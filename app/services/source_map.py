@@ -1,11 +1,9 @@
 """
 Map knowledge-base sources to portfolio (bolablg.com) receipts.
 
-PART 8.2: the "Answer sources" rail shows recruiters which profile sections
-grounded an answer, as links back to bolablg.com. The KB files originate from
-the website canon, so each maps to a portfolio section. The site is currently a
-single page, so URLs point to the canon origin; when the portfolio grows stable
-per-section anchors, only ``_SOURCE_MAP`` here changes.
+Receipts identify the sections actually supplied as generation context. Public
+sections link to their canonical page; curated and owner-confirmed records
+without a published equivalent remain labeled, unlinked receipts.
 
 This module is the single source of truth. It is used at request time to build
 ``answer_sources`` from retrieved evidence, and at KB-sync time (the chunker) to
@@ -18,34 +16,55 @@ from __future__ import annotations
 import re
 from typing import Any, Dict, List, Optional
 
-# Canon origin (matches public_facts.yaml `website`). Single page today.
+# Canon origin (matches public_facts.yaml `website`).
 SITE_BASE = "https://www.bolablg.com"
 
 # KB source filename (with or without .txt) -> portfolio section receipt.
 # ``path`` is appended to SITE_BASE; "" means the portfolio home. Group several
 # files under one label so the rail shows deduplicated section receipts, not one
 # row per chunk.
-_SOURCE_MAP: Dict[str, Dict[str, str]] = {
-    "00_identity": {"label": "About", "path": ""},
-    "01_career_overview": {"label": "Experience", "path": ""},
-    "02_last_role_gozem_data_director": {"label": "Experience", "path": ""},
-    "03_previous_role_gozem_gda": {"label": "Experience", "path": ""},
-    "04_previous_roles_early": {"label": "Experience", "path": ""},
-    "05_skills_and_tools": {"label": "Skills & tools", "path": ""},
-    "06_education": {"label": "Education", "path": ""},
-    "07_community_and_research": {"label": "Community & research", "path": ""},
-    "08_consulting": {"label": "Consulting", "path": ""},
-    "09_blog_and_newsletter": {"label": "Writing", "path": ""},
-    "10_apps_and_projects": {"label": "Projects", "path": ""},
-    "11_leadership_style": {"label": "Leadership", "path": ""},
-    "12_product_analytics": {"label": "Product analytics", "path": ""},
-    "13_gozem_internal_projects": {"label": "Projects", "path": ""},
-    "14_career_advice": {"label": "Writing", "path": ""},
-    "15_professional_narrative": {"label": "About", "path": ""},
-    "16_current_status": {"label": "Now", "path": ""},
-    "17_highlights_pitch": {"label": "Highlights", "path": ""},
-    "90_website_canon_llms_full": {"label": "Portfolio", "path": ""},
-    "91_role_timeline": {"label": "Experience", "path": ""},
+_SOURCE_MAP = {
+    "00_identity": {"label": "About", "path": "/bio.md"},
+    "01_career_overview": {"label": "Experience", "path": "/llms-full.txt"},
+    "02_last_role_gozem_data_director": {
+        "label": "Experience",
+        "path": "/llms-full.txt",
+    },
+    "03_previous_role_gozem_gda": {"label": "Experience", "path": "/llms-full.txt"},
+    "04_previous_roles_early": {"label": "Experience", "path": "/llms-full.txt"},
+    "05_skills_and_tools": {"label": "Skills & tools", "path": "/skills/"},
+    "06_education": {"label": "Education", "path": "/llms-full.txt"},
+    "07_community_and_research": {
+        "label": "Community & research",
+        "path": "/llms-full.txt",
+    },
+    "08_consulting": {"label": "Consulting", "path": "/llms-full.txt"},
+    "09_blog_and_newsletter": {"label": "Writing", "path": "/llms-full.txt"},
+    "10_apps_and_projects": {"label": "Projects", "path": None},
+    "11_leadership_style": {"label": "Leadership record", "path": None},
+    "12_product_analytics": {"label": "Product analytics", "path": "/llms-full.txt"},
+    "13_gozem_internal_projects": {"label": "Project record", "path": None},
+    "14_career_advice": {"label": "Career guidance", "path": None},
+    "15_professional_narrative": {"label": "Profile interpretation", "path": None},
+    "16_current_status": {"label": "Availability record", "path": None},
+    "17_highlights_pitch": {"label": "Highlights", "path": None},
+    "18_confirmed_clarifications": {
+        "label": "Candidate-confirmed clarifications",
+        "path": None,
+    },
+    "19_owner_confirmed_scope": {"label": "Owner-confirmed scope", "path": None},
+    "evidence_policy.yaml": {"label": "Claim status", "path": None},
+    "90_website_canon_llms_full": {
+        "label": "Published profile",
+        "path": "/llms-full.txt",
+    },
+    "91_role_timeline": {"label": "Experience", "path": "/llms-full.txt"},
+}
+
+_SECTION_PATHS = {
+    "dataform": "/projects/dataform-modeling-lab/",
+    "ibola": "/projects/ibola/",
+    "data hub": "/experience/gozem-director/#data-hub",
 }
 
 
@@ -62,13 +81,17 @@ def _slug(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
 
 
-def resolve_source(source: str) -> Optional[Dict[str, str]]:
+def resolve_source(source: str, section: str = "") -> Optional[Dict[str, Any]]:
     """Return ``{id, label, url}`` for a KB source, or None if unmapped."""
     entry = _SOURCE_MAP.get(_stem(source))
     if not entry:
         return None
     path = entry["path"]
-    url = SITE_BASE + (path if path.startswith("/") or not path else "/" + path)
+    for term, candidate in _SECTION_PATHS.items():
+        if term in section.casefold():
+            path = candidate
+            break
+    url = SITE_BASE + path if path else None
     return {"id": _slug(entry["label"]), "label": entry["label"], "url": url}
 
 
@@ -89,17 +112,20 @@ def build_answer_sources(
 
     Groups chunks by portfolio section (label), keeps the best-ranked chunk's
     section header, and returns ``[{id, label, section, url, rank}]`` ordered by
-    retrieval rank. Chunks whose source is unmapped are skipped so the rail only
-    ever shows real, linkable receipts.
+    retrieval rank. Unmapped evidence stays visible without an invented URL.
     """
     grouped: Dict[str, Dict[str, Any]] = {}
     for item in evidence or []:
-        resolved = resolve_source(item.get("source", ""))
+        resolved = resolve_source(item.get("source", ""), item.get("section", ""))
         if not resolved:
-            continue
+            resolved = {
+                "id": "profile-evidence",
+                "label": "Profile evidence",
+                "url": None,
+            }
         rank = item.get("retrieval_rank")
         rank = rank if isinstance(rank, int) else 10_000
-        key = resolved["id"]
+        key = resolved["id"] + ":" + (item.get("section", "") or "")
         existing = grouped.get(key)
         if existing is None or rank < existing["rank"]:
             grouped[key] = {
