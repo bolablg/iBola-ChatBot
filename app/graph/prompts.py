@@ -25,10 +25,10 @@ PROMPT_VERSIONS = {
     "condense": "1.1",
     "batch_grade": "2.2",
     "rewrite": "2.1",
-    "generate_professional": "3.7",
-    "generate_education": "3.3",
-    "generate_learning": "3.3",
-    "verify_grounding": "2.9",
+    "generate_professional": "3.8",
+    "generate_education": "3.4",
+    "generate_learning": "3.4",
+    "verify_grounding": "2.10",
     "upper_bound_clarification": "1.0",
     "skills_completeness_clarification": "1.0",
     "insufficient_evidence": "1.1",
@@ -211,7 +211,10 @@ _REFUSAL_AND_CTA_RULE = (
     "question, including working conditions mentioned in the brief. Explicitly "
     "mark each unsupported requirement unknown. For role comparisons, distinguish "
     "demonstrated scope from unverified mandatory requirements. Contact is optional and must respect requests "
-    "for no outreach. A useful next verification step is allowed when requested.\n"
+    "for no outreach. State each hiring condition separately: supported target-role "
+    "examples and an unknown working condition must not share one compound unknown. "
+    "An undocumented mandatory tool is a verification gap, not confirmed lack of "
+    "experience. A useful next verification step is allowed when requested.\n"
 )
 
 _EQUIVALENCE_RULE = (
@@ -234,7 +237,10 @@ _EVIDENCE_RULE = (
     "do not choose a disputed numerical value. Preserve average versus maximum, "
     "observational versus causal, and in-progress versus completed status. "
     "A generic tool inventory or certificate is not proof of production use. "
-    "Bind experience type to EACH tool individually. Include the documented "
+    "Bind experience type and employer to EACH tool individually. Never apply one "
+    "employer, date, year or status to every member of a list unless each entry "
+    "supports that association. A question's year does not date an undated "
+    "publication. Omit unrequested tool lists and comparisons. Include the documented "
     "project or system name when identifying its delivery. For a measurement, "
     "include the unit, population or denominator, qualifier and measurement "
     "window. An order share must identify which orders form its denominator. "
@@ -435,6 +441,13 @@ VERIFY_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
                 "credential. Do not describe it as unavailable. Treat an in-progress "
                 "credential as incomplete, and do not infer completion from grades "
                 "or other details.\n\n"
+                "COMPLETE CORRECTION: check every material claim before writing the verdict, "
+                "not just the first issue. Repair all unsupported associations in one "
+                "corrected_answer, including each member of a grouped employer or date "
+                "claim. Retain supported requested parts. State known role examples "
+                "separately from unknown employment conditions, and make each "
+                "documentation limit apply only to its own missing detail. Do not "
+                "add unrequested comparisons while repairing the answer.\n\n"
                 "VERDICT:\n"
                 "The listed deterministic constraint violations are part of this "
                 "contract. If any are listed, return a non-empty corrected_answer "
