@@ -45,6 +45,6 @@ Le Pantagruel is a business in Benin where Bolaji completed his first profession
 Key achievements:
 - Designed and conducted a customer satisfaction survey in collaboration with the Sales team, delivering a structured client feedback database.
 - Built and deployed a customer satisfaction scoring system, then trained the Sales team to use it in performance reviews.
-- Findings shaped management policies that lifted the Net Promoter Score by 8 points and grew sales by nearly double digits in one quarter.
+- Findings informed management policies. Later initiatives were associated with an approximately 9-point increase in Net Promoter Score; causal lift is not established.
 
 Tools: Excel, survey design, statistical scoring.

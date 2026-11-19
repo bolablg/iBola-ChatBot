@@ -1,0 +1,477 @@
+"""Shared source and disputed-claim boundary for every evidence consumer."""
+
+from __future__ import annotations
+
+import copy
+import hashlib
+import re
+import unicodedata
+from functools import lru_cache
+from pathlib import Path
+from typing import List
+
+import yaml
+from langchain_core.documents import Document
+
+POLICY_PATH = Path(__file__).resolve().parents[2] / "data/evidence_policy.yaml"
+
+
+@lru_cache(maxsize=2)
+def _parse_policy(raw: str) -> dict:
+    return yaml.safe_load(raw)
+
+
+def policy_data() -> dict:
+    return _parse_policy(POLICY_PATH.read_text(encoding="utf-8"))
+
+
+def policy_revision() -> str:
+    return hashlib.sha256(POLICY_PATH.read_bytes()).hexdigest()
+
+
+def prepare_evidence(documents: List[Document], query: str = "") -> List[Document]:
+    """Copy, label and quarantine without changing persisted evidence."""
+    policy = policy_data()
+    result = []
+    redacted = set()
+    for document in documents:
+        doc = copy.deepcopy(document)
+        source = Path(doc.metadata.get("source", "")).name
+        kind = policy.get("source_types", {}).get(source, "curated")
+        for section_type in policy.get("section_types", []):
+            if re.search(
+                section_type["section_pattern"], doc.metadata.get("section_header", "")
+            ):
+                kind = section_type["evidence_type"]
+        for scope in policy.get("metric_scopes", []):
+            if source == scope["source"] and re.search(
+                scope["section_pattern"], doc.metadata.get("section_header", "")
+            ):
+                doc.metadata["metric_scope"] = scope["fields"]
+        mapping_requested = any(
+            re.search(rule["section_pattern"], doc.metadata.get("section_header", ""))
+            and re.search(rule.get("include_if_query_matches", r"(?!)"), _fold(query))
+            for rule in policy.get("section_types", [])
+        )
+        if (
+            kind == "interpretation"
+            and not mapping_requested
+            and not re.search(
+                r"(?i)\b(?:narrative|positioning|philosophy|philosophie|transferable|equivalent|equivalence)\b",
+                query,
+            )
+        ):
+            continue
+        doc.metadata["evidence_type"] = (
+            "pending_confirmation" if source == "evidence_policy.yaml" else kind
+        )
+        for conflict in policy.get("conflicts", []):
+            if conflict["status"] != "pending_owner_confirmation":
+                continue
+            if doc.metadata.get("source") == "evidence_policy.yaml":
+                continue
+            filtered = re.sub(
+                conflict["redact_pattern"],
+                "[" + conflict["label"] + ": pending owner confirmation]",
+                doc.page_content,
+            )
+            if filtered != doc.page_content:
+                redacted.add(conflict["id"])
+            doc.page_content = filtered
+        result.append(doc)
+    existing = {d.metadata.get("chunk_id") for d in result}
+    for conflict in policy.get("conflicts", []):
+        cid = "policy:" + conflict["id"]
+        if (
+            conflict["status"] == "pending_owner_confirmation"
+            and (
+                re.search(conflict["query_pattern"], query)
+                or conflict["id"] in redacted
+            )
+            and cid not in existing
+        ):
+            result.insert(
+                0,
+                Document(
+                    page_content=conflict["summary"],
+                    metadata={
+                        "source": "evidence_policy.yaml",
+                        "chunk_id": cid,
+                        "evidence_type": "pending_confirmation",
+                        "section_header": conflict["label"],
+                        "retrieval_method": "policy_lookup",
+                        "retrieval_rank": 1,
+                        "retrieval_score": 1.0,
+                    },
+                ),
+            )
+    return result
+
+
+def disputed_claims(answer: str) -> List[str]:
+    return [
+        c["id"]
+        for c in policy_data().get("conflicts", [])
+        if c["status"] == "pending_owner_confirmation"
+        and re.search(c["answer_pattern"], answer)
+    ]
+
+
+def _fold(text: str) -> str:
+    return "".join(
+        c for c in unicodedata.normalize("NFKD", text) if not unicodedata.combining(c)
+    ).replace("’", "'")
+
+
+_UNCERTAIN = re.compile(
+    r"(?i)\b(?:(?:not|never) (?:explicitly |specifically |clearly |directly )?"
+    r"(?:documented|confirmed|established|proven|known|available|specified|provided|stated|recorded|mentioned)|"
+    r"unknown|unconfirmed|unverified|undocumented|cannot (?:infer|establish)|"
+    r"(?:does not|doesn't|do not|don't) (?:explicitly |specifically |clearly |directly )?"
+    r"(?:specify|document|confirm|establish|provide|detail|state|record|list|mention|include|prove)|"
+    r"no (?:documented |explicit |confirmed )?(?:evidence|documentation|information|details)|"
+    r"not evidence|pas (?:documente|confirme|etabli|disponible|precise|fourni|indique)\w*|"
+    r"non (?:documente|confirme|etabli)\w*|ne (?:precis|document|mentionn|fourni)\w* pas|inconnu)\b"
+)
+
+
+def _claim_clauses(text: str):
+    # A qualifier can govern several noun phrases. Separate a new assertion
+    # only after the left side already contains a predicate or qualifier.
+    predicate = re.compile(
+        r"\b(?:is|was|are|were|has|have|had|does|did|est|sont|etait)\b", re.I
+    )
+    new_assertion = re.compile(
+        r"(?:(?:\w+\s+){1,7}(?:is|was|are|were|has|have|had|held|holds?|owns?|owned|approved|"
+        r"manages?|managed|demonstrates?|proves?|est|sont|etait|detient|possede|gere|approuve)\b|"
+        r"(?:has|have|had|never|does|did)\b)",
+        re.I,
+    )
+    result = []
+    for sentence in re.split(
+        r"[.;\n]|\b(?:but|mais|yet|however|though)\b", text, flags=re.I
+    ):
+        start = 0
+        for separator in re.finditer(
+            r",\s*(?:(?:and|et)\s+)?|\s+(?:and|et)\s+", sentence, re.I
+        ):
+            left = sentence[start : separator.start()]
+            right = sentence[separator.end() :]
+            governed_detail = _UNCERTAIN.search(left) and re.match(
+                r"(?i)(?:who|what|which|how|whether|where|when|qui|quel\w*|comment|si|ou|quand)\b",
+                right,
+            )
+            if (
+                not governed_detail
+                and new_assertion.match(right)
+                and (predicate.search(left) or _UNCERTAIN.search(left))
+            ):
+                result.append(left)
+                start = separator.end()
+        result.append(sentence[start:])
+    return result
+
+
+def documentation_limits(answer: str, targets: List[str]) -> List[str]:
+    """Return requested details without an explicit, locally scoped unknown."""
+    clauses = _claim_clauses(_fold(answer))
+    return [
+        target
+        for target in targets
+        if not any(
+            re.search(_fold(target), clause, re.IGNORECASE)
+            and _UNCERTAIN.search(clause)
+            for clause in clauses
+        )
+    ]
+
+
+def preserve_project_identity(
+    answer: str, documents: List[Document], query: str, language: str
+):
+    """Restore names only when both the retrieved text and answer concern them."""
+    from app.graph.prompts import PROJECT_IDENTITY_TEMPLATES
+
+    names = []
+    for rule in policy_data().get("required_identity", []):
+        name = rule["name"]
+        if name.casefold() in answer.casefold() or not re.search(
+            rule["query_pattern"], _fold(query)
+        ):
+            continue
+        if rule.get("answer_pattern") and not re.search(
+            rule["answer_pattern"], _fold(answer)
+        ):
+            continue
+        for doc in documents:
+            scoped = (
+                doc.metadata.get("metric_scope", {}).get("id") == rule.get("scope_id")
+                if rule.get("scope_id")
+                else Path(doc.metadata.get("source", "")).name
+                in rule.get("sources", [])
+            )
+            if scoped and name.casefold() in doc.page_content.casefold():
+                template = PROJECT_IDENTITY_TEMPLATES[
+                    "fr" if language in {"fr", "French"} else "en"
+                ]
+                answer += " " + template.format(name=name)
+                names.append(name)
+                break
+    return answer, names
+
+
+def preserve_requested_evidence(
+    answer: str, documents: List[Document], query: str, language: str
+):
+    """Restore at most three missing details as exact, scoped retrieved quotes."""
+    from app.graph.prompts import EVIDENCE_DETAIL_TEMPLATES
+
+    if not answer.strip():
+        return answer, []
+    lang = "fr" if language in {"fr", "French"} else "en"
+    restored = []
+    used = set()
+    for rule in policy_data().get("required_details", []):
+        restoration = rule.get("restore_quotes", {}).get(lang) or rule.get(
+            "restore_quote"
+        )
+        if len(restored) >= 3:
+            break
+        if not restoration or restoration["language"] != lang:
+            continue
+        if rule["id"] not in constraint_failures(answer, documents, query):
+            continue
+        for doc in documents:
+            meta = doc.metadata
+            if Path(meta.get("source", "")).name not in rule.get("sources", []):
+                continue
+            if meta.get("evidence_type") not in {
+                None,
+                "curated",
+                "published",
+                "candidate_confirmed",
+            }:
+                continue
+            matches = list(re.finditer(restoration["pattern"], doc.page_content))
+            if len(matches) != 1:
+                continue
+            quote = matches[0].group().strip()
+            key = (meta.get("source"), meta.get("chunk_id"), quote)
+            if len(quote) > 800 or quote in answer or key in used:
+                continue
+            if restoration.get("scope_match") and not re.search(
+                restoration["scope_match"], meta.get("scope_context", "")
+            ):
+                continue
+            section = restoration.get("section_label") or meta.get("section_header", "")
+            if not section:
+                continue
+            scope = restoration.get("scope_label", meta.get("scope_context", ""))
+            answer += " " + EVIDENCE_DETAIL_TEMPLATES[lang].format(
+                label=restoration["label"],
+                section=section,
+                scope=(", " + scope) if scope else "",
+                quote=quote,
+            )
+            used.add(key)
+            restored.append(rule["id"])
+            break
+    return answer, restored
+
+
+def describe_constraints(ids):
+    """Explain the violated source scope, without putting facts in prompts."""
+    policy = policy_data()
+    rules = {
+        rule["id"]: rule
+        for group in (
+            "assertion_rules",
+            "metric_constraints",
+            "required_limits",
+            "required_details",
+        )
+        for rule in policy.get(group, [])
+    }
+    return (
+        "; ".join(
+            identifier
+            + (
+                ": " + rules[identifier]["description"]
+                if rules.get(identifier, {}).get("description")
+                else ""
+            )
+            for identifier in ids
+        )
+        or "none"
+    )
+
+
+def constraint_failures(
+    answer: str, documents: List[Document], query: str = ""
+) -> List[str]:
+    """Reject overclaims and missing explicit measurement-scope limits."""
+    policy = policy_data()
+    failures = []
+    answer = _fold(answer)
+    uncertain = _UNCERTAIN
+    evidence = [
+        _fold(d.page_content)
+        for d in documents
+        if d.metadata.get("evidence_type")
+        not in {"interpretation", "summary", "pending_confirmation"}
+    ]
+    for rule in policy.get("assertion_rules", []):
+        for clause in _claim_clauses(answer):
+            matches = list(re.finditer(rule["answer_pattern"], clause))
+            if not matches or uncertain.search(clause):
+                continue
+            if rule.get("affirmation_pattern") and not re.search(
+                rule["affirmation_pattern"], clause
+            ):
+                continue
+            support = [
+                m.group()
+                for text in evidence
+                for m in re.finditer(rule["support_pattern"], text)
+                if not uncertain.search(text[max(0, m.start() - 60) : m.end() + 60])
+            ]
+            if rule.get("match_subject"):
+                # A negative statement about one tool cannot prove non-use of another.
+                proven = all(
+                    any(
+                        set(re.findall(r"\w+", match.group().casefold()))
+                        <= set(re.findall(r"\w+", supported.casefold()))
+                        for supported in support
+                    )
+                    for match in matches
+                )
+            elif rule.get("subject_pattern"):
+                proven_subjects = {
+                    subject.casefold()
+                    for text in support
+                    for subject in re.findall(rule["subject_pattern"], text)
+                }
+                proven = all(
+                    {
+                        subject.casefold()
+                        for subject in re.findall(
+                            rule["subject_pattern"], match.group()
+                        )
+                    }
+                    <= proven_subjects
+                    for match in matches
+                )
+            else:
+                proven = bool(support)
+            if not proven:
+                failures.append(rule["id"])
+                break
+    negated_metric = re.compile(
+        r"(?i)(?:no evidence (?:that|of)|not (?:a|an)|not|never|"
+        r"aucune preuve que|pas)\s*(?:\w+\s+){0,4}$"
+    )
+    for rule in policy.get("metric_constraints", []):
+        invalid = False
+        for clause in _claim_clauses(answer):
+            if uncertain.search(clause):
+                continue
+            for pattern in rule["invalid_patterns"]:
+                for match in re.finditer(pattern, clause):
+                    prefix = clause[: match.start()]
+                    if not negated_metric.search(prefix):
+                        invalid = True
+        if invalid:
+            failures.append(rule["id"])
+    scope_ids = {d.metadata.get("metric_scope", {}).get("id") for d in documents}
+    sources = {Path(d.metadata.get("source", "")).name for d in documents}
+    for rule in policy.get("required_limits", []):
+        applicable = (
+            rule["scope_id"] in scope_ids
+            if rule.get("scope_id")
+            else bool(sources & set(rule.get("sources", [])))
+        )
+        if applicable and re.search(rule["query_pattern"], _fold(query)):
+            if documentation_limits(answer, [rule["target_pattern"]]):
+                failures.append(rule["id"])
+    for rule in policy.get("required_details", []):
+        applicable = (
+            rule["scope_id"] in scope_ids
+            if rule.get("scope_id")
+            else any(
+                Path(doc.metadata.get("source", "")).name in rule.get("sources", [])
+                and re.search(rule["support_pattern"], doc.page_content)
+                for doc in documents
+            )
+        )
+        if applicable and re.search(rule["query_pattern"], _fold(query)):
+            claims = (
+                [m.group() for m in re.finditer(rule["claim_pattern"], answer)]
+                if rule.get("claim_pattern")
+                else [answer]
+            )
+            if any(not re.search(rule["answer_pattern"], claim) for claim in claims):
+                failures.append(rule["id"])
+    return failures
+
+
+def supplement_facets(search, query: str, documents: List[Document], limit=3):
+    """Bounded lexical facet lookups over the already loaded corpus, no API calls."""
+    corpus = getattr(search, "documents", None)
+    if not isinstance(corpus, list):
+        return documents
+    selected = []
+    policy = policy_data()
+    for facet in policy.get("facets", []):
+        if len(selected) >= limit:
+            break
+        if not re.search(facet["query_pattern"], _fold(query)):
+            continue
+        query_words = set(re.findall(r"\w{3,}", query.casefold()))
+        terms = set(facet["terms"].casefold().split())
+        entities = [
+            entity
+            for entity in facet.get("entities", [])
+            if re.search(r"\b" + re.escape(entity) + r"\b", query.casefold())
+        ]
+        candidates = []
+        for doc in corpus:
+            if Path(doc.metadata.get("source", "")).name not in facet["sources"]:
+                continue
+            if entities and not all(
+                entity in doc.page_content.casefold() for entity in entities
+            ):
+                continue
+            words = set(re.findall(r"\w{3,}", doc.page_content.casefold()))
+            score = len(words & query_words) + 2 * len(words & terms)
+            if not words & terms:
+                continue
+            if (
+                policy.get("source_types", {}).get(
+                    Path(doc.metadata.get("source", "")).name
+                )
+                == "candidate_confirmed"
+            ):
+                score += 3
+            if score:
+                candidates.append((score, doc))
+        if not candidates:
+            continue
+        score, doc = max(candidates, key=lambda item: item[0])
+        copy_doc = copy.deepcopy(doc)
+        copy_doc.metadata.update(
+            retrieval_rank=1,
+            retrieval_score=float(score),
+            retrieval_method="facet_lookup",
+            required_facet=facet["id"],
+        )
+        # Promote an existing result too, so its facet survives context truncation.
+        selected.append(copy_doc)
+    promoted = {d.page_content for d in selected}
+    return selected + [d for d in documents if d.page_content not in promoted]
+
+
+def expand_lexical_query(query: str) -> str:
+    """Add category vocabulary, never candidate values or claimed experience."""
+    if re.search(r"(?i)\b(?:team|headcount|effectif|equipe)\b", query):
+        return query + " team size headcount professionals organization growth"
+    return query

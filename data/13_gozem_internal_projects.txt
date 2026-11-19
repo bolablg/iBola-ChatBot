@@ -74,7 +74,7 @@ DATA TEAM CAPACITY EXPANSION - Team Building
 
 - Situation: data team capacity needed to scale across African operations to support growing operational and BI needs, requiring senior hires alongside a data engineer owning pipelines and platform.
 - Action: Bolaji authored the job scopes, technical requirements, and business cases justifying the senior hires to leadership. He designed and ran technical interviews and assessments, evaluated 50+ candidates, negotiated offers end to end, and coordinated onboarding for 12 total hires with tooling access, team integration, and 30/60/90-day ramp milestones.
-- Outcome: the team grew from 0 to 14+ professionals across Sub-Saharan Africa. The hiring rubrics, interview loops, and onboarding programs he designed are still in use across the function.
+- Outcome: the team grew from 4 to 14+ professionals during the Head of Data period (October 2022 - March 2025) across Sub-Saharan Africa. The hiring rubrics, interview loops, and onboarding programs he designed are still in use across the function.
 
 ---
 
@@ -117,6 +117,8 @@ SELF-SERVICE NO-CODE DATA EXPLORATION PLATFORM - Data Democratization
 - Action: Bolaji assessed data literacy and exploration needs across all Gozem markets, then coordinated configuration of a no-code query and exploration layer (Metabase) integrated with Gozem's central data warehouse.
 - Tools: Metabase, BigQuery, Looker.
 - Outcome: adoption reached 12+ active manager users, halving routine query volume on the central data team.
+
+Résumé français (traduction des faits ci-dessus): L'adoption de Metabase a atteint plus de 12 utilisateurs managers actifs et a divisé par deux le volume des requêtes courantes adressées à l'équipe data centrale. Il s'agit d'utilisateurs actifs, pas d'un effectif confirmé de managers formés. La période précise de mesure et la méthode de comparaison ne sont pas documentées dans ce dossier.
 
 ---
 

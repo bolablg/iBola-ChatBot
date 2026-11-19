@@ -263,6 +263,7 @@ async def _stream_agentic(
             "grounding_checked": result.get("grounding_checked", False),
             "unsupported_claims": result.get("unsupported_claims", []),
             "answer_sources": result.get("answer_sources", []),
+            "provenance": result.get("provenance", {}),
             "trace_id": result.get("trace_id"),
         },
         "done",

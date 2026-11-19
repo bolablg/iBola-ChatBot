@@ -26,7 +26,7 @@ from langchain_chroma import Chroma
 from langchain_community.document_loaders import Docx2txtLoader, PyPDFLoader, TextLoader
 
 import config
-from pipeline.chunker import IntelligentChunker, dedupe_chunks
+from pipeline.chunker import CHUNKER_VERSION, IntelligentChunker, dedupe_chunks
 from utils.embedder import (
     get_embeddings,
     validate_embedding_contract,
@@ -137,6 +137,12 @@ def update_vectorstore(rebuild=False):
         vectorstore_state = get_vectorstore_state()
 
     updated = rebuild
+    chunker_version_path = os.path.join(config.DB_PATH, ".chunker_version")
+    try:
+        with open(chunker_version_path) as f:
+            needs_rechunk = f.read().strip() != CHUNKER_VERSION
+    except FileNotFoundError:
+        needs_rechunk = True
     seen = set()
     failures = []
 
@@ -144,7 +150,7 @@ def update_vectorstore(rebuild=False):
         seen.add(rel_path)
         file_hash = get_file_hash(abs_path)
 
-        if vectorstore_state.get(rel_path) == file_hash:
+        if not needs_rechunk and vectorstore_state.get(rel_path) == file_hash:
             continue
 
         status = "New" if rel_path not in vectorstore_state else "Modified"
@@ -225,6 +231,8 @@ def update_vectorstore(rebuild=False):
         save_vectorstore_state(vectorstore_state)
     if updated and not failures:
         write_embedding_contract(config.DB_PATH)
+        with open(chunker_version_path, "w") as f:
+            f.write(CHUNKER_VERSION + "\n")
     if failures:
         raise RuntimeError("Index update failed for: " + ", ".join(failures))
     if updated:

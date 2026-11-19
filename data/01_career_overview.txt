@@ -12,7 +12,7 @@ This was Bolaji's most recent role. He owned the data function end to end (platf
 ---
 
 PREVIOUS ROLE: Head of Data - Gozem (October 2022 - March 2025)
-Before becoming Data Director, Bolaji was Head of Data for Gozem's Sub-Saharan Africa group: governance, team scaling from 0 to 14+, FinOps, and fintech-grade analytics. He led FinOps initiatives that cut Google Cloud costs by 42.57% in a single quarter while maintaining SLAs on data freshness and integrity, led ML-based fraud screening that made field-agent payment processing 7x faster, built the fintech analytics infrastructure that surfaces ~150 incidents per month and flagged a fraud worth over 25M XOF, and onboarded 12 hires from 50+ evaluated candidates with 30/60/90-day ramp milestones.
+Before becoming Data Director, Bolaji was Head of Data for Gozem's Sub-Saharan Africa group: governance, team scaling from 4 to 14+ during the Head of Data period (October 2022 - March 2025), FinOps, and fintech-grade analytics. He led FinOps initiatives that cut Google Cloud costs by 42.57% in a single quarter while maintaining SLAs on data freshness and integrity, led ML-based fraud screening that made field-agent payment processing 7x faster, built the fintech analytics infrastructure that surfaces ~150 incidents per month and flagged a fraud worth over 25M XOF, and onboarded 12 hires from 50+ evaluated candidates with 30/60/90-day ramp milestones.
 
 ---
 
@@ -37,7 +37,7 @@ Bolaji designed and delivered hands-on R analytics training to about 30 agents a
 ---
 
 EARLY CAREER: Statistician - Le Pantagruel (August 2013 - October 2013)
-Bolaji designed and conducted a customer satisfaction survey with the Sales team, built a structured customer feedback database, and deployed a satisfaction scoring system. The findings shaped management policies that lifted the Net Promoter Score by 8 points and grew sales by nearly double digits in one quarter.
+Bolaji designed and conducted a customer satisfaction survey with the Sales team, built a structured customer feedback database, and deployed a satisfaction scoring system. The findings informed management policies. Later initiatives were associated with an approximately 9-point increase in Net Promoter Score; causal lift is not established.
 
 QUESTION: What did Bolaji do before moving into data science?
 ANSWER: Before his data science career, Bolaji worked as a Statistician at Le Pantagruel in 2013 and at INStaD, Benin's national statistics institute, from September 2017 to February 2018. At Le Pantagruel he built a customer satisfaction scoring system. At INStaD he delivered hands-on R training and contributed to a national survey-funding data collection campaign covering four ministries. He moved into data science after a Big Data bootcamp at Rintio in 2018.

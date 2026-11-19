@@ -107,6 +107,7 @@ class CacheService:
             Path(config.DB_PATH) / CONTRACT_FILENAME,
             Path(config.DATA_PATH) / "public_facts.yaml",
             Path(config.DATA_PATH) / "quantitative_facts.yaml",
+            Path(config.DATA_PATH) / "evidence_policy.yaml",
         ):
             if path.exists():
                 digest.update(path.read_bytes())

@@ -205,7 +205,11 @@ class _StructuredOutput:
                         response_mime_type="application/json",
                         response_schema=self._schema,
                         temperature=self._llm._temperature,
-                        max_output_tokens=self._llm._max_output_tokens,
+                        max_output_tokens=(
+                            max(self._llm._max_output_tokens, 1500)
+                            if self._schema is GroundingVerdict
+                            else self._llm._max_output_tokens
+                        ),
                         thinking_config=genai.types.ThinkingConfig(
                             thinking_budget=self._llm._thinking_budget
                         ),
@@ -465,7 +469,9 @@ def _temporal_boost(query: str, docs: List[Document]) -> List[Document]:
 
     def recency(doc: Document) -> int:
         try:
-            return int(doc.metadata.get("latest_year") or 0)
+            return int(
+                doc.metadata.get("scope_year") or doc.metadata.get("latest_year") or 0
+            )
         except (TypeError, ValueError):
             return 0
 
@@ -489,8 +495,8 @@ _HIGHLIGHT_QUERY_PATTERN = __import__("re").compile(
     __import__("re").IGNORECASE,
 )
 _HIGHLIGHT_TERMS = (
-    "highlights impact achievements cloud cost reduction Gozem Data Hub "
-    "0 to 14+ team 30+ AI tools 88% match rate why Bolaji stands out"
+    "highlights achievements cloud cost reduction platform team "
+    "automation tools marketplace outcomes professional experience"
 )
 
 
@@ -705,6 +711,10 @@ def retrieve_node(state: dict) -> dict:
             search, original, query, docs, search_settings.vector_top_k
         )
         docs = _prioritize_career_year(original, query, docs)
+        from app.services.evidence_policy import prepare_evidence, supplement_facets
+
+        docs = supplement_facets(search, original or query, docs)
+        docs = prepare_evidence(docs, original or query)
 
         return {
             "documents": docs,
@@ -737,7 +747,7 @@ def retrieve_node(state: dict) -> dict:
 # ===================================================================
 
 
-def _grading_snippet(index: int, doc: Document) -> str:
+def _grading_snippet(index: int, doc: Document, query: str = "") -> str:
     """Snippet the grader sees: metadata line + first 1000 chars.
 
     The previous 300-char window dropped facts that lived past the chunk's
@@ -750,7 +760,26 @@ def _grading_snippet(index: int, doc: Document) -> str:
     if meta.get("section_header"):
         header_bits.append(str(meta["section_header"]))
     header = " | ".join(bit for bit in header_bits if bit)
-    return f"[DOC {index}] ({header}):\n{doc.page_content[:1000]}"
+    text = doc.page_content
+    if query and len(text) > 1000:
+        terms = set(re.findall(r"\w{4,}", query.casefold()))
+        paragraphs = text.split("\n\n")
+        ranked = sorted(
+            enumerate(paragraphs),
+            key=lambda item: len(
+                terms & set(re.findall(r"\w{4,}", item[1].casefold()))
+            ),
+            reverse=True,
+        )
+        chosen = {i for i, _ in ranked[:2]}
+        # Whole paragraphs retain neighboring negation and numerical qualifiers.
+        excerpt = "\n\n".join(p for i, p in enumerate(paragraphs) if i in chosen)
+        text = excerpt[:3000]
+    else:
+        text = text[:1000]
+    kind = (doc.metadata or {}).get("evidence_type", "curated")
+    facet = meta.get("required_facet", "")
+    return f"[DOC {index}] ({header}; evidence_type={kind}; requested_facet={facet}):\n{text}"
 
 
 def grade_documents_node(state: dict) -> dict:
@@ -769,7 +798,7 @@ def grade_documents_node(state: dict) -> dict:
 
     # Build a single prompt listing all documents for batch grading
     doc_summaries = "\n\n".join(
-        _grading_snippet(i, doc) for i, doc in enumerate(documents)
+        _grading_snippet(i, doc, query) for i, doc in enumerate(documents)
     )
 
     try:
@@ -850,14 +879,19 @@ _LEAK_PHRASES = [
         "",
     ),
     (
-        r"\b(?:the\s+)?provided\s+context\s+(?:does\s+not|doesn't|indicates|shows|contains|suggests|mentions)\b",
-        "I don't have information that",
+        r"\b(?:the\s+)?provided\s+context\s+(?:does\s+not|doesn't)\s+"
+        r"(mention|contain|specify|indicate|provide|establish|document|confirm|state)\b",
+        r"The record does not \1",
+    ),
+    (
+        r"\b(?:the\s+)?provided\s+context\s+(indicates|shows|contains|suggests|mentions)\b",
+        r"The record \1",
     ),
     # "the context" variants
     (r"\b(?:based on|according to|from|in)\s+(?:the\s+)?context\b", ""),
     (
-        r"\b(?:the\s+)?context\s+(?:does\s+not|doesn't)\s+(?:mention|contain|specify|indicate|provide)\b",
-        "I don't have information about",
+        r"\b(?:the\s+)?context\s+(?:does\s+not|doesn't)\s+(mention|contain|specify|indicate|provide|establish|document|confirm|state)\b",
+        r"The record does not \1",
     ),
     # AFFIRMATIVE context mentions ("the context does mention", "the context
     # mentions/shows/indicates") — the negated forms above missed these (s07)
@@ -883,13 +917,13 @@ _LEAK_PHRASES = [
     (r"\b(?:the\s+)?(?:retrieved|fetched)\s+(?:documents?|content|data)\b", ""),
     # "there is no mention/information" — deflection phrasing
     (
-        r"\bthere\s+(?:is|are|isn't|aren't|are\s+no)\s+(?:no\s+)?(?:specific\s+)?(?:mention|information|details?|data)\s+(?:of|about|regarding|on)\b",
-        "I don't have information on",
+        r"\bthere\s+(?:(?:is|are)\s+no|isn't|aren't)\s+(?:specific\s+)?(?:mention|information|details?|data)\s+(?:of|about|regarding|on)\b",
+        "The record does not specify",
     ),
     # "it is not specified" / "not mentioned in"
     (
-        r"\b(?:is\s+)?not\s+(?:specifically\s+)?(?:mentioned|specified|detailed)\s+in\s+(?:the\s+)?(?:context|information|documents?)\b",
-        "",
+        r"\bnot\s+(?:specifically\s+)?(?:mentioned|specified|detailed)\s+in\s+(?:the\s+)?(?:context|information|documents?)\b",
+        "not documented",
     ),
     # Cleanup patterns
     (r"^\s*[,.]\s*", ""),  # strip leading comma/period after substitution
@@ -1104,6 +1138,33 @@ def _select_context_docs(graded_docs: List[Document]) -> List[Document]:
     return selected
 
 
+def _evidence_context(documents: List[Document]) -> str:
+    """Serialize evidence identity alongside content, not just ranking metadata."""
+    import json
+
+    return "\n\n---\n\n".join(
+        json.dumps(
+            {
+                key: doc.metadata.get(key)
+                for key in (
+                    "chunk_id",
+                    "source",
+                    "section_header",
+                    "parent_context",
+                    "scope_context",
+                    "evidence_type",
+                    "canonical_url",
+                    "metric_scope",
+                )
+            },
+            ensure_ascii=False,
+        )
+        + "\n"
+        + doc.page_content
+        for doc in documents
+    )
+
+
 def generate_node(state: dict) -> dict:
     """Generate the final answer from graded documents.
 
@@ -1119,7 +1180,9 @@ def generate_node(state: dict) -> dict:
     # Build context from graded documents: settings-driven budget with a
     # near-duplicate filter (five tight chunks beat fifty loose ones; dupes
     # waste tokens and invite hallucinated merges).
-    context_docs = _select_context_docs(graded_docs)
+    from app.services.evidence_policy import prepare_evidence
+
+    context_docs = _select_context_docs(prepare_evidence(graded_docs, query))
     if not context_docs:
         steps.append(
             ReasoningStep(node="generate", action="insufficient_evidence", detail="")
@@ -1131,7 +1194,7 @@ def generate_node(state: dict) -> dict:
             "reasoning_steps": steps,
         }
     if context_docs:
-        context = "\n\n---\n\n".join(doc.page_content for doc in context_docs)
+        context = _evidence_context(context_docs)
     else:
         context = "(No relevant context found.)"
 
@@ -1242,8 +1305,7 @@ def generate_node(state: dict) -> dict:
 # ===================================================================
 
 
-# Even the last-resort refusal carries the redirect-offer (policy: refusals
-# never dead-end)
+# Keep failed verification concise and respect requests for no outreach.
 def _insufficient_answer(state: dict) -> str:
     language = _detect_reply_language(
         state.get("original_query") or state.get("query", ""),
@@ -1256,40 +1318,69 @@ def _insufficient_answer(state: dict) -> str:
 
 
 def verify_grounding_node(state: dict) -> dict:
-    """Verify claims, then preserve retrieved numeric qualifiers."""
+    """Validate the exact delivered text, including deterministic restorations."""
     from app.graph.answer_completeness import (
         preserve_primary_language,
         preserve_requested_degrees,
     )
     from app.graph.numeric_grounding import preserve_percentage_qualifiers
+    from app.graph.prompts import DISPUTED_EVIDENCE_ANSWERS
+    from app.services.evidence_policy import (
+        disputed_claims,
+        prepare_evidence,
+        preserve_project_identity,
+        preserve_requested_evidence,
+    )
 
-    docs = state.get("context_documents", []) or []
-    if not docs or state.get("agent_type") == "redirect":
-        return _verify_grounding_llm_node(state)
     query = state.get("original_query") or state.get("query", "")
-    language = _detect_reply_language(
-        query,
-        state.get("user_language", "en"),
-    )
-    draft, primary_added = preserve_primary_language(
-        state.get("answer", ""), docs, query, language
-    )
+    docs = prepare_evidence(state.get("context_documents", []) or [], query)
+    language = _detect_reply_language(query, state.get("user_language", "en"))
+    draft = state.get("answer", "")
+    draft, primary_added = preserve_primary_language(draft, docs, query, language)
     draft, degree_added = preserve_requested_degrees(draft, docs, query, language)
-    # The model verifier receives the restored fact and its retrieved support.
-    verification_state = (
-        {**state, "answer": draft} if primary_added or degree_added else state
-    )
+    draft, numeric_facts = preserve_percentage_qualifiers(draft, docs, language)
+    draft, project_names = preserve_project_identity(draft, docs, query, language)
+    draft, restored_details = preserve_requested_evidence(draft, docs, query, language)
+    verification_state = {**state, "answer": draft, "context_documents": docs}
     result = _verify_grounding_llm_node(verification_state)
-    if not result.get("grounding_checked"):
-        return result
-    answer = result.get("answer", draft)
-    guarded, numeric_facts = preserve_percentage_qualifiers(answer, docs, language)
-    _, primary_still_missing = preserve_primary_language(guarded, docs, query, language)
-    _, degree_still_missing = preserve_requested_degrees(guarded, docs, query, language)
-    if numeric_facts or primary_added or degree_added:
-        result["answer"] = guarded
-        steps = list(result.get("reasoning_steps", []))
-        if primary_added and not primary_still_missing:
+    result["context_documents"] = docs
+    if result.get("grounding_checked"):
+        final_answer = result.get("answer", draft)
+        violations = disputed_claims(final_answer)
+        if violations:
+            lang = "fr" if language == "French" else "en"
+            result.update(
+                answer=DISPUTED_EVIDENCE_ANSWERS[lang],
+                confidence=0.0,
+                unsupported_claims=violations,
+            )
+            result["reasoning_steps"].append(
+                ReasoningStep(
+                    node="verify_grounding",
+                    action="disputed_claim_withheld",
+                    detail=", ".join(violations),
+                )
+            )
+        elif draft != state.get("answer", "") and "answer" not in result:
+            result["answer"] = draft
+        steps = result.get("reasoning_steps", [])
+        if restored_details:
+            steps.append(
+                ReasoningStep(
+                    node="verify_grounding",
+                    action="requested_evidence_preserved",
+                    detail=", ".join(restored_details),
+                )
+            )
+        if project_names:
+            steps.append(
+                ReasoningStep(
+                    node="verify_grounding",
+                    action="project_identity_preserved",
+                    detail=", ".join(project_names),
+                )
+            )
+        if primary_added:
             steps.append(
                 ReasoningStep(
                     node="verify_grounding",
@@ -1297,25 +1388,24 @@ def verify_grounding_node(state: dict) -> dict:
                     detail="explicit retrieved primary language",
                 )
             )
-        for qualifier, fact_ids in numeric_facts.items():
-            action = (
-                "upper_bound_preserved"
-                if qualifier == "upper"
-                else "approximate_percentage_preserved"
-            )
-            steps.append(
-                ReasoningStep(
-                    node="verify_grounding",
-                    action=action,
-                    detail=", ".join(fact_ids),
-                )
-            )
-        if degree_added and not degree_still_missing:
+        if degree_added:
             steps.append(
                 ReasoningStep(
                     node="verify_grounding",
                     action="retrieved_degree_preserved",
                     detail="explicit retrieved degree",
+                )
+            )
+        for qualifier, fact_ids in numeric_facts.items():
+            steps.append(
+                ReasoningStep(
+                    node="verify_grounding",
+                    action=(
+                        "upper_bound_preserved"
+                        if qualifier == "upper"
+                        else "approximate_percentage_preserved"
+                    ),
+                    detail=", ".join(fact_ids),
                 )
             )
         result["reasoning_steps"] = steps
@@ -1363,14 +1453,25 @@ def _verify_grounding_llm_node(state: dict) -> dict:
             result.update(answer=_insufficient_answer(state), confidence=0.0)
         return result
 
-    context = "\n\n---\n\n".join(doc.page_content for doc in context_docs)
+    context = _evidence_context(context_docs)
 
+    from app.services.evidence_policy import (
+        constraint_failures,
+        describe_constraints,
+        preserve_project_identity,
+        preserve_requested_evidence,
+    )
+
+    violations = constraint_failures(answer, context_docs, question)
     try:
         llm = _get_llm(temperature=0.0)
         structured_llm = llm.with_structured_output(GroundingVerdict)
         verdict: GroundingVerdict = structured_llm.invoke(
             VERIFY_GROUNDING_PROMPT.format_messages(
-                question=question or "(unknown)", context=context, answer=answer
+                question=question or "(unknown)",
+                context=context,
+                answer=answer,
+                constraint_failures=describe_constraints(violations),
             )
         )
     except Exception as exc:
@@ -1390,7 +1491,7 @@ def _verify_grounding_llm_node(state: dict) -> dict:
             "reasoning_steps": steps,
         }
 
-    if verdict.is_grounded and verdict.addresses_question:
+    if verdict.is_grounded and verdict.addresses_question and not violations:
         steps.append(
             ReasoningStep(node="verify_grounding", action="grounded", detail="")
         )
@@ -1401,29 +1502,65 @@ def _verify_grounding_llm_node(state: dict) -> dict:
         }
 
     corrected = _sanitize_answer(verdict.corrected_answer.strip())
-    failure = (
-        "unsupported claims" if not verdict.is_grounded else "wrong-topic substitution"
+    from app.graph.numeric_grounding import preserve_percentage_qualifiers
+
+    corrected, _ = preserve_percentage_qualifiers(
+        corrected,
+        context_docs,
+        _detect_reply_language(question, state.get("user_language", "en")),
     )
     steps.append(
         ReasoningStep(
             node="verify_grounding",
             action="corrected",
-            detail=(
-                f"{failure}: unsupported={len(verdict.unsupported_claims)} "
-                f"on_topic={verdict.addresses_question}"
-            ),
+            detail=f"unsupported={len(verdict.unsupported_claims)} on_topic={verdict.addresses_question}",
         )
     )
-    logger.info(
-        "Grounding verifier corrected answer (%s): %s",
-        failure,
-        verdict.unsupported_claims[:5],
+    corrected, _ = preserve_project_identity(
+        corrected,
+        context_docs,
+        question,
+        _detect_reply_language(question, state.get("user_language", "en")),
+    )
+    corrected, _ = preserve_requested_evidence(
+        corrected,
+        context_docs,
+        question,
+        _detect_reply_language(question, state.get("user_language", "en")),
+    )
+    # A correction is another draft, not proof. Recheck changed text once.
+    if corrected and not constraint_failures(corrected, context_docs, question):
+        try:
+            recheck = structured_llm.invoke(
+                VERIFY_GROUNDING_PROMPT.format_messages(
+                    question=question or "(unknown)",
+                    context=context,
+                    answer=corrected,
+                    constraint_failures="none",
+                )
+            )
+            if recheck.is_grounded and recheck.addresses_question:
+                return {
+                    "answer": corrected,
+                    "confidence": min(state.get("confidence", 0.5), 0.5),
+                    "grounding_checked": True,
+                    "unsupported_claims": verdict.unsupported_claims + violations,
+                    "reasoning_steps": steps,
+                }
+        except Exception:
+            logger.warning("Corrected answer verification unavailable")
+    steps.append(
+        ReasoningStep(
+            node="verify_grounding",
+            action="withheld",
+            detail="correction did not pass bounded final verification",
+        )
     )
     return {
-        "answer": corrected or _insufficient_answer(state),
-        "confidence": min(state.get("confidence", 0.5), 0.5),
-        "grounding_checked": True,
-        "unsupported_claims": verdict.unsupported_claims,
+        "answer": _insufficient_answer(state),
+        "confidence": 0.0,
+        "grounding_checked": False,
+        "unsupported_claims": verdict.unsupported_claims + violations,
         "reasoning_steps": steps,
     }
 

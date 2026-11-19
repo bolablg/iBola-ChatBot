@@ -29,7 +29,11 @@ def _state(answer="Bolaji was Data Director until July 2026.", docs=None):
 
 def _mock_llm(verdict):
     llm = Mock()
-    llm.with_structured_output.return_value.invoke.return_value = verdict
+    llm.with_structured_output.return_value.invoke.side_effect = (
+        [verdict]
+        if verdict.is_grounded
+        else [verdict, GroundingVerdict(is_grounded=True)]
+    )
     return llm
 
 
@@ -65,7 +69,9 @@ class TestVerifyGroundingNode:
         )
         with patch("app.graph.nodes._get_llm", return_value=_mock_llm(verdict)):
             result = verify_grounding_node(_state())
-        assert "hello@bolablg.com" in result["answer"]
+        assert "verified information" in result["answer"]
+        assert "@" not in result["answer"]
+        assert result["grounding_checked"] is False
 
     def test_no_context_skips_verification(self):
         with patch("app.graph.nodes._get_llm") as mock_get:

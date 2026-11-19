@@ -22,7 +22,7 @@ from pipeline.chunker import IntelligentChunker
 
 
 def _doc(content, source, latest_year=None):
-    metadata = {"source": source}
+    metadata = {"source": source, "evidence_type": "curated"}
     if latest_year is None:
         latest_year = IntelligentChunker._latest_year(content)
     metadata["latest_year"] = latest_year

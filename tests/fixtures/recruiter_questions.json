@@ -1,0 +1,566 @@
+[
+  {
+    "id": "SDE-01-T1",
+    "question": "This is a recruiter simulation for a Senior Data Engineer role at a fictional marketplace using GCP. What is the strongest evidence that Bolaji can personally build and operate production data pipelines rather than only manage a team?"
+  },
+  {
+    "id": "SDE-01-T2",
+    "question": "Before discussing opportunities, please give one concrete production pipeline project Bolaji built, the technologies used, and what he personally implemented."
+  },
+  {
+    "id": "SDE-01-T3",
+    "question": "For that minute-level pipeline, how were retries, duplicate events and late-arriving GPS records handled? Please distinguish documented design choices from assumptions."
+  },
+  {
+    "id": "SDE-01-T4",
+    "question": "You cited an 88% rider match rate. Is there evidence that the pipeline caused an improvement, with a baseline or comparison, or is that an observed event metric?"
+  },
+  {
+    "id": "SDE-01-T5",
+    "question": "What evidence can I review of his Python and SQL code quality, automated pipeline tests, and CI/CD practices? Please name public artifacts if available."
+  },
+  {
+    "id": "SDE-01-T6",
+    "question": "For the 250+ production pipelines, what service levels, failure recovery results or on-call ownership are actually documented?"
+  },
+  {
+    "id": "SDE-01-T7",
+    "question": "Our role is a hands-on individual contributor with on-call responsibilities. What is confirmed about his current interest in an IC role, work location or remote arrangements, availability, and compensation expectations?"
+  },
+  {
+    "id": "SDE-01-T8",
+    "question": "For this simulation I would advance him to a technical screening, but cannot recommend an offer until pipeline reliability depth, IC/on-call interest and compensation are verified. What specific evidence should I ask him to bring to that screening?"
+  },
+  {
+    "id": "SDE-02-T1",
+    "question": "This is a recruiter simulation for a fictional financial-services Senior Data Engineer position. Which completed warehouse or migration project best demonstrates Bolaji can own a governed production data platform?"
+  },
+  {
+    "id": "SDE-02-T2",
+    "question": "Please answer from his project history rather than the job opportunity: what warehouse migration did he deliver, and what was his personal responsibility?"
+  },
+  {
+    "id": "SDE-02-T3",
+    "question": "What is the strongest documented example of him implementing data quality controls and access permissions in a production warehouse?"
+  },
+  {
+    "id": "SDE-02-T4",
+    "question": "For those controls, does the profile document row-level security, PII masking, audit logs, or reconciliation tests? Which of those are confirmed rather than inferred?"
+  },
+  {
+    "id": "SDE-02-T5",
+    "question": "Has he actually delivered work in banking, payments or fraud analytics? I need the project context and his own technical contribution, not a generic industry fit."
+  },
+  {
+    "id": "SDE-02-T6",
+    "question": "Can you provide sources for the fraud and reconciliation claims, and clarify whether the detected amount was a prevented loss or simply the size of a flagged scheme?"
+  },
+  {
+    "id": "SDE-02-T7",
+    "question": "What is confirmed about his start date, US work authorization and willingness to work a remote US senior engineer position? Please leave unknown terms unknown."
+  },
+  {
+    "id": "SDE-02-T8",
+    "question": "My simulated decision is to hold an offer recommendation until regulated-security implementation and employment terms are verified, while inviting a technical screen based on the fintech work. What are the remaining evidence gaps in that assessment?"
+  },
+  {
+    "id": "SDE-03-T1",
+    "question": "This is a recruiter simulation, not a real offer. For a senior data engineer who must run Kafka and Spark Structured Streaming in production, what hands-on evidence does Bolaji have with those exact technologies?"
+  },
+  {
+    "id": "SDE-03-T2",
+    "question": "I am asking only about experience: has Bolaji personally deployed Kafka or Spark Structured Streaming, and which named project proves it?"
+  },
+  {
+    "id": "SDE-03-T3",
+    "question": "What is his closest documented experience with real-time event processing, and how does its latency compare with sub-second streaming?"
+  },
+  {
+    "id": "SDE-03-T4",
+    "question": "What throughput, event volume, end-to-end latency or availability measurements are actually documented for those systems? Do not estimate missing numbers."
+  },
+  {
+    "id": "SDE-03-T5",
+    "question": "For the MongoDB CDC pipeline, what can you tell me about schema evolution, replay after failure, and consistency between source and warehouse?"
+  },
+  {
+    "id": "SDE-03-T6",
+    "question": "Is there a public technical write-up or repository demonstrating this CDC or streaming implementation that I can use as evidence for a screening decision?"
+  },
+  {
+    "id": "SDE-03-T7",
+    "question": "Before any simulated next step, what is known about his interest in hands-on senior engineering, remote location and start availability?"
+  },
+  {
+    "id": "SDE-03-T8",
+    "question": "My simulated decision is hold for this Kafka/Spark-specific opening: adjacent GCP streaming is relevant, but exact tool ownership and sub-second reliability are unproven. Is there any documented evidence that would materially change that decision?"
+  },
+  {
+    "id": "SDE-04-T1",
+    "question": "This is a recruiter simulation. I am assessing Bolaji for a hands-on BigQuery analytics-engineering role. What is his strongest technical project involving Dataform or dbt, and what did he build himself?"
+  },
+  {
+    "id": "SDE-04-T2",
+    "question": "Tell me specifically about the Dataform framework Bolaji built: what problems did it solve and which components did he implement?"
+  },
+  {
+    "id": "SDE-04-T3",
+    "question": "How did the framework handle incremental changes, partition pruning and schema evolution? I want documented implementation detail rather than general BigQuery best practices."
+  },
+  {
+    "id": "SDE-04-T4",
+    "question": "What measured cost or performance improvement can be attributed to this Dataform work, and what are the baseline and measurement period?"
+  },
+  {
+    "id": "SDE-04-T5",
+    "question": "Our team uses dbt. Is dbt production experience confirmed, or would his Dataform skills be transferable experience that still needs validation?"
+  },
+  {
+    "id": "SDE-04-T6",
+    "question": "Can you point me to a public article or repository for this framework so I can inspect how he models data and tests changes?"
+  },
+  {
+    "id": "SDE-04-T7",
+    "question": "What is documented about his current availability and willingness to spend most of his time coding SQL and JavaScript as a senior IC, and what terms would still need direct confirmation?"
+  },
+  {
+    "id": "SDE-04-T8",
+    "question": "I would advance him to a practical modeling screen for this simulation, with dbt-specific proficiency and the cost attribution still to verify. Is there any evidence that would justify an offer before that screen?"
+  },
+  {
+    "id": "SDE-05-T1",
+    "question": "This is a recruiter simulation for a fictional lean AI product company. Which Python data or AI product has Bolaji personally taken from idea to deployed service, and what did he implement?"
+  },
+  {
+    "id": "SDE-05-T2",
+    "question": "Please describe iBola as an engineering project: what did Bolaji build himself, which architecture does it use, and where is it deployed?"
+  },
+  {
+    "id": "SDE-05-T3",
+    "question": "How is iBola knowledge ingested, chunked, indexed and kept fresh? What prevents an answer from inventing facts about Bolaji?"
+  },
+  {
+    "id": "SDE-05-T4",
+    "question": "Yes, explain the continuous evaluation and regression tests. What is actually measured before release, and are any concrete results available?"
+  },
+  {
+    "id": "SDE-05-T5",
+    "question": "What operational evidence is available for iBola: latency, uptime, traffic or error monitoring, and incident recovery? Please separate implemented instrumentation from measured results."
+  },
+  {
+    "id": "SDE-05-T6",
+    "question": "Which other public Python package or deployed application would best demonstrate his software engineering depth beyond iBola, and where can its code or documentation be inspected?"
+  },
+  {
+    "id": "SDE-05-T7",
+    "question": "What is confirmed about his availability for a small remote team, willingness to own hands-on engineering and production support, and expected employment or consulting terms?"
+  },
+  {
+    "id": "SDE-05-T8",
+    "question": "In this simulation I would invite him to a code and architecture screen, with no offer yet because ingestion detail, operational metrics and engagement terms remain open. What evidence from his profile is strongest for that next step?"
+  },
+  {
+    "id": "SDA-01-T1",
+    "question": "This is a recruiter simulation for a fictional Senior Data Architect search at a growing multi-country mobility business. We need someone who has personally shaped a production data platform. Which experience makes Bolaji a credible candidate, and what did he own?"
+  },
+  {
+    "id": "SDA-01-T2",
+    "question": "I need the architecture evidence before discussing contact. What data platform did Bolaji build at Gozem, and which architectural decisions were his?"
+  },
+  {
+    "id": "SDA-01-T3",
+    "question": "Can you give one specific architecture tradeoff he made in that platform, the alternative considered, and why he chose it? If that detail is undocumented, say so."
+  },
+  {
+    "id": "SDA-01-T4",
+    "question": "What documented evidence shows that choice improved reliability or cost? I need a baseline, result, and source rather than an assumed benefit."
+  },
+  {
+    "id": "SDA-01-T5",
+    "question": "For the 10 TB migration, what were the source and target systems, how was cutover validated, and what rollback mechanism was documented?"
+  },
+  {
+    "id": "SDA-01-T6",
+    "question": "What access-control or data-governance design did he personally introduce for that platform? Distinguish a documented implementation from a general skill."
+  },
+  {
+    "id": "SDA-01-T7",
+    "question": "For this simulated role I would advance to an architecture interview, with rollback design still unverified. Is Bolaji currently open to hands-on senior architect work, and what location or working arrangement is documented? Please do not initiate contact."
+  },
+  {
+    "id": "SDA-02-T1",
+    "question": "This is a recruiter simulation for a fictional Senior Data Architect role in regulated financial services. Our priority is governed access to sensitive data and auditable controls. What comparable work has Bolaji personally delivered?"
+  },
+  {
+    "id": "SDA-02-T2",
+    "question": "Before any contact, what documented implementation shows his work with role-based access control or data governance? Please name the system and his own contribution."
+  },
+  {
+    "id": "SDA-02-T3",
+    "question": "Yes. Which specific controls or governance standards were implemented, and is there documented audit, GDPR, SOC 2, or financial-regulatory experience? Separate confirmed work from anything unknown."
+  },
+  {
+    "id": "SDA-02-T4",
+    "question": "The potential-loss claim matters for my brief. Was that money actually recovered, and what was his personal technical contribution to detecting the issue? Please provide the evidence source if available."
+  },
+  {
+    "id": "SDA-02-T5",
+    "question": "How did he handle PII retention, encryption, and data lineage in that payments architecture? These are mandatory for our role, so an explicit unknown is more useful than inference."
+  },
+  {
+    "id": "SDA-02-T6",
+    "question": "I would place this simulated candidacy on hold pending evidence for those controls. Before closing, what current availability and preferred employment or consulting arrangement are documented? No contact action, please."
+  },
+  {
+    "id": "SDA-03-T1",
+    "question": "Recruiter simulation: a fictional company needs a Senior Data Architect to migrate a legacy warehouse to GCP with controlled cost and no business interruption. What comparable migration has Bolaji delivered, including scale and personal ownership?"
+  },
+  {
+    "id": "SDA-03-T2",
+    "question": "Please focus on his documented cloud migration rather than contact. How much data was migrated, over what period, and what did Bolaji personally do?"
+  },
+  {
+    "id": "SDA-03-T3",
+    "question": "What happened to cloud cost after the migration, and what cost-optimization techniques did he personally implement? Please distinguish migration results from later optimization work."
+  },
+  {
+    "id": "SDA-03-T4",
+    "question": "Could I review a public artifact showing that Dataform framework or warehouse design? Give the exact source link if documented, and tell me what it demonstrates."
+  },
+  {
+    "id": "SDA-03-T5",
+    "question": "Our source warehouse is Oracle with change-data capture and a strict recovery-point objective. Has he delivered Oracle CDC or documented recovery objectives, or would those need assessment in interview?"
+  },
+  {
+    "id": "SDA-03-T6",
+    "question": "For this simulation I would propose a technical discovery discussion, conditional on Oracle CDC and recovery validation. Is a project-based remote architecture engagement consistent with his current preferences, and is a start date documented? Please do not contact him."
+  },
+  {
+    "id": "SDA-04-T1",
+    "question": "This is a recruiter simulation for a fictional enterprise Senior Data Architect search. The brief is to reconcile conflicting business metrics across multiple countries and domains. Which of Bolaji's delivered projects best demonstrates that capability?"
+  },
+  {
+    "id": "SDA-04-T2",
+    "question": "What did Bolaji actually deliver to standardize metric definitions across business domains? Please describe a named framework or implementation, not general leadership qualities."
+  },
+  {
+    "id": "SDA-04-T3",
+    "question": "How was ownership split between him and business-domain teams, and what process resolved disagreements over KPI definitions? Is that operating model documented?"
+  },
+  {
+    "id": "SDA-04-T4",
+    "question": "What evidence shows adoption of that catalog or improved reporting consistency? Please separate a measured result from a description of what the framework was intended to do."
+  },
+  {
+    "id": "SDA-04-T5",
+    "question": "The Claude-to-BigQuery integration raises an architecture question: how were permissions, query validation, and metric consistency enforced? Which safeguards are documented as implemented?"
+  },
+  {
+    "id": "SDA-04-T6",
+    "question": "For this simulated search I would advance to a design interview and request the missing operating-model evidence. Which languages and regions can he work in, based on his documented profile? Please do not send any message."
+  },
+  {
+    "id": "SDA-05-T1",
+    "question": "Recruiter simulation for a fictional Senior Data Architect role: an AWS-native platform needs Kafka streaming, schema evolution, and strong operational ownership. What relevant production architecture experience can you establish for Bolaji?"
+  },
+  {
+    "id": "SDA-05-T2",
+    "question": "Which production AWS services and streaming technologies has Bolaji personally designed or operated? In particular, is Kafka architecture delivery documented?"
+  },
+  {
+    "id": "SDA-05-T3",
+    "question": "Was that real-time module operated in production, or was it training or a prototype? What scale, latency, and reliability evidence is documented?"
+  },
+  {
+    "id": "SDA-05-T4",
+    "question": "For that 45-million-events-per-day system, what source supports the volume, and what is documented about schema evolution, replay, and incident response? Those details determine whether I can progress this brief."
+  },
+  {
+    "id": "SDA-05-T5",
+    "question": "Would it be accurate to present him as an experienced Kafka-on-AWS architect based on this evidence, or should I describe him as a GCP architect with transferable streaming experience and unverified AWS/Kafka depth?"
+  },
+  {
+    "id": "SDA-05-T6",
+    "question": "I will hold this simulated AWS/Kafka candidacy until the mandatory stack experience is verified, while considering him for a GCP role. What current location and openness to consulting are documented? Please do not initiate outreach."
+  },
+  {
+    "id": "ADI-01-T1",
+    "question": "This is a recruiter simulation for a fictional senior analytics and data intelligence specialist opening at a mobility marketplace. We need someone who connects customer analytics to operational decisions. What is Bolaji’s strongest relevant example, and what did he personally own?"
+  },
+  {
+    "id": "ADI-01-T2",
+    "question": "For that marketplace role, please describe a specific customer or product analytics project he delivered, including the decision it supported and his own work."
+  },
+  {
+    "id": "ADI-01-T3",
+    "question": "You mentioned about 600 users, 12% of delivered orders, and Product adopting homepage recommendations. What do those figures actually measure, and is there evidence of statistically significant incremental revenue rather than attribution?"
+  },
+  {
+    "id": "ADI-01-T4",
+    "question": "That distinction matters. What did Bolaji personally do in event tracking, SQL analysis or metric validation for that experiment, and which details are not documented?"
+  },
+  {
+    "id": "ADI-01-T5",
+    "question": "For a senior specialist who still builds dashboards, what evidence shows his hands-on SQL, Looker or Power BI capability, rather than only team leadership?"
+  },
+  {
+    "id": "ADI-01-T6",
+    "question": "Before I advance him to a technical screen, what is confirmed about current location, remote work preference, availability and interest in an individual-contributor senior specialist role? Please separate confirmed facts from details I must ask him directly."
+  },
+  {
+    "id": "ADI-02-T1",
+    "question": "This is a recruiter simulation for a fictional senior analytics and data intelligence specialist supporting a CFO. The role owns trusted executive KPIs, financial reporting and self-service BI. What experience makes Bolaji credible for this remit?"
+  },
+  {
+    "id": "ADI-02-T2",
+    "question": "Which executive KPI or reporting deliverable did he personally build, and how did leaders use it to make a decision?"
+  },
+  {
+    "id": "ADI-02-T3",
+    "question": "You describe management reporting, but I need finance-grade metric consistency. What evidence shows how he reconciled KPI definitions, data quality and conflicting stakeholder numbers?"
+  },
+  {
+    "id": "ADI-02-T4",
+    "question": "The framework across five markets is relevant. What measured adoption or efficiency result came from his self-service analytics work, and what was the denominator and time period?"
+  },
+  {
+    "id": "ADI-02-T5",
+    "question": "Our team mandates Power BI semantic models and DAX, with no ramp-up allowance. Has he actually used those in production, or would that be an experience gap?"
+  },
+  {
+    "id": "ADI-02-T6",
+    "question": "That is a hard requirement for this particular screen. What is confirmed about his current location and availability, and what would need direct discussion before any alternative BI-focused opportunity?"
+  },
+  {
+    "id": "ADI-03-T1",
+    "question": "This is a recruiter simulation. I am screening a fictional senior analytics and data intelligence specialist for growth experimentation. Which concrete A/B testing experience can Bolaji demonstrate, including his contribution to experiment design?"
+  },
+  {
+    "id": "ADI-03-T2",
+    "question": "For that experiment, what were the treatment groups, randomization unit, sample size and primary metric? Please distinguish known details from anything the record does not establish."
+  },
+  {
+    "id": "ADI-03-T3",
+    "question": "What was Bolaji’s own role in that work: did he define hypotheses and metrics, analyse the results, implement the recommendation system, or supervise others?"
+  },
+  {
+    "id": "ADI-03-T4",
+    "question": "Our hiring panel will challenge claims of causality. Is there a documented p-value, confidence interval, power calculation or uplift percentage from this test, and can we describe the post-launch order share as incremental growth?"
+  },
+  {
+    "id": "ADI-03-T5",
+    "question": "If experimentation depth needs interview validation, what other evidence demonstrates that he can turn customer or growth analysis into an operational decision? Give one different example, not the recommendation engine."
+  },
+  {
+    "id": "ADI-03-T6",
+    "question": "The earlier statistical question was not answered. Does his documented recommendation experiment establish a p-value, confidence interval or incremental uplift, or are those details unavailable?"
+  },
+  {
+    "id": "ADI-03-T7",
+    "question": "For an experimentation-focused individual contributor position, what is confirmed about his interest, location and work arrangements, and which hiring details still require asking Bolaji directly?"
+  },
+  {
+    "id": "ADI-04-T1",
+    "question": "This is a recruiter simulation for a fictional senior analytics and data intelligence specialist in multi-market operations. The work combines operational monitoring, data quality and decisions under demand spikes. What concrete experience best demonstrates Bolaji’s fit?"
+  },
+  {
+    "id": "ADI-04-T2",
+    "question": "Please give a specific example of analytics supporting a demand spike or major operating event. What did he build or monitor, and what decision did it enable?"
+  },
+  {
+    "id": "ADI-04-T3",
+    "question": "For that event, which outcomes were directly observed and which were caused by his work? Please explain the metric definitions and comparison baseline so I do not overstate the result."
+  },
+  {
+    "id": "ADI-04-T4",
+    "question": "What safeguards did he put around data quality and observability so operating teams could trust dashboards during an incident or spike? Please identify his own implementation work."
+  },
+  {
+    "id": "ADI-04-T5",
+    "question": "Our domain also includes fraud and regulated financial operations. What relevant analytical result has he delivered there, and what should I avoid claiming about loss prevention or regulatory expertise?"
+  },
+  {
+    "id": "ADI-04-T6",
+    "question": "Before a simulated technical interview, what is known about his current availability, work location and willingness to do hands-on operational analytics? Which of these still need direct confirmation?"
+  },
+  {
+    "id": "ADI-05-T1",
+    "question": "Ceci est une simulation de recrutement pour une mission fictive de spécialiste senior en analytics et intelligence des données. Une entreprise de services présente dans plusieurs pays cherche à fiabiliser ses indicateurs et à rendre ses équipes autonomes. Quelle expérience concrète de Bolaji correspond à ce besoin ?"
+  },
+  {
+    "id": "ADI-05-T2",
+    "question": "Dans cet exemple, quelles réalisations a-t-il produites personnellement, et lesquelles relèvent de la direction ou de la coordination de son équipe ?"
+  },
+  {
+    "id": "ADI-05-T3",
+    "question": "Vous mentionnez une équipe développée de zéro à plus de quatorze personnes dans six pays et à Singapour. Quelles sont les dates et les limites exactes de cette affirmation ? Je dois distinguer l’effectif hérité, les recrutements personnels et le périmètre opérationnel."
+  },
+  {
+    "id": "ADI-05-T4",
+    "question": "Pour notre mission, je dois documenter des résultats vérifiables. La réduction de moitié des demandes de requêtes et les douze managers formés sont-elles mesurées sur une période connue, avec une méthode de comparaison documentée ?"
+  },
+  {
+    "id": "ADI-05-T5",
+    "question": "Le panneau de cette page indique une croissance de quatre à plus de quatorze personnes et cinq pays africains. Votre réponse parle de zéro à quatorze et de six pays, mais en nomme cinq. Quelle formulation puis-je retenir sans ajouter de faits non établis ?"
+  },
+  {
+    "id": "ADI-05-T6",
+    "question": "La mission se déroulerait à distance avec des interlocuteurs francophones et anglophones. Quelles langues professionnelles, disponibilité et modalités de travail sont confirmées, et quels éléments contractuels dois-je vérifier directement avec lui ?"
+  },
+  {
+    "id": "ADI-05-T7",
+    "question": "Avant de proposer un entretien exploratoire fictif, quels liens ou livrables publics permettraient de vérifier son travail analytique, et quels points de notre échange doivent rester non confirmés plutôt que figurer comme acquis dans une proposition ?"
+  },
+  {
+    "id": "HDA-01-T1",
+    "question": "This is a recruiter simulation for a fictional regional healthcare organization, with no real vacancy or hiring action. I am assessing Bolaji for Head of Data and Analytics: 12 analysts and engineers, two managers, clinical and finance KPIs, and a constrained transformation budget. Which documented experience is most relevant, and what was his personal leadership responsibility?"
+  },
+  {
+    "id": "HDA-01-T2",
+    "question": "Please treat this as an evidence interview, with no contact action. What documented healthcare or public-health analytics work did Bolaji personally lead, including his title, organization, dates and the decisions he owned?"
+  },
+  {
+    "id": "HDA-01-T3",
+    "question": "The cross-country team build may transfer. Which organization and period does the 0 to 14+ claim concern? How many were his direct reports, how many were managers, and what hiring, performance-review and promotion authority did he personally hold? Please separate known facts from unknowns."
+  },
+  {
+    "id": "HDA-01-T4",
+    "question": "What evidence supports the 42.57% Google Cloud cost reduction: the business context, baseline, measurement period, technical changes, and Bolaji’s own decisions versus work delivered by the team?"
+  },
+  {
+    "id": "HDA-01-T5",
+    "question": "For this healthcare brief, reporting trust is as important as cloud savings. Describe one documented example of Bolaji establishing KPI ownership, quality controls or access governance, and how he handled disagreement between finance and operational stakeholders. If no conflict example is documented, say so."
+  },
+  {
+    "id": "HDA-01-T6",
+    "question": "Which actual prioritization or change-management example shows him choosing between competing analytics requests under a fixed budget, gaining adoption, and measuring whether the change worked? Please give the documented example and identify any missing budget or adoption evidence."
+  },
+  {
+    "id": "HDA-01-T7",
+    "question": "SIMULATED decision: hold for this healthcare Head role. The replies show potentially relevant cost and governance leadership, but do not establish healthcare leadership, management of managers, budget authority or quantified adoption. Before I close, which of those requirements can actually be substantiated, and what work location, travel, notice period or compensation information is known rather than assumed? No booking or outreach."
+  },
+  {
+    "id": "HDA-02-T1",
+    "question": "This is a recruiter simulation for a fictional B2B SaaS company, with no real hiring action. We need a first Head of Data who can build a six-person function, remain hands-on and guide founders on product and commercial analytics. What documented experience most closely demonstrates Bolaji building a data function, and what did he personally own?"
+  },
+  {
+    "id": "HDA-02-T2",
+    "question": "Please answer from career evidence rather than scheduling. Describe his data-team build: employer, dates, starting and ending team size, disciplines, and his own hiring and management responsibilities."
+  },
+  {
+    "id": "HDA-02-T3",
+    "question": "What does the profile document about his work at Gozem, specifically his title progression, the data organization he led and the boundaries between his personal work and his team’s output?"
+  },
+  {
+    "id": "HDA-02-T4",
+    "question": "For founder discussions I need a concrete product or commercial decision, not just platform delivery. What example shows his analysis changing a product, pricing, growth or retention decision, with the decision-maker, his own contribution and the measured business result?"
+  },
+  {
+    "id": "HDA-02-T5",
+    "question": "Take the recommendation-engine example. Did Bolaji personally design the experiment and success metrics, approve rollout, or lead engineers who did that work? What is documented about A/B validity, guardrails and attribution of the 12% figure?"
+  },
+  {
+    "id": "HDA-02-T6",
+    "question": "What documented example demonstrates his hiring and coaching approach, team operating cadence, and handling of an underperforming delivery or conflicting founder priorities? Also, did he hold an actual hiring or department budget, or is that unknown?"
+  },
+  {
+    "id": "HDA-02-T7",
+    "question": "What evidence shows him setting governance and data-quality standards while enabling self-service for nontechnical users? I am especially interested in how he checked adoption and resolved disagreement about metric definitions."
+  },
+  {
+    "id": "HDA-02-T8",
+    "question": "SIMULATED decision: advance to an initial screening for the small SaaS Head of Data brief, based on the described first-hire function build, hands-on delivery and product collaboration. This is not offer-ready. Remaining conditions are verification of personal scope, hiring authority, prioritization and budget examples, and SaaS domain fit. What relevant B2B SaaS experience, work arrangement, start timing and compensation information is actually documented, and which conditions need Bolaji directly?"
+  },
+  {
+    "id": "HDA-03-T1",
+    "question": "This is a recruiter simulation for a fictional regulated financial-services business, with no real vacancy or hiring action. The Head of Data and Analytics role leads 25 people through managers and owns audit-facing governance, privacy controls and a multi-year platform budget. What documented experience most closely supports Bolaji for that scope, including his personal accountability?"
+  },
+  {
+    "id": "HDA-03-T2",
+    "question": "Which governance or privacy controls did he personally design and operate, in which organization? Please distinguish technical data controls from direct accountability to auditors, regulators or a risk committee."
+  },
+  {
+    "id": "HDA-03-T3",
+    "question": "What organization structure did he actually manage: total headcount, direct reports, manager layers, countries and formal performance-management authority? Our requirement is 25 people through managers, so please do not equate a cross-country team with manager-of-managers experience."
+  },
+  {
+    "id": "HDA-03-T4",
+    "question": "Describe a documented budget or investment decision he owned: amount or range, planning horizon, approval authority, options rejected and outcome. Is there evidence of multi-year department budget ownership, beyond reducing a cloud bill?"
+  },
+  {
+    "id": "HDA-03-T5",
+    "question": "Tell me about one actual stakeholder conflict involving risk, finance or operations: what each party wanted, the decision Bolaji made, who held final authority and the resulting change. Please distinguish a documented incident from general leadership principles."
+  },
+  {
+    "id": "HDA-03-T6",
+    "question": "What technical oversight example best demonstrates trustworthy financial data: lineage, reconciliation, access segregation, incident handling or recovery? Describe his own design decisions and any measured reliability outcome, and identify gaps in regulated controls."
+  },
+  {
+    "id": "HDA-03-T7",
+    "question": "SIMULATED decision: hold for this regulated Head role. The conversation describes relevant fintech architecture and governance, while audit accountability, manager layers at 25-person scale, formal risk controls and multi-year budget ownership remain unresolved. This is not an offer. Is there any direct evidence that changes those gaps, and what start timing, work authorization or location constraints are actually documented? Please do not infer legal status or initiate contact."
+  },
+  {
+    "id": "HDA-04-T1",
+    "question": "This is a recruiter simulation for a fictional international nonprofit, with no real vacancy or hiring action. We need a Head of Data and Analytics to coordinate distributed multilingual teams, improve public-health and donor reporting, and build local capacity with limited funding. Which parts of Bolaji’s actual career are closest to that brief, and which requirements lack documented evidence?"
+  },
+  {
+    "id": "HDA-04-T2",
+    "question": "What professional experience does Bolaji have in nonprofits, development programs, public health or donor reporting? Please give organization, dates, personal responsibility and outputs, and explicitly say if public-health or donor expertise is not documented."
+  },
+  {
+    "id": "HDA-04-T3",
+    "question": "Take the ITC assignment. What did his coaching actually change for participating startups, how were needs prioritized, and is there a documented adoption or outcome measure? Distinguish the number trained from evidence of sustained capability."
+  },
+  {
+    "id": "HDA-04-T4",
+    "question": "What evidence demonstrates direct leadership of distributed staff rather than advising clients: team size, countries, reporting lines, languages used, hiring, coaching and performance decisions? Please name what is known and what remains unknown."
+  },
+  {
+    "id": "HDA-04-T5",
+    "question": "For the countries in his Gozem work, what actual management responsibilities and language capabilities are documented? I need to understand how he coordinated delivery and transferred knowledge across locations, without assuming that working across countries proves fluency or line-management authority."
+  },
+  {
+    "id": "HDA-04-T6",
+    "question": "Describe one documented case where he reconciled conflicting metric definitions or reporting needs across country teams. What governance, quality checks and access safeguards did he personally establish, and what changed for the people using the reports?"
+  },
+  {
+    "id": "HDA-04-T7",
+    "question": "Our funding is fixed for two years. Is there a documented example of Bolaji prioritizing delivery or changing an operating model under a fixed funding constraint, including what he stopped, how he gained stakeholder agreement and what outcome was measured? Please distinguish cost optimization from ownership of a program budget."
+  },
+  {
+    "id": "HDA-04-T8",
+    "question": "SIMULATED decision: hold for this nonprofit Head role, with potential transferability from the ITC coaching and distributed data-team work. Public-health and donor reporting expertise, language requirements, sustained training outcomes and funding accountability need direct verification. This is not an offer. Before closing, what is documented about travel, remote collaboration or start timing, and is there evidence that resolves any of those domain gaps? No outreach or booking."
+  },
+  {
+    "id": "HDA-05-T1",
+    "question": "This is a recruiter simulation for a fictional retail enterprise, with no real vacancy or hiring action. The Head of Data and Analytics would lead 40 analytics and AI staff, set experimentation and ML lifecycle standards, choose platform vendors and own a substantial operating budget. Which documented experience most closely demonstrates Bolaji’s personal responsibility at that scale, and what gaps should I recognize?"
+  },
+  {
+    "id": "HDA-05-T2",
+    "question": "What is the largest data organization he actually managed, with employer, dates, disciplines, direct reports and manager layers? Which hiring, performance and organizational-design decisions were his own? Please distinguish known scope from an assumption about readiness for 40 staff."
+  },
+  {
+    "id": "HDA-05-T3",
+    "question": "Describe one actual AI product that he led from business problem to production. What did he personally decide or build, what did the team deliver, and what commercial outcome was observed?"
+  },
+  {
+    "id": "HDA-05-T4",
+    "question": "For that support chatbot, what is documented about his technical oversight of evaluation, grounding, privacy, human escalation and production monitoring? Which decisions were his, and were quality, containment, cost or customer outcomes measured?"
+  },
+  {
+    "id": "HDA-05-T5",
+    "question": "For commercial analytics, which documented experiment changed a product, recommendation or pricing decision? Explain Bolaji’s own contribution, the measured result, and whether the result is causal uplift or only observed usage or association."
+  },
+  {
+    "id": "HDA-05-T6",
+    "question": "For the AI strategy you mentioned, how did he prioritize the six implementations, compare build versus vendor options and resolve disagreement with executives? What budget amount, approval authority, rejected option and measured return are documented rather than implied?"
+  },
+  {
+    "id": "HDA-05-T7",
+    "question": "How did he turn platform or AI strategy into organizational adoption: a specific coaching, governance or workflow change he personally led, the users affected and evidence that the new way of working stuck? Also, what is actually known about his largest team and management layers, since the earlier scope question was not answered?"
+  },
+  {
+    "id": "HDA-05-T8",
+    "question": "SIMULATED decision: hold for this 40-person enterprise retail Head role. The described AI portfolio, experimentation and self-service adoption experience is relevant, but does not yet establish manager-of-managers scale, formal operating-budget ownership, production AI controls or commercial causal results. This is not an offer. Is there direct evidence that resolves those requirements, and what retail experience, work arrangement and start timing are actually known? Please state unknowns without arranging contact."
+  }
+]

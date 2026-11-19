@@ -125,7 +125,7 @@ _LOCAL_DENIAL = _re_mod.compile(
 _DENIAL_WINDOW = 25
 
 
-def check_facts(answer, row, actions=None):
+def check_facts(answer, row, actions=None, result=None):
     """Deterministic checks. Returns (passed, failures).
 
     ``must_contain`` / ``must_not_contain`` are accent-folded, case-insensitive
@@ -136,6 +136,23 @@ def check_facts(answer, row, actions=None):
     """
     low = _accent_fold(answer.lower())
     failures = []
+    for pattern in row.get("must_match", []):
+        if not _re_mod.search(pattern, answer, _re_mod.IGNORECASE | _re_mod.DOTALL):
+            failures.append(f"missing pattern: {pattern}")
+    for pattern in row.get("must_not_match", []):
+        if _re_mod.search(pattern, answer, _re_mod.IGNORECASE | _re_mod.DOTALL):
+            failures.append(f"forbidden pattern: {pattern}")
+    if result is not None:
+        if result.get("agent_type") in row.get("forbidden_agent_types", []):
+            failures.append(f"incorrect route: {result.get('agent_type')}")
+        if row.get("require_grounded") and not result.get("grounding_checked"):
+            failures.append("answer did not pass grounding verification")
+        if row.get("require_evidence") and not result.get("evidence"):
+            failures.append("missing retrieved evidence")
+    if row.get("must_mark_unknown"):
+        from app.services.evidence_policy import documentation_limits
+        for target in documentation_limits(answer, row["must_mark_unknown"]):
+            failures.append(f"missing explicit documentation limit: {target}")
     for clause in row.get("must_contain", []):
         clause_f = _accent_fold(clause.lower())
         if not any(alt.strip() in low for alt in clause_f.split("|")):
@@ -228,7 +245,7 @@ class Judge:
 
             api_key = config.GEMINI_API_KEY
         self.model = model
-        self.client = genai.Client(api_key=api_key)
+        self.client = genai.Client(api_key=api_key, http_options={"retry_options":{"attempts":1}})
 
     def score(self, question, gold, answer, context):
         prompt = (
@@ -237,11 +254,18 @@ class Judge:
             .replace("{answer}", answer or "(empty answer)")
             .replace("{context}", context or "(no context provided)")
         )
-        response = self.client.models.generate_content(
-            model=self.model,
-            contents=prompt,
-            config={"temperature": 0.0, "response_mime_type": "application/json"},
-        )
+        for attempt in range(2):
+            try:
+                response = self.client.models.generate_content(
+                    model=self.model, contents=prompt,
+                    config={"temperature":0.0,"response_mime_type":"application/json"},
+                )
+                break
+            except Exception as exc:
+                code = getattr(exc,"code",getattr(exc,"status_code",None))
+                if str(code) not in {"429","503"} or attempt:
+                    raise
+                time.sleep(0.5)
         data = json.loads(response.text)
         return {
             k: max(0, min(10, int(data.get(k, 0))))
@@ -301,7 +325,9 @@ def run_one(target, judge, row):
         f"[{e.get('source', '?')}] {e.get('content_preview', '')}" for e in evidence
     )
 
-    fact_pass, fact_failures = check_facts(answer, row, actions=result.get("actions"))
+    fact_pass, fact_failures = check_facts(
+        answer, row, actions=result.get("actions"), result=result
+    )
 
     scores = None
     judge_error = None
@@ -320,6 +346,9 @@ def run_one(target, judge, row):
         "answer": answer,
         "agent_type": result.get("agent_type"),
         "evidence_count": len(evidence),
+        "evidence": evidence,
+        "grounding_checked": result.get("grounding_checked", False),
+        "provenance": result.get("provenance", {}),
         "evidence_sources": [e.get("source") for e in evidence[:5]],
         "unsupported_claims": result.get("unsupported_claims", []),
         "latency_s": round(latency, 3),
@@ -389,6 +418,7 @@ def aggregate(results):
         "n": len(results),
         "errors": sum(1 for r in results if r["error"]),
         "warnings": sum(1 for r in results if r.get("warning")),
+        "judge_errors": sum(1 for r in results if r.get("judge_error")),
         "canonical_fact_accuracy": (
             round(sum(r["fact_pass"] for r in fact_rows) / len(fact_rows), 4)
             if fact_rows

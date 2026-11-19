@@ -157,7 +157,9 @@ class BM25Index:
     def search(self, query: str, top_k: int = 10) -> List[Tuple[Document, float]]:
         if not self.is_built or self.bm25 is None:
             return []
-        scores = self.bm25.get_scores(_tokenize(query))
+        from app.services.evidence_policy import expand_lexical_query
+
+        scores = self.bm25.get_scores(_tokenize(expand_lexical_query(query)))
         top_idx = np.argsort(scores)[::-1][:top_k]
         return [(self.documents[i], float(scores[i])) for i in top_idx if scores[i] > 0]
 
@@ -544,6 +546,9 @@ class HybridSearchService:
 
     def _revision(self) -> str:
         digest = hashlib.sha256(embedding_fingerprint().encode())
+        from app.services.evidence_policy import policy_revision
+
+        digest.update(policy_revision().encode())
         for name in (
             ".vectorstore_state.json",
             ".vectorstore_revision",

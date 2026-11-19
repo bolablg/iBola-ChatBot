@@ -76,6 +76,13 @@ def main():
 
     failures = []
 
+    if agg.get("judge_errors"):
+        failures.append(f"{agg['judge_errors']} question(s) were not judged successfully")
+
+    for row in report.get("results", []):
+        if "recruiter_regression" in row.get("tags", []) and not row.get("fact_pass"):
+            failures.append(f"recruiter regression failed: {row['id']}")
+
     if agg.get("errors"):
         failures.append(
             f"{agg['errors']} question(s) hit hard errors; a gate must not "
@@ -90,7 +97,10 @@ def main():
     max_drop = gate.get("max_aggregate_drop", 2.0)
     for dim in JUDGED_DIMENSIONS:
         base_val, now_val = base_agg.get(dim), agg.get(dim)
-        if base_val is None or now_val is None:
+        if base_val is not None and now_val is None:
+            failures.append(f"{dim} is missing although the baseline is judged")
+            continue
+        if base_val is None:
             continue
         if base_val - now_val > max_drop:
             failures.append(

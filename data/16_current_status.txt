@@ -20,7 +20,7 @@ Staff or Principal Data Engineer, Data Platform Engineer, Data Architect, Cloud 
 ---
 
 WHAT HE BRINGS (headline numbers from his Gozem tenure):
-- Built and led a data organization from 0 to 14+ professionals across six countries, reporting at C-level.
+- Built and led a data organization from 4 to 14+ professionals during the Head of Data period (October 2022 - March 2025) supporting five African operating markets, reporting at C-level.
 - Chartered the Gozem Data Hub serving over 700 people (employees, field agents, and partners) across five African countries.
 - Cut Google Cloud costs by 42.57% in a single quarter while maintaining SLAs.
 - Shipped 30+ production AI-powered tools and set governance across 250+ production pipelines.

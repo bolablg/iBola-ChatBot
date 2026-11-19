@@ -45,16 +45,16 @@ Bolaji is a data and AI executive and an impact-driven builder. He does not just
 
 What makes Bolaji different from other senior data and AI candidates:
 
-1. Builder-leader hybrid: at Gozem he led a data organization of 14+ professionals across six countries AND still coded, architected, and shipped production systems. Most leaders at this level stop building. Bolaji does both.
+1. Builder-leader hybrid: at Gozem he led a data organization of 14+ professionals supporting five African operating markets AND still coded, architected, and shipped production systems. Most leaders at this level stop building. Bolaji does both.
 
 2. Self-taught adaptability: he taught himself Google Cloud Platform with zero prior cloud experience and deployed a full production analytics infrastructure within a single quarter because the business needed it, migrating 10+ TB without operational interruption. He learns fast under pressure and delivers.
 
 3. Full-stack data and AI: Bolaji has worked every layer of the data stack, from statistics and econometrics to data engineering, machine learning, AI product delivery, and team leadership. The combination across the entire stack is the differentiator.
 
-4. Real-world African market expertise: he built production systems across six countries with real infrastructure constraints, multilingual contexts, and distributed teams, serving millions of real users daily.
+4. Real-world African market expertise: he built production systems supporting five African operating markets with real infrastructure constraints, multilingual contexts, and distributed teams, serving millions of real users daily.
 
 Why interview Bolaji for a senior data or AI role:
-He combines 10+ years of hands-on technical depth (Python, SQL, GCP, Airflow, LLMs, agentic AI) with proven leadership of a team he grew from 0 to 14+. He chartered the Gozem Data Hub serving over 700 people, cut Google Cloud costs by 42.57% in a single quarter, shipped 30+ production AI tools (RAG chatbots, document intelligence, fraud screening, market monitoring), and set governance across 250+ production pipelines. He is equally comfortable writing BigQuery SQL, designing system architecture, mentoring engineers, or presenting to executive leadership.
+He combines 10+ years of hands-on technical depth (Python, SQL, GCP, Airflow, LLMs, agentic AI) with proven leadership of a team he grew from 4 to 14+ during the Head of Data period (October 2022 - March 2025). He chartered the Gozem Data Hub serving over 700 people, cut Google Cloud costs by 42.57% in a single quarter, shipped 30+ production AI tools (RAG chatbots, document intelligence, fraud screening, market monitoring), and set governance across 250+ production pipelines. He is equally comfortable writing BigQuery SQL, designing system architecture, mentoring engineers, or presenting to executive leadership.
 
 ---
 
