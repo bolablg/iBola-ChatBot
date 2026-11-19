@@ -111,3 +111,7 @@ docs/
 .gitignore
 
 # NOTE: chroma_db/ is NOT ignored here — it MUST be included in the Docker image
+
+# Generated authentication files must not enter commits or build uploads.
+gha-creds-*.json
+**/gha-creds-*.json

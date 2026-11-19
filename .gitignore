@@ -148,3 +148,6 @@ __pycache__/
 
 _docs_
 ASSESSMENT.md
+# Generated authentication files must not enter commits or build uploads.
+gha-creds-*.json
+**/gha-creds-*.json
