@@ -1,0 +1,411 @@
+version: 2
+source_types:
+  90_website_canon_llms_full.txt: published
+  18_confirmed_clarifications.txt: candidate_confirmed
+  15_professional_narrative.txt: interpretation
+  17_highlights_pitch.txt: summary
+  19_owner_confirmed_scope.txt: candidate_confirmed
+assertion_rules:
+- id: manager_layers_require_direct_evidence
+  answer_pattern: (?i)(?:manager.of.managers|management of managers)|(?i:management de managers|manager de
+    managers)
+  support_pattern: (?i)(?:directly managed|supervised|led)\s+(?:\w+\s+){0,3}(?:managers|team leads)\b
+- id: budget_authority_requires_direct_evidence
+  answer_pattern: (?i)(?:budget (?:authority|ownership|approval)|(?:department|operating|multi.year) budget|approval
+    authority)|(?i:(?:autorite|responsabilite|approbation) (?:du |de )?budget|budget (?:departemental|pluriannuel|de
+    fonctionnement))
+  support_pattern: (?i)(?:owned|approved|held|was accountable for)\s+(?:\w+\s+){0,4}(?:department budget|operating
+    budget|budget approval authority)
+  affirmation_pattern: (?i)(?:(?:has|had|holds?|held|owns?|owned|approved|manages?|managed|demonstrates?|demonstrated|shows?|proves?|evidences?|establishes?|confirms?|includes?|included|detient|detenait|possede|approuvait|assume|gerait|evidence
+    of|(?:is|was) accountable for|(?:est|etait) responsable (?:du|de))\b.{0,90}(?:budget (?:authority|ownership|approval)|(?:department|operating|multi.year)
+    budget|approval authority|(?:autorite|responsabilite|approbation) (?:du |de )?budget|budget (?:departemental|pluriannuel|de
+    fonctionnement))|(?:budget (?:authority|ownership|approval)|(?:department|operating|multi.year) budget|approval
+    authority|(?:autorite|responsabilite|approbation) (?:du |de )?budget|budget (?:departemental|pluriannuel|de
+    fonctionnement)).{0,50}\b(?:is|was|has been)\s+(?:confirmed|documented|established|demonstrated|held|owned)|(?:budget
+    (?:authority|ownership|approval)|(?:department|operating|multi.year) budget|approval authority|(?:autorite|responsabilite|approbation)
+    (?:du |de )?budget|budget (?:departemental|pluriannuel|de fonctionnement))\s*:\s*(?:yes|confirmed))
+- id: non_use_requires_explicit_negative_evidence
+  answer_pattern: (?i)(?:has (?:not|never) (?:directly )?(?:used|worked with)|never used|no (?:direct )?production
+    experience (?:with|in))\s+[^.;,]+|(?i:(?:n'a (?:jamais|pas) (?:directement )?utilise|aucune experience
+    (?:directe )?en production (?:avec|sur))\s+[^.;,]+)
+  support_pattern: (?i)(?:has (?:not|never) (?:directly )?(?:used|worked with)|never used|no (?:direct )?production
+    experience (?:with|in))\s+[^.;,]+|(?i:(?:n'a (?:jamais|pas) (?:directement )?utilise|aucune experience
+    (?:directe )?en production (?:avec|sur))\s+[^.;,]+)
+  match_subject: true
+- id: lab_tool_requires_own_production_evidence
+  answer_pattern: (?i)(?:production.{0,100}\b(?:Lakeflow|Databricks|Delta Lake|Unity Catalog)\b|\b(?:Lakeflow|Databricks|Delta
+    Lake|Unity Catalog)\b.{0,70}in production)
+  support_pattern: (?i)(?:personally (?:used|deployed|operated).{0,35}\b(?:Lakeflow|Databricks|Delta Lake|Unity
+    Catalog)\b.{0,20}in production)
+  subject_pattern: (?i)\b(?:Lakeflow|Databricks|Delta Lake|Unity Catalog)\b
+metric_constraints:
+- id: event_volume_average_and_population
+  description: The documented average belongs to the Gozem streaming workload, not an established maximum or
+    an individually measured CDC pipeline.
+  source_spans:
+  - 90_website_canon_llms_full.txt:38
+  invalid_patterns:
+  - (?i)(?:up to|maximum|capacity|at most).{0,35}(?:45\s*million|45\s*M\b)
+  - (?i)(?:this production system\s+(?:processed|handled|ingested|averaged)|(?:MongoDB )?CDC (?:pipeline|system)(?:\x27s)?\s+(?:[\w/-]+\s+){0,5}(?:processed|processes|handles|handled|ingests|ingested|averages|averaged|throughput|volume))[^.;\n]{0,80}(?:45\s*million|45\s*M\b)
+- id: observational_event_matching
+  description: The event match rate is observational, without an established causal treatment effect.
+  source_spans:
+  - 13_gozem_internal_projects.txt:52
+  invalid_patterns:
+  - (?i)(?:leading to|result(?:ing|ed) in|caused|increased.{0,20}to).{0,80}88\s*%
+- id: implementation_status
+  description: Six strategic use cases moved into implementation; completion of all six is not established.
+  source_spans:
+  - 13_gozem_internal_projects.txt:21
+  - 90_website_canon_llms_full.txt:92
+  invalid_patterns:
+  - (?i)(?:six|6)\s+(?:implemented|completed|deployed|production)\s+(?:AI\s+)?use cases
+  - (?i)(?:six|6)\s+(?:AI\s+)?use cases\s+(?:were|are|have been)\s+(?:implemented|completed|deployed)
+facets:
+- id: ai_project_overview
+  query_pattern: (?i)(?:AI work|AI projects?|travaux en IA|projets? (?:en )?IA|LLM projects?)
+  terms: Gozem LLM invoice extraction support chatbot AI strategy RAG
+  sources:
+  - 02_last_role_gozem_data_director.txt
+  - 13_gozem_internal_projects.txt
+  - 90_website_canon_llms_full.txt
+- id: professional_credentials
+  query_pattern: (?i)\b(?:certifications?|certificats?|credentials?)\b
+  terms: Google Cloud Professional Data Engineer McKinsey Forward Airflow certification
+  sources:
+  - 06_education.txt
+  - 90_website_canon_llms_full.txt
+- id: requested_degree
+  query_pattern: (?i)\b(?:degree|degrees|diplome|diplomes|academic qualifications)\b
+  terms: Master Science Statistics completed degree
+  sources:
+  - 06_education.txt
+  - 90_website_canon_llms_full.txt
+- id: dbt_transfer
+  query_pattern: (?i)\bdbt\b
+  terms: Dataform framework SQL modeling templates JavaScript
+  sources:
+  - 05_skills_and_tools.txt
+  - 90_website_canon_llms_full.txt
+- id: early_statistics
+  query_pattern: (?i)(?:before.{0,35}data science|avant.{0,35}data science|early career|statistician|statisticien)
+  terms: Statistician INStaD Pantagruel survey R
+  sources:
+  - 04_previous_roles_early.txt
+  - 01_career_overview.txt
+  - 90_website_canon_llms_full.txt
+- id: marketplace_analytics
+  query_pattern: (?i)(?:mobility marketplace|customer analytics|product analytics|customer segmentation|driver
+    retention)
+  terms: marketplace customer product analytics segmentation retention cohort RFM Gozem
+  sources:
+  - 13_gozem_internal_projects.txt
+  - 12_product_analytics.txt
+  - 90_website_canon_llms_full.txt
+- id: team_scope
+  query_pattern: (?i)\b(?:team|headcount|organization|organisation|effectif|equipe)\b
+  terms: team size growth headcount professionals organization management
+  sources:
+  - 19_owner_confirmed_scope.txt
+  - 11_leadership_style.txt
+  - 13_gozem_internal_projects.txt
+  - 90_website_canon_llms_full.txt
+- id: languages
+  query_pattern: (?i)\b(?:languages?|langues?|francophone|anglophone)\b
+  terms: spoken languages native professional proficiency
+  sources:
+  - 00_identity.txt
+- id: availability
+  query_pattern: (?i)\b(?:available|availability|location|remote|work arrangement|regions?|disponibilite|distance)\b
+  terms: location current availability remote work style consulting
+  sources:
+  - 00_identity.txt
+  - 16_current_status.txt
+- id: cloud_services
+  query_pattern: (?i)\b(?:aws|ec2|kafka)\b
+  terms: AWS EC2 production Data Hub platform tools
+  sources:
+  - 10_apps_and_projects.txt
+  - 13_gozem_internal_projects.txt
+  - 90_website_canon_llms_full.txt
+- id: tool_experience_scope
+  query_pattern: (?i)\b(?:streaming|databricks|delta lake|lakeflow|unity catalog)\b
+  terms: experience projects labs Databricks Delta Lake Lakeflow Unity Catalog
+  sources:
+  - 90_website_canon_llms_full.txt
+- id: permissions
+  query_pattern: (?i)\b(?:iam|permissions?|claude|rbac|access safeguards|access.control)\b
+  terms: permissions IAM role based access governance authentication
+  sources:
+  - 13_gozem_internal_projects.txt
+  - 90_website_canon_llms_full.txt
+- id: self_service
+  query_pattern: (?i)(?:self.service|routine quer|exploration|autonom|adoption|efficiency)
+  terms: self service Metabase routine query active manager users
+  sources:
+  - 13_gozem_internal_projects.txt
+  - 11_leadership_style.txt
+  - 05_skills_and_tools.txt
+- id: artifacts
+  query_pattern: (?i)\b(?:public|artifacts?|repository|write.up|liens?|livrables?|udownloader)\b
+  terms: public project article GitHub PyPI
+  sources:
+  - 10_apps_and_projects.txt
+  - 09_blog_and_newsletter.txt
+  - 90_website_canon_llms_full.txt
+  entities:
+  - dataform
+  - ibola
+  - udownloader
+conflicts:
+- id: nps_change
+  status: owner_confirmed
+  query_pattern: (?i)\b(?:nps|net promoter|pantagruel|customer satisfaction)\b
+  label: numerical NPS change
+  summary: 'Owner-confirmed November 19, 2026: approximately 9 NPS points associated with later initiatives;
+    causal lift is not established.'
+  source_spans:
+  - 04_previous_roles_early.txt:48
+  - 01_career_overview.txt:40
+  - 90_website_canon_llms_full.txt:320
+  redact_pattern: (?im)^.*(?:\bNPS\b|Net Promoter Score).*$
+  answer_pattern: (?is)(?:\b(?:8|9|eight|nine|huit|neuf)\s*[- ]?(?:point|points)\b.{0,100}\b(?:NPS|net promoter)|\b(?:NPS|net
+    promoter).{0,100}\b(?:8|9|eight|nine|huit|neuf)\s*[- ]?(?:point|points)\b)
+  superseded_summary: The NPS change differs between the curated career summaries (8 points, causal wording)
+    and the website canon (approximately 9 points, observed association). The magnitude and attribution require
+    owner confirmation.
+  confirmed_on: '2026-11-19'
+  confirmation_source: 19_owner_confirmed_scope.txt
+- id: team_growth_baseline
+  status: owner_confirmed
+  query_pattern: (?i)\b(?:team|headcount|staff|organization|organisation|equipe|effectif|growth|croissance)\b
+  label: team-growth baseline and period
+  summary: 'Owner-confirmed November 19, 2026: first data hire in 2019; initial team grew to 4 during the Global
+    Data Analyst era; 4 to 14+ during Head of Data, October 2022 to March 2025.'
+  source_spans:
+  - 03_previous_role_gozem_gda.txt:48
+  - 13_gozem_internal_projects.txt:77
+  - 90_website_canon_llms_full.txt:194
+  redact_pattern: (?i)(?:from|de)\s+(?:0|zero|zéro|4|four|quatre)\s+(?:to|a|à)\s+(?:14|fourteen|quatorze)\+?
+  answer_pattern: (?i)(?:from|de)\s+(?:0|zero|zéro|4|four|quatre)\s+(?:to|a|à)\s+(?:14|fourteen|quatorze)\+?
+  superseded_summary: First-hire foundation, the four-person analyst-era team, and Head of Data expansion are
+    different periods. Some curated summaries use 0 to 14+ while the published Head of Data case uses 4 to
+    14+. The role-specific growth baseline requires owner confirmation; the documented organization size of
+    14+ is not disputed here.
+  confirmed_on: '2026-11-19'
+  confirmation_source: 19_owner_confirmed_scope.txt
+- id: team_geography
+  status: owner_confirmed
+  query_pattern: (?i)\b(?:countr\w*|geograph\w*|singapore|pays|locations|team|equipe)\b
+  label: team-location count
+  summary: 'Owner-confirmed November 19, 2026: five African operating markets; Singapore was headquarters only,
+    not a team-member work location in this claim.'
+  source_spans:
+  - 11_leadership_style.txt:25
+  - 90_website_canon_llms_full.txt:10
+  redact_pattern: (?i)(?:across|in|dans|répartis dans|distributed across)\s+(?:six|6)\s+(?:countries|pays)(?:\s+in
+    Sub-Saharan Africa)?
+  answer_pattern: (?i)(?:six|6)\s+(?:African countries|countries in Sub-Saharan Africa|pays d.Afrique)
+  superseded_summary: Five African operating markets and Singapore headquarters are documented. Whether Singapore
+    was also a team-member work location requires owner confirmation. Operating countries, headquarters and
+    staff locations must not be conflated.
+  confirmed_on: '2026-11-19'
+  confirmation_source: 19_owner_confirmed_scope.txt
+section_types:
+- section_pattern: (?i)tool (?:equivalences|category comparisons)
+  evidence_type: interpretation
+  include_if_query_matches: (?i)\b(?:dbt|power bi|dax|dagster|snowflake|redshift)\b
+metric_scopes:
+- source: 13_gozem_internal_projects.txt
+  section_pattern: (?i)self.service no.code
+  fields:
+    id: self_service_adoption
+    project: Metabase no-code exploration layer
+    population: 12+ active manager users; this is not a count of managers trained
+    outcome: routine query volume on the central data team halved
+    role_period: Head of Data, October 2022 to March 2025; project context only
+    measurement_period: not documented in the source record
+    comparison_method: not documented; needs assessment was implementation preparation
+    provenance: source audit of 13_gozem_internal_projects.txt, self-service platform section
+- source: 18_confirmed_clarifications.txt
+  section_pattern: (?i)recommendation experiment
+  fields:
+    id: recommendation_order_share
+    unit: percent
+    value: approximately 12%
+    denominator: delivered orders
+    measurement_period: first month after deployment
+    attribution: observed association, not incremental or causal sales uplift
+    provenance: explicit supporting quotes in data/quantitative_facts.yaml
+- source: 90_website_canon_llms_full.txt
+  section_pattern: (?i)marketplace analytics and product decisions
+  fields:
+    id: recommendation_order_share
+    unit: percent
+    value: approximately 12%
+    denominator: delivered orders
+    measurement_period: first month after deployment
+    attribution: observed association, not incremental or causal sales uplift
+    provenance: explicit supporting quotes in data/quantitative_facts.yaml
+- source: 12_product_analytics.txt
+  section_pattern: (?i)recommendation
+  fields:
+    id: recommendation_order_share
+    unit: percent
+    value: approximately 12%
+    denominator: delivered orders
+    measurement_period: first month after deployment
+    attribution: observed association, not incremental or causal sales uplift
+    provenance: explicit supporting quotes in data/quantitative_facts.yaml
+- source: 13_gozem_internal_projects.txt
+  section_pattern: (?i)automated invoice data extraction
+  fields:
+    id: invoice_time_savings
+    value: 40+ hours
+    qualifier: estimated savings, not established measured time savings
+    population: per country Financing Manager
+    measurement_period: per month
+    provenance: explicit estimated savings in the cited invoice records
+- source: 90_website_canon_llms_full.txt
+  section_pattern: (?i)(?:AI.powered invoice processing|applied AI.*reliability)
+  fields:
+    id: invoice_time_savings
+    value: 40+ hours
+    qualifier: estimated savings, not established measured time savings
+    population: per country Financing Manager
+    measurement_period: per month
+    provenance: explicit estimated savings in the cited invoice records
+- source: 02_last_role_gozem_data_director.txt
+  section_pattern: (?i)(?:last role|key results)
+  fields:
+    id: invoice_time_savings
+    value: 40+ hours
+    qualifier: estimated savings, not established measured time savings
+    population: per country Financing Manager
+    measurement_period: per month
+    provenance: explicit estimated savings in the cited invoice records
+- source: 90_website_canon_llms_full.txt
+  section_pattern: (?i)workload and measurement scope
+  fields:
+    id: streaming_workload_volume
+    average: 45 million telemetry and operational events per day
+    population: separate Gozem streaming workload, distinct from 5 TB batch upserts
+    not_established: not an individual MongoDB CDC pipeline count, throughput ceiling, sub-second latency or
+      availability guarantee
+required_limits:
+- id: self_service_measurement_period_unknown
+  scope_id: self_service_adoption
+  query_pattern: (?i)(?:measurement (?:period|interval|window)|time period|over what period|periode (?:connue|de
+    mesure)|mesurees sur une periode)
+  target_pattern: (?:period|interval|window|periode|fenetre)
+- id: self_service_comparison_method_unknown
+  scope_id: self_service_adoption
+  query_pattern: (?i)(?:comparison (?:method|methodology)|methode de comparaison|measurement method)
+  target_pattern: (?:method|comparison|methode|comparaison|methodologie)
+- id: on_call_willingness_unknown
+  sources:
+  - 00_identity.txt
+  - 16_current_status.txt
+  query_pattern: (?i)\bon.call\b
+  target_pattern: on.call|production support
+- id: clinical_domain_not_established
+  sources:
+  - 11_leadership_style.txt
+  - 19_owner_confirmed_scope.txt
+  - 90_website_canon_llms_full.txt
+  query_pattern: (?i)\b(?:clinical|healthcare|public.health)\b
+  target_pattern: clinical|healthcare|public.health
+required_identity:
+- scope_id: self_service_adoption
+  name: Metabase
+  query_pattern: (?i)(?:self.service|routine|query|requet|exploration|manager|adoption)
+  answer_pattern: (?i)(?:12|douze|halv|moiti|self.service|libre.service|requet|query)
+- sources:
+  - 90_website_canon_llms_full.txt
+  - 13_gozem_internal_projects.txt
+  - 10_apps_and_projects.txt
+  name: Gozem Data Hub
+  query_pattern: (?i)\b(?:aws|ec2)\b
+  answer_pattern: (?i)(?:EC2|700|operational.{0,15}platform|governed.{0,20}platform)
+required_details:
+- scope_id: recommendation_order_share
+  query_pattern: (?i)(?=.*(?:12|metric|figure|mesure|chiffre))(?=.*(?:recommend|recommand))
+  id: recommendation_delivered_order_denominator_missing
+  answer_pattern: (?i)(?:delivered\s+orders|commandes\s+livree\w*)
+- scope_id: recommendation_order_share
+  query_pattern: (?i)(?=.*(?:12|metric|figure|mesure|chiffre))(?=.*(?:recommend|recommand))
+  id: recommendation_approximate_qualifier_missing
+  answer_pattern: (?i)(?:approximate\w*|about|roughly|around|environ)
+- scope_id: recommendation_order_share
+  query_pattern: (?i)(?=.*(?:12|metric|figure|mesure|chiffre))(?=.*(?:recommend|recommand))
+  id: recommendation_first_month_window_missing
+  answer_pattern: (?i)(?:first\s+month|premier\s+mois)
+- id: invoice_savings_estimate_qualifier_missing
+  scope_id: invoice_time_savings
+  query_pattern: (?i)(?:invoice|facture)
+  claim_pattern: (?i)[^.!?\n]*\b40\s*\+?\s*(?:hours?|heures?)[^.!?\n]*
+  answer_pattern: (?i)estimat|estim
+- id: published_professional_credential_omitted
+  sources:
+  - 06_education.txt
+  - 90_website_canon_llms_full.txt
+  support_pattern: Google Cloud Professional Data Engineer
+  query_pattern: (?i)\b(?:certifications?|certificats?|credentials?)\b
+  answer_pattern: (?i)Professional Data Engineer
+- sources: &id001
+  - 90_website_canon_llms_full.txt
+  support_pattern: existing Google Cloud IAM permissions
+  query_pattern: (?i)(?=.*(?:metric|governance|KPI))(?=.*(?:access|permission|safeguard))
+  id: requested_IAM_access_boundary_missing
+  answer_pattern: (?i)\bIAM\b
+  restore_quote:
+    language: en
+    label: Access safeguards
+    pattern: Introduced governed AI access[^\n]*Claude\.\s+Selected senior users[^\n]*IAM permissions\.
+- sources: *id001
+  support_pattern: existing Google Cloud IAM permissions
+  query_pattern: (?i)(?=.*(?:metric|governance|KPI))(?=.*(?:access|permission|safeguard))
+  id: requested_Claude_integration_missing
+  answer_pattern: (?i)\bClaude\b
+  restore_quote:
+    language: en
+    label: Access safeguards
+    pattern: Introduced governed AI access[^\n]*Claude\.\s+Selected senior users[^\n]*IAM permissions\.
+- sources:
+  - 13_gozem_internal_projects.txt
+  support_pattern: automated (?:data.)?quality checks
+  query_pattern: (?i)quality checks
+  id: requested_documented_quality_checks_missing
+  answer_pattern: (?i)(?:quality checks|automated.{0,15}checks|discrepanc|duplicate|incomplete|completeness|controle.{0,20}qualite)
+  restore_quote:
+    language: en
+    label: Quality checks
+    pattern: '(?<=- Action: )Bolaji built observability[^\n]+'
+- id: requested_report_user_outcome_missing
+  sources:
+  - 11_leadership_style.txt
+  support_pattern: closed long-standing reporting disputes
+  query_pattern: (?i)(?=.*(?:metric|governance|report))(?=.*what changed)
+  answer_pattern: (?i)(?:reporting disputes|closed.{0,30}disputes|resolved.{0,30}disputes)
+  restore_quote:
+    language: en
+    label: Effect on report users
+    pattern: The governance bar[^\n]*closed long-standing reporting disputes[^\n]*\.
+- id: self_service_active_manager_population_missing
+  scope_id: self_service_adoption
+  sources:
+  - 13_gozem_internal_projects.txt
+  query_pattern: (?i)(?:self.service|routine quer|requet|exploration|managers|adoption)
+  answer_pattern: (?i)(?:\b12\+?|\bdouze)\s+(?:active\s+manager\s+users|active\s+managers|managers?\s+(?:are\s+)?active|utilisateurs?\s+managers?\s+actifs?|managers?\s+actifs?)
+  restore_quotes:
+    en:
+      language: en
+      label: Observed adoption
+      pattern: '(?<=- Outcome: )adoption reached 12\+ active manager users[^\n]+'
+    fr:
+      language: fr
+      label: Résumé français du dossier
+      section_label: Exploration Metabase en libre-service
+      scope_match: (?i)Head of Data.*2022.*2025
+      scope_label: mandat Head of Data, octobre 2022 - mars 2025
+      pattern: L\x27adoption de Metabase a atteint plus de 12 utilisateurs managers actifs[^\n]*centrale\.

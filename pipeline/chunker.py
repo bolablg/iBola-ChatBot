@@ -19,6 +19,8 @@ from typing import Any, Dict, List, Optional
 
 from langchain_core.documents import Document
 
+CHUNKER_VERSION = "3"
+
 # Category detection keywords
 _CATEGORY_KEYWORDS = {
     "professional": [
@@ -162,6 +164,8 @@ class IntelligentChunker:
         max_words: int = 800,
         overlap_words: int = 100,
     ):
+        if max_words <= 0 or not 0 <= overlap_words < max_words:
+            raise ValueError("overlap_words must be nonnegative and below max_words")
         self.min_words = min_words
         self.max_words = max_words
         self.overlap_words = overlap_words
@@ -216,6 +220,9 @@ class IntelligentChunker:
             prefix_parts.append(f"Title: {title}")
         if header:
             prefix_parts.append(f"Section: {header}")
+        parents = section.get("parent_headers", [])
+        if parents:
+            prefix_parts.append("Parent context: " + " > ".join(parents))
 
         prefixed_content = " | ".join(prefix_parts) + "\n\n" + text
 
@@ -226,6 +233,8 @@ class IntelligentChunker:
             "filename": filename,
             "title": title,
             "section_header": header,
+            "parent_context": " > ".join(parents),
+            "chunker_version": CHUNKER_VERSION,
             "category": category,
             "word_count": len(text.split()),
             # Structured recency signal: the most recent year mentioned
@@ -234,6 +243,22 @@ class IntelligentChunker:
             "latest_year": self._latest_year(text),
         }
 
+        for scope in reversed([*parents, header]):
+            if re.search(r"\b(?:19|20)\d{2}\b|\bPresent\b", scope):
+                chunk_metadata["scope_context"] = scope
+                chunk_metadata["scope_year"] = self._latest_year(scope)
+                break
+        from app.services.evidence_policy import policy_data
+        from app.services.source_map import resolve_source
+
+        chunk_metadata["evidence_type"] = (
+            policy_data().get("source_types", {}).get(filename, "curated")
+        )
+        receipt = resolve_source(filename, header)
+        if receipt:
+            chunk_metadata["source_label"] = receipt["label"]
+            if receipt.get("url"):
+                chunk_metadata["canonical_url"] = receipt["url"]
         return Document(page_content=prefixed_content, metadata=chunk_metadata)
 
     @staticmethod
@@ -244,65 +269,81 @@ class IntelligentChunker:
         return max(years) if years else 0
 
     def _detect_sections(self, content: str) -> List[Dict[str, Any]]:
-        """Detect document sections by structural patterns."""
-        # Split on markdown headers, horizontal rules, or double newlines with caps
-        header_pattern = re.compile(
-            r"(?:^|\n)(?:#{1,4}\s+.+|[A-Z][A-Z\s&:—–-]{5,}|---+)\s*\n",
-            re.MULTILINE,
-        )
-
-        parts = header_pattern.split(content)
-        headers = header_pattern.findall(content)
-
+        """Keep heading hierarchy and flush at actual section boundaries."""
         sections = []
-        for i, part in enumerate(parts):
-            header = (
-                headers[i - 1].strip().strip("#").strip("-").strip()
-                if i > 0 and i - 1 < len(headers)
-                else ""
-            )
-            text = part.strip()
+        parents = []
+        body = []
+
+        def flush():
+            text = "\n".join(body).strip()
             if text:
-                sections.append({"header": header, "text": text})
+                sections.append(
+                    {
+                        "header": parents[-1][1] if parents else "",
+                        "parent_headers": [h for _, h in parents[:-1]],
+                        "text": text,
+                    }
+                )
+            body.clear()
 
-        # If no sections detected, treat entire content as one section
-        if not sections:
-            sections = [{"header": "", "text": content.strip()}]
-
+        for line in content.splitlines():
+            stripped = line.strip()
+            if re.fullmatch(r"[-=]{3,}", stripped):
+                flush()
+                continue
+            md = re.match(r"^(#{1,6})\s+(.+)", stripped)
+            upper = bool(
+                re.fullmatch(
+                    r"[A-Z][A-Z0-9 &:/+.,'()\-]*(?:\s*\([^)]*\)| - .+)?",
+                    stripped.rstrip(":"),
+                )
+            )
+            letters = [char for char in stripped if char.isalpha()]
+            upper = upper or (
+                len(letters) > 5
+                and sum(char.isupper() for char in letters) / len(letters) > 0.8
+                and not stripped.startswith("-")
+                and not stripped.endswith((".", "?"))
+            )
+            era = bool(re.match(r"^[A-Z][A-Z &-]{5,} ERA\b", stripped))
+            if md or ((upper or era) and len(stripped) > 5):
+                flush()
+                header = md.group(2).strip() if md else stripped
+                level = (
+                    len(md.group(1))
+                    if md
+                    else (1 if not parents else (2 if era else 3))
+                )
+                # Exported biographies can insert a level-2 training section
+                # between dated role headings. A new dated role must reset that
+                # section rather than inherit its training/project identity.
+                if (
+                    md
+                    and header.count(" · ") >= 2
+                    and re.search(r"\b(?:19|20)\d{2}\b", header)
+                ):
+                    level = min(level, 2)
+                while parents and parents[-1][0] >= level:
+                    parents.pop()
+                parents.append((level, header))
+            else:
+                body.append(line)
+        flush()
         return sections
 
     def _accumulate_short_sections(self, sections: List[Dict]) -> List[Dict]:
-        """Merge sections shorter than min_words with neighbors."""
-        if len(sections) <= 1:
-            return sections
-
+        """Never merge separate roles/projects just to reach a word target."""
         result = []
-        accumulator = None
-
         for section in sections:
-            word_count = len(section["text"].split())
-
-            if word_count < self.min_words:
-                if accumulator is None:
-                    accumulator = dict(section)
-                else:
-                    accumulator["text"] += "\n\n" + section["text"]
-                    if section["header"] and not accumulator["header"]:
-                        accumulator["header"] = section["header"]
+            if (
+                result
+                and len(result[-1]["text"].split()) < self.min_words
+                and result[-1]["header"] == section["header"]
+                and result[-1].get("parent_headers") == section.get("parent_headers")
+            ):
+                result[-1]["text"] += "\n\n" + section["text"]
             else:
-                if accumulator is not None:
-                    # Attach accumulated to this section
-                    section["text"] = accumulator["text"] + "\n\n" + section["text"]
-                    accumulator = None
-                result.append(section)
-
-        # Handle trailing accumulator
-        if accumulator is not None:
-            if result:
-                result[-1]["text"] += "\n\n" + accumulator["text"]
-            else:
-                result.append(accumulator)
-
+                result.append(dict(section))
         return result
 
     def _split_long_section(self, text: str, header: str) -> List[str]:
@@ -315,6 +356,8 @@ class IntelligentChunker:
             end = start + self.max_words
             chunk_words = words[start:end]
             chunks.append(" ".join(chunk_words))
+            if end == len(words):
+                break
             start = end - self.overlap_words  # Overlap
 
         return chunks

@@ -4,7 +4,7 @@ Status: PAST ROLE, and Bolaji's MOST RECENT role (April 2025 - July 2026)
 Company: Gozem (Singapore-headquartered, French-speaking Africa's leading super app)
 Title: Data Director
 Scope: owned the data function end to end (platform, products, team, governance, FinOps) and co-led AI strategy, reporting at C-level
-Footprint: Singapore, Togo, Benin, Cameroon, Gabon, and Congo
+Footprint: five African operating markets (Togo, Benin, Cameroon, Gabon, Congo); Singapore was company headquarters only
 Team: a data organization of 14+ professionals spanning eight analytics domains
 
 ---

@@ -46,7 +46,7 @@ CANONICAL_FACTS = [
     "30+ production",
     "25M+ XOF",
     "founding Vice-President",
-    "0 to 14+",
+    "4 to 14+",
     "250+",
     "Data Product Engineering in Scaleups",
 ]
@@ -177,7 +177,7 @@ class TestGoldenRetrievalQA:
         ),
         (
             "How big was the data team Bolaji built?",
-            ["0 to 14+"],
+            ["4 to 14+"],
         ),
     ]
 

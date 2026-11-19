@@ -160,8 +160,9 @@ class TestPolicyAsData:
         assert "Today's date:" in captured["prompt"]
         assert "PUBLIC FACTS" in captured["prompt"]
         assert "What you know about Bolaji:" in captured["prompt"]
-        # Refusal policy: redirect-offer, never a dead end
-        assert "adjacent topics" in captured["prompt"]
+        # Missing evidence stays specific and respects requests for no outreach.
+        assert "Contact is optional" in captured["prompt"]
+        assert "answer every supported part" in captured["prompt"]
 
     @pytest.mark.parametrize(
         "publications",

@@ -17,6 +17,13 @@ from app.graph.state import AgentCategory, GraphState, ReasoningStep
 from app.graph.workflow import create_rag_workflow
 from app.services.google_chat_alert import google_chat_alert
 from app.services.google_sheets_logger import google_sheets_logger
+from app.services.interaction_intent import (
+    cancellation,
+    contact_action,
+    is_evidence_request,
+    message_action,
+    opportunity_submission,
+)
 from app.services.source_map import build_answer_sources
 
 logger = logging.getLogger("ibola.graph")
@@ -104,12 +111,31 @@ class AgenticRAGService:
 
         # --- Lead capture flow (multi-turn state machine) ---
         if "lead_capture" in session:
-            return self._handle_lead_capture(
-                user_input, session, session_id, chat_history
-            )
+            if cancellation(user_input):
+                session.pop("lead_capture", None)
+                return self._lead_response(
+                    (
+                        "Aucun message n'a été envoyé."
+                        if user_language.startswith("fr")
+                        else "No message was sent."
+                    ),
+                    session_id,
+                    agent_type="contact_cancelled",
+                )
+            if is_evidence_request(user_input):
+                session.pop("lead_capture", None)
+            else:
+                return self._handle_lead_capture(
+                    user_input, session, session_id, chat_history
+                )
 
         # Detect "send a message to Bolaji" intent
-        if self._detect_message_intent(user_input):
+        if (
+            not is_evidence_request(user_input)
+            and not cancellation(user_input)
+            and self._detect_message_intent(user_input)
+            and message_action(user_input)
+        ):
             session["lead_capture"] = {"step": "name"}
             return self._lead_response(
                 "I'd be happy to pass along your message to Bolaji. "
@@ -118,8 +144,7 @@ class AgenticRAGService:
                 agent_type="lead_capture",
             )
 
-        # Contact and opportunity intents always trigger (even in follow-ups)
-        # because they're actionable business intents, not knowledge questions.
+        # Action-only requests may display options; questions always use evidence.
         opportunity_intent = self._detect_opportunity_intent(user_input)
         if opportunity_intent:
             return self._opportunity_response(
@@ -252,6 +277,7 @@ class AgenticRAGService:
             evidence=evidence,
             elapsed=elapsed,
         )
+        from app.services.provenance import runtime_provenance
 
         return {
             "answer": final_state.get("answer", ""),
@@ -272,6 +298,7 @@ class AgenticRAGService:
             "workflow_errors": workflow_errors,
             "workflow_warnings": workflow_warnings,
             "trace_id": trace_id,
+            "provenance": runtime_provenance(),
         }
 
     @staticmethod
@@ -292,6 +319,7 @@ class AgenticRAGService:
         so the response and user feedback can link back to this turn.
         """
         try:
+            from app.services.provenance import runtime_provenance
             from app.services.tracing import get_tracer, hash_visitor
 
             tracer = get_tracer()
@@ -321,15 +349,8 @@ class AgenticRAGService:
                     "rewritten_query": final_state.get("rewritten_query", ""),
                     "agent_type": final_state.get("agent_type", ""),
                     "confidence": final_state.get("confidence", 0.0),
-                    "retrieved_chunks": [
-                        {
-                            "source": e["source"],
-                            "section": e["section"],
-                            "rank": e["retrieval_rank"],
-                            "score": e["retrieval_score"],
-                        }
-                        for e in evidence
-                    ],
+                    "retrieved_chunks": evidence,
+                    "provenance": runtime_provenance(),
                     "context_order": [e["source"] for e in evidence],
                     "grounding_checked": final_state.get("grounding_checked", False),
                     "unsupported_claims": final_state.get("unsupported_claims", []),
@@ -350,12 +371,10 @@ class AgenticRAGService:
         it. Deterministic intents (contact, opportunity, pleasantries) carry
         no profile facts and therefore no evidence.
         """
-        docs = (
-            final_state.get("context_documents")
-            or final_state.get("graded_documents")
-            or final_state.get("documents")
-            or []
-        )
+        docs = final_state.get("context_documents")
+        if "context_documents" not in final_state:
+            docs = final_state.get("graded_documents") or final_state.get("documents")
+        docs = docs or []
         evidence = []
         for doc in docs[:10]:
             meta = getattr(doc, "metadata", {}) or {}
@@ -366,9 +385,12 @@ class AgenticRAGService:
                     "section": meta.get("section_header", ""),
                     "retrieval_rank": meta.get("retrieval_rank"),
                     "retrieval_score": meta.get("retrieval_score"),
-                    # Long enough for a faithfulness judge to find supporting
-                    # text; still bounded so payloads stay small.
-                    "content_preview": getattr(doc, "page_content", "")[:1500],
+                    "parent_context": meta.get("parent_context", ""),
+                    "scope_context": meta.get("scope_context", ""),
+                    "evidence_type": meta.get("evidence_type", "curated"),
+                    "metric_scope": meta.get("metric_scope", {}),
+                    # Context documents are already bounded by generation's budget.
+                    "content_preview": getattr(doc, "page_content", ""),
                 }
             )
         return evidence
@@ -522,33 +544,6 @@ class AgenticRAGService:
         user_language: str,
         chat_history: Optional[List[Tuple[str, str]]] = None,
     ) -> Dict[str, Any]:
-        answer = random.choice(
-            [
-                "Yes. Bolaji is open to ambitious AI, data, and technical leadership roles "
-                "with meaningful impact. The fastest next step is to email the role details "
-                "or book a conversation below.",
-                "Absolutely! Bolaji is actively exploring impactful data and AI leadership "
-                "opportunities. Share the role details via email or schedule a chat below.",
-                "Great timing: Bolaji is open to the right opportunity in AI, data, or "
-                "technical leadership. Reach out with details using the options below.",
-                "Yes, Bolaji welcomes conversations about ambitious roles in data and AI. "
-                "The best way forward is to send the details or book a quick call.",
-                "Definitely! Bolaji is interested in high-impact data, AI, and leadership "
-                "roles. Email the opportunity or book a meeting to discuss further.",
-                "Bolaji is open to meaningful opportunities in AI and data leadership. "
-                "Feel free to share the details or schedule a conversation below.",
-                "Yes: Bolaji is looking for impactful roles in data engineering, AI, and "
-                "technical leadership. Send the role info or book time to connect.",
-                "Absolutely. Bolaji is selectively exploring senior data and AI roles. "
-                "Drop the details via email or grab a meeting slot below.",
-                "Yes! If you have an exciting data, AI, or leadership role, Bolaji would "
-                "love to hear about it. Use the options below to connect.",
-                "Bolaji is always open to the right challenge in AI and data. "
-                "Share the opportunity details or schedule a call to discuss.",
-            ]
-        )
-
-        google_chat_alert.send_contact_alert("email", session_id, chat_history or [])
         response = AgenticRAGService._contact_response(
             session_id=session_id,
             user_language=user_language,
@@ -556,7 +551,6 @@ class AgenticRAGService:
         )
         response.update(
             {
-                "answer": answer,
                 "agent_type": "opportunity",
                 "confidence": 1.0,
             }
@@ -786,79 +780,8 @@ class AgenticRAGService:
 
     @staticmethod
     def _detect_opportunity_intent(message: str) -> bool:
-        """Detect recruiting / job-offer intent.
-
-        Uses two tiers:
-        - Strong signals (multi-word phrases): match unconditionally.
-        - Weak signals (single words like "role", "job"): only match in
-          short messages (≤10 words) to avoid false positives on questions
-          like "What was Bolaji's role at Gozem?"
-        """
-        lower = message.lower()
-        word_count = len(lower.split())
-
-        import re as _re
-
-        # Strong signals: multi-word phrases that clearly indicate
-        # recruiting / business intent. Match regardless of query length.
-        strong_signals = [
-            "hiring",
-            "hire you",
-            "hire bolaji",
-            "recruit",
-            "recruiter",
-            "join our team",
-            "work with us",
-            "consulting project",
-            "job opening",
-            "job opportunity",
-            "open position",
-            "have a role",
-            "have a position",
-            "have an opportunity",
-            "looking to hire",
-        ]
-        if any(signal in lower for signal in strong_signals):
-            return True
-
-        # Weak signals: single words that overlap with career questions.
-        # Only match in short non-question messages (≤8 words) where the
-        # user is likely pitching, not asking about Bolaji's career.
-        question_starters = (
-            "what",
-            "how",
-            "when",
-            "where",
-            "who",
-            "which",
-            "does",
-            "did",
-            "is",
-            "are",
-            "was",
-            "were",
-            "can",
-            "could",
-            "tell",
-            "describe",
-            "explain",
-        )
-        first_word = lower.split()[0] if lower.split() else ""
-        is_question = first_word in question_starters or lower.rstrip().endswith("?")
-
-        if word_count <= 8 and not is_question:
-            weak_patterns = [
-                r"\bjob\b",
-                r"\brole\b",
-                r"\bposition\b",
-                r"\bopportunity\b",
-                r"\bopening\b",
-                r"\bcollaboration\b",
-            ]
-            if any(_re.search(p, lower) for p in weak_patterns):
-                return True
-
-        return False
+        """Recognize only explicit opportunity submissions."""
+        return opportunity_submission(message)
 
     @staticmethod
     def _is_contact_request(message: str) -> bool:
@@ -876,127 +799,8 @@ class AgenticRAGService:
 
     @staticmethod
     def _detect_contact_type(message: str) -> Optional[str]:
-        """Detect contact/booking intent.
-
-        Only triggers the fast-path widget when the user clearly wants to
-        reach Bolaji: not when they ask knowledge questions that happen to
-        contain words like 'book' (e.g. 'what book would you recommend?')
-        or 'email' (e.g. 'does he write email pipelines?').
-        """
-        import re as _re
-
-        lower = message.lower().strip()
-        word_count = len(lower.split())
-
-        # Strong intent phrases: match at any length. Includes casual
-        # phrasings ("best way to reach out", "how do I get in touch") that
-        # previously missed (measured defect n19).
-        strong_email = [
-            "contact bolaji",
-            "send bolaji an email",
-            "email bolaji",
-            "how can i contact",
-            "how do i contact",
-            "how to contact",
-            "how do i reach",
-            "how can i reach",
-            "how to reach",
-            "reach out",
-            "get in touch",
-            "way to reach",
-            "way to contact",
-            "way to connect",
-            "connect with bolaji",
-            "get ahold of",
-            "get hold of",
-            "reach him",
-            "contact him",
-            "comment contacter",
-            "contacter bolaji",
-            "joindre bolaji",
-            "le joindre",
-            "le contacter",
-            "entrer en contact",
-            "meilleur moyen de",
-            "comment joindre",
-            "envoyer un email",
-            "envoyer un mail",
-        ]
-        if any(s in lower for s in strong_email):
-            return "email"
-
-        strong_booking = [
-            "book a meeting",
-            "book a call",
-            "book an appointment",
-            "schedule a meeting",
-            "schedule a call",
-            "schedule an appointment",
-            "set up a meeting",
-            "set up a call",
-            "prendre rendez-vous",
-            "prendre un rendez-vous",
-            "reserver une reunion",
-            "réserver une réunion",
-            "planifier un appel",
-            "planifier une reunion",
-            "planifier une réunion",
-        ]
-        if any(s in lower for s in strong_booking):
-            return "booking"
-
-        # Weak signals: only for SHORT non-question messages (≤6 words).
-        # These are likely direct requests ("contact", "email him", "book a call").
-        question_starters = (
-            "what",
-            "how",
-            "when",
-            "where",
-            "who",
-            "which",
-            "does",
-            "did",
-            "is",
-            "are",
-            "was",
-            "were",
-            "can",
-            "could",
-            "has",
-            "have",
-            "tell",
-            "describe",
-            "explain",
-            "quel",
-            "quelle",
-            "quels",
-            "quelles",
-            "comment",
-            "ou",
-            "où",
-            "est",
-            "est-ce",
-            "as",
-            "a-t-il",
-            "peut",
-            "peux",
-            "dis",
-            "dites",
-        )
-        first_word = lower.split()[0] if lower.split() else ""
-        is_question = first_word in question_starters or lower.rstrip().endswith("?")
-
-        if word_count <= 6 and not is_question:
-            if _re.search(r"\bcontact\b", lower):
-                return "email"
-            if _re.search(r"\b(?:email|mail)\b", lower):
-                return "email"
-            if _re.search(
-                r"\b(?:meeting|appointment|schedule|call|reunion|réunion|rendez-vous|appel)\b",
-                lower,
-            ):
-                return "booking"
-        return None
+        """Recognize explicit actions without consuming evidence questions."""
+        return contact_action(message)
 
     @staticmethod
     def _detect_pleasantry(message: str) -> Optional[str]:

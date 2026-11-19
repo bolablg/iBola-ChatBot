@@ -150,18 +150,18 @@ PROJECT MANAGEMENT:
 
 ---
 
-TOOL EQUIVALENCES (transferable skills):
-Bolaji can transfer his expertise to equivalent tools in the same categories:
-- dbt is equivalent to Dataform: SQL-based modeling, DAGs, tests, documentation, CI/CD for data warehouses.
-  Est-ce que Bolaji connait dbt: son expertise approfondie porte sur Dataform, l'equivalent direct de dbt. Il a construit un framework de smart templates sur Dataform chez Gozem.
-- Power BI is equivalent to Looker Studio / Tableau: BI dashboards, data modeling layers, visual storytelling, sharing, governance.
-- Snowflake / Redshift is equivalent to BigQuery / ClickHouse: cloud data warehouses, MPP SQL, partitioning, clustering, cost/performance tuning.
-- Airflow is equivalent to Dagster: workflow orchestration, scheduling, monitoring, data pipeline management.
+TOOL CATEGORY COMPARISONS (transferable concepts):
+These comparisons describe shared concepts. They do not document direct production use, equal proficiency, or feature parity. Actual tools used are identified in the separate "Used at" entries above.
+- dbt and Dataform share SQL-based modeling, DAG, testing, documentation, and data-warehouse CI/CD concepts. Bolaji's documented framework implementation was in Dataform at Gozem; this comparison does not establish direct dbt use.
+  Est-ce que Bolaji connait dbt: son experience documentee porte sur Dataform et son framework de templates chez Gozem. Les concepts SQL, DAG et tests sont transferables; l'utilisation directe de dbt n'est pas etablie par cette comparaison.
+- Power BI and Looker Studio share dashboard, modeling, visual-storytelling, sharing, and governance concepts. This comparison does not establish Power BI, DAX, or Tableau production use or proficiency. The documented Gozem tools in the BI record are Looker and Looker Studio.
+- Snowflake/Redshift and BigQuery/ClickHouse share cloud-warehouse, MPP SQL, partitioning, clustering, and cost-tuning concepts. This comparison does not establish direct Snowflake or Redshift use.
+- Airflow and Dagster share workflow-orchestration, scheduling, monitoring, and pipeline-management concepts. This comparison does not establish direct Dagster use.
 
 ---
 
 LEADERSHIP & SOFT SKILLS:
-Team leadership (built a team from 0 to 14+), team management, hiring and onboarding design, product development, product design, problem solving, adaptability and resilience, communicating for impact, presentations, executive training delivery, research and development, scientific writing, mentorship.
+Team leadership (built a team from 4 to 14+ during the Head of Data period (October 2022 - March 2025)), team management, hiring and onboarding design, product development, product design, problem solving, adaptability and resilience, communicating for impact, presentations, executive training delivery, research and development, scientific writing, mentorship.
 
 ---
 

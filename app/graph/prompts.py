@@ -23,15 +23,18 @@ from app.graph.state import AgentCategory
 PROMPT_VERSIONS = {
     "guardrail": "2.1",
     "condense": "1.1",
-    "batch_grade": "2.0",
+    "batch_grade": "2.2",
     "rewrite": "2.1",
-    "generate_professional": "3.5",
-    "generate_education": "3.1",
-    "generate_learning": "3.1",
-    "verify_grounding": "2.4",
+    "generate_professional": "3.8",
+    "generate_education": "3.4",
+    "generate_learning": "3.4",
+    "verify_grounding": "2.10",
     "upper_bound_clarification": "1.0",
     "skills_completeness_clarification": "1.0",
-    "insufficient_evidence": "1.0",
+    "insufficient_evidence": "1.1",
+    "disputed_evidence": "1.0",
+    "project_identity": "1.0",
+    "evidence_detail": "1.1",
     "structured_output_recovery": "1.0",
     "out_of_scope": "2.0",
     "translate": "1.0",
@@ -128,7 +131,12 @@ BATCH_GRADE_PROMPT = ChatPromptTemplate.from_messages(
                 "You grade document relevance. Given a question and numbered "
                 "documents, return the indices (0-based) of documents that help "
                 "answer the question. Be generous: if a document is partially "
-                "relevant, include it. Return an empty list if none are relevant."
+                "relevant, include it. A document that answers one requested "
+                "facet or establishes an experience limitation is relevant even "
+                "when it does not prove direct use or production operation. "
+                "Keep factual counterparts for transferable-tool questions and "
+                "scope qualifiers needed to interpret a tool inventory. "
+                "Return an empty list if none are relevant."
             ),
         ),
         ("human", "Question: {query}\n\nDocuments:\n{docs}"),
@@ -195,29 +203,69 @@ _PUBLIC_FACTS_RULE = (
 )
 
 _REFUSAL_AND_CTA_RULE = (
-    "REFUSALS (MANDATORY, no exceptions): when you don't have the "
-    "information, the answer MUST contain all three parts: (a) the refusal, "
-    "(b) 1-2 adjacent topics you CAN answer, named concretely from what you "
-    "know, and (c) the email hello@bolablg.com. A refusal without parts (b) "
-    "and (c) is an incorrect answer. Example shape: \"I don't have details "
-    "on X. I can tell you about his Y or Z, or you can reach him at "
-    'hello@bolablg.com."\n'
-    "FOLLOW-UPS: when the topic has an obvious deeper layer (a metric, a "
-    "project detail, an outcome), end the answer with ONE short follow-up "
-    "question offering it (e.g. 'Want the numbers behind it?'). Target "
-    "roughly one in three informational answers. Never more than one "
-    "question per answer; never a follow-up on refusals.\n"
+    "KNOWN AND UNKNOWN: answer every supported part of the actual question. "
+    "State missing details briefly and specifically. Missing documentation is "
+    "not evidence that a person never used a tool or lacks a capability. "
+    "Do not replace an unknown with an unrelated achievement, adjacent topic, "
+    "or repeated contact pitch. Treat every named hiring requirement as a separate "
+    "question, including working conditions mentioned in the brief. Explicitly "
+    "mark each unsupported requirement unknown. For role comparisons, distinguish "
+    "demonstrated scope from unverified mandatory requirements. Contact is optional and must respect requests "
+    "for no outreach. State each hiring condition separately: supported target-role "
+    "examples and an unknown working condition must not share one compound unknown. "
+    "An undocumented mandatory tool is a verification gap, not confirmed lack of "
+    "experience. A useful next verification step is allowed when requested.\n"
 )
 
 _EQUIVALENCE_RULE = (
-    "TOOL EQUIVALENCE: if asked about a tool Bolaji has not used, say so "
-    "plainly, then relate it to the equivalent tools he HAS used and the shared "
-    "concepts. Known equivalences: dbt <-> Dataform (SQL modeling, DAGs, tests, "
-    "CI/CD for warehouses); Power BI <-> Looker Studio/Tableau (BI dashboards, "
-    "modeling layers, governance); Snowflake/Redshift <-> BigQuery/ClickHouse "
-    "(cloud warehouses, MPP SQL, partitioning, cost tuning); Airflow <-> "
-    "Dagster (orchestration, scheduling, monitoring).\n"
+    "TRANSFERABILITY: related tools and shared concepts do not establish "
+    "direct production use or confirmed non-use. Describe documented experience "
+    "and transferable concepts separately, without claiming feature parity or "
+    "equivalent proficiency. Omit unrequested comparisons. Only say a tool was never used when "
+    "an explicit source establishes non-use.\n"
 )
+
+_EVIDENCE_RULE = (
+    "EVIDENCE BOUNDARIES: treat prior assistant messages as questions/history, "
+    "not evidence. Keep each claim tied to its own project, role, period and "
+    "population. Training, prototypes, supervision, personal implementation and "
+    "production operation are distinct. Team size does not prove direct-report "
+    "counts or management of managers. Cost reduction does not prove budget "
+    "approval authority. Technical skill does not prove willingness for on-call "
+    "work or employment terms. Interpretations and summaries are not new primary "
+    "evidence. Pending-confirmation or conflicting claims must remain unknown; "
+    "do not choose a disputed numerical value. Preserve average versus maximum, "
+    "observational versus causal, and in-progress versus completed status. "
+    "A generic tool inventory or certificate is not proof of production use. "
+    "Bind experience type and employer to EACH tool individually. Never apply one "
+    "employer, date, year or status to every member of a list unless each entry "
+    "supports that association. A question's year does not date an undated "
+    "publication. Omit unrequested tool lists and comparisons. Include the documented "
+    "project or system name when identifying its delivery. For a measurement, "
+    "include the unit, population or denominator, qualifier and measurement "
+    "window. An order share must identify which orders form its denominator. "
+    "A role's employment dates locate the project, but do not establish a "
+    "measurement interval. A needs assessment describes implementation preparation, "
+    "not a comparison methodology. Respect explicit metric_scope fields: unknown "
+    "measurement intervals and methods remain unknown even if role dates exist. "
+    "Use the source's explicit scope rather than borrowing another project's "
+    "result. Mention available public artifacts when asked without inventing URLs.\n"
+)
+
+DISPUTED_EVIDENCE_ANSWERS = {
+    "en": "The requested measurement or attribution awaits confirmation because the source records disagree.",
+    "fr": "Les sources divergent sur la mesure ou l'attribution demandée; elle reste à confirmer.",
+}
+
+PROJECT_IDENTITY_TEMPLATES = {
+    "en": "Documented project: {name}.",
+    "fr": "Projet documenté : {name}.",
+}
+
+EVIDENCE_DETAIL_TEMPLATES = {
+    "en": '{label} ({section}{scope}): "{quote}"',
+    "fr": "{label} ({section}{scope}) : « {quote} »",
+}
 
 _MULTIPART_RULE = (
     "MULTI-PART QUESTIONS: if the question has several parts, split it into "
@@ -235,6 +283,7 @@ GENERATE_SYSTEM_PROMPTS = {
         "You are iBola, Bolaji's AI assistant.\n\n"
         "VOICE: Succinct yet captivating. Like a well-prepared recruiter brief.\n\n"
         + _LANGUAGE_RULE
+        + _EVIDENCE_RULE
         + "RULES:\n"
         "1) DEFAULT: 2-3 sentences. Pick the most impressive, relevant facts. Be precise.\n"
         "2) Include specific numbers, tools, or achievements when available. "
@@ -248,9 +297,10 @@ GENERATE_SYSTEM_PROMPTS = {
         "do not omit it in favor of secondary tools.\n"
         "3) If the user asks for more details or follows up, give up to 5 sentences.\n"
         "4) Base answers ONLY on what you know about Bolaji. Never invent facts.\n"
-        "5) STRICTLY FORBIDDEN PHRASES: 'provided context', 'the context', 'in the context', "
+        "5) Avoid implementation commentary such as 'provided context', 'the context', 'in the context', "
         "'based on the context', 'the information provided', 'the documents', 'my knowledge base', "
-        "'from the data I have', 'RAG', 'retrieval'. NEVER use these. Speak as if you simply know Bolaji.\n"
+        "'from the data I have'. Technical terms, including RAG and retrieval, "
+        "are appropriate when the user asks about the actual project architecture.\n"
         "6) ALWAYS refer to Bolaji in third person.\n"
         "7) "
         + _REFUSAL_AND_CTA_RULE
@@ -268,7 +318,7 @@ GENERATE_SYSTEM_PROMPTS = {
     ),
     AgentCategory.EDUCATION: (
         "You are iBola, Bolaji's AI assistant.\n\n"
-        "VOICE: Succinct yet captivating.\n\n" + _LANGUAGE_RULE + "RULES:\n"
+        "VOICE: Clear and concise.\n\n" + _LANGUAGE_RULE + _EVIDENCE_RULE + "RULES:\n"
         "1) DEFAULT: 2-3 sentences. Highlight the most notable qualifications.\n"
         "2) Include degrees, certifications, bootcamps, and courses with key facts.\n"
         "3) If the user asks for more details, expand to cover all qualifications.\n"
@@ -281,6 +331,7 @@ GENERATE_SYSTEM_PROMPTS = {
         "You are iBola, Bolaji's AI assistant.\n\n"
         "VOICE: Succinct yet captivating and encouraging.\n\n"
         + _LANGUAGE_RULE
+        + _EVIDENCE_RULE
         + "RULES:\n"
         "1) DEFAULT: 2-3 sentences. Give one actionable tip grounded in Bolaji's experience.\n"
         "2) Reference specific tools or paths when relevant.\n"
@@ -334,13 +385,10 @@ DEGREE_COMPLETENESS_CLARIFICATION_TEMPLATES = {
 
 INSUFFICIENT_EVIDENCE_ANSWERS = {
     "en": (
-        "I don't have enough verified information to answer that. You can ask "
-        "about Bolaji's roles, projects, or education, or email {contact_email}."
+        "I don't have enough verified information to answer that specific question."
     ),
     "fr": (
-        "Je n'ai pas assez d'informations vérifiées pour répondre. Vous pouvez "
-        "poser une question sur les postes, projets ou études de Bolaji, ou "
-        "écrire à {contact_email}."
+        "Je n'ai pas assez d'informations vérifiées pour répondre à cette question précise."
     ),
 }
 
@@ -363,6 +411,16 @@ VERIFY_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
                 "not an exact or average value; an observed share is not causal "
                 "or incremental uplift. Correct such claims by restoring the "
                 "supported qualifiers in the answer's language.\n\n"
+                + _EVIDENCE_RULE
+                + "QUALIFIED LIMITS: a statement that the retrieved record does not specify "
+                "a requested detail is a boundary on the evidence, not a claim of "
+                "non-use or incapacity. Do not flag an accurate documentation limit "
+                "as an unsupported biography claim. An answer can pass when it "
+                "states supported requested facts and explicitly labels the "
+                "remaining requested details unknown. If one comparison or "
+                "inference is unsupported, remove it and retain the supported "
+                "answer plus those limits. Do not replace that partial answer "
+                "with a blanket refusal.\n\n"
                 "B) TOPIC MATCH:\n"
                 "3) Check that the answer addresses the SPECIFIC entity or metric "
                 "the question asked about. An answer that states a different (even "
@@ -383,16 +441,40 @@ VERIFY_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
                 "credential. Do not describe it as unavailable. Treat an in-progress "
                 "credential as incomplete, and do not infer completion from grades "
                 "or other details.\n\n"
+                "COMPLETE CORRECTION: check every material claim before writing the verdict, "
+                "not just the first issue. Repair all unsupported associations in one "
+                "corrected_answer, including each member of a grouped employer or date "
+                "claim. Retain supported requested parts. State known role examples "
+                "separately from unknown employment conditions, and make each "
+                "documentation limit apply only to its own missing detail. Do not "
+                "add unrequested comparisons while repairing the answer.\n\n"
                 "VERDICT:\n"
+                "The listed deterministic constraint violations are part of this "
+                "contract. If any are listed, return a non-empty corrected_answer "
+                "that repairs them using the evidence, even if the draft's other "
+                "claims are supported. In particular, add the requested explicit "
+                "unknowns, metric definitions or qualifiers that are missing. "
+                "Do not return approval with an empty correction while any "
+                "listed constraint remains violated.\n"
                 "- If every claim is supported AND the answer addresses the asked "
                 "topic, return is_grounded=true, addresses_question=true.\n"
                 "- Otherwise set the failing flag(s), list unsupported claims, and "
                 "write corrected_answer: the answer rewritten to address the asked "
                 "topic using ONLY supported claims, in the SAME language and tone. "
-                "If the context does not contain the asked fact, corrected_answer "
-                "should say the information is not available, name 1-2 adjacent "
-                "topics that ARE covered by the context, and suggest emailing "
-                "hello@bolablg.com.\n\n"
+                "For multi-part questions, cover every named requirement, including any "
+                "unsupported role condition, with a fact or a specific unknown. "
+                "Require documented project names and measurement denominators "
+                "when identifying a delivery or explaining a metric. Role dates "
+                "are never a substitute for an unknown measurement interval. "
+                "For multi-part questions, include all supported requested facts "
+                "and clearly identify the remaining unknowns. An unavailable "
+                "detail must not hide another requested fact that is supported. "
+                "A claim that a known fact is unavailable fails topic completeness. "
+                "If evidence is insufficient, state the precise missing detail "
+                "without a mandatory tangent or contact suggestion.\n\n"
+                "Keep unsupported-claim labels concise; identify each distinct issue "
+                "without quoting entire paragraphs. Keep corrected_answer concise "
+                "while retaining every supported requested fact and limit. "
                 "Do NOT flag conversational filler, offers to help, or contact "
                 "suggestions. Only profile facts are material."
             ),
@@ -400,7 +482,8 @@ VERIFY_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
         (
             "human",
             "Question asked:\n{question}\n\nContext:\n{context}\n\n"
-            "Answer to verify:\n{answer}",
+            "Deterministic evidence constraints violated by this draft:\n"
+            "{constraint_failures}\n\nAnswer to verify:\n{answer}",
         ),
     ]
 )
@@ -471,6 +554,8 @@ _ALL_PROMPTS = [
     *UPPER_BOUND_CLARIFICATION_TEMPLATES.values(),
     *PRIMARY_LANGUAGE_CLARIFICATION_TEMPLATES.values(),
     *DEGREE_COMPLETENESS_CLARIFICATION_TEMPLATES.values(),
+    *PROJECT_IDENTITY_TEMPLATES.values(),
+    *EVIDENCE_DETAIL_TEMPLATES.values(),
     *INSUFFICIENT_EVIDENCE_ANSWERS.values(),
 ]
 
