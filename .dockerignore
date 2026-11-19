@@ -1,0 +1,23 @@
+# Exclude generated authentication and local credentials from images.
+gha-creds-*.json
+**/gha-creds-*.json
+.env
+.env.*
+**/.env
+**/.env.*
+_conf/
+**/*.pem
+**/*.key
+**/*.p12
+**/*.jks
+**/*.keystore
+**/*.credentials.json
+
+# Local state is not part of the runtime image.
+.git
+.github
+.venv/
+venv/
+local/
+**/__pycache__/
+**/*.pyc
