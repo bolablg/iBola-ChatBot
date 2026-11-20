@@ -1241,6 +1241,7 @@ def _evidence_context(documents: List[Document]) -> str:
                     "evidence_type",
                     "canonical_url",
                     "metric_scope",
+                    "conversation_coverage",
                 )
             },
             ensure_ascii=False,
@@ -1452,6 +1453,7 @@ def _verification_scope(state):
 def verify_grounding_node(state: dict) -> dict:
     """Validate the exact delivered text, including deterministic restorations."""
     from app.graph.answer_completeness import (
+        normalize_metric_omission_attribution,
         preserve_primary_language,
         preserve_requested_degrees,
     )
@@ -1466,6 +1468,10 @@ def verify_grounding_node(state: dict) -> dict:
 
     query = _verification_scope(state)
     docs = prepare_evidence(state.get("context_documents", []) or [], query)
+    from app.services.service_inventory import inventory_followup
+
+    # Recompute observations from this request after discarding incoming metadata.
+    inventory_followup(state, docs, state.get("user_language", "en"))
     language = _detect_reply_language(
         state.get("original_query") or state.get("query", ""),
         state.get("user_language", "en"),
@@ -1476,6 +1482,7 @@ def verify_grounding_node(state: dict) -> dict:
     draft, numeric_facts = preserve_percentage_qualifiers(draft, docs, language)
     draft, project_names = preserve_project_identity(draft, docs, query, language)
     draft, restored_details = preserve_requested_evidence(draft, docs, query, language)
+    draft = normalize_metric_omission_attribution(draft, docs, language)
     verification_state = {**state, "answer": draft, "context_documents": docs}
     result = _verify_grounding_llm_node(verification_state)
     result["context_documents"] = docs
@@ -1724,6 +1731,13 @@ def _verify_grounding_llm_node(state: dict) -> dict:
             corrected = ""
             logger.warning("Bounded grounding repair unavailable")
     # A correction is another draft, not proof. Recheck changed text once.
+    from app.graph.answer_completeness import normalize_metric_omission_attribution
+
+    corrected = normalize_metric_omission_attribution(
+        corrected,
+        context_docs,
+        _detect_reply_language(question, state.get("user_language", "en")),
+    )
     if corrected and not constraint_failures(corrected, context_docs, scope_query):
         try:
             recheck = structured_llm.invoke(

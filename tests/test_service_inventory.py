@@ -411,3 +411,131 @@ def test_excluded_provider_scope_is_not_selected(docs):
     assert inventory_followup(state, docs, "English") is None
     state["original_query"] = "What other AWS services?"
     assert "AWS EC2" in inventory_followup(state, docs, "English")
+
+
+@pytest.mark.parametrize(
+    "prior",
+    [
+        "Could he use Cloud Run?",
+        "Cloud Run is only hypothetical.",
+        "Cloud Run?",
+        "He asked whether Bolaji used Cloud Run.",
+        "The question was whether production services include Cloud Run.",
+        "His production scope might include Cloud Run.",
+        "Documentation mentions Cloud Run services.",
+        "An unverified report says Bolaji used Cloud Run.",
+    ],
+)
+def test_hypothetical_mentions_are_not_positive_coverage(docs, prior):
+    assert (
+        inventory_followup(
+            {"original_query": FOLLOWUP, "chat_history": [(QUESTION, prior)]},
+            docs,
+            "English",
+        )
+        is None
+    )
+
+
+def test_coverage_is_request_local_intersected_and_visible_to_verifier(docs):
+    from app.graph.nodes import _evidence_context
+    from app.graph.service import AgenticRAGService
+
+    state = {
+        "original_query": "What other AWS services?",
+        "chat_history": [
+            (QUESTION, "Bolaji operated BigQuery, AWS EC2 and Fake Cloud.")
+        ],
+    }
+    answer = inventory_followup(state, docs, "English")
+    assert "AWS S3" in answer and "AWS EC2" not in answer
+    annotated = next(doc for doc in docs if doc.metadata.get("conversation_coverage"))
+    metadata = annotated.metadata["conversation_coverage"]
+    assert metadata["relevant_inventory_labels"] == ["AWS EC2", "AWS S3"]
+    assert metadata["previously_listed_labels"] == ["AWS EC2"]
+    assert metadata["remaining_labels"] == ["AWS S3"]
+    assert not metadata["all_relevant_labels_previously_listed"]
+    assert "Fake Cloud" not in str(metadata)
+    assert "conversation_coverage" in _evidence_context(docs)
+    evidence = AgenticRAGService._build_evidence({"context_documents": docs})
+    assert (
+        next(e for e in evidence if e.get("conversation_coverage"))[
+            "conversation_coverage"
+        ]
+        == metadata
+    )
+    assert not any(
+        doc.metadata.get("conversation_coverage") for doc in prepare_evidence(docs)
+    )
+    assert (
+        inventory_followup(
+            {"original_query": FOLLOWUP, "chat_history": []}, docs, "English"
+        )
+        is None
+    )
+    assert not any(doc.metadata.get("conversation_coverage") for doc in docs)
+
+
+def test_conversational_coverage_cannot_rescue_an_unsupported_profile_claim(docs):
+    from app.graph.prompts import INSUFFICIENT_EVIDENCE_ANSWERS, VERIFY_GROUNDING_PROMPT
+
+    state = {
+        "query": FOLLOWUP,
+        "original_query": FOLLOWUP,
+        "chat_history": [(QUESTION, "BigQuery and Apache Airflow.")],
+        "answer": "BigQuery and Apache Airflow were covered above. Bolaji operated Kafka in production.",
+        "agent_type": "professional",
+        "user_language": "en",
+        "context_documents": docs,
+    }
+    llm = Mock()
+    verifier = llm.with_structured_output.return_value.invoke
+    verifier.side_effect = [
+        GroundingVerdict(is_grounded=False, corrected_answer=state["answer"]),
+        GroundingVerdict(is_grounded=False),
+    ]
+    with patch("app.graph.nodes._get_llm", return_value=llm):
+        result = verify_grounding_node(state)
+    assert (
+        not result["grounding_checked"]
+        and result["answer"] == INSUFFICIENT_EVIDENCE_ANSWERS["en"]
+    )
+    assert "not profile" in str(VERIFY_GROUNDING_PROMPT)
+    submitted = (
+        llm.with_structured_output.return_value.invoke.call_args_list[0]
+        .args[0][-1]
+        .content
+    )
+    assert "conversation_coverage" in submitted
+    assert "Bolaji operated Kafka in production." in submitted
+    assert verifier.call_count == 2
+    rechecked = verifier.call_args_list[1].args[0][-1].content
+    assert rechecked.rsplit("Answer to verify:\n", 1)[1] == state["answer"]
+    assert "conversation_coverage" in rechecked
+    assert (
+        "Every profile claim still requires support in the retrieved source text"
+        in verifier.call_args_list[0].args[0][0].content
+    )
+
+
+def test_annotated_inventory_cannot_fall_outside_returned_evidence_cap(docs):
+    inventory = next(
+        doc
+        for doc in docs
+        if doc.metadata.get("section_header") == "PRODUCTION SERVICE INVENTORY"
+    )
+    padding = [
+        Document(page_content="padding", metadata={"source": "other.txt"})
+        for _ in range(11)
+    ]
+    assert (
+        inventory_followup(
+            {
+                "original_query": FOLLOWUP,
+                "chat_history": [(QUESTION, "BigQuery and Apache Airflow.")],
+            },
+            padding + [inventory],
+            "English",
+        )
+        is None
+    )

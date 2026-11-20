@@ -29,7 +29,7 @@ PROMPT_VERSIONS = {
     "generate_professional": "3.14",
     "generate_education": "3.6",
     "generate_learning": "3.6",
-    "verify_grounding": "2.14",
+    "verify_grounding": "2.15",
     "repair_grounding": "1.2",
     "upper_bound_clarification": "1.0",
     "skills_completeness_clarification": "1.0",
@@ -502,6 +502,13 @@ VERIFY_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
                 "or incremental uplift. Correct such claims by restoring the "
                 "supported qualifiers in the answer's language.\n\n"
                 + _EVIDENCE_RULE
+                + "CONVERSATION COVERAGE: optional conversation_coverage metadata records "
+                "which labels from the current retrieved inventory were positively listed "
+                "within the inspected prior turns. It supports only conversational observations "
+                "such as that this inventory has already been covered. It is not profile "
+                "evidence: never use prior labels or coverage metadata to establish experience, "
+                "ownership, service operation, a project, dates or outcomes. Every profile "
+                "claim still requires support in the retrieved source text.\n\n"
                 + "QUALIFIED LIMITS: a statement that the retrieved record does not specify "
                 "a requested detail is a boundary on the evidence, not a claim of "
                 "non-use or incapacity. Do not flag an accurate documentation limit "

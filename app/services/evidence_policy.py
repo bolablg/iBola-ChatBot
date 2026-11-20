@@ -36,6 +36,8 @@ def prepare_evidence(documents: List[Document], query: str = "") -> List[Documen
     redacted = set()
     for document in documents:
         doc = copy.deepcopy(document)
+        # Conversation observations are recomputed per request, never corpus facts.
+        doc.metadata.pop("conversation_coverage", None)
         source = Path(doc.metadata.get("source", "")).name
         kind = policy.get("source_types", {}).get(source, "curated")
         for section_type in policy.get("section_types", []):
@@ -198,10 +200,12 @@ def documentation_limits(answer: str, targets: List[str]) -> List[str]:
     for match in re.finditer(
         r"(?i)\b(?:direct\s+|personal\s+)?production use of\s+"
         r"(?P<subjects>[^.;:\n]{1,150}?)\s+(?:is|are|remains?)\s+"
-        r"(?:not documented|not established|unknown|unverified)\b",
+        r"(?:not documented|not established|unknown|unverified)\b|"
+        r"\bno documented (?:personal )?(?:production )?experience "
+        r"(?:with|in|using)\s+(?P<prequalified_subjects>[^.;:\n]{1,150})",
         _fold(answer),
     ):
-        nominal = match.group("subjects")
+        nominal = match.group("subjects") or match.group("prequalified_subjects")
         remainder = nominal
         for target in targets:
             remainder = re.sub(_fold(target), " ", remainder, flags=re.I)

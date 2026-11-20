@@ -45,6 +45,8 @@ def _provider(text):
 
 
 def inventory_followup(state, documents, language):
+    for document in documents:
+        document.metadata.pop("conversation_coverage", None)
     question = state.get("original_query") or state.get("query", "")
     history = state.get("chat_history", [])
     # Only the observed short enumeration request and equivalent phrasing.
@@ -56,6 +58,12 @@ def inventory_followup(state, documents, language):
         return None
     prior_user = history[-1][0]
     if not re.search(r"services|technologies|outils", prior_user, re.I):
+        return None
+    if re.search(
+        r"\b(?:not|never|pas|jamais)\b.{0,25}\b(?:use|used|operate|operated|design|experience|utilis\w*|exploite\w*)",
+        question + " " + prior_user,
+        re.I,
+    ):
         return None
     if re.search(
         r"project|employer|Gozem|Rintio|streaming|why|how|projet|pourquoi|comment",
@@ -75,7 +83,10 @@ def inventory_followup(state, documents, language):
     ]
     if not candidates or len({doc.page_content for doc in candidates}) != 1:
         return None
-    names = _names(candidates[0], "Service inventory")
+    document = candidates[0]
+    if next(i for i, candidate in enumerate(documents) if candidate is document) >= 10:
+        return None
+    names = _names(document, "Service inventory")
     if not names or len(names) < 2:
         return None
     relevant = (
@@ -87,22 +98,48 @@ def inventory_followup(state, documents, language):
         return None
     seen = set()
     for _, answer in history[-3:]:
-        for clause in re.split(r"[.!?\n]", answer):
-            if re.search(
-                r"\b(?:not|no|never|unconfirmed|undocumented|unspecified|pas|jamais|aucun|ignore|pretend|instructions?|assume|exclude|omit|without|avoid|invent(?:ed)?)\b|[\"“”«»]",
+        for clause in re.findall(r"[^.!?\n]+[.!?]?", answer):
+            if clause.rstrip().endswith("?") or re.search(
+                r"\b(?:not|no|never|unconfirmed|undocumented|unspecified|pas|jamais|aucun|ignore|pretend|instructions?|assume|exclude|omit|without|avoid|invent(?:ed)?|could|might|would|hypothetical|possibly|proposed|consider|whether|asked|question|uncertain|if|wonder|possible|maybe|reportedly)\b|[\"“”«»]",
                 clause,
                 re.I,
             ):
                 continue
+            matches = set()
+            residue = clause
             for name in names:
                 alias = re.escape(name)
                 if name.startswith("AWS "):
                     alias = r"(?:AWS\s+)?" + re.escape(name[4:])
-                if re.search(r"\b" + alias + r"\b", clause, re.I):
-                    seen.add(name)
+                elif name.startswith("Apache "):
+                    alias = r"(?:Apache\s+)?" + re.escape(name[7:])
+                pattern = r"\b" + alias + r"\b"
+                if re.search(pattern, clause, re.I):
+                    matches.add(name)
+                    residue = re.sub(pattern, "", residue, flags=re.I)
+            affirmative = re.search(
+                r"^\s*(?:[-*•]\s*)?(?:Bolaji|he|his (?:hands-on )?production scope)\s+(?:(?:has|personally|also|designed|and|hands-on)\s+){0,5}(?:designed|operated|uses?|used|managed|built|deployed|covers|includes)\b|"
+                r"^\s*(?:(?:confirmed|documented|production|AWS|GCP)\s+)*(?:service inventory|inventory|services)\s*(?::|includes?\b|covers\b)",
+                clause,
+                re.I,
+            )
+            plain_list = not re.sub(
+                r"\b(?:and|et)\b|[\s,;:./+*()–-]", "", residue, flags=re.I
+            )
+            if affirmative or plain_list:
+                seen.update(matches)
     if not seen:
         return None
     remaining = [name for name in relevant if name not in seen]
+    document.metadata["conversation_coverage"] = {
+        "kind": "previously_listed_labels_only",
+        "scope": provider or "all",
+        "inspected_prior_turns": min(3, len(history)),
+        "relevant_inventory_labels": relevant,
+        "previously_listed_labels": [name for name in relevant if name in seen],
+        "remaining_labels": remaining,
+        "all_relevant_labels_previously_listed": not remaining,
+    }
     lang = "fr" if language in {"fr", "French"} else "en"
     templates = INVENTORY_FOLLOWUP_TEMPLATES[lang]
     if remaining:

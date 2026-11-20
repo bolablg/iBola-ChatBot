@@ -1,4 +1,4 @@
-version: 10
+version: 11
 source_types:
   21_production_service_inventory.txt: candidate_confirmed
   20_owner_confirmed_production_scope.txt: candidate_confirmed
@@ -128,6 +128,13 @@ metric_constraints:
   - (?i)(?:six|6)\s+(?:AI\s+)?use cases\s+(?:were|are|have been)\s+(?:implemented|completed|deployed)
   - '(?i)(?:completed|deployed|delivered)\s+(?:all\s+)?(?:six|6)\s+(?:(?:AI|strategic|high.priority)\s+)?(?:use cases|initiatives|implementations)'
 facets:
+- id: leadership_operating_principles
+  query_pattern: '(?is)\A(?![^\n]*\b(?:one|single|seul)\b)(?=.*(?:leadership|management))(?=.*(?:principles|principes))'
+  terms: metrics architecture budget adoption principles
+  sources: [11_leadership_style.txt]
+  section_pattern: '^THREE OPERATING PRINCIPLES:$'
+  support_pattern: 'metrics before dashboards; architecture is the budget; adoption is the deliverable'
+  retain_for_query: true
 - id: confirmed_team_stages
   query_pattern: '(?i)(?:growth|croissance|developp).{0,180}(?:countries|pays)|(?:team|equipe).{0,100}\b(?:dates|limites|boundaries)\b'
   terms: first data hire initial team grew Global Data Analyst
@@ -471,6 +478,50 @@ required_identity:
   query_pattern: (?i)\b(?:aws|ec2)\b
   answer_pattern: (?i)(?:EC2|700|operational.{0,15}platform|governed.{0,20}platform)
 required_details:
+- id: leadership_principles_complete_missing
+  description: Preserve the three named operating principles in naming or application questions, distinct from the separate leadership philosophy.
+  sources: [11_leadership_style.txt]
+  section_pattern: '^THREE OPERATING PRINCIPLES:$'
+  support_pattern: 'metrics before dashboards; architecture is the budget; adoption is the deliverable'
+  query_pattern: '(?is)\A(?![^\n]*\b(?:one|single|seul)\b)(?=.*(?:leadership|management))(?=.*(?:principles|principes))'
+  answer_pattern: '(?is)(?=.*(?:metrics before dashboards|metriques avant les tableaux de bord))(?=.*(?:architecture is the budget|architecture est le budget))(?=.*(?:adoption is the deliverable|adoption est le livrable))'
+  restore_quotes:
+    en:
+      language: en
+      label: Named operating principles
+      pattern: 'metrics before dashboards; architecture is the budget; adoption is the deliverable\.'
+    fr:
+      language: fr
+      label: Principes opérationnels
+      section_label: Trois principes opérationnels
+      pattern: 'les metriques avant les tableaux de bord ; l\x27architecture est le budget ; l\x27adoption est le livrable\.'
+- id: requested_self_service_query_reduction_missing
+  description: Retain the halving of routine query volume addressed to the central data team, not a general company-query reduction or confirmed training outcome.
+  scope_id: self_service_adoption
+  sources: [13_gozem_internal_projects.txt]
+  section_pattern: '(?i)^SELF-SERVICE NO-CODE DATA EXPLORATION PLATFORM'
+  query_pattern: '(?i)(?:self.service|routine quer|requete|requetes|Metabase|moitie|query load)'
+  answer_pattern: '(?is)(?:halv\w* routine query volume (?:on|addressed to) the central data team|routine query volume (?:on|addressed to) the central data team [^.!?\n]{0,30}(?:halv\w*|half)|divise par deux le volume des requetes courantes adressees a l\x27equipe data centrale)'
+  restore_quotes:
+    en:
+      language: en
+      label: Routine query workload
+      pattern: '(?<=- Outcome: )adoption reached 12\+ active manager users, halving routine query volume on the central data team\.'
+    fr:
+      language: fr
+      label: Charge des requêtes courantes
+      section_label: Exploration Metabase en libre-service
+      pattern: 'L\x27adoption de Metabase a atteint plus de 12 utilisateurs managers actifs et a divisé par deux le volume des requêtes courantes adressées à l\x27équipe data centrale\.'
+- id: requested_ec2_project_binding_missing
+  description: Bind the confirmed EC2 production responsibility to Gozem Data Hub locally. This establishes no S3 employer or project.
+  sources: [20_owner_confirmed_production_scope.txt]
+  support_pattern: 'For the Gozem Data Hub, Bolaji personally designed and operated AWS EC2 in production'
+  query_pattern: '(?is)(?=.*AWS)(?=.*(?:personal|personnel))(?=.*(?:services|technologies|EC2))'
+  answer_pattern: '(?i)(?:For the Gozem Data Hub, Bolaji personally designed and operated AWS EC2 in production|(?:Bolaji|he)\s+(?:has\s+)?personally\s+(?:designed\s+and\s+operated|operated\s+and\s+designed)\s+(?:AWS\s+)?EC2\s+in production\s+for\s+(?:the\s+)?Gozem Data Hub)'
+  restore_quote:
+    language: en
+    label: EC2 production project
+    pattern: 'For the Gozem Data Hub, Bolaji personally designed and operated AWS EC2 in production\.'
 - id: plural_production_service_inventory_missing
   description: Broad plural production-service enumeration should cover the documented inventory rather than repeat a single project. Provider-specific and singular requests remain focused.
   sources: [21_production_service_inventory.txt]

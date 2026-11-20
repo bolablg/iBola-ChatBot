@@ -403,6 +403,11 @@ class AgenticRAGService:
                     "scope_context": meta.get("scope_context", ""),
                     "evidence_type": meta.get("evidence_type", "curated"),
                     "metric_scope": meta.get("metric_scope", {}),
+                    **(
+                        {"conversation_coverage": meta["conversation_coverage"]}
+                        if "conversation_coverage" in meta
+                        else {}
+                    ),
                     # Context documents are already bounded by generation's budget.
                     "content_preview": getattr(doc, "page_content", ""),
                 }
