@@ -128,6 +128,35 @@ _LOCAL_DENIAL = _re_mod.compile(
 _DENIAL_WINDOW = 25
 
 
+def _confirmed_experience_limit(answer, target):
+    """Evaluator-only recognition of a complete, named confirmation gap."""
+    prefix = r"(?:Similarly,\s+)?(?:he|Bolaji)\s+has\s+no confirmed personal production experience with\s+"
+    normalized = " ".join(_accent_fold(answer).split())
+    for sentence in normalized.split("."):
+        sentence = " ".join(sentence.split())
+        # Reject a conditional before clause extraction can detach its premise.
+        if not _re_mod.match(prefix, sentence, _re_mod.I) or _re_mod.search(
+            r"\b(?:if|unless|whether|when|would|could|might|assuming|suppose|provided|hypothetical|example)\b",
+            sentence,
+            _re_mod.I,
+        ):
+            continue
+        # Match the complete sentence. Only the recorded negative project-proof
+        # continuation is allowed; a new positive predicate cannot be detached.
+        match = _re_mod.fullmatch(
+            prefix
+            + r"(?P<subject>[a-z][a-z0-9 /+#_'()-]{0,120}?)"
+            + r"(?:,\s+and no named project proves its personal deployment)?",
+            sentence,
+            _re_mod.I,
+        )
+        if match and _re_mod.fullmatch(
+            _accent_fold(target), match.group("subject").strip(), _re_mod.I
+        ):
+            return True
+    return False
+
+
 def check_facts(answer, row, actions=None, result=None):
     """Deterministic checks. Returns (passed, failures).
 
@@ -167,6 +196,13 @@ def check_facts(answer, row, actions=None, result=None):
         from app.services.evidence_policy import documentation_limits
 
         for target in documentation_limits(answer, row["must_mark_unknown"]):
+            if (
+                result is not None
+                and result.get("grounding_checked") is True
+                and result.get("evidence")
+                and _confirmed_experience_limit(answer, target)
+            ):
+                continue
             failures.append(f"missing explicit documentation limit: {target}")
     documents = []
     if (

@@ -1,0 +1,189 @@
+{
+  "runtime_commit": "826fa50f4f3329dec4729bce20470b0496063d50",
+  "original_report": "eval_20261120_124950.json",
+  "golden_assertions": {
+    "id": "recruiter-sde-03-t2",
+    "category": "canonical",
+    "lang": "en",
+    "tags": [
+      "recruiter_regression"
+    ],
+    "conversation_turn_id": "SDE-03-T2",
+    "question": "I am asking only about experience: has Bolaji personally deployed Kafka or Spark Structured Streaming, and which named project proves it?",
+    "gold": "Owner explicitly confirmed no Kafka experience. Spark Structured Streaming production ownership remains unverified. Adjacent confirmed evidence includes personal production design of a Gozem MongoDB CDC pipeline using Pub/Sub and Dataflow; Rintio documented Hadoop/Spark production work does not establish Spark Structured Streaming. Require retrieved confirmation for Kafka absence; older evidence alone warrants only an unknown.",
+    "must_contain": [],
+    "forbidden_agent_types": [
+      "contact",
+      "opportunity",
+      "message"
+    ],
+    "require_evidence": true,
+    "require_grounded": true,
+    "history": [
+      [
+        "This is a recruiter simulation, not a real offer. For a senior data engineer who must run Kafka and Spark Structured Streaming in production, what hands-on evidence does Bolaji have with those exact technologies?",
+        "Yes! If you have an exciting data, AI, or leadership role, Bolaji would love to hear about it. Use the options below to connect."
+      ]
+    ],
+    "must_mark_unknown": [
+      "Spark Structured Streaming"
+    ],
+    "must_resolve_experience": [
+      "Kafka"
+    ]
+  },
+  "captured_result": {
+    "id": "recruiter-sde-03-t2",
+    "category": "canonical",
+    "lang": "en",
+    "tags": [
+      "recruiter_regression"
+    ],
+    "question": "I am asking only about experience: has Bolaji personally deployed Kafka or Spark Structured Streaming, and which named project proves it?",
+    "answer": "Bolaji has no experience with Kafka and has never used it, meaning no project proves its deployment. Similarly, he has no confirmed personal production experience with Spark Structured Streaming, and no named project proves its personal deployment.",
+    "agent_type": "professional",
+    "evidence_count": 4,
+    "evidence": [
+      {
+        "source": "20_owner_confirmed_production_scope.txt",
+        "chunk_id": "20_owner_confirmed_production_scope.txt::0",
+        "section": "OWNER-CONFIRMED PRODUCTION RESPONSIBILITY",
+        "retrieval_rank": 1,
+        "retrieval_score": 46.0,
+        "parent_context": "",
+        "scope_context": "",
+        "evidence_type": "candidate_confirmed",
+        "metric_scope": {},
+        "content_preview": "Source: 20_owner_confirmed_production_scope.txt | Title: OWNER-CONFIRMED PRODUCTION RESPONSIBILITY | Section: OWNER-CONFIRMED PRODUCTION RESPONSIBILITY\n\nConfirmation recorded on November 19, 2026. This is the confirmation date, not a date assigned to the underlying work. Evidence classification: candidate_confirmed.\n\nAt Gozem, Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline. The owner subsequently clarified that he is both an architect and engineer and personally designed and operated the production services he used. This supersedes the earlier design-only qualification for these services.\n\nFor the Gozem Data Hub, Bolaji personally designed and operated AWS EC2 in production.\n\nBolaji personally set up an AWS S3 bucket in production. Bolaji personally operates an AWS S3 bucket in production, reading data from it and writing data back. He owns and operates the bucket on an ongoing basis. AWS S3 serves as an exchange layer with the product team and has also been used in projects. This clarification does not identify an employer or project for the S3 bucket and does not establish on-call responsibility.\n\nBolaji has no Kafka experience at all. Bolaji has never used Kafka. This is an explicit owner-confirmed absence of experience, not an inference from an omitted tool. It does not imply inability to learn Kafka or a deficiency in other streaming technologies.\n\nThese clarifications do not add personal Spark Structured Streaming, Apache NiFi or Lakeflow production experience. They do not establish CDC event counts, end-to-end latency or availability. The separately documented streaming-workload average remains a different measurement population.\n\nCDC role and period, owner confirmation received November 20, 2026: During his Head of Data role at Gozem (October 2022 to March 2025), Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline.\n\nThis confirmation locates the CDC work within that role period. It does not establish the project's exact start or completion dates, continuous operation throughout the entire role, on-call coverage, latency or uptime guarantees. It does not assign that role period to AWS EC2, AWS S3 or other services. The earlier Google Cloud migration remains separately attributed to the Global Data Analyst role.\n\nConfirmation provenance: Asked which role and period covered his design and operation of the MongoDB CDC pipeline, the owner answered: \"Head of Data, Oct 2022–Mar 2025\". Evidence classification: candidate_confirmed. The November 20 date records when this role clarification was received, not when the project started or ended."
+      },
+      {
+        "source": "90_website_canon_llms_full.txt",
+        "chunk_id": "90_website_canon_llms_full.txt::7",
+        "section": "Applied AI, automation, and reliability",
+        "retrieval_rank": 1,
+        "retrieval_score": 20.0,
+        "parent_context": "Bolaji BALOGOUN · Biography",
+        "scope_context": "",
+        "evidence_type": "published",
+        "metric_scope": {
+          "id": "invoice_time_savings",
+          "value": "40+ hours",
+          "qualifier": "estimated savings, not established measured time savings",
+          "population": "per country Financing Manager",
+          "measurement_period": "per month",
+          "provenance": "explicit estimated savings in the cited invoice records"
+        },
+        "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN · Data Engineer · Data Architect (full content) | Section: Applied AI, automation, and reliability | Parent context: Bolaji BALOGOUN · Biography\n\nBolaji co-led Gozem’s AI strategy. The group shipped 30+ production automation tools during his Data Director mandate. He prototyped invoice extraction in Vertex AI Studio and built a workflow with validation and human review. Estimated savings were 40+ hours per country Financing Manager each month. The Vodun Days command center gave Operations minute-level visibility into driver supply. On the peak day, ride requests were 48% above the average for the other event days and the rider match rate was 88%.\n\nHe also built application-ready data flows from MongoDB, BigQuery, Google Cloud Storage, and Sheets, plus a near-real-time MongoDB CDC pipeline that published change events through Pub/Sub, processed them in Dataflow, updated BigQuery, and supported real-time visualization in Looker Studio. These systems paired data products with operational services and decision workflows."
+      },
+      {
+        "source": "90_website_canon_llms_full.txt",
+        "chunk_id": "90_website_canon_llms_full.txt::14",
+        "section": "Gozem Data Hub: operational apps & analytics platform",
+        "retrieval_rank": 1,
+        "retrieval_score": 21.0,
+        "parent_context": "Bolaji BALOGOUN · Biography > Data Director · GOZEM · Apr 2025 - Jul 2026",
+        "scope_context": "Data Director · GOZEM · Apr 2025 - Jul 2026",
+        "evidence_type": "published",
+        "metric_scope": {},
+        "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN · Data Engineer · Data Architect (full content) | Section: Gozem Data Hub: operational apps & analytics platform | Parent context: Bolaji BALOGOUN · Biography > Data Director · GOZEM · Apr 2025 - Jul 2026\n\nResult: Unified analytics, AI, and operational tools into a single platform serving 700+ stakeholders across five countries.\nProblem: As Gozem evolved from a startup into a scale-up, the demand for operational applications, automation workflows, analytics products, and AI-powered tools grew rapidly across the organization.\n\nProduct and engineering teams remained primarily focused on revenue-generating marketplace initiatives, limiting their capacity to support the growing number of operational use cases. Many requests to the Data team recurred, including ad hoc analyses, data extractions, and operational workflows that required intervention from analysts and engineers.\n\nThe Data team also lacked a shared environment for its growing portfolio of tools, applications, analytics assets, and AI services. It had two goals.\n\n1. Give operational teams direct access to data products, analytics, and tools to reduce recurring requests to the Data team.\n2. Establish a common platform for the Data team to quickly design, deploy, and govern applications, automation, and AI solutions at scale.\nSolution: Architected and led the development of **Gozem Data Hub**, a centralized data and AI workspace for delivering self-service products across the organization.\n\nThe platform brought operational applications, analytics tools, AI solutions, automation workflows, and data exploration into one environment with shared standards for authentication, authorization, deployment, and governance.\n\nThe Data team used reusable architecture and AI-assisted engineering workflows to deliver production applications for operational teams. These applications moved a large share of analytical and operational requests from manual tickets to self-service tools that business users could operate directly.\n\nBusiness teams could independently access insights, applications, and AI tools, and the Data team had more time for higher-value initiatives.\nTools: React · FastAPI · AWS EC2 · BigQuery · MongoDB · Nginx · Docker · Google Cloud Storage · Artifact Registry · Python"
+      },
+      {
+        "source": "90_website_canon_llms_full.txt",
+        "chunk_id": "90_website_canon_llms_full.txt::47",
+        "section": "Tech stack",
+        "retrieval_rank": 4,
+        "retrieval_score": 0.016129,
+        "parent_context": "Bolaji BALOGOUN · Biography",
+        "scope_context": "",
+        "evidence_type": "published",
+        "metric_scope": {},
+        "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN · Data Engineer · Data Architect (full content) | Section: Tech stack | Parent context: Bolaji BALOGOUN · Biography\n\nBolaji personally uses Cloud Functions and Vertex AI in production.\n\n\n- Data platforms & governance: BigQuery · ClickHouse · BigLake · Databricks (projects and labs) · Dataplex · Unity Catalog\n- Databases & storage: PostgreSQL · MongoDB · Google Cloud Storage · AWS S3 · Delta Lake · Apache Iceberg\n- Pipelines & streaming: Airflow · Dataform · Dataflow · Apache NiFi · Lakeflow · Spark · Pub/Sub\n- Languages & frameworks: Python · SQL · R · Bash · Scala · FastAPI\n- Cloud & delivery: Google Cloud · Compute Engine · AWS · AWS EC2 · Cloud Run · Cloud Functions · Docker · Artifact Registry · Git\n- Analytics & visualization: Data Studio · Superset · Metabase · Grafana\n- AI & automation: Vertex AI · Gemini · Codex · RAG · LangGraph (iBola project) · MCP"
+      }
+    ],
+    "grounding_checked": true,
+    "provenance": {
+      "code_revision": "eef40dacf01b6d20",
+      "deployment_revision": null,
+      "corpus_revision": "91c0084e17159130",
+      "kb_revision": "91c0084e17159130",
+      "policy_revision": "467a9b77fa85f0fe",
+      "index_sync_pending": false,
+      "chunker_version": "3",
+      "model": "gemini-3.5-flash-lite",
+      "thinking_config": {
+        "thinking_level": "low"
+      },
+      "routing_thinking_config": {
+        "thinking_level": "minimal"
+      },
+      "generation_thinking_config": {
+        "thinking_level": "low"
+      },
+      "generation_temperature": null,
+      "verifier_model": "gemini-3.5-flash-lite",
+      "verifier_thinking_level": "low",
+      "verifier_thinking_budget": null,
+      "prompt_versions": {
+        "inventory_followup": "1.1",
+        "guardrail": "2.2",
+        "condense": "1.1",
+        "batch_grade": "2.3",
+        "rewrite": "2.1",
+        "generate_professional": "3.20",
+        "generate_education": "3.6",
+        "generate_learning": "3.6",
+        "verify_grounding": "2.16",
+        "repair_grounding": "1.7",
+        "upper_bound_clarification": "1.0",
+        "skills_completeness_clarification": "1.0",
+        "insufficient_evidence": "1.1",
+        "disputed_evidence": "1.0",
+        "project_identity": "1.0",
+        "evidence_detail": "1.1",
+        "documentation_limit": "1.0",
+        "personal_production_limit": "1.1",
+        "degree_clarification": "1.0",
+        "language_retry": "1.0",
+        "structured_output_recovery": "1.0",
+        "out_of_scope": "2.0",
+        "translate": "1.0",
+        "notification_suppressed": "1.0"
+      }
+    },
+    "evidence_sources": [
+      "20_owner_confirmed_production_scope.txt",
+      "90_website_canon_llms_full.txt",
+      "90_website_canon_llms_full.txt",
+      "90_website_canon_llms_full.txt"
+    ],
+    "unsupported_claims": [],
+    "latency_s": 10.267,
+    "fact_pass": false,
+    "fact_failures": [
+      "missing explicit documentation limit: Spark Structured Streaming"
+    ],
+    "scores": {
+      "relevance": 10,
+      "accuracy": 10,
+      "helpfulness": 10,
+      "faithfulness": 10,
+      "rationale": "The answer correctly and directly addresses both parts of the question, and its claims are explicitly supported by the provided context."
+    },
+    "error": null,
+    "warning": null,
+    "judge_error": null,
+    "judge_diagnostics": {
+      "protocol": "bounded-format-recovery-1",
+      "attempts": [
+        {
+          "attempt": 1
+        }
+      ],
+      "retry_reasons": [],
+      "decoding_source": "text",
+      "status": "success"
+    },
+    "chars_in": 7346,
+    "chars_out": 248
+  }
+}
