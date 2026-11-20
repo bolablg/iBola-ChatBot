@@ -1,4 +1,4 @@
-version: 14
+version: 15
 source_types:
   21_production_service_inventory.txt: candidate_confirmed
   20_owner_confirmed_production_scope.txt: candidate_confirmed
@@ -8,6 +8,17 @@ source_types:
   17_highlights_pitch.txt: summary
   19_owner_confirmed_scope.txt: candidate_confirmed
 assertion_rules:
+- id: onsite_availability_requires_same_actor_evidence
+  description: Working hours and employment type do not establish physical location. Preserve remote, full-time and consulting as their own categories. Do not translate them into affirmative availability for on-site work, présentiel or en mode present without retrieved availability for the same actor and location arrangement.
+  answer_pattern: '(?i)\b(?:available|open|willing|disponible|ouvert|prete?|pret)\w*[^.;\n]{0,120}(?:on.site|in.person|presentiel|en mode present)\b|\b(?:on.site|in.person|presentiel|en mode present)[^.;\n]{0,80}\b(?:available|disponible)\b'
+  affirmation_pattern: '(?i)\b(?:Bolaji|he|il)\b'
+  support_pattern: '(?i)\bBolaji\s+(?:(?:is|est|remains|reste)\s+)?(?:(?:currently|actuellement|now)\s+)?(?:available|open|willing|disponible|ouvert|pret)\w*\s+(?:(?:to|for|pour|a|des|du|un|une|en|full.time|part.time)\s+){0,8}(?:(?:work|roles?|positions?|missions?|travail|travailler|opportunities)\s+(?:en\s+)?(?:on.site|in.person|presentiel|en mode present)|(?:on.site|in.person|presentiel|en mode present)\s+(?:work|roles?|positions?|missions?|travail|opportunities))\b'
+  uncertainty_prefix_pattern: '(?i)(?:(?:not (?:documented|established|confirmed)|does not (?:establish|document|confirm|specify))\s+(?:whether|if|that)\s+(?:he|Bolaji)\s+(?:is\s+)?(?:currently\s+)?|ne (?:precise|confirme|documente) pas s\x27il est\s+(?:actuellement\s+)?)$'
+  exclude_support_pattern: '(?i)\b(?:training|teaching|bootcamp|historical|previously|former|previous role|past role|earlier role|requirement|vacancy|fictional|hypothetical|formations?|auparavant|ancien\w*|interviews?|meetings?|conferences?|entretiens?|reunions?)\b'
+  support_continuation_pattern: '(?i)^\s*(?:(?:only|solely|exclusively|uniquement|seulement)\b|(?:this|that|it|availability|arrangement|ceci|cela|cette?)\b.{0,40}\b(?:only|solely|limited|restricted|confined|uniquement|seulement|limite|restreint|reserve)\w*\b|(?:for|pour)\s+[^.;\n]{1,35}\b(?:only|uniquement|seulement)\b)'
+  clause_support: true
+  local_negation: true
+  local_uncertainty: true
 - id: operating_model_requires_retrieved_support
   description: An operating-model design claim requires retrieved evidence of that responsibility. General team leadership or platform strategy is insufficient. The documented operating model concerns the data function.
   answer_pattern: '(?i)(?:(?:design\w*|creat\w*|built|build\w*|develop\w*|defin\w*|establish\w*)[^.!?;\n]{0,80}operating models?|operating models?[^.!?;\n]{0,60}(?:design\w*|creat\w*|built|build\w*|develop\w*|defin\w*|establish\w*))'
@@ -619,6 +630,28 @@ required_details:
   support_pattern: 'At Gozem, Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline'
   query_pattern: '(?is)\A(?![^\n]*\b(?:BigQuery|Airflow|Pub/Sub|Dataflow|MongoDB|CDC|EC2|S3)\b)(?=.*production)(?=.*(?:personally|personal|hands.on))(?=.*(?:pipeline|engineering))(?=.*(?:strongest|best|evidence|proof))'
   answer_pattern: '(?i)Gozem'
+  answer_activation_pattern: '(?i)\b(?:Pub/Sub|Dataflow)\b'
+  activation_negation_prefix_pattern: '(?i)(?:without|(?:did|does|has|have|had)\s+not\s+(?:use|used|design|operate|deploy)|(?:doesn\x27t|didn\x27t)\s+use|never\s+(?:used|operated|designed))\s+$'
+  answer_match_required_pattern: '(?i)\bGozem\b'
+  answer_clause_exclude_pattern: '(?i)\b(?:not|never|unknown|unverified|unrelated|undocumented|no evidence)\b'
+  answer_clause_pattern: |-
+    (?ix)
+    (?:
+    (?:At\s+Gozem,?\s+)?
+    \b(?:Bolaji|he)\s+(?:has\s+)?(?:personally\s+)?
+    (?:designed|operated|built|implemented|used|designs|operates|uses)\s+
+    (?:(?:production|services?|components?|including|the|and|operated|using)\s+){0,6}
+    (?:Pub/Sub|Dataflow)(?:\s*(?:,|and|et)\s*(?:Pub/Sub|Dataflow))*
+    (?:\s+in\s+production)?(?:\s+at\s+Gozem,?)?\s+for\s+(?:(?:the|a)\s+)?
+    (?:Gozem(?:\x27s)?\s+)?MongoDB\s+CDC(?:\s+pipeline)?(?:\s+at\s+Gozem)?\b
+    |
+    (?:Chez\s+Gozem,?\s+)?
+    \b(?:Bolaji|il)\s+a\s+(?:personnellement\s+)?
+    (?:concu|exploite|construit|implemente|utilise)(?:\s+et\s+exploite)?\s+
+    (?:Pub/Sub|Dataflow)(?:\s*(?:,|et)\s*(?:Pub/Sub|Dataflow))*
+    (?:\s+en\s+production)?(?:\s+chez\s+Gozem,?)?\s+pour\s+(?:(?:le|un)\s+)?
+    (?:pipeline\s+)?(?:MongoDB\s+CDC|CDC\s+MongoDB)(?:\s+(?:chez|de)\s+Gozem)?\b
+    )
   restore_quote:
     language: en
     label: Named production implementation

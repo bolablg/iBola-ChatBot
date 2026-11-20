@@ -256,9 +256,12 @@ class _StructuredOutput:
                         response_schema=self._schema,
                         **self._llm._sampling_config(),
                         max_output_tokens=(
-                            max(self._llm._max_output_tokens, 4096)
-                            if self._schema is GroundingVerdict
-                            else self._llm._max_output_tokens
+                            max(
+                                self._llm._max_output_tokens,
+                                {GeneratedAnswer: 2048, GroundingVerdict: 4096}.get(
+                                    self._schema, 0
+                                ),
+                            )
                         ),
                         thinking_config=genai.types.ThinkingConfig(
                             **self._llm._thinking_config()
@@ -973,7 +976,7 @@ _LEAK_PHRASES = [
         r"The record does not \1",
     ),
     # AFFIRMATIVE context mentions ("the context does mention", "the context
-    # mentions/shows/indicates") — the negated forms above missed these (s07)
+    # mentions/shows/indicates"), the negated forms above missed these (s07)
     (
         r"\b(?:the\s+)?context\s+(?:does\s+)?(?:mention|mentions|show|shows|"
         r"indicate|indicates|state|states|note|notes)\b",
@@ -994,7 +997,7 @@ _LEAK_PHRASES = [
     (r"\bthe documents?\s+(?:provided|indicate|show|mention|contain)\b", ""),
     (r"\bfrom (?:the\s+)?(?:knowledge base|data I have|my knowledge)\b", ""),
     (r"\b(?:the\s+)?(?:retrieved|fetched)\s+(?:documents?|content|data)\b", ""),
-    # "there is no mention/information" — deflection phrasing
+    # "there is no mention/information", deflection phrasing
     (
         r"\bthere\s+(?:(?:is|are)\s+no|isn't|aren't)\s+(?:specific\s+)?(?:mention|information|details?|data)\s+(?:of|about|regarding|on)\b",
         "The record does not specify",

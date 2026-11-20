@@ -435,7 +435,7 @@ def test_verifier_json_budget_is_separate_from_answer_budget():
         (
             GeneratedAnswer,
             GeneratedAnswer(answer="Supported answer.", confidence=1.0),
-            750,
+            2048,
         ),
     ]:
         llm._client.models.generate_content.return_value = SimpleNamespace(

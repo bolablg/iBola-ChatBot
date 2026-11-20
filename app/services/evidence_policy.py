@@ -521,6 +521,30 @@ def _direct_support_matches(rule, clause, query):
     )
 
 
+def _has_detail_activation(answer, rule):
+    """Keep a use-negation attached to its coordinated tool objects."""
+    for clause in _claim_clauses(answer):
+        previous_end = 0
+        denied = False
+        for match in re.finditer(rule["answer_activation_pattern"], clause):
+            inherited = denied and re.fullmatch(
+                r"\s*,?\s*(?:(?:and|or|et|ou)\s+)?",
+                clause[previous_end : match.start()],
+            )
+            denied = bool(
+                inherited
+                or _denied_assertion(clause, match)
+                or re.search(
+                    rule.get("activation_negation_prefix_pattern", r"(?!)"),
+                    clause[: match.start()],
+                )
+            )
+            if not denied:
+                return True
+            previous_end = match.end()
+    return False
+
+
 def constraint_failures(
     answer: str, documents: List[Document], query: str = ""
 ) -> List[str]:
@@ -586,6 +610,14 @@ def constraint_failures(
             matches = list(re.finditer(rule["answer_pattern"], clause))
             if rule.get("local_negation"):
                 matches = [m for m in matches if not _denied_assertion(clause, m)]
+            if rule.get("uncertainty_prefix_pattern"):
+                matches = [
+                    m
+                    for m in matches
+                    if not re.search(
+                        rule["uncertainty_prefix_pattern"], clause[: m.start()]
+                    )
+                ]
             if not matches or (
                 not rule.get("local_uncertainty") and uncertain.search(clause)
             ):
@@ -598,7 +630,18 @@ def constraint_failures(
             support = []
             for text in evidence:
                 spans = _claim_clauses(text) if rule.get("clause_support") else [text]
-                for span in spans:
+                if rule.get("support_continuation_pattern"):
+                    spans = [span for span in spans if span.strip()]
+                for index, span in enumerate(spans):
+                    if rule.get("support_continuation_pattern"):
+                        for continuation in spans[index + 1 : index + 3]:
+                            if not continuation.strip():
+                                continue
+                            if re.search(
+                                rule["support_continuation_pattern"], continuation
+                            ):
+                                span += " " + continuation
+                            break
                     if rule.get("negation_pattern") and re.search(
                         rule["negation_pattern"], span
                     ):
@@ -760,6 +803,22 @@ def constraint_failures(
             )
         )
         if applicable and re.search(rule["query_pattern"], _fold(query)):
+            if rule.get("answer_activation_pattern"):
+                if not _has_detail_activation(answer, rule):
+                    continue
+            if rule.get("answer_clause_pattern"):
+                if not any(
+                    not re.search(
+                        rule.get("answer_clause_exclude_pattern", r"(?!)"), clause
+                    )
+                    and re.search(
+                        rule.get("answer_match_required_pattern", r""), match.group()
+                    )
+                    for clause in _claim_clauses(answer)
+                    for match in re.finditer(rule["answer_clause_pattern"], clause)
+                ):
+                    failures.append(rule["id"])
+                continue
             if rule.get("governing_role_pattern"):
                 active_role = ""
                 invalid = False

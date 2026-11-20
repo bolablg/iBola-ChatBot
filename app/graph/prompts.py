@@ -26,7 +26,7 @@ PROMPT_VERSIONS = {
     "condense": "1.1",
     "batch_grade": "2.3",
     "rewrite": "2.1",
-    "generate_professional": "3.15",
+    "generate_professional": "3.16",
     "generate_education": "3.6",
     "generate_learning": "3.6",
     "verify_grounding": "2.15",
@@ -332,9 +332,9 @@ GENERATE_SYSTEM_PROMPTS = {
         "Answer the latest user question. Use earlier turns to resolve references, "
         "without answering their earlier requests again. Include comparisons "
         "and qualifications only when needed for the latest question.\n"
-        + _LANGUAGE_RULE
-        + _EVIDENCE_RULE
-        + "RULES:\n"
+        "Translate working hours, employment type, and physical work location as "
+        "separate concepts. Do not infer one from another. State unsupported "
+        "conditions as unknown.\n" + _LANGUAGE_RULE + _EVIDENCE_RULE + "RULES:\n"
         "1) DEFAULT: 2-3 sentences. Pick the most impressive, relevant facts. Be precise.\n"
         "2) Include specific numbers, tools, or achievements when available. "
         "Preserve each number's bounds, uncertainty, and scope: keep qualifiers "
