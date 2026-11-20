@@ -327,14 +327,6 @@ document.addEventListener('DOMContentLoaded', () => {
             content.textContent = text;
         }
 
-        if (sender === 'bot' && Array.isArray(opts.answerSources)) {
-            const receipts = document.createElement('div');
-            receipts.className = 'answer-sources';
-            receipts.setAttribute('aria-label', 'Answer sources');
-            renderAnswerSources(opts.answerSources, receipts);
-            content.appendChild(receipts);
-        }
-
         if (sender === 'bot' && !opts.noFeedback) {
             content.appendChild(createFeedbackRow(msgIndex++, opts.traceId));
         }
@@ -592,7 +584,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (res.ok) {
                 const data = await res.json();
                 // Retain the rated turn's trace_id so feedback attaches to it
-                const answerContent = data.answer ? await typeMessage(data.answer, 'bot', { traceId: data.trace_id, answerSources: data.answer_sources }) : null;
+                const answerContent = data.answer ? await typeMessage(data.answer, 'bot', { traceId: data.trace_id }) : null;
                 if (data.actions && data.actions.length > 0) addActionButtons(data.actions, answerContent);
                 if (data.should_end_chat && !chatEnded) endChat();
                 trackEvent('bot_response', {
@@ -684,39 +676,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const subtitleEl = document.getElementById('welcome-subtitle');
         if (titleEl) titleEl.textContent = texts.title;
         if (subtitleEl) subtitleEl.textContent = texts.subtitle;
-    };
-
-    // Keep receipts beside their answer, including in the embedded chat.
-    const renderAnswerSources = (sources, container) => {
-        if (!Array.isArray(sources)) return;
-        sources.forEach(src => {
-            let url = null;
-            try {
-                const parsed = new URL(src.url);
-                if (parsed.protocol === 'https:' && parsed.hostname === 'www.bolablg.com') url = parsed.href;
-            } catch (_) { /* Curated evidence can have no public equivalent. */ }
-            const receipt = document.createElement(url ? 'a' : 'span');
-            receipt.className = 'rail-source';
-            if (url) {
-                receipt.href = url;
-                receipt.target = '_blank';
-                receipt.rel = 'noopener';
-                receipt.addEventListener('click', () => {
-                    trackEvent('answer_source_clicked', { source_id: src.id, session_id: sessionId });
-                });
-            }
-            const label = document.createElement('span');
-            label.className = 'rail-source-label';
-            label.textContent = src.label || 'Source';
-            receipt.appendChild(label);
-            if (src.section) {
-                const section = document.createElement('span');
-                section.className = 'rail-source-section';
-                section.textContent = src.section;
-                receipt.appendChild(section);
-            }
-            container.appendChild(receipt);
-        });
     };
 
     // --- Rotating profile quotes ---
