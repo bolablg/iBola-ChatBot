@@ -1,4 +1,4 @@
-version: 8
+version: 9
 source_types:
   20_owner_confirmed_production_scope.txt: candidate_confirmed
   90_website_canon_llms_full.txt: published
@@ -127,6 +127,34 @@ metric_constraints:
   - (?i)(?:six|6)\s+(?:AI\s+)?use cases\s+(?:were|are|have been)\s+(?:implemented|completed|deployed)
   - '(?i)(?:completed|deployed|delivered)\s+(?:all\s+)?(?:six|6)\s+(?:(?:AI|strategic|high.priority)\s+)?(?:use cases|initiatives|implementations)'
 facets:
+- id: confirmed_team_stages
+  query_pattern: '(?i)(?:growth|croissance|developp).{0,180}(?:countries|pays)|(?:team|equipe).{0,100}(?:dates|limites|boundaries)'
+  terms: first data hire initial team grew Global Data Analyst
+  sources: [19_owner_confirmed_scope.txt]
+  section_pattern: '^GOZEM TEAM GROWTH AND ROLE PERIODS$'
+  support_pattern: 'first data hire in 2019.*initial team grew to 4'
+  retain_for_query: true
+- id: confirmed_team_stages_french
+  query_pattern: '(?is)(?=.*(?:croissance|equipe))(?=.*(?:pays|dates|limites))'
+  terms: première embauche data équipe initiale personnes
+  sources: [19_owner_confirmed_scope.txt]
+  section_pattern: '^FRENCH SUMMARY OF CONFIRMED TEAM STAGES$'
+  support_pattern: 'première embauche data en 2019.*initiale a atteint 4 personnes'
+  retain_for_query: true
+- id: human_language_proficiency
+  query_pattern: '(?is)\A(?:(?!.*\b(?:programming|programmation|coding)\b)|(?=.*\b(?:spoken|human|French|English|francais|anglais)\b))(?=.*(?:language|langue|francophone|anglophone))(?=.*(?:speak|spoken|parle|capabilit|proficien|fluen|couran|francophone|anglophone))'
+  terms: spoken languages native English French professional proficiency
+  sources: [00_identity.txt]
+  section_pattern: '^SPOKEN LANGUAGES:$'
+  support_pattern: 'French \(native\) and English \(full professional proficiency\)'
+  retain_for_query: true
+- id: current_head_role_interval
+  query_pattern: '(?is)(?=.*head of data)(?=.*(?:current|still|encore|actuel))'
+  terms: Head Data Gozem employment timeline
+  sources: [91_role_timeline.txt]
+  section_pattern: '^EMPLOYMENT TIMELINE:$'
+  support_pattern: 'Head of Data at Gozem: October 2022 - March 2025'
+  retain_for_query: true
 - id: owner_confirmed_production_responsibility
   query_pattern: '(?is)(?=.*(?:personal|personnel))(?=.*(?:production|AWS|EC2|S3|streaming|Pub/Sub|Dataflow|Kafka))'
   terms: personally production designed operated MongoDB CDC Pub/Sub Dataflow AWS EC2 S3 Kafka
@@ -433,6 +461,34 @@ required_identity:
   query_pattern: (?i)\b(?:aws|ec2)\b
   answer_pattern: (?i)(?:EC2|700|operational.{0,15}platform|governed.{0,20}platform)
 required_details:
+- id: requested_spoken_languages_missing
+  description: Preserve both documented human languages and their proficiency levels when spoken-language capability is requested. Programming-only questions do not establish this intent.
+  sources: [00_identity.txt]
+  section_pattern: '^SPOKEN LANGUAGES:$'
+  support_pattern: 'French \(native\) and English \(full professional proficiency\)'
+  query_pattern: '(?is)\A(?:(?!.*\b(?:programming|programmation|coding)\b)|(?=.*\b(?:spoken|human|French|English|francais|anglais)\b))(?=.*(?:language|langue|francophone|anglophone))(?=.*(?:speak|spoken|parle|capabilit|proficien|fluen|couran|francophone|anglophone))'
+  answer_pattern: '(?is)(?=.*(?:French|francais|francaise).{0,30}(?:native|maternel))(?=.*(?:English|anglais).{0,40}(?:full professional|professionnel))'
+  restore_quotes:
+    en:
+      language: en
+      label: Documented spoken languages
+      pattern: 'French \(native\) and English \(full professional proficiency\)\.'
+    fr:
+      language: fr
+      label: Langues documentées
+      section_label: Langues parlées
+      pattern: 'le francais \(langue maternelle\) et l\x27anglais \(competence professionnelle complete\)\.'
+- id: requested_current_head_role_interval_missing
+  description: A current Head of Data question should preserve the named role's own end date from the retrieved employment table, without deriving it from a subsequent role.
+  sources: [91_role_timeline.txt]
+  section_pattern: '^EMPLOYMENT TIMELINE:$'
+  support_pattern: 'Head of Data at Gozem: October 2022 - March 2025'
+  query_pattern: '(?is)(?=.*head of data)(?=.*(?:current|still|encore|actuel))'
+  answer_pattern: '(?i)Head of Data[^.!?\n]{0,100}(?:March 2025|mars 2025)'
+  restore_quote:
+    language: en
+    label: Head of Data role interval
+    pattern: 'Head of Data at Gozem: October 2022 - March 2025 \(Oct 2022 - Mar 2025\)'
 - id: requested_AI_implementation_progress_missing
   description: Preserve the retrieved count and its implementation-stage status when the question asks about the prioritized initiatives. Advancing into implementation does not establish completed delivery or a measured return.
   sources: [90_website_canon_llms_full.txt]
@@ -462,6 +518,18 @@ required_details:
   support_pattern: 'initial team grew to 4'
   query_pattern: '(?i)(?:growth|croissance|developp).{0,180}(?:countries|pays)|(?:team|equipe).{0,100}(?:dates|limites|boundaries)'
   answer_pattern: '(?i)(?:initial|premiere|d.abord|Global Data Analyst).{0,100}(?:to|a|jusqu.a|attein\w*)\s+(?:4|quatre)|(?:to|a|jusqu.a|attein\w*)\s+(?:4|quatre).{0,100}(?:initial|premiere|Global Data Analyst)'
+  restore_quotes:
+    en:
+      language: en
+      section_pattern: '^GOZEM TEAM GROWTH AND ROLE PERIODS$'
+      label: Confirmed team stages
+      pattern: 'Bolaji was the first data hire in 2019\. The initial team grew to 4 during the Global Data Analyst era \(November 2019 - September 2022\)\.'
+    fr:
+      language: fr
+      section_pattern: '^FRENCH SUMMARY OF CONFIRMED TEAM STAGES$'
+      label: Étapes confirmées de l'équipe
+      section_label: Chronologie confirmée de l'équipe
+      pattern: 'Bolaji a été la première embauche data en 2019\. L\x27équipe initiale a atteint 4 personnes pendant le mandat Global Data Analyst \(novembre 2019 - septembre 2022\)\.'
 - id: requested_streaming_workload_average_missing
   description: Include the retrieved average event count for the separate streaming workload when the request asks about measurements across the systems. Its population is distinct from an individual CDC pipeline, throughput ceiling or latency guarantee.
   scope_id: streaming_workload_volume
@@ -478,6 +546,18 @@ required_details:
   support_pattern: 'first data hire in 2019'
   query_pattern: '(?i)(?:growth|croissance|developp).{0,180}(?:countries|pays)|(?:team|equipe).{0,100}(?:dates|limites|boundaries)'
   answer_pattern: '(?i)(?:first data hire|first.{0,15}data (?:recruit|employee)|premier data hire|premier\w*.{0,25}(?:embauch\w*|recru\w*|collaborat\w*|employ\w*|data hire).{0,15}(?:data|donnees)).{0,50}2019|2019.{0,50}(?:first data hire|premier\w*.{0,25}(?:embauch\w*|recru\w*|collaborat\w*|employ\w*|data hire).{0,15}(?:data|donnees))'
+  restore_quotes:
+    en:
+      language: en
+      section_pattern: '^GOZEM TEAM GROWTH AND ROLE PERIODS$'
+      label: Confirmed team stages
+      pattern: 'Bolaji was the first data hire in 2019\. The initial team grew to 4 during the Global Data Analyst era \(November 2019 - September 2022\)\.'
+    fr:
+      language: fr
+      section_pattern: '^FRENCH SUMMARY OF CONFIRMED TEAM STAGES$'
+      label: Étapes confirmées de l'équipe
+      section_label: Chronologie confirmée de l'équipe
+      pattern: 'Bolaji a été la première embauche data en 2019\. L\x27équipe initiale a atteint 4 personnes pendant le mandat Global Data Analyst \(novembre 2019 - septembre 2022\)\.'
 - id: team_growth_own_period
   description: Preserve the retrieved later growth endpoints and their Head of Data period instead of attaching the full growth to the latest role.
   sources: [19_owner_confirmed_scope.txt]

@@ -356,6 +356,10 @@ def preserve_requested_evidence(
                 rule["section_pattern"], meta.get("section_header", "")
             ):
                 continue
+            if restoration.get("section_pattern") and not re.search(
+                restoration["section_pattern"], meta.get("section_header", "")
+            ):
+                continue
             if meta.get("evidence_type") not in {
                 None,
                 "curated",
@@ -929,6 +933,10 @@ def supplement_facets(
         for doc in corpus:
             if Path(doc.metadata.get("source", "")).name not in facet["sources"]:
                 continue
+            if facet.get("section_pattern") and not re.search(
+                facet["section_pattern"], doc.metadata.get("section_header", "")
+            ):
+                continue
             if facet.get("support_pattern") and not re.search(
                 facet["support_pattern"], doc.page_content
             ):
@@ -992,6 +1000,12 @@ def retained_facet_indices(documents, query):
             and Path(doc.metadata.get("source", "")).name in rule["sources"]
             and re.search(rule["query_pattern"], _fold(query))
             and re.search(rule["support_pattern"], doc.page_content)
+            and (
+                not rule.get("section_pattern")
+                or re.search(
+                    rule["section_pattern"], doc.metadata.get("section_header", "")
+                )
+            )
         ):
             result.add(i)
     return result
