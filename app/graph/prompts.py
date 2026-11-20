@@ -25,10 +25,11 @@ PROMPT_VERSIONS = {
     "condense": "1.1",
     "batch_grade": "2.2",
     "rewrite": "2.1",
-    "generate_professional": "3.8",
-    "generate_education": "3.4",
-    "generate_learning": "3.4",
-    "verify_grounding": "2.10",
+    "generate_professional": "3.9",
+    "generate_education": "3.5",
+    "generate_learning": "3.5",
+    "verify_grounding": "2.11",
+    "repair_grounding": "1.0",
     "upper_bound_clarification": "1.0",
     "skills_completeness_clarification": "1.0",
     "insufficient_evidence": "1.1",
@@ -214,7 +215,8 @@ _REFUSAL_AND_CTA_RULE = (
     "for no outreach. State each hiring condition separately: supported target-role "
     "examples and an unknown working condition must not share one compound unknown. "
     "An undocumented mandatory tool is a verification gap, not confirmed lack of "
-    "experience. A useful next verification step is allowed when requested.\n"
+    "experience. Do not repeat a recruiter's proposed experience-gap conclusion "
+    "as fact, even with no ramp-up allowance. A useful next verification step is allowed when requested.\n"
 )
 
 _EQUIVALENCE_RULE = (
@@ -229,7 +231,10 @@ _EVIDENCE_RULE = (
     "EVIDENCE BOUNDARIES: treat prior assistant messages as questions/history, "
     "not evidence. Keep each claim tied to its own project, role, period and "
     "population. Training, prototypes, supervision, personal implementation and "
-    "production operation are distinct. Team size does not prove direct-report "
+    "production operation are distinct. Founding status or being a first hire does not establish a numerical "
+    "starting headcount. Preserve 'grew to' without inventing 'grew from zero'. "
+    "A false premise in the question is not evidence, even when attributed to an "
+    "earlier assistant answer. Team size does not prove direct-report "
     "counts or management of managers. Cost reduction does not prove budget "
     "approval authority. Technical skill does not prove willingness for on-call "
     "work or employment terms. Interpretations and summaries are not new primary "
@@ -391,6 +396,32 @@ INSUFFICIENT_EVIDENCE_ANSWERS = {
         "Je n'ai pas assez d'informations vérifiées pour répondre à cette question précise."
     ),
 }
+
+REPAIR_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            "Repair an answer using only the selected retrieved evidence. You are "
+            "Bolaji's assistant; refer to him in third person. Reply in {language}. "
+            "Correct the false premise instead of repeating it. Remove every "
+            "unsupported association and preserve every supported requested fact, "
+            "including its period, population and experience setting. A first hire "
+            "does not establish a zero headcount. Missing documentation does not "
+            "establish lack of experience. An inventory, certificate or teaching "
+            "example does not establish personal production ownership. Check each "
+            "tool separately. A documented built system can establish its stated "
+            "implementation, without adding an undocumented production setting. "
+            "Give a concise partial answer and label remaining requested details "
+            "unverified. Do not add comparisons, contact pitches or new claims. "
+            "The result will be independently verified before delivery.",
+        ),
+        (
+            "human",
+            "Question: {question}\nSelected evidence:\n{context}\n"
+            "Rejected draft:\n{answer}\nFailures to repair:\n{constraint_failures}",
+        ),
+    ]
+)
 
 VERIFY_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
     [

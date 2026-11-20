@@ -37,7 +37,12 @@ def test_critical_recruiter_failure_cannot_hide_in_good_aggregate(
     data = {
         "aggregates": dims,
         "results": [
-            {"id": "recruiter-1", "tags": ["recruiter_regression"], "fact_pass": False}
+            {
+                "id": "recruiter-1",
+                "tags": ["recruiter_regression"],
+                "fact_pass": False,
+                "scores": dict(dims),
+            }
         ],
     }
     report.write_text(json.dumps(data))
@@ -135,3 +140,36 @@ def test_judge_retries_transient_failures_once_and_preserves_real_failure():
         judge.score("question", "gold", "answer", "evidence")
     assert generate.call_count == 1
     sleep.assert_not_called()
+
+
+def test_individual_recruiter_judge_failure_blocks_good_aggregates(
+    tmp_path, monkeypatch, capsys
+):
+    baseline = tmp_path / "baseline.json"
+    report = tmp_path / "report.json"
+    dims = {dim: 10 for dim in eval_gate.JUDGED_DIMENSIONS}
+    baseline.write_text(json.dumps({"aggregates": dims, "gate": {}}))
+    data = {
+        "aggregates": dims,
+        "results": [
+            {
+                "id": "recruiter-adi-02-t5",
+                "tags": ["recruiter_regression"],
+                "fact_pass": True,
+                "scores": {**dims, "accuracy": 3, "faithfulness": 4},
+            }
+        ],
+    }
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["eval_gate", "--report", str(report), "--baseline", str(baseline), "--strict"],
+    )
+    for scores in ({**dims, "accuracy": 3}, {**dims, "faithfulness": 4}, None):
+        data["results"][0]["scores"] = scores
+        report.write_text(json.dumps(data))
+        assert eval_gate.main() == 1
+        assert "recruiter-adi-02-t5" in capsys.readouterr().out
+    data["results"][0]["scores"] = dims
+    report.write_text(json.dumps(data))
+    assert eval_gate.main() == 0
