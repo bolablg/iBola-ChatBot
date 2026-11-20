@@ -54,10 +54,18 @@ def prepare_evidence(documents: List[Document], query: str = "") -> List[Documen
             for rule in policy.get("section_types", [])
         )
         if (
-            kind == "interpretation"
-            and not mapping_requested
+            kind in {"interpretation", "summary"}
+            and not (kind == "interpretation" and mapping_requested)
             and not re.search(
-                r"(?i)\b(?:narrative|positioning|philosophy|philosophie|transferable|equivalent|equivalence)\b",
+                (
+                    r"(?i)\b(?:narrative|positioning|philosophy|philosophie"
+                    + (
+                        r"|transferable|equivalent|equivalence"
+                        if kind == "interpretation"
+                        else ""
+                    )
+                    + r")\b"
+                ),
                 query,
             )
         ):
@@ -184,6 +192,48 @@ def _claim_clauses(text: str):
 def documentation_limits(answer: str, targets: List[str]) -> List[str]:
     """Return requested details without an explicit, locally scoped unknown."""
     clauses = _claim_clauses(_fold(answer))
+    # A final predicate can govern coordinated objects even when an earlier
+    # comparison elsewhere in the sentence contains another finite verb.
+    shared = []
+    for match in re.finditer(
+        r"(?i)\b(?:direct\s+|personal\s+)?production use of\s+"
+        r"(?P<subjects>[^.;:\n]{1,150}?)\s+(?:is|are|remains?)\s+"
+        r"(?:not documented|not established|unknown|unverified)\b",
+        _fold(answer),
+    ):
+        nominal = match.group("subjects")
+        remainder = nominal
+        for target in targets:
+            remainder = re.sub(_fold(target), " ", remainder, flags=re.I)
+        # Only named requested subjects, coordinated with nominal modifiers.
+        # An arbitrary verb cannot pass by being absent from a blacklist.
+        words = set(re.findall(r"\w+", remainder.casefold()))
+        if words <= {
+            "and",
+            "or",
+            "both",
+            "the",
+            "semantic",
+            "model",
+            "models",
+            "measure",
+            "measures",
+            "dashboard",
+            "dashboards",
+            "pipeline",
+            "pipelines",
+            "tool",
+            "tools",
+            "service",
+            "services",
+            "component",
+            "components",
+            "platform",
+            "platforms",
+            "et",
+            "ou",
+        }:
+            shared.append(nominal)
     return [
         target
         for target in targets
@@ -192,7 +242,51 @@ def documentation_limits(answer: str, targets: List[str]) -> List[str]:
             and _UNCERTAIN.search(clause)
             for clause in clauses
         )
+        and not any(re.search(_fold(target), span, re.I) for span in shared)
     ]
+
+
+def confirmed_non_use(documents):
+    """Explicit owner statements, never absence inferred from an inventory."""
+    subjects = set()
+    for rule in policy_data().get("experience_confirmations", []):
+        for doc in documents:
+            if Path(doc.metadata.get("source", "")).name == rule[
+                "source"
+            ] and doc.metadata.get("evidence_type") not in {
+                "interpretation",
+                "summary",
+                "pending_confirmation",
+            }:
+                subjects.update(
+                    m.group("subject")
+                    for m in re.finditer(rule["negative_pattern"], doc.page_content)
+                )
+    return subjects
+
+
+def experience_resolution_failures(answer, documents, subjects):
+    """Require a confirmed absence when proven, otherwise an evidence limit."""
+    confirmed = {s.casefold() for s in confirmed_non_use(documents)}
+    missing = []
+    for subject in subjects:
+        if subject.casefold() not in confirmed:
+            if documentation_limits(answer, [re.escape(subject)]):
+                missing.append(subject)
+            continue
+        tool = re.escape(subject)
+        negative = re.compile(
+            rf"(?i)(?:no|aucune)\s+(?:(?:prior|professional|production)\s+)?{tool}\s+experience|"
+            rf"(?:no\s+|aucune\s+|pas\s+d')experience\s+(?:(?:with|of|avec|en|de)\s+)?{tool}|"
+            rf"(?:never|not)\s+(?:used|worked with)\s+{tool}|"
+            rf"(?:jamais|pas)\s+utilise\s+{tool}"
+        )
+        if not any(
+            negative.search(clause) and not _UNCERTAIN.search(clause)
+            for clause in _claim_clauses(_fold(answer))
+        ):
+            missing.append(subject)
+    return missing
 
 
 def preserve_project_identity(
@@ -257,6 +351,10 @@ def preserve_requested_evidence(
         for doc in documents:
             meta = doc.metadata
             if Path(meta.get("source", "")).name not in rule.get("sources", []):
+                continue
+            if rule.get("section_pattern") and not re.search(
+                rule["section_pattern"], meta.get("section_header", "")
+            ):
                 continue
             if meta.get("evidence_type") not in {
                 None,
@@ -329,6 +427,7 @@ def describe_constraints(ids):
             "required_limits",
             "required_details",
             "request_scopes",
+            "experience_confirmations",
         )
         for rule in policy.get(group, [])
     }
@@ -401,6 +500,31 @@ def constraint_failures(
         not in {"interpretation", "summary", "pending_confirmation"}
     ]
     failures.extend(_request_scope_failures(answer, documents, query))
+    for rule in policy.get("relationship_constraints", []):
+        pending = 0
+        for clause in re.split(
+            r"(?<!\d)[.!?](?!\d)|[;\n]|\b(?:but|mais|while|whereas)\b",
+            answer,
+            flags=re.I,
+        ):
+            if not clause.strip():
+                continue
+            cause = re.search(rule["cause_pattern"], clause)
+            if cause:
+                pending = 2
+            elif re.search(rule["separate_pattern"], clause):
+                pending = 0
+            causal = re.search(rule["causal_pattern"], clause)
+            linked = cause or (pending and re.search(rule["reference_pattern"], clause))
+            if causal and linked and re.search(rule["metric_pattern"], clause):
+                prefix = clause[: causal.start()].rsplit(",", 1)[-1]
+                if not _UNCERTAIN.search(prefix) and not re.search(
+                    rule["negation_pattern"], prefix
+                ):
+                    failures.append(rule["id"])
+                    break
+            if not cause:
+                pending = max(0, pending - 1)
     for rule in policy.get("assertion_rules", []):
         for clause in _claim_clauses(answer):
             if rule.get("negation_pattern") and re.search(
@@ -558,6 +682,12 @@ def constraint_failures(
             else any(
                 Path(doc.metadata.get("source", "")).name in rule.get("sources", [])
                 and re.search(rule["support_pattern"], doc.page_content)
+                and (
+                    not rule.get("section_pattern")
+                    or re.search(
+                        rule["section_pattern"], doc.metadata.get("section_header", "")
+                    )
+                )
                 for doc in documents
             )
         )
@@ -596,6 +726,17 @@ def constraint_failures(
             )
             if any(not re.search(rule["answer_pattern"], claim) for claim in claims):
                 failures.append(rule["id"])
+    requested_confirmations = [
+        subject
+        for subject in confirmed_non_use(documents)
+        if re.search(r"\b" + re.escape(subject) + r"\b", query, re.I)
+    ]
+    failures.extend(
+        "confirmed_non_use_requires_answer:" + subject
+        for subject in experience_resolution_failures(
+            answer, documents, requested_confirmations
+        )
+    )
     return failures
 
 
@@ -709,7 +850,7 @@ def _request_scope_failures(answer, documents, query):
                 not strong_claim or uncertainty.start() < strong_claim.start()
             ):
                 continue
-            # Explicit labels describe an inventory, not experience or operation.
+            # An explicitly labeled inventory does not assert personal operation.
             if re.search(rule["inventory_label_pattern"], clause) and not re.search(
                 rule["operation_pattern"], clause
             ):
@@ -741,7 +882,7 @@ def _request_scope_failures(answer, documents, query):
                     if tool in qualified and claimed_projects <= supported_projects
                 )
                 if rule["project_key"] in claimed_projects:
-                    proven.update(project & qualified)
+                    proven.update(project)
             for subject in sorted(subjects - proven):
                 failures.append(rule["id"] + ":" + subject)
     return failures

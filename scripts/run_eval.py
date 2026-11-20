@@ -154,12 +154,14 @@ def check_facts(answer, row, actions=None, result=None):
 
         for target in documentation_limits(answer, row["must_mark_unknown"]):
             failures.append(f"missing explicit documentation limit: {target}")
-    if row.get("check_source_scope") and result is not None:
+    documents = []
+    if (
+        row.get("check_source_scope") or row.get("must_resolve_experience")
+    ) and result is not None:
         from langchain_core.documents import Document
 
         from app.services.evidence_policy import constraint_failures
 
-        documents = []
         for item in result.get("evidence", []) or []:
             metadata = dict(item.get("metadata", {}))
             for key in ("source", "chunk_id", "evidence_type", "metric_scope"):
@@ -176,8 +178,18 @@ def check_facts(answer, row, actions=None, result=None):
                     metadata=metadata,
                 )
             )
-        for violation in constraint_failures(answer, documents, row["question"]):
-            failures.append("source-scope constraint: " + violation)
+        if row.get("check_source_scope"):
+            for violation in constraint_failures(answer, documents, row["question"]):
+                failures.append("source-scope constraint: " + violation)
+    if row.get("must_resolve_experience"):
+        from app.services.evidence_policy import experience_resolution_failures
+
+        for subject in experience_resolution_failures(
+            answer, documents, row["must_resolve_experience"]
+        ):
+            failures.append(
+                "missing evidence-conditioned experience resolution: " + subject
+            )
     for clause in row.get("must_contain", []):
         clause_f = _accent_fold(clause.lower())
         if not any(alt.strip() in low for alt in clause_f.split("|")):

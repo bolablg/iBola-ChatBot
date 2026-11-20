@@ -1,0 +1,25 @@
+OWNER-CONFIRMED PRODUCTION RESPONSIBILITY
+
+Confirmation recorded on November 19, 2026. This is the confirmation date, not a date assigned to the underlying work. Evidence classification: candidate_confirmed.
+
+At Gozem, Bolaji personally designed Pub/Sub and Dataflow components of the MongoDB CDC pipeline in production. This confirms personal production design of that pipeline; personal operation of Pub/Sub and Dataflow is not established by this clarification.
+
+For the Gozem Data Hub, Bolaji personally designed and operated AWS EC2 in production.
+
+Bolaji personally set up an AWS S3 bucket in production. Bolaji personally operates an AWS S3 bucket in production, reading data from it and writing data back. He owns and operates the bucket on an ongoing basis. AWS S3 serves as an exchange layer with the product team and has also been used in projects. This clarification does not identify an employer or project for the S3 bucket and does not establish on-call responsibility.
+
+Bolaji has no Kafka experience at all. Bolaji has never used Kafka. This is an explicit owner-confirmed absence of experience, not an inference from an omitted tool. It does not imply inability to learn Kafka or a deficiency in other streaming technologies.
+
+These clarifications do not add personal Spark Structured Streaming, Apache NiFi or Lakeflow production experience. They do not establish CDC event counts, end-to-end latency or availability. The separately documented streaming-workload average remains a different measurement population.
+
+CONFIRMATION RECORD
+
+Question: The KB documents a MongoDB CDC pipeline using Pub/Sub and Dataflow, but does not explicitly state your personal production responsibility. Which description is accurate?
+Answer: I personally designed it in production
+
+Question: The Gozem Data Hub case lists AWS EC2 in its stack. What can the KB explicitly confirm about your own EC2 responsibility?
+Answer: I personally designed and operated EC2 in production
+
+Additional owner statement: no  kafka experience at all. s3 in production as exchange layer with the product team, and in projects
+Additional owner statement: i set up bucket in s3 in production
+Additional owner statement: i own it on long run as i read data from it adn write back as well

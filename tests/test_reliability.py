@@ -56,6 +56,7 @@ def test_structured_output_recovers_from_truncated_json():
         _temperature=0.0,
         _max_output_tokens=750,
         _thinking_budget=0,
+        _thinking_config=lambda: {"thinking_budget": 0},
     )
 
     prompts = []
@@ -101,6 +102,7 @@ def test_structured_output_recovers_grounding_verdict():
         _temperature=0.0,
         _max_output_tokens=750,
         _thinking_budget=0,
+        _thinking_config=lambda: {"thinking_budget": 0},
     )
 
     result = _StructuredOutput(llm, GroundingVerdict).invoke(["Return JSON"])
@@ -127,6 +129,7 @@ def test_structured_output_prefers_sdk_parsed_model():
         _temperature=0.0,
         _max_output_tokens=750,
         _thinking_budget=0,
+        _thinking_config=lambda: {"thinking_budget": 0},
     )
 
     result = _StructuredOutput(llm, GeneratedAnswer).invoke(["Return JSON"])
@@ -163,5 +166,5 @@ def test_cache_service_without_cachetools_is_safe():
 def test_professional_prompt_requires_complete_multipart_answers():
     prompt = GENERATE_SYSTEM_PROMPTS[AgentCategory.PROFESSIONAL]
 
-    assert PROMPT_VERSIONS["generate_professional"] == "3.11"
+    assert PROMPT_VERSIONS["generate_professional"] == "3.12"
     assert "include every requested number, title, date, and category" in prompt

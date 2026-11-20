@@ -10,7 +10,7 @@ from __future__ import annotations
 import os
 from functools import lru_cache
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -26,6 +26,8 @@ class LLMSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="LLM_")
 
     model_name: str = "gemini-2.5-flash"
+    verifier_model_name: str = "gemini-3.5-flash-lite"
+    verifier_thinking_level: Literal["minimal", "low", "medium", "high"] = "low"
     guardrail_temperature: float = 0.0
     grading_temperature: float = 0.0
     rewrite_temperature: float = 0.3
@@ -35,6 +37,14 @@ class LLMSettings(BaseSettings):
     # Claim-level grounding verifier after generate (fail closed on
     # unsupported profile claims). One extra temperature-0 call per turn.
     grounding_verifier_enabled: bool = True
+
+    def verifier_parameters(self):
+        if self.verifier_model_name.startswith("gemini-2.5-"):
+            return {"model": self.verifier_model_name, "thinking_budget": 0}
+        return {
+            "model": self.verifier_model_name,
+            "thinking_level": self.verifier_thinking_level,
+        }
 
 
 class SearchSettings(BaseSettings):

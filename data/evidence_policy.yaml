@@ -1,11 +1,20 @@
-version: 5
+version: 8
 source_types:
+  20_owner_confirmed_production_scope.txt: candidate_confirmed
   90_website_canon_llms_full.txt: published
   18_confirmed_clarifications.txt: candidate_confirmed
   15_professional_narrative.txt: interpretation
   17_highlights_pitch.txt: summary
   19_owner_confirmed_scope.txt: candidate_confirmed
 assertion_rules:
+- id: streaming_operation_requires_operation_evidence
+  description: Personal production design of a streaming implementation does not establish personal production operation of its services. Retain the documented design responsibility and mark operation unconfirmed unless the same tool has direct operation evidence.
+  answer_pattern: '(?i)\b(?:operated|operates|operating|ran|maintained|exploite\w*)\s+[^.;\n]{0,85}\b(?:Pub/Sub|Dataflow)\b'
+  support_pattern: '(?i)\b(?:Bolaji|he|il)\s+(?:(?:has|had|a|personally|directly|personnellement)\s+){0,3}(?:operated|operates|ran|maintained|exploite\w*|designed and operated)\s+(?P<tools>(?:AWS\s+)?(?:EC2|S3|Pub/Sub|Dataflow)(?:\s*(?:,|and|et|with)\s*(?:AWS\s+)?(?:EC2|S3|Pub/Sub|Dataflow))*)(?:\s+(?:components?|pipelines?|systems?))?\s+(?:in|en)\s+production'
+  subject_pattern: '(?i)\b(?:Pub/Sub|Dataflow)\b'
+  support_subject_groups: [tools]
+  clause_support: true
+  local_negation: true
 - id: manager_layers_require_direct_evidence
   answer_pattern: (?i)(?:manager.of.managers|management of managers)|(?i:management de managers|manager de
     managers)
@@ -60,9 +69,9 @@ assertion_rules:
   support_pattern: |-
     (?ix)\b(?:Bolaji|he|il)\s+(?:(?:has|had|a|personally|directly|personnellement|directement)\s+){0,3}
     (?:
-      (?:uses?|used|operates?|operated|builds?|built|designs?|designed|deploys?|deployed|utilise|exploite|construit|concu|deploye)\s+
+      (?:uses?|used|operates?|operated|builds?|built|designs?|designed(?:\s+and\s+operated)?|deploys?|deployed|set\s+up|provisioned|configured|utilise|exploite|construit|concu|deploye)\s+(?:an?\s+)?
       (?P<tools_before>(?:Google\s+)?(?:Pub/Sub|Dataflow)(?:\s*(?:,|and|et|with|avec)\s*(?:Google\s+)?(?:Pub/Sub|Dataflow))*)
-      (?:\s+(?:pipelines?|systems?|applications?))?\s+(?:in|en)\s+production
+      (?:\s+(?:buckets?|pipelines?|systems?|applications?|components?)(?:\s+(?:of|for|within)\s+[^.;\n]{1,80}?)?)?\s+(?:in|en)\s+production
     |
       (?:has|had)\s+(?:personal\s+)?production\s+experience\s+with\s+
       (?P<tools_after>(?:Google\s+)?(?:Pub/Sub|Dataflow)(?:\s*(?:,|and|et)\s*(?:Google\s+)?(?:Pub/Sub|Dataflow))*)
@@ -116,7 +125,20 @@ metric_constraints:
   invalid_patterns:
   - (?i)(?:six|6)\s+(?:implemented|completed|deployed|production)\s+(?:AI\s+)?use cases
   - (?i)(?:six|6)\s+(?:AI\s+)?use cases\s+(?:were|are|have been)\s+(?:implemented|completed|deployed)
+  - '(?i)(?:completed|deployed|delivered)\s+(?:all\s+)?(?:six|6)\s+(?:(?:AI|strategic|high.priority)\s+)?(?:use cases|initiatives|implementations)'
 facets:
+- id: owner_confirmed_production_responsibility
+  query_pattern: '(?is)(?=.*(?:personal|personnel))(?=.*(?:production|AWS|EC2|S3|streaming|Pub/Sub|Dataflow|Kafka))'
+  terms: personally production designed operated MongoDB CDC Pub/Sub Dataflow AWS EC2 S3 Kafka
+  sources: [20_owner_confirmed_production_scope.txt]
+  support_pattern: '(?is)Bolaji personally designed Pub/Sub and Dataflow.{0,160}production.*Bolaji personally designed and operated AWS EC2 in production'
+  retain_for_query: true
+- id: owner_confirmed_production_responsibility
+  query_pattern: '(?is)(?=.*(?:personal|personnel))(?=.*(?:production|AWS|EC2|S3|streaming|Pub/Sub|Dataflow|Kafka))'
+  terms: personally production designed operated EC2 S3 MongoDB CDC Pub/Sub Dataflow Kafka
+  sources: [20_owner_confirmed_production_scope.txt]
+  support_pattern: '(?is)Bolaji personally designed Pub/Sub and Dataflow components.{0,100}production.{0,300}Bolaji personally designed and operated AWS EC2 in production'
+  retain_for_query: true
 - id: streaming_workload_measurement
   query_pattern: '(?is)(?=.*(?:throughput|event volume|latency|availability|measurements|debit|latence|disponibilite))(?=.*(?:streaming|CDC|MongoDB|flux|event processing))'
   terms: separate streaming workload averaged telemetry operational events
@@ -285,6 +307,15 @@ section_types:
   evidence_type: interpretation
   include_if_query_matches: (?i)\b(?:dbt|power bi|dax|dagster|snowflake|redshift)\b
 metric_scopes:
+- source: 90_website_canon_llms_full.txt
+  section_pattern: '(?i)(?:FinOps and analytical serving|Data platform modernization and FinOps transformation)'
+  fields:
+    id: finops_cost_reduction
+    value: 42.57 percent
+    qualifier: recorded reduction, one quarter
+    role: Head of Data
+    initiative: Dataform adoption, incremental modeling, partitioning, clustering and workload monitoring
+    not_established: causal attribution to the initial cloud-platform choice or migration; investment amount, approval authority or multi-year department budget ownership
 - source: 13_gozem_internal_projects.txt
   section_pattern: (?i)self.service no.code
   fields:
@@ -402,6 +433,17 @@ required_identity:
   query_pattern: (?i)\b(?:aws|ec2)\b
   answer_pattern: (?i)(?:EC2|700|operational.{0,15}platform|governed.{0,20}platform)
 required_details:
+- id: requested_AI_implementation_progress_missing
+  description: Preserve the retrieved count and its implementation-stage status when the question asks about the prioritized initiatives. Advancing into implementation does not establish completed delivery or a measured return.
+  sources: [90_website_canon_llms_full.txt]
+  section_pattern: '(?i)^AI strategy & investment portfolio$'
+  support_pattern: 'advancing 6 high-priority initiatives into implementation'
+  query_pattern: '(?is)(?=.*(?:AI strategy|strategie IA|priorit|vendor|fournisseur))(?=.*(?:six|6|implementation|progress))'
+  answer_pattern: '(?is)(?=.*(?:six|6))(?=.*(?:into implementation|implementation|en cours de mise en oeuvre))'
+  restore_quote:
+    language: en
+    label: Implementation progress
+    pattern: 'Result: Turned fragmented AI experimentation[^\n]*advancing 6 high-priority initiatives into implementation\.'
 - id: migration_earlier_role_missing
   description: If a personal production-pipeline answer uses the cloud migration, bind that migration locally to its explicitly documented earlier role. A later Director umbrella, unrelated role mention or appended correct quotation cannot establish the role governing the original migration claim. Retain warehouse design and pipeline facts without inferring operation of every service.
   sources: [01_career_overview.txt, 90_website_canon_llms_full.txt]
@@ -409,7 +451,6 @@ required_details:
   query_pattern: '(?is)(?=.*production)(?=.*(?:personally|personal|hands.on))(?=.*(?:pipeline|data engineering))'
   claim_pattern: '(?i)cloud migration|migrat\w*[^.!?\n]{0,100}10\+?\s*TB|50\+? scheduled ETL'
   governing_role_pattern: '(?i)Global Data Analyst|Data Director|Head of Data'
-  heading_pattern: '(?i)(?:PREVIOUS ROLE:\s*)?Global Data Analyst(?:\s*[-:(][^.!?\n]*)?[:)]?'
   restore_quote:
     language: en
     label: Earlier role evidence
@@ -543,9 +584,9 @@ request_scopes:
   personal_support_pattern: |-
     (?ix)\b(?:Bolaji|he|il)\s+(?:(?:has|had|a|personally|directly|personnellement|directement)\s+){0,3}
     (?:
-      (?:uses?|used|operates?|operated|builds?|built|designs?|designed|deploys?|deployed|utilise|exploite|construit|concu|deploye)\s+
+      (?:uses?|used|operates?|operated|builds?|built|designs?|designed(?:\s+and\s+operated)?|deploys?|deployed|set\s+up|provisioned|configured|utilise|exploite|construit|concu|deploye)\s+(?:an?\s+)?
       (?P<tools_before>(?:AWS\s+)?(?:EC2|S3|Pub/Sub|Dataflow|Spark|Apache\s+NiFi|NiFi|Lakeflow)(?:\s*(?:,|and|et|with|avec)\s*(?:AWS\s+)?(?:EC2|S3|Pub/Sub|Dataflow|Spark|Apache\s+NiFi|NiFi|Lakeflow))*)
-      (?:\s+(?:pipelines?|systems?|applications?))?\s+(?:in|en)\s+production
+      (?:\s+(?:buckets?|pipelines?|systems?|applications?|components?)(?:\s+(?:of|for|within)\s+[^.;\n]{1,80}?)?)?\s+(?:in|en)\s+production
     |
       (?:has|had)\s+(?:personal\s+)?production\s+experience\s+with\s+
       (?P<tools_after>(?:AWS\s+)?(?:EC2|S3|Pub/Sub|Dataflow|Spark|Apache\s+NiFi|NiFi|Lakeflow)(?:\s*(?:,|and|et)\s*(?:AWS\s+)?(?:EC2|S3|Pub/Sub|Dataflow|Spark|Apache\s+NiFi|NiFi|Lakeflow))*)
@@ -557,8 +598,6 @@ request_scopes:
   project_support_pattern: '(?is)Gozem Data Hub.{0,900}?(?:published case documents|documented stack (?:includes|contains))\s+(?P<tools>[^.\n]+)'
   project_tools_pattern: '(?im)^Tools:\s*(?P<tools>[^\n]+)'
   project_stack_sources: [90_website_canon_llms_full.txt, 13_gozem_internal_projects.txt, 10_apps_and_projects.txt]
-  project_stack_sources: [90_website_canon_llms_full.txt, 13_gozem_internal_projects.txt, 10_apps_and_projects.txt]
-  project_tools_pattern: '(?im)^Tools:\s*(?P<tools>[^\n]+)'
   project_names:
     data_hub: '(?i)\b(?:Gozem\s+)?Data Hub\b'
     gozem: '(?i)\bGozem\b'
@@ -573,3 +612,19 @@ request_scopes:
   inventory_label_pattern: '(?i)^\s*(?:listed tools|tool inventory|inventory|documented tool list|outils listes)|\b(?:inventory|tool list|catalogue)\b.{0,30}(?:lists|includes|contains)|(?:appear\w*|listed)\s+in.{0,20}(?:inventory|tool list)'
   exclude_support_pattern: '(?i)\b(?:taught|teaches|teaching|supervised|delivered|designed)\b[^.;\n]{0,60}\b(?:training|bootcamp|module|lab|prototype|formation|atelier)\b|\b(?:for|during|in|en|pour)\s+(?:a\s+|an\s+)?(?:training|bootcamp|lab|prototype|formation|atelier)\b'
   operation_pattern: '(?i)\b(?:personally|operated|operating|operates|use|uses|used|using|designed|designing|designs|deployed|deploys|builds|built|exploite|utilise|concu)\b'
+
+experience_confirmations:
+- id: confirmed_non_use_requires_answer
+  description: Explicit owner-confirmed absence must be stated when the requested tool is covered by that retrieved confirmation. Do not retain an outdated unknown or infer inability. Without an explicit confirmation, retain a documentation limit.
+  source: 20_owner_confirmed_production_scope.txt
+  negative_pattern: '(?i)Bolaji has no (?P<subject>[A-Za-z][A-Za-z /-]{0,45}?) experience at all'
+
+relationship_constraints:
+- id: initial_cloud_choice_not_finops_cause
+  description: The initial cloud-first platform choice and migration belong to the earlier Global Data Analyst role. The later Head of Data FinOps cost reduction is a separate recorded initiative. Do not attribute that reduction to the initial choice or a nearby reference to that decision; retain both facts separately with their own role and initiative.
+  cause_pattern: '(?i)cloud.first|initial.{0,30}(?:cloud|GCP|platform)|(?:cloud|GCP) migration'
+  separate_pattern: '(?i)\b(?:separately|later|FinOps|Dataform|incremental|partitioning|clustering)\b'
+  reference_pattern: '(?i)\b(?:this|that|the) (?:decision|choice|approach)|\bit\b'
+  causal_pattern: '(?i)\b(?:resulted in|contributed to|led to|caused|reduced|cut|achieved|drove|yielded|yielding)\b'
+  metric_pattern: '42[.,]57\s*%'
+  negation_pattern: '(?i)\b(?:not|never|no|pas|non)\b'

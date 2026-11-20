@@ -64,5 +64,12 @@ def runtime_provenance():
         "index_sync_pending": indexed != current or indexed_chunker != CHUNKER_VERSION,
         "chunker_version": CHUNKER_VERSION,
         "model": get_settings().llm.model_name,
+        "verifier_model": get_settings().llm.verifier_model_name,
+        "verifier_thinking_level": get_settings()
+        .llm.verifier_parameters()
+        .get("thinking_level"),
+        "verifier_thinking_budget": get_settings()
+        .llm.verifier_parameters()
+        .get("thinking_budget"),
         "prompt_versions": dict(PROMPT_VERSIONS),
     }

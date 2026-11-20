@@ -160,15 +160,27 @@ class _SyncGeminiLLM:
         api_key: str,
         temperature: float,
         max_output_tokens: int,
-        thinking_budget: int = 0,
+        thinking_budget: int | None = None,
+        thinking_level: str | None = None,
     ):
         from google import genai
 
+        if thinking_level is not None and thinking_budget is not None:
+            raise ValueError("Specify a thinking level or budget, not both")
         self._model = model
         self._temperature = temperature
         self._max_output_tokens = max_output_tokens
-        self._thinking_budget = thinking_budget
+        self._thinking_budget = 0 if thinking_budget is None else thinking_budget
+        self._thinking_level = thinking_level
         self._client = genai.Client(api_key=api_key)
+
+    def _thinking_config(self):
+        level = getattr(self, "_thinking_level", None)
+        return (
+            {"thinking_level": level}
+            if level is not None
+            else {"thinking_budget": self._thinking_budget}
+        )
 
     def invoke(self, messages, **kwargs):
         """Accept LangChain message list, return an object with .content."""
@@ -191,7 +203,7 @@ class _SyncGeminiLLM:
                 config={
                     "temperature": self._temperature,
                     "max_output_tokens": self._max_output_tokens,
-                    "thinking_config": {"thinking_budget": self._thinking_budget},
+                    "thinking_config": self._thinking_config(),
                 },
             ),
             "text generation",
@@ -235,12 +247,12 @@ class _StructuredOutput:
                         response_schema=self._schema,
                         temperature=self._llm._temperature,
                         max_output_tokens=(
-                            max(self._llm._max_output_tokens, 1500)
+                            max(self._llm._max_output_tokens, 4096)
                             if self._schema is GroundingVerdict
                             else self._llm._max_output_tokens
                         ),
                         thinking_config=genai.types.ThinkingConfig(
-                            thinking_budget=self._llm._thinking_budget
+                            **self._llm._thinking_config()
                         ),
                     ),
                 ),
@@ -282,9 +294,20 @@ class _StructuredOutput:
                 )
 
 
-def _get_llm(temperature: float = 0.0, thinking_budget: int = 0):
+def _get_llm(
+    temperature: float = 0.0,
+    thinking_budget: int | None = None,
+    model: str | None = None,
+    thinking_level: str | None = None,
+):
     """Return a sync Gemini LLM (no async event-loop issues)."""
-    key = f"llm-{temperature}-think{thinking_budget}"
+    from app.settings import get_settings
+
+    settings = get_settings()
+    if thinking_level is not None and thinking_budget is not None:
+        raise ValueError("Specify a thinking level or budget, not both")
+    selected_model = model or settings.llm.model_name
+    key = f"llm-{selected_model}-{temperature}-think{thinking_budget}-{thinking_level}"
     if key not in _llms:
         with _lock:
             if key not in _llms:
@@ -292,11 +315,12 @@ def _get_llm(temperature: float = 0.0, thinking_budget: int = 0):
 
                 settings = get_settings()
                 _llms[key] = _SyncGeminiLLM(
-                    model=settings.llm.model_name,
+                    model=selected_model,
                     api_key=config.GEMINI_API_KEY,
                     temperature=temperature,
                     max_output_tokens=_LLM_MAX_OUTPUT_TOKENS,
                     thinking_budget=thinking_budget,
+                    thinking_level=thinking_level,
                 )
     return _llms[key]
 
@@ -1284,7 +1308,7 @@ def generate_node(state: dict) -> dict:
                 today=today,
                 context=context,
                 chat_history=history_str or "(none)",
-                query=scope,
+                query=_verification_scope(state),
             )
         )
 
@@ -1372,9 +1396,17 @@ def _insufficient_answer(state: dict) -> str:
 
 def _verification_scope(state):
     """Follow-up scope may come from condensation; facts still require evidence."""
-    from app.services.evidence_policy import request_scope
-
-    return request_scope(state)
+    return "\n".join(
+        dict.fromkeys(
+            filter(
+                None,
+                (
+                    state.get("original_query"),
+                    state.get("query"),
+                ),
+            )
+        )
+    )
 
 
 def verify_grounding_node(state: dict) -> dict:
@@ -1529,7 +1561,13 @@ def _verify_grounding_llm_node(state: dict) -> dict:
 
     violations = constraint_failures(answer, context_docs, scope_query)
     try:
-        llm = _get_llm(temperature=0.0)
+        from app.settings import get_settings
+
+        verification_settings = get_settings().llm
+        llm = _get_llm(
+            temperature=0.0,
+            **verification_settings.verifier_parameters(),
+        )
         structured_llm = llm.with_structured_output(GroundingVerdict)
         verdict: GroundingVerdict = structured_llm.invoke(
             VERIFY_GROUNDING_PROMPT.format_messages(
@@ -1598,19 +1636,23 @@ def _verify_grounding_llm_node(state: dict) -> dict:
     # still needs both deterministic checks and independent verification below.
     if not corrected or repair_failures:
         try:
-            repair = llm.with_structured_output(GeneratedAnswer).invoke(
-                REPAIR_GROUNDING_PROMPT.format_messages(
-                    question=scope_query or "(unknown)",
-                    context=context,
-                    answer=corrected or answer,
-                    language=_detect_reply_language(
-                        question, state.get("user_language", "en")
-                    ),
-                    constraint_failures=describe_constraints(
-                        list(dict.fromkeys(violations + repair_failures))
+            repair = (
+                _get_llm(temperature=0.0)
+                .with_structured_output(GeneratedAnswer)
+                .invoke(
+                    REPAIR_GROUNDING_PROMPT.format_messages(
+                        question=scope_query or "(unknown)",
+                        context=context,
+                        answer=corrected or answer,
+                        language=_detect_reply_language(
+                            question, state.get("user_language", "en")
+                        ),
+                        constraint_failures=describe_constraints(
+                            list(dict.fromkeys(violations + repair_failures))
+                        )
+                        + "; "
+                        + "; ".join(verdict.unsupported_claims),
                     )
-                    + "; "
-                    + "; ".join(verdict.unsupported_claims),
                 )
             )
             corrected = _sanitize_answer(repair.answer.strip())

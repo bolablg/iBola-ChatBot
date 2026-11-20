@@ -680,7 +680,7 @@ def test_actual_published_tools_row_and_missing_setting_recovery():
     weak = "Bolaji architected and led Gozem Data Hub, which used AWS EC2. He built a MongoDB CDC pipeline through Pub/Sub and Dataflow."
     fixed, ids = preserve_requested_evidence(weak, docs, q, "English")
     assert ids == ["requested_personal_production_scope"]
-    assert "does not establish personal production" in fixed
+    assert "does not specify whether" in fixed
     assert not constraint_failures(fixed, docs, q)
     assert not constraint_failures("The Gozem Data Hub used AWS EC2.", docs, q)
     for wrong in [
@@ -721,7 +721,7 @@ def test_missing_setting_recovery_requires_exact_independent_verification(approv
         )
     assert result["grounding_checked"] is approved
     if approved:
-        assert "retrieved evidence does not establish" in result["answer"]
+        assert "retrieved evidence does not specify whether" in result["answer"]
         assert not constraint_failures(
             result["answer"],
             docs,
@@ -739,3 +739,19 @@ def test_workload_inclusion_is_not_proven_by_co_mention():
         [],
         "What event volumes exist?",
     )
+
+
+def test_actual_shared_production_use_limit_does_not_split_coordinated_objects():
+    from app.services.evidence_policy import documentation_limits
+
+    answer = "While Power BI shares concepts with tools Bolaji has used, his direct production use of Power BI semantic models and DAX is not documented."
+    assert not documentation_limits(answer, ["Power BI", "DAX"])
+    assert documentation_limits(answer, ["Tableau"])
+    for text in [
+        "He used Power BI. Production use of DAX is not documented.",
+        "While he has used other tools, production use of Power BI is established and DAX is not documented.",
+        "While he used other tools, production use of Power BI is established, and DAX use is not documented.",
+        "Production use of Power BI. DAX is not documented.",
+        "While he has used other tools, production use of Power BI enables reporting, and DAX is not documented.",
+    ]:
+        assert "Power BI" in documentation_limits(text, ["Power BI"])

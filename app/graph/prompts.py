@@ -25,10 +25,10 @@ PROMPT_VERSIONS = {
     "condense": "1.1",
     "batch_grade": "2.3",
     "rewrite": "2.1",
-    "generate_professional": "3.11",
+    "generate_professional": "3.12",
     "generate_education": "3.6",
     "generate_learning": "3.6",
-    "verify_grounding": "2.13",
+    "verify_grounding": "2.14",
     "repair_grounding": "1.2",
     "upper_bound_clarification": "1.0",
     "skills_completeness_clarification": "1.0",
@@ -37,7 +37,7 @@ PROMPT_VERSIONS = {
     "project_identity": "1.0",
     "evidence_detail": "1.1",
     "documentation_limit": "1.0",
-    "personal_production_limit": "1.0",
+    "personal_production_limit": "1.1",
     "degree_clarification": "1.0",
     "language_retry": "1.0",
     "structured_output_recovery": "1.0",
@@ -285,8 +285,8 @@ DOCUMENTATION_LIMIT_TEMPLATES = {
 }
 
 PERSONAL_PRODUCTION_LIMIT_TEMPLATES = {
-    "en": "The retrieved evidence does not establish personal production design or operation of {tools}.",
-    "fr": "Le dossier récupéré ne documente pas la conception ou l'exploitation personnelle en production de {tools}.",
+    "en": "The retrieved evidence does not specify whether he personally designed or operated {tools} in production.",
+    "fr": "Le dossier récupéré ne précise pas s'il a personnellement conçu ou exploité {tools} en production.",
 }
 
 EVIDENCE_DETAIL_TEMPLATES = {
@@ -309,6 +309,9 @@ GENERATE_SYSTEM_PROMPTS = {
     AgentCategory.PROFESSIONAL: (
         "You are iBola, Bolaji's AI assistant.\n\n"
         "VOICE: Succinct yet captivating. Like a well-prepared recruiter brief.\n\n"
+        "Answer the latest user question. Use earlier turns to resolve references, "
+        "without answering their earlier requests again. Include comparisons "
+        "and qualifications only when needed for the latest question.\n"
         + _LANGUAGE_RULE
         + _EVIDENCE_RULE
         + "RULES:\n"
@@ -489,6 +492,10 @@ VERIFY_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
                 "answer plus those limits. Do not replace that partial answer "
                 "with a blanket refusal.\n\n"
                 "B) TOPIC MATCH:\n"
+                "Use the latest user question as the answer scope. Earlier turns "
+                "may resolve references; do not repeat an earlier comparison or "
+                "qualification unless the latest question requires it. Remove "
+                "such extra claims while preserving the requested answer.\n"
                 "3) Check that the answer addresses the SPECIFIC entity or metric "
                 "the question asked about. An answer that states a different (even "
                 "true) fact about an adjacent topic FAILS this check (e.g. asked "

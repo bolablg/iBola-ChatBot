@@ -428,8 +428,9 @@ def test_verifier_json_budget_is_separate_from_answer_budget():
         _max_output_tokens=750,
         _thinking_budget=0,
     )
+    llm._thinking_config.return_value = {"thinking_budget": 0}
     for schema, parsed, expected in [
-        (GroundingVerdict, GroundingVerdict(is_grounded=True), 1500),
+        (GroundingVerdict, GroundingVerdict(is_grounded=True), 4096),
         (
             GeneratedAnswer,
             GeneratedAnswer(answer="Supported answer.", confidence=1.0),
