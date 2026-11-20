@@ -1,0 +1,568 @@
+{
+  "origin": "Exact e8e4813 full149 failed deliveries and actual SDK response text, not synthetic",
+  "provenance": {
+    "code_revision": "d9e9da080a4ec5c1",
+    "deployment_revision": null,
+    "corpus_revision": "3fae0c27dfb14d76",
+    "kb_revision": "3fae0c27dfb14d76",
+    "policy_revision": "b723f78770668dcc",
+    "index_sync_pending": false,
+    "chunker_version": "3",
+    "model": "gemini-3.5-flash-lite",
+    "thinking_config": {
+      "thinking_level": "low"
+    },
+    "generation_thinking_config": {
+      "thinking_level": "low"
+    },
+    "generation_temperature": null,
+    "verifier_model": "gemini-3.5-flash-lite",
+    "verifier_thinking_level": "low",
+    "verifier_thinking_budget": null,
+    "prompt_versions": {
+      "inventory_followup": "1.1",
+      "guardrail": "2.1",
+      "condense": "1.1",
+      "batch_grade": "2.3",
+      "rewrite": "2.1",
+      "generate_professional": "3.16",
+      "generate_education": "3.6",
+      "generate_learning": "3.6",
+      "verify_grounding": "2.15",
+      "repair_grounding": "1.3",
+      "upper_bound_clarification": "1.0",
+      "skills_completeness_clarification": "1.0",
+      "insufficient_evidence": "1.1",
+      "disputed_evidence": "1.0",
+      "project_identity": "1.0",
+      "evidence_detail": "1.1",
+      "documentation_limit": "1.0",
+      "personal_production_limit": "1.1",
+      "degree_clarification": "1.0",
+      "language_retry": "1.0",
+      "structured_output_recovery": "1.0",
+      "out_of_scope": "2.0",
+      "translate": "1.0"
+    }
+  },
+  "cases": [
+    {
+      "id": "recruiter-hda-03-t4",
+      "category": "canonical",
+      "lang": "en",
+      "tags": [
+        "recruiter_regression"
+      ],
+      "question": "Describe a documented budget or investment decision he owned: amount or range, planning horizon, approval authority, options rejected and outcome. Is there evidence of multi-year department budget ownership, beyond reducing a cloud bill?",
+      "answer": "The retrieved evidence does not establish investment amount or range, planning horizon, approval authority, rejected options, or outcome for a documented budget or investment decision. The retrieved evidence does not establish multi-year department budget ownership beyond reducing a cloud bill. Specifically, the retrieved evidence notes a recorded Google Cloud cost reduction of 42.57 percent in one quarter achieved through data platform modernization (Dataform adoption, incremental modeling, partitioning, clustering, and workload monitoring), but explicitly states that investment amount, approval authority, or multi-year department budget ownership are not established.",
+      "agent_type": "professional",
+      "evidence_count": 4,
+      "evidence": [
+        {
+          "source": "90_website_canon_llms_full.txt",
+          "chunk_id": "90_website_canon_llms_full.txt::20",
+          "section": "Data platform modernization and FinOps transformation",
+          "retrieval_rank": 1,
+          "retrieval_score": 15.0,
+          "parent_context": "Bolaji BALOGOUN · Biography > Head of Data · GOZEM · Oct 2022 - Mar 2025",
+          "scope_context": "Head of Data · GOZEM · Oct 2022 - Mar 2025",
+          "evidence_type": "published",
+          "metric_scope": {
+            "id": "finops_cost_reduction",
+            "value": "42.57 percent",
+            "qualifier": "recorded reduction, one quarter",
+            "role": "Head of Data",
+            "initiative": "Dataform adoption, incremental modeling, partitioning, clustering and workload monitoring",
+            "not_established": "causal attribution to the initial cloud-platform choice or migration; investment amount, approval authority or multi-year department budget ownership"
+          },
+          "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN · Data Engineer · Data Architect (full content) | Section: Data platform modernization and FinOps transformation | Parent context: Bolaji BALOGOUN · Biography > Head of Data · GOZEM · Oct 2022 - Mar 2025\n\nResult: Reduced Google Cloud costs by **42.57% in one quarter** while sustaining platform reliability and growing analytics adoption.\nProblem: As Gozem scaled across multiple countries and business units, analytics demand, reporting needs, and data volumes grew significantly. BigQuery transformation workloads relied heavily on scheduled queries with limited dependency management and visibility into cost drivers, leading to duplicated computation, increasing cloud expenditure, and growing operational complexity.\nSolution: Established data platform observability and FinOps governance by analyzing BigQuery workload metadata to categorize ingestion, transformation, reporting, and ad hoc analytical activities. Identified the primary drivers of platform spend and led a modernization program spanning Dataform adoption, dependency-aware orchestration, incremental processing, partitioning and clustering optimization, reusable intermediate data models, and warehouse improvements tailored to workload access patterns.\n\nImplemented monitoring and cost-allocation dashboards to guide ongoing optimization while maintaining data freshness and reliability as analytics usage grew.\nTools: Google BigQuery · Dataform · SQL · Google Cloud Platform · Looker Studio · Apache Airflow"
+        },
+        {
+          "source": "11_leadership_style.txt",
+          "chunk_id": "11_leadership_style.txt::0",
+          "section": "THREE OPERATING PRINCIPLES:",
+          "retrieval_rank": 1,
+          "retrieval_score": 0.030835,
+          "parent_context": "BOLAJI BALOGOUN - LEADERSHIP STYLE & MANAGEMENT PHILOSOPHY",
+          "scope_context": "",
+          "evidence_type": "curated",
+          "metric_scope": {},
+          "content_preview": "Source: 11_leadership_style.txt | Title: BOLAJI BALOGOUN - LEADERSHIP STYLE & MANAGEMENT PHILOSOPHY | Section: THREE OPERATING PRINCIPLES: | Parent context: BOLAJI BALOGOUN - LEADERSHIP STYLE & MANAGEMENT PHILOSOPHY\n\nWhat are Bolaji's leadership principles: metrics before dashboards; architecture is the budget; adoption is the deliverable. These are three operating principles. His separate leadership philosophy is to lead with care.\nQuels sont les principes de leadership de Bolaji : les metriques avant les tableaux de bord ; l'architecture est le budget ; l'adoption est le livrable. Ces trois principes de fonctionnement sont distincts de sa philosophie de management : diriger avec bienveillance.\n\nThree principles run through all of Bolaji's work:\n1. Metrics before dashboards: he builds operational systems that act on metrics and patterns (automations, alerts, workflows) rather than reports that describe them.\n2. Architecture is the budget: cost discipline is designed into data models and pipelines, not bolted on afterwards. His 42.57% Google Cloud cost reduction in a single quarter came from data-model redesign, not procurement.\n3. Adoption is the deliverable: a platform, strategy, or model only counts when the finance manager, the ops lead, and the executive are using it without the data team in the room."
+        },
+        {
+          "source": "19_owner_confirmed_scope.txt",
+          "chunk_id": "19_owner_confirmed_scope.txt::2",
+          "section": "GOZEM TEAM GROWTH AND ROLE PERIODS",
+          "retrieval_rank": 3,
+          "retrieval_score": 0.016393,
+          "parent_context": "BOLAJI BALOGOUN - OWNER-CONFIRMED CLAIM SCOPE",
+          "scope_context": "",
+          "evidence_type": "candidate_confirmed",
+          "metric_scope": {},
+          "content_preview": "Source: 19_owner_confirmed_scope.txt | Title: BOLAJI BALOGOUN - OWNER-CONFIRMED CLAIM SCOPE | Section: GOZEM TEAM GROWTH AND ROLE PERIODS | Parent context: BOLAJI BALOGOUN - OWNER-CONFIRMED CLAIM SCOPE\n\nBolaji was the first data hire in 2019. The initial team grew to 4 during the Global Data Analyst era (November 2019 - September 2022). The organization then grew from 4 to 14+ during his Head of Data period (October 2022 - March 2025). His later Data Director period was April 2025 - July 2026. The full team build must not be dated entirely to that later mandate. This confirmation does not establish direct-report counts, manager layers, department budget authority, or the precise dates of all 12 hires."
+        },
+        {
+          "source": "90_website_canon_llms_full.txt",
+          "chunk_id": "90_website_canon_llms_full.txt::8",
+          "section": "FinOps and analytical serving",
+          "retrieval_rank": 4,
+          "retrieval_score": 0.016129,
+          "parent_context": "Bolaji BALOGOUN · Biography",
+          "scope_context": "",
+          "evidence_type": "published",
+          "metric_scope": {
+            "id": "finops_cost_reduction",
+            "value": "42.57 percent",
+            "qualifier": "recorded reduction, one quarter",
+            "role": "Head of Data",
+            "initiative": "Dataform adoption, incremental modeling, partitioning, clustering and workload monitoring",
+            "not_established": "causal attribution to the initial cloud-platform choice or migration; investment amount, approval authority or multi-year department budget ownership"
+          },
+          "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN · Data Engineer · Data Architect (full content) | Section: FinOps and analytical serving | Parent context: Bolaji BALOGOUN · Biography\n\nAs Head of Data, Bolaji led Dataform adoption, dependency-aware orchestration, incremental modeling, partitioning and clustering optimization, and BigQuery workload monitoring. Recorded Google Cloud costs fell by 42.57% in one quarter while data freshness and reliability requirements were maintained. In the separate [Advanced Dataform framework project](https://www.bolablg.com/projects/dataform-modeling-lab/), one documented model definition went from about 150 lines to 20 lines of configuration."
+        }
+      ],
+      "grounding_checked": true,
+      "provenance": {
+        "code_revision": "d9e9da080a4ec5c1",
+        "deployment_revision": null,
+        "corpus_revision": "3fae0c27dfb14d76",
+        "kb_revision": "3fae0c27dfb14d76",
+        "policy_revision": "b723f78770668dcc",
+        "index_sync_pending": false,
+        "chunker_version": "3",
+        "model": "gemini-3.5-flash-lite",
+        "thinking_config": {
+          "thinking_level": "low"
+        },
+        "generation_thinking_config": {
+          "thinking_level": "low"
+        },
+        "generation_temperature": null,
+        "verifier_model": "gemini-3.5-flash-lite",
+        "verifier_thinking_level": "low",
+        "verifier_thinking_budget": null,
+        "prompt_versions": {
+          "inventory_followup": "1.1",
+          "guardrail": "2.1",
+          "condense": "1.1",
+          "batch_grade": "2.3",
+          "rewrite": "2.1",
+          "generate_professional": "3.16",
+          "generate_education": "3.6",
+          "generate_learning": "3.6",
+          "verify_grounding": "2.15",
+          "repair_grounding": "1.3",
+          "upper_bound_clarification": "1.0",
+          "skills_completeness_clarification": "1.0",
+          "insufficient_evidence": "1.1",
+          "disputed_evidence": "1.0",
+          "project_identity": "1.0",
+          "evidence_detail": "1.1",
+          "documentation_limit": "1.0",
+          "personal_production_limit": "1.1",
+          "degree_clarification": "1.0",
+          "language_retry": "1.0",
+          "structured_output_recovery": "1.0",
+          "out_of_scope": "2.0",
+          "translate": "1.0"
+        }
+      },
+      "evidence_sources": [
+        "90_website_canon_llms_full.txt",
+        "11_leadership_style.txt",
+        "19_owner_confirmed_scope.txt",
+        "90_website_canon_llms_full.txt"
+      ],
+      "unsupported_claims": [
+        "budget_authority_requires_direct_evidence"
+      ],
+      "latency_s": 6.405,
+      "fact_pass": true,
+      "fact_failures": [],
+      "scores": {
+        "relevance": 10,
+        "accuracy": 10,
+        "helpfulness": 8,
+        "faithfulness": 4,
+        "rationale": "The answer correctly states that the requested budget details are not documented, but it is unfaithful to the context by incorrectly claiming the project's outcome is also not documented."
+      },
+      "error": null,
+      "warning": null,
+      "judge_error": null,
+      "chars_in": 4659,
+      "chars_out": 677,
+      "sdk_responses": [
+        {
+          "sequence": 3,
+          "text": "{\n  \"answer\": \"Bolaji did not own a documented department budget, capital allocation, or multi-year financial plan, and there is no evidence of budget approval authority or multi-year department budget ownership beyond his data platform FinOps initiatives. His cost optimization achievement delivered a recorded Google Cloud cost reduction of 42.57% in one quarter through technical data platform modernization rather than procurement or budget authority. The planning horizon, rejected options, and specific monetary investment amounts or ranges are unknown.\",\n  \"confidence\": 0.95\n}",
+          "finish_reasons": [
+            "FinishReason.STOP"
+          ]
+        },
+        {
+          "sequence": 4,
+          "text": "{\n  \"is_grounded\": true,\n  \"addresses_question\": true,\n  \"unsupported_claims\": [],\n  \"corrected_answer\": \"\"\n}",
+          "finish_reasons": [
+            "FinishReason.STOP"
+          ]
+        },
+        {
+          "sequence": 5,
+          "text": "{\n  \"answer\": \"The retrieved evidence does not establish investment amount or range, planning horizon, approval authority, rejected options, or outcome for a documented budget or investment decision. The retrieved evidence does not establish multi-year department budget ownership beyond reducing a cloud bill. Specifically, the retrieved evidence notes a recorded Google Cloud cost reduction of 42.57 percent in one quarter achieved through data platform modernization (Dataform adoption, incremental modeling, partitioning, clustering, and workload monitoring), but explicitly states that investment amount, approval authority, or multi-year department budget ownership are not established.\",\n  \"confidence\": 1\n}",
+          "finish_reasons": [
+            "FinishReason.STOP"
+          ]
+        },
+        {
+          "sequence": 6,
+          "text": "{\n  \"is_grounded\": true,\n  \"addresses_question\": true,\n  \"unsupported_claims\": [],\n  \"corrected_answer\": \"\"\n}",
+          "finish_reasons": [
+            "FinishReason.STOP"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "recruiter-sde-01-t1",
+      "category": "canonical",
+      "lang": "en",
+      "tags": [
+        "recruiter_regression"
+      ],
+      "question": "This is a recruiter simulation for a Senior Data Engineer role at a fictional marketplace using GCP. What is the strongest evidence that Bolaji can personally build and operate production data pipelines rather than only manage a team?",
+      "answer": "At Gozem, during his earlier role as Global Data Analyst, Bolaji personally designed and operated Google Cloud Pub/Sub and Dataflow in production for the MongoDB CDC pipeline. Furthermore, he self-taught GCP and migrated 10+ TB within a single quarter without operational interruption while building a data warehouse with 50+ scheduled ETL pipelines using Python and BigQuery. The retrieved evidence does not establish personal production ownership for Apache Spark Structured Streaming, Apache NiFi, or Lakeflow, nor does it establish Kafka experience, which the evidence confirms Bolaji has none of at all. Named production implementation (OWNER-CONFIRMED PRODUCTION RESPONSIBILITY): \"At Gozem, Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline.\"",
+      "agent_type": "professional",
+      "evidence_count": 4,
+      "evidence": [
+        {
+          "source": "20_owner_confirmed_production_scope.txt",
+          "chunk_id": "20_owner_confirmed_production_scope.txt::0",
+          "section": "OWNER-CONFIRMED PRODUCTION RESPONSIBILITY",
+          "retrieval_rank": 1,
+          "retrieval_score": 36.0,
+          "parent_context": "",
+          "scope_context": "",
+          "evidence_type": "candidate_confirmed",
+          "metric_scope": {},
+          "content_preview": "Source: 20_owner_confirmed_production_scope.txt | Title: OWNER-CONFIRMED PRODUCTION RESPONSIBILITY | Section: OWNER-CONFIRMED PRODUCTION RESPONSIBILITY\n\nConfirmation recorded on November 19, 2026. This is the confirmation date, not a date assigned to the underlying work. Evidence classification: candidate_confirmed.\n\nAt Gozem, Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline. The owner subsequently clarified that he is both an architect and engineer and personally designed and operated the production services he used. This supersedes the earlier design-only qualification for these services.\n\nFor the Gozem Data Hub, Bolaji personally designed and operated AWS EC2 in production.\n\nBolaji personally set up an AWS S3 bucket in production. Bolaji personally operates an AWS S3 bucket in production, reading data from it and writing data back. He owns and operates the bucket on an ongoing basis. AWS S3 serves as an exchange layer with the product team and has also been used in projects. This clarification does not identify an employer or project for the S3 bucket and does not establish on-call responsibility.\n\nBolaji has no Kafka experience at all. Bolaji has never used Kafka. This is an explicit owner-confirmed absence of experience, not an inference from an omitted tool. It does not imply inability to learn Kafka or a deficiency in other streaming technologies.\n\nThese clarifications do not add personal Spark Structured Streaming, Apache NiFi or Lakeflow production experience. They do not establish CDC event counts, end-to-end latency or availability. The separately documented streaming-workload average remains a different measurement population."
+        },
+        {
+          "source": "00_identity.txt",
+          "chunk_id": "00_identity.txt::4",
+          "section": "WHY BOLAJI - VALUE PROPOSITION:",
+          "retrieval_rank": 2,
+          "retrieval_score": 0.031754,
+          "parent_context": "BOLAJI BALOGOUN - IDENTITY & CONTACT",
+          "scope_context": "",
+          "evidence_type": "curated",
+          "metric_scope": {},
+          "content_preview": "Source: 00_identity.txt | Title: BOLAJI BALOGOUN - IDENTITY & CONTACT | Section: WHY BOLAJI - VALUE PROPOSITION: | Parent context: BOLAJI BALOGOUN - IDENTITY & CONTACT\n\nBolaji is a data and AI executive and an impact-driven builder. He does not just set strategy: he architects and deploys the systems himself while leading the team that scales them. He has built data platforms serving millions of users in markets most engineers never touch.\n\nWhat makes Bolaji different from other senior data and AI candidates:\n\n1. Builder-leader hybrid: at Gozem he led a data organization of 14+ professionals supporting five African operating markets AND still coded, architected, and shipped production systems. Most leaders at this level stop building. Bolaji does both.\n\n2. Self-taught adaptability: he taught himself Google Cloud Platform with zero prior cloud experience and deployed a full production analytics infrastructure within a single quarter because the business needed it, migrating 10+ TB without operational interruption. He learns fast under pressure and delivers.\n\n3. Full-stack data and AI: Bolaji has worked every layer of the data stack, from statistics and econometrics to data engineering, machine learning, AI product delivery, and team leadership. The combination across the entire stack is the differentiator.\n\n4. Real-world African market expertise: he built production systems supporting five African operating markets with real infrastructure constraints, multilingual contexts, and distributed teams, serving millions of real users daily.\n\nWhy interview Bolaji for a senior data or AI role:\nHe combines 10+ years of hands-on technical depth (Python, SQL, GCP, Airflow, LLMs, agentic AI) with proven leadership of a team he grew from 4 to 14+ during the Head of Data period (October 2022 - March 2025). He chartered the Gozem Data Hub serving over 700 people, cut Google Cloud costs by 42.57% in a single quarter, shipped 30+ production AI tools (RAG chatbots, document intelligence, fraud screening, market monitoring), and set governance across 250+ production pipelines. He is equally comfortable writing BigQuery SQL, designing system architecture, mentoring engineers, or presenting to executive leadership."
+        },
+        {
+          "source": "90_website_canon_llms_full.txt",
+          "chunk_id": "90_website_canon_llms_full.txt::4",
+          "section": "Data products at operating scale",
+          "retrieval_rank": 5,
+          "retrieval_score": 0.015873,
+          "parent_context": "Bolaji BALOGOUN · Biography",
+          "scope_context": "",
+          "evidence_type": "published",
+          "metric_scope": {},
+          "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN · Data Engineer · Data Architect (full content) | Section: Data products at operating scale | Parent context: Bolaji BALOGOUN · Biography\n\nBolaji architected and led the development of the [Gozem Data Hub](https://www.bolablg.com/experience/gozem-director/#data-hub), a governed operational and analytics platform adopted by 700+ employees, field agents, and partners across five African countries. It provided self-service access to operational applications, analytics, AI tools, and automation. The published case documents React, FastAPI, AWS EC2, BigQuery, MongoDB, Nginx, Docker, Google Cloud Storage, Artifact Registry, and Python.\n\nThe data team monitored more than 250 pipelines. Bolaji established governance, observability, and reliability standards across 300+ workflow orchestration, transformation, and metrics-layer assets."
+        },
+        {
+          "source": "03_previous_role_gozem_gda.txt",
+          "chunk_id": "03_previous_role_gozem_gda.txt::1",
+          "section": "KEY ACHIEVEMENTS:",
+          "retrieval_rank": 8,
+          "retrieval_score": 0.015385,
+          "parent_context": "BOLAJI BALOGOUN - PREVIOUS ROLE: GLOBAL DATA ANALYST AT GOZEM",
+          "scope_context": "",
+          "evidence_type": "curated",
+          "metric_scope": {},
+          "content_preview": "Source: 03_previous_role_gozem_gda.txt | Title: BOLAJI BALOGOUN - PREVIOUS ROLE: GLOBAL DATA ANALYST AT GOZEM | Section: KEY ACHIEVEMENTS: | Parent context: BOLAJI BALOGOUN - PREVIOUS ROLE: GLOBAL DATA ANALYST AT GOZEM\n\nMigrated Gozem's data infrastructure to Google Cloud:\n- Situation: the data infrastructure ran on legacy batch processes that could not keep up with growing operational and analytical needs across countries. There was no data warehouse. Bolaji had never worked with GCP or AWS before.\n- Action: self-taught Google BigQuery, Cloud Storage, and related tools. Opted for a cloud-first approach to avoid maintenance overhead. Designed a BigQuery-based data warehouse with 50+ scheduled ETL pipelines.\n- Tools: Google BigQuery, Google Cloud Storage, Google Dataflow, Apache Airflow, Python.\n- Outcome: migrated 10+ TB within a single quarter, without operational interruption, into a fully functional cloud-based analytics infrastructure. Founded the analytics engineering function on top of it.\n\nAutomated operational monitoring:\n- Situation: operations monitoring relied on a manual recurring job to spot business scenarios across markets, taking up to 2 days of analyst work per cycle.\n- Action: automated the workflow within the first 6 months of the role. Python jobs querying PostgreSQL surfaced supply gaps, driver behaviour anomalies, and fraudulent trip patterns into Google Sheets for the operations team.\n- Outcome: replaced a 2-day manual job with a 5-15 minute automated cycle.\n\nAutomated incentive payments:\n- Situation: the agent and partner incentive payment process took multiple days, with manual reviews creating delays, errors, and heavy load on the finance team.\n- Action: built automated data pipelines combining predictive analytics and near-real-time monitoring, with structured logs and dispute trails for finance and support.\n- Outcome: reduced a multi-day manual process to minutes and facilitated more driver engagement.\n\nBuilt the fraud patterns database:\n- Situation: financial defaults from undetected fraud patterns were eroding margins, with no central knowledge base of known schemes.\n- Action: implemented a fraud patterns database fed by automated daily collection monitoring, surfacing anomalies the same day they appeared.\n- Outcome: zero unknown financial defaults during the period. Laid the groundwork for the later ML-based fraud screening pipeline.\n\nMarketing segmentation and cohort analysis:\n- Situation: marketing campaigns were broadly targeted because the team lacked a structured user profiling layer.\n- Action: built a profiling database covering riders and drivers, with RFM segmentation and cohort analysis used by Marketing for targeted campaigns.\n- Outcome: supported targeted campaigns and retention analysis. The approximately 9% retention improvement belongs to the separate seasonal driver-retention analysis, not user retention.\n\nSeasonal driver-retention analysis:\n- Action: identified driver churn associated with the agricultural season and informed an incentive response.\n- Outcome: supported an approximately 9% improvement in driver retention. The measurement interval is not confirmed as quarter-over-quarter.\n\nBusiness health monitoring and daily insights:\n- Situation: country managers and top management lacked a single daily lens on business health across markets.\n- Action: consolidated 20+ KPIs into a daily report spanning all business areas, built in Google Sheets and transitioned to Google Data Studio and Tableau after the BigQuery migration.\n- Outcome: daily insights presented to country managers and top management, surfacing trends and anomalies for operational decisions.\n\nBuilt and led a distributed analytics team:\n- Action: founded the analytics engineering function and grew a distributed team of 4, delivering automated dashboards, KPI reporting, and weekly market insights."
+        }
+      ],
+      "grounding_checked": true,
+      "provenance": {
+        "code_revision": "d9e9da080a4ec5c1",
+        "deployment_revision": null,
+        "corpus_revision": "3fae0c27dfb14d76",
+        "kb_revision": "3fae0c27dfb14d76",
+        "policy_revision": "b723f78770668dcc",
+        "index_sync_pending": false,
+        "chunker_version": "3",
+        "model": "gemini-3.5-flash-lite",
+        "thinking_config": {
+          "thinking_level": "low"
+        },
+        "generation_thinking_config": {
+          "thinking_level": "low"
+        },
+        "generation_temperature": null,
+        "verifier_model": "gemini-3.5-flash-lite",
+        "verifier_thinking_level": "low",
+        "verifier_thinking_budget": null,
+        "prompt_versions": {
+          "inventory_followup": "1.1",
+          "guardrail": "2.1",
+          "condense": "1.1",
+          "batch_grade": "2.3",
+          "rewrite": "2.1",
+          "generate_professional": "3.16",
+          "generate_education": "3.6",
+          "generate_learning": "3.6",
+          "verify_grounding": "2.15",
+          "repair_grounding": "1.3",
+          "upper_bound_clarification": "1.0",
+          "skills_completeness_clarification": "1.0",
+          "insufficient_evidence": "1.1",
+          "disputed_evidence": "1.0",
+          "project_identity": "1.0",
+          "evidence_detail": "1.1",
+          "documentation_limit": "1.0",
+          "personal_production_limit": "1.1",
+          "degree_clarification": "1.0",
+          "language_retry": "1.0",
+          "structured_output_recovery": "1.0",
+          "out_of_scope": "2.0",
+          "translate": "1.0"
+        }
+      },
+      "evidence_sources": [
+        "20_owner_confirmed_production_scope.txt",
+        "00_identity.txt",
+        "90_website_canon_llms_full.txt",
+        "03_previous_role_gozem_gda.txt"
+      ],
+      "unsupported_claims": [
+        "migration_earlier_role_missing"
+      ],
+      "latency_s": 7.164,
+      "fact_pass": true,
+      "fact_failures": [],
+      "scores": {
+        "relevance": 10,
+        "accuracy": 10,
+        "helpfulness": 10,
+        "faithfulness": 4,
+        "rationale": "The answer is highly relevant, accurate, and helpful by directly citing the strongest evidence, but it makes one minor claim linking a project to a role that is not explicitly supported by the context, capping faithfulness."
+      },
+      "error": null,
+      "warning": null,
+      "judge_error": null,
+      "chars_in": 9105,
+      "chars_out": 802,
+      "sdk_responses": [
+        {
+          "sequence": 3,
+          "text": "{\n  \"answer\": \"At Gozem, Bolaji personally designed and operated Google Cloud Pub/Sub and Dataflow in production for the MongoDB change data capture pipeline. Furthermore, he self-taught GCP and migrated 10+ TB within a single quarter without operational interruption while building a data warehouse with 50+ scheduled ETL pipelines using Python and BigQuery.\",\n  \"confidence\": 1\n}",
+          "finish_reasons": [
+            "FinishReason.STOP"
+          ]
+        },
+        {
+          "sequence": 4,
+          "text": "{\n  \"is_grounded\": true,\n  \"addresses_question\": true,\n  \"unsupported_claims\": [],\n  \"corrected_answer\": \"\"\n}",
+          "finish_reasons": [
+            "FinishReason.STOP"
+          ]
+        },
+        {
+          "sequence": 5,
+          "text": "{\n  \"answer\": \"At Gozem, during his earlier role as Global Data Analyst, Bolaji personally designed and operated Google Cloud Pub/Sub and Dataflow in production for the MongoDB CDC pipeline. Furthermore, he self-taught GCP and migrated 10+ TB within a single quarter without operational interruption while building a data warehouse with 50+ scheduled ETL pipelines using Python and BigQuery. The retrieved evidence does not establish personal production ownership for Apache Spark Structured Streaming, Apache NiFi, or Lakeflow, nor does it establish Kafka experience, which the evidence confirms Bolaji has none of at all.\",\n  \"confidence\": 1\n}",
+          "finish_reasons": [
+            "FinishReason.STOP"
+          ]
+        },
+        {
+          "sequence": 6,
+          "text": "{\n  \"is_grounded\": true,\n  \"addresses_question\": true,\n  \"unsupported_claims\": [],\n  \"corrected_answer\": \"\"\n}",
+          "finish_reasons": [
+            "FinishReason.STOP"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "recruiter-sde-03-t2",
+      "category": "canonical",
+      "lang": "en",
+      "tags": [
+        "recruiter_regression"
+      ],
+      "question": "I am asking only about experience: has Bolaji personally deployed Kafka or Spark Structured Streaming, and which named project proves it?",
+      "answer": "I don't have enough verified information to answer that specific question.",
+      "agent_type": "professional",
+      "evidence_count": 5,
+      "evidence": [
+        {
+          "source": "20_owner_confirmed_production_scope.txt",
+          "chunk_id": "20_owner_confirmed_production_scope.txt::0",
+          "section": "OWNER-CONFIRMED PRODUCTION RESPONSIBILITY",
+          "retrieval_rank": 1,
+          "retrieval_score": 44.0,
+          "parent_context": "",
+          "scope_context": "",
+          "evidence_type": "candidate_confirmed",
+          "metric_scope": {},
+          "content_preview": "Source: 20_owner_confirmed_production_scope.txt | Title: OWNER-CONFIRMED PRODUCTION RESPONSIBILITY | Section: OWNER-CONFIRMED PRODUCTION RESPONSIBILITY\n\nConfirmation recorded on November 19, 2026. This is the confirmation date, not a date assigned to the underlying work. Evidence classification: candidate_confirmed.\n\nAt Gozem, Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline. The owner subsequently clarified that he is both an architect and engineer and personally designed and operated the production services he used. This supersedes the earlier design-only qualification for these services.\n\nFor the Gozem Data Hub, Bolaji personally designed and operated AWS EC2 in production.\n\nBolaji personally set up an AWS S3 bucket in production. Bolaji personally operates an AWS S3 bucket in production, reading data from it and writing data back. He owns and operates the bucket on an ongoing basis. AWS S3 serves as an exchange layer with the product team and has also been used in projects. This clarification does not identify an employer or project for the S3 bucket and does not establish on-call responsibility.\n\nBolaji has no Kafka experience at all. Bolaji has never used Kafka. This is an explicit owner-confirmed absence of experience, not an inference from an omitted tool. It does not imply inability to learn Kafka or a deficiency in other streaming technologies.\n\nThese clarifications do not add personal Spark Structured Streaming, Apache NiFi or Lakeflow production experience. They do not establish CDC event counts, end-to-end latency or availability. The separately documented streaming-workload average remains a different measurement population."
+        },
+        {
+          "source": "90_website_canon_llms_full.txt",
+          "chunk_id": "90_website_canon_llms_full.txt::7",
+          "section": "Applied AI, automation, and reliability",
+          "retrieval_rank": 1,
+          "retrieval_score": 20.0,
+          "parent_context": "Bolaji BALOGOUN · Biography",
+          "scope_context": "",
+          "evidence_type": "published",
+          "metric_scope": {
+            "id": "invoice_time_savings",
+            "value": "40+ hours",
+            "qualifier": "estimated savings, not established measured time savings",
+            "population": "per country Financing Manager",
+            "measurement_period": "per month",
+            "provenance": "explicit estimated savings in the cited invoice records"
+          },
+          "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN · Data Engineer · Data Architect (full content) | Section: Applied AI, automation, and reliability | Parent context: Bolaji BALOGOUN · Biography\n\nBolaji co-led Gozem’s AI strategy. The group shipped 30+ production automation tools during his Data Director mandate. He prototyped invoice extraction in Vertex AI Studio and built a workflow with validation and human review. Estimated savings were 40+ hours per country Financing Manager each month. The Vodun Days command center gave Operations minute-level visibility into driver supply. On the peak day, ride requests were 48% above the average for the other event days and the rider match rate was 88%.\n\nHe also built application-ready data flows from MongoDB, BigQuery, Google Cloud Storage, and Sheets, plus a near-real-time MongoDB CDC pipeline that published change events through Pub/Sub, processed them in Dataflow, updated BigQuery, and supported real-time visualization in Looker Studio. These systems paired data products with operational services and decision workflows."
+        },
+        {
+          "source": "90_website_canon_llms_full.txt",
+          "chunk_id": "90_website_canon_llms_full.txt::14",
+          "section": "Gozem Data Hub: operational apps & analytics platform",
+          "retrieval_rank": 1,
+          "retrieval_score": 21.0,
+          "parent_context": "Bolaji BALOGOUN · Biography > Data Director · GOZEM · Apr 2025 - Jul 2026",
+          "scope_context": "Data Director · GOZEM · Apr 2025 - Jul 2026",
+          "evidence_type": "published",
+          "metric_scope": {},
+          "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN · Data Engineer · Data Architect (full content) | Section: Gozem Data Hub: operational apps & analytics platform | Parent context: Bolaji BALOGOUN · Biography > Data Director · GOZEM · Apr 2025 - Jul 2026\n\nResult: Unified analytics, AI, and operational tools into a single platform serving 700+ stakeholders across five countries.\nProblem: As Gozem evolved from a startup into a scale-up, the demand for operational applications, automation workflows, analytics products, and AI-powered tools grew rapidly across the organization.\n\nProduct and engineering teams remained primarily focused on revenue-generating marketplace initiatives, limiting their capacity to support the growing number of operational use cases. Many requests to the Data team recurred, including ad hoc analyses, data extractions, and operational workflows that required intervention from analysts and engineers.\n\nThe Data team also lacked a shared environment for its growing portfolio of tools, applications, analytics assets, and AI services. It had two goals.\n\n1. Give operational teams direct access to data products, analytics, and tools to reduce recurring requests to the Data team.\n2. Establish a common platform for the Data team to quickly design, deploy, and govern applications, automation, and AI solutions at scale.\nSolution: Architected and led the development of **Gozem Data Hub**, a centralized data and AI workspace for delivering self-service products across the organization.\n\nThe platform brought operational applications, analytics tools, AI solutions, automation workflows, and data exploration into one environment with shared standards for authentication, authorization, deployment, and governance.\n\nThe Data team used reusable architecture and AI-assisted engineering workflows to deliver production applications for operational teams. These applications moved a large share of analytical and operational requests from manual tickets to self-service tools that business users could operate directly.\n\nBusiness teams could independently access insights, applications, and AI tools, and the Data team had more time for higher-value initiatives.\nTools: React · FastAPI · AWS EC2 · BigQuery · MongoDB · Nginx · Docker · Google Cloud Storage · Artifact Registry · Python"
+        },
+        {
+          "source": "90_website_canon_llms_full.txt",
+          "chunk_id": "90_website_canon_llms_full.txt::47",
+          "section": "Tech stack",
+          "retrieval_rank": 2,
+          "retrieval_score": 0.032258,
+          "parent_context": "Bolaji BALOGOUN · Biography",
+          "scope_context": "",
+          "evidence_type": "published",
+          "metric_scope": {},
+          "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN · Data Engineer · Data Architect (full content) | Section: Tech stack | Parent context: Bolaji BALOGOUN · Biography\n\nBolaji personally uses Cloud Functions and Vertex AI in production.\n\n\n- Data platforms & governance: BigQuery · ClickHouse · BigLake · Databricks (projects and labs) · Dataplex · Unity Catalog\n- Databases & storage: PostgreSQL · MongoDB · Google Cloud Storage · AWS S3 · Delta Lake · Apache Iceberg\n- Pipelines & streaming: Airflow · Dataform · Dataflow · Apache NiFi · Lakeflow · Spark · Pub/Sub\n- Languages & frameworks: Python · SQL · R · Bash · Scala · FastAPI\n- Cloud & delivery: Google Cloud · Compute Engine · AWS · AWS EC2 · Cloud Run · Cloud Functions · Docker · Artifact Registry · Git\n- Analytics & visualization: Data Studio · Superset · Metabase · Grafana\n- AI & automation: Vertex AI · Gemini · Codex · RAG · LangGraph (iBola project) · MCP"
+        },
+        {
+          "source": "04_previous_roles_early.txt",
+          "chunk_id": "04_previous_roles_early.txt::2",
+          "section": "BIG DATA BOOTCAMP - RINTIO (March - June 2018)",
+          "retrieval_rank": 3,
+          "retrieval_score": 0.030331,
+          "parent_context": "BOLAJI BALOGOUN - EARLY CAREER",
+          "scope_context": "BIG DATA BOOTCAMP - RINTIO (March - June 2018)",
+          "evidence_type": "curated",
+          "metric_scope": {},
+          "content_preview": "Source: 04_previous_roles_early.txt | Title: BOLAJI BALOGOUN - EARLY CAREER | Section: BIG DATA BOOTCAMP - RINTIO (March - June 2018) | Parent context: BOLAJI BALOGOUN - EARLY CAREER\n\nBolaji transitioned from Statistics to Data Science through this intensive 4-month program covering Data Engineering, Machine Learning, and Big Data infrastructure (Apache Spark, Hive, Python, SQL, Hadoop, ElasticSearch, Kibana, Apache Superset, GitLab), with hands-on projects on data visualization and large-scale processing. Key project: \"Duniya Data\", a collaborative agricultural insights app built with peers under mentor guidance."
+        }
+      ],
+      "grounding_checked": false,
+      "provenance": {
+        "code_revision": "d9e9da080a4ec5c1",
+        "deployment_revision": null,
+        "corpus_revision": "3fae0c27dfb14d76",
+        "kb_revision": "3fae0c27dfb14d76",
+        "policy_revision": "b723f78770668dcc",
+        "index_sync_pending": false,
+        "chunker_version": "3",
+        "model": "gemini-3.5-flash-lite",
+        "thinking_config": {
+          "thinking_level": "low"
+        },
+        "generation_thinking_config": {
+          "thinking_level": "low"
+        },
+        "generation_temperature": null,
+        "verifier_model": "gemini-3.5-flash-lite",
+        "verifier_thinking_level": "low",
+        "verifier_thinking_budget": null,
+        "prompt_versions": {
+          "inventory_followup": "1.1",
+          "guardrail": "2.1",
+          "condense": "1.1",
+          "batch_grade": "2.3",
+          "rewrite": "2.1",
+          "generate_professional": "3.16",
+          "generate_education": "3.6",
+          "generate_learning": "3.6",
+          "verify_grounding": "2.15",
+          "repair_grounding": "1.3",
+          "upper_bound_clarification": "1.0",
+          "skills_completeness_clarification": "1.0",
+          "insufficient_evidence": "1.1",
+          "disputed_evidence": "1.0",
+          "project_identity": "1.0",
+          "evidence_detail": "1.1",
+          "documentation_limit": "1.0",
+          "personal_production_limit": "1.1",
+          "degree_clarification": "1.0",
+          "language_retry": "1.0",
+          "structured_output_recovery": "1.0",
+          "out_of_scope": "2.0",
+          "translate": "1.0"
+        }
+      },
+      "evidence_sources": [
+        "20_owner_confirmed_production_scope.txt",
+        "90_website_canon_llms_full.txt",
+        "90_website_canon_llms_full.txt",
+        "90_website_canon_llms_full.txt",
+        "04_previous_roles_early.txt"
+      ],
+      "unsupported_claims": [
+        "non_use_requires_explicit_negative_evidence",
+        "confirmed_non_use_requires_answer:Kafka"
+      ],
+      "latency_s": 5.729,
+      "fact_pass": false,
+      "fact_failures": [
+        "answer did not pass grounding verification",
+        "missing explicit documentation limit: Spark Structured Streaming",
+        "missing evidence-conditioned experience resolution: Kafka"
+      ],
+      "scores": {
+        "relevance": 10,
+        "accuracy": 0,
+        "helpfulness": 0,
+        "faithfulness": 0,
+        "rationale": "The bot incorrectly declined to answer, as the provided context explicitly confirms the absence of Kafka experience and clarifies the status of Spark Structured Streaming experience."
+      },
+      "error": null,
+      "warning": null,
+      "judge_error": null,
+      "chars_in": 7029,
+      "chars_out": 74,
+      "sdk_responses": [
+        {
+          "sequence": 3,
+          "text": "{\n  \"answer\": \"Bolaji has an explicit owner-confirmed absence of experience with Kafka and has never used it. Spark Structured Streaming is unsupported by direct production evidence.\",\n  \"confidence\": 1\n}",
+          "finish_reasons": [
+            "FinishReason.STOP"
+          ]
+        },
+        {
+          "sequence": 4,
+          "text": "{\n  \"is_grounded\": true,\n  \"addresses_question\": true,\n  \"unsupported_claims\": [],\n  \"corrected_answer\": \"\"\n}",
+          "finish_reasons": [
+            "FinishReason.STOP"
+          ]
+        },
+        {
+          "sequence": 5,
+          "text": "{\n  \"answer\": \"Regarding Kafka, Bolaji has no Kafka experience at all and has never used it; this is an explicit owner-confirmed absence of experience. Regarding Spark Structured Streaming, the retrieved evidence does not establish personal production deployment or a named project, as Spark Structured Streaming is unsupported by direct production evidence.\",\n  \"confidence\": 1.0\n}",
+          "finish_reasons": [
+            "FinishReason.STOP"
+          ]
+        }
+      ]
+    }
+  ]
+}

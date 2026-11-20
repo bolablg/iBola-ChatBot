@@ -1,0 +1,640 @@
+{
+  "origin_commit": "18f39b3ab24e90a712ca9f80acb6c2a10bcef3b1",
+  "origin_report": "eval_20261120_045138.json",
+  "kind": "actual_failed_evaluation",
+  "cases": [
+    {
+      "id": "com-001-fr",
+      "category": "community",
+      "lang": "fr",
+      "tags": [],
+      "question": "Quel est le role de Bolaji chez iSheero ?",
+      "answer": "Je ne peux pas r\u00e9pondre \u00e0 cette question car elle d\u00e9passe mon domaine de comp\u00e9tences. Je vous invite plut\u00f4t \u00e0 m'interroger sur l'exp\u00e9rience professionnelle, l'\u00e9ducation, le leadership communautaire, le conseil, le blog ou les applications de Bolaji!",
+      "agent_type": "redirect",
+      "evidence_count": 0,
+      "evidence": [],
+      "grounding_checked": false,
+      "provenance": {
+        "code_revision": "6b44f0b30db84a5a",
+        "deployment_revision": null,
+        "corpus_revision": "3fae0c27dfb14d76",
+        "kb_revision": "3fae0c27dfb14d76",
+        "policy_revision": "e7d6cf761e1796ea",
+        "index_sync_pending": false,
+        "chunker_version": "3",
+        "model": "gemini-3.5-flash-lite",
+        "thinking_config": {
+          "thinking_level": "low"
+        },
+        "generation_thinking_config": {
+          "thinking_level": "low"
+        },
+        "generation_temperature": null,
+        "verifier_model": "gemini-3.5-flash-lite",
+        "verifier_thinking_level": "low",
+        "verifier_thinking_budget": null,
+        "prompt_versions": {
+          "inventory_followup": "1.1",
+          "guardrail": "2.1",
+          "condense": "1.1",
+          "batch_grade": "2.3",
+          "rewrite": "2.1",
+          "generate_professional": "3.17",
+          "generate_education": "3.6",
+          "generate_learning": "3.6",
+          "verify_grounding": "2.15",
+          "repair_grounding": "1.4",
+          "upper_bound_clarification": "1.0",
+          "skills_completeness_clarification": "1.0",
+          "insufficient_evidence": "1.1",
+          "disputed_evidence": "1.0",
+          "project_identity": "1.0",
+          "evidence_detail": "1.1",
+          "documentation_limit": "1.0",
+          "personal_production_limit": "1.1",
+          "degree_clarification": "1.0",
+          "language_retry": "1.0",
+          "structured_output_recovery": "1.0",
+          "out_of_scope": "2.0",
+          "translate": "1.0",
+          "notification_suppressed": "1.0"
+        }
+      },
+      "evidence_sources": [],
+      "unsupported_claims": [],
+      "latency_s": 1.611,
+      "fact_pass": false,
+      "fact_failures": [
+        "missing: vice-president|vice president",
+        "missing: fondateur|founding"
+      ],
+      "scores": {
+        "relevance": 0,
+        "accuracy": 3,
+        "helpfulness": 0,
+        "faithfulness": 10,
+        "rationale": "The bot incorrectly declined a relevant question about professional experience, a topic it explicitly suggests it can answer, making the response unhelpful and inaccurate."
+      },
+      "error": null,
+      "warning": null,
+      "judge_error": null,
+      "judge_diagnostics": {
+        "protocol": "bounded-format-recovery-1",
+        "attempts": [
+          {
+            "attempt": 1
+          }
+        ],
+        "retry_reasons": [],
+        "decoding_source": "text",
+        "status": "success"
+      },
+      "chars_in": 41,
+      "chars_out": 249,
+      "sdk_responses": [
+        {
+          "sequence": 1,
+          "response_text": "{\n  \"score\": 0,\n  \"category\": \"out_of_scope\",\n  \"reasoning\": \"Bolaji has no role at iSheero based on his professional profile.\",\n  \"standalone_query\": \"Quel est le role de Bolaji chez iSheero ?\",\n  \"retrieval_query_en\": \"What is Bolaji's role at iSheero?\"\n}",
+          "finish_reasons": [
+            "FinishReason.STOP"
+          ],
+          "elapsed_s": 0.864
+        },
+        {
+          "sequence": 2,
+          "response_text": "Je ne peux pas r\u00e9pondre \u00e0 cette question car elle d\u00e9passe mon domaine de comp\u00e9tences. Je vous invite plut\u00f4t \u00e0 m'interroger sur l'exp\u00e9rience professionnelle, l'\u00e9ducation, le leadership communautaire, le conseil, le blog ou les applications de Bolaji !",
+          "finish_reasons": [
+            "FinishReason.STOP"
+          ],
+          "elapsed_s": 0.7347
+        }
+      ]
+    },
+    {
+      "id": "recruiter-adi-05-t5",
+      "category": "canonical",
+      "lang": "fr",
+      "tags": [
+        "recruiter_regression"
+      ],
+      "question": "Le panneau de cette page indique une croissance de quatre \u00e0 plus de quatorze personnes et cinq pays africains. Votre r\u00e9ponse parle de z\u00e9ro \u00e0 quatorze et de six pays, mais en nomme cinq. Quelle formulation puis-je retenir sans ajouter de faits non \u00e9tablis ?",
+      "answer": "Bolaji a \u00e9t\u00e9 la premi\u00e8re embauche data en 2019. L'\u00e9quipe initiale a atteint 4 personnes pendant son mandat de Global Data Analyst de novembre 2019 \u00e0 septembre 2022, puis l'organisation est pass\u00e9e de 4 \u00e0 plus de 14 professionnels durant son mandat de Head of Data d'octobre 2022 \u00e0 mars 2025. L'\u00e9quipe soutenait cinq march\u00e9s op\u00e9rationnels africains, \u00e0 savoir le Togo, le B\u00e9nin, le Cameroun, le Gabon et le Congo, tandis que Singapour \u00e9tait le si\u00e8ge social de l'entreprise et non un march\u00e9 op\u00e9rationnel. Le dossier ne prouve pas un effectif initial de z\u00e9ro ni une croissance de z\u00e9ro \u00e0 quatorze.",
+      "agent_type": "professional",
+      "evidence_count": 2,
+      "evidence": [
+        {
+          "source": "19_owner_confirmed_scope.txt",
+          "chunk_id": "19_owner_confirmed_scope.txt::2",
+          "section": "GOZEM TEAM GROWTH AND ROLE PERIODS",
+          "retrieval_rank": 1,
+          "retrieval_score": 19.0,
+          "parent_context": "BOLAJI BALOGOUN - OWNER-CONFIRMED CLAIM SCOPE",
+          "scope_context": "",
+          "evidence_type": "candidate_confirmed",
+          "metric_scope": {},
+          "content_preview": "Source: 19_owner_confirmed_scope.txt | Title: BOLAJI BALOGOUN - OWNER-CONFIRMED CLAIM SCOPE | Section: GOZEM TEAM GROWTH AND ROLE PERIODS | Parent context: BOLAJI BALOGOUN - OWNER-CONFIRMED CLAIM SCOPE\n\nBolaji was the first data hire in 2019. The initial team grew to 4 during the Global Data Analyst era (November 2019 - September 2022). The organization then grew from 4 to 14+ during his Head of Data period (October 2022 - March 2025). His later Data Director period was April 2025 - July 2026. The full team build must not be dated entirely to that later mandate. This confirmation does not establish direct-report counts, manager layers, department budget authority, or the precise dates of all 12 hires."
+        },
+        {
+          "source": "19_owner_confirmed_scope.txt",
+          "chunk_id": "19_owner_confirmed_scope.txt::4",
+          "section": "FRENCH SUMMARY OF CONFIRMED TEAM STAGES",
+          "retrieval_rank": 1,
+          "retrieval_score": 23.0,
+          "parent_context": "BOLAJI BALOGOUN - OWNER-CONFIRMED CLAIM SCOPE",
+          "scope_context": "",
+          "evidence_type": "candidate_confirmed",
+          "metric_scope": {},
+          "content_preview": "Source: 19_owner_confirmed_scope.txt | Title: BOLAJI BALOGOUN - OWNER-CONFIRMED CLAIM SCOPE | Section: FRENCH SUMMARY OF CONFIRMED TEAM STAGES | Parent context: BOLAJI BALOGOUN - OWNER-CONFIRMED CLAIM SCOPE\n\nTraduction fran\u00e7aise des faits confirm\u00e9s ci-dessus, sans nouvelle affirmation : Bolaji a \u00e9t\u00e9 la premi\u00e8re embauche data en 2019. L'\u00e9quipe initiale a atteint 4 personnes pendant le mandat Global Data Analyst (novembre 2019 - septembre 2022). L'organisation est ensuite pass\u00e9e de 4 \u00e0 plus de 14 professionnels durant le mandat Head of Data (octobre 2022 - mars 2025). L'\u00e9quipe soutenait cinq march\u00e9s op\u00e9rationnels africains : Togo, B\u00e9nin, Cameroun, Gabon et Congo. Singapour \u00e9tait uniquement le si\u00e8ge social de l'entreprise, et non un march\u00e9 op\u00e9rationnel suppl\u00e9mentaire ni un lieu de travail des membres de l'\u00e9quipe. Le dossier ne prouve pas un effectif initial de z\u00e9ro."
+        }
+      ],
+      "grounding_checked": true,
+      "provenance": {
+        "code_revision": "6b44f0b30db84a5a",
+        "deployment_revision": null,
+        "corpus_revision": "3fae0c27dfb14d76",
+        "kb_revision": "3fae0c27dfb14d76",
+        "policy_revision": "e7d6cf761e1796ea",
+        "index_sync_pending": false,
+        "chunker_version": "3",
+        "model": "gemini-3.5-flash-lite",
+        "thinking_config": {
+          "thinking_level": "low"
+        },
+        "generation_thinking_config": {
+          "thinking_level": "low"
+        },
+        "generation_temperature": null,
+        "verifier_model": "gemini-3.5-flash-lite",
+        "verifier_thinking_level": "low",
+        "verifier_thinking_budget": null,
+        "prompt_versions": {
+          "inventory_followup": "1.1",
+          "guardrail": "2.1",
+          "condense": "1.1",
+          "batch_grade": "2.3",
+          "rewrite": "2.1",
+          "generate_professional": "3.17",
+          "generate_education": "3.6",
+          "generate_learning": "3.6",
+          "verify_grounding": "2.15",
+          "repair_grounding": "1.4",
+          "upper_bound_clarification": "1.0",
+          "skills_completeness_clarification": "1.0",
+          "insufficient_evidence": "1.1",
+          "disputed_evidence": "1.0",
+          "project_identity": "1.0",
+          "evidence_detail": "1.1",
+          "documentation_limit": "1.0",
+          "personal_production_limit": "1.1",
+          "degree_clarification": "1.0",
+          "language_retry": "1.0",
+          "structured_output_recovery": "1.0",
+          "out_of_scope": "2.0",
+          "translate": "1.0",
+          "notification_suppressed": "1.0"
+        }
+      },
+      "evidence_sources": [
+        "19_owner_confirmed_scope.txt",
+        "19_owner_confirmed_scope.txt"
+      ],
+      "unsupported_claims": [],
+      "latency_s": 3.951,
+      "fact_pass": false,
+      "fact_failures": [
+        "forbidden pattern: (?:de |from )(?:zero|z\u00e9ro|0).{0,12}(?:14|quatorze)"
+      ],
+      "scores": {
+        "relevance": 10,
+        "accuracy": 10,
+        "helpfulness": 10,
+        "faithfulness": 10,
+        "rationale": "The answer perfectly uses the context to resolve the user's specific points of confusion regarding team growth and country count, providing a clear and accurate formulation."
+      },
+      "error": null,
+      "warning": null,
+      "judge_error": null,
+      "judge_diagnostics": {
+        "protocol": "bounded-format-recovery-1",
+        "attempts": [
+          {
+            "attempt": 1
+          }
+        ],
+        "retry_reasons": [],
+        "decoding_source": "text",
+        "status": "success"
+      },
+      "chars_in": 1908,
+      "chars_out": 591,
+      "sdk_responses": [
+        {
+          "sequence": 1,
+          "response_text": "{\n  \"score\": 95,\n  \"category\": \"professional\",\n  \"reasoning\": \"The user is asking for clarification on conflicting statements regarding team size and countries in Bolaji's professional experience at Gozem, aiming to verify factual accuracy for documentation.\",\n  \"standalone_query\": \"Le panneau de cette page indique une croissance de quatre \u00e0 plus de quatorze personnes et cinq pays africains. Votre r\u00e9ponse parle de z\u00e9ro \u00e0 quatorze et de six pays, mais en nomme cinq. Quelle formulation puis-je retenir sans ajouter de faits non \u00e9tablis ?\",\n  \"retrieval_query_en\": \"The page panel indicates growth from four to over fourteen people and five African countries. Your response talks about zero to fourteen and six countries, but names five. Which formulation should I use without adding unestablished facts?\"\n}",
+          "finish_reasons": [
+            "FinishReason.STOP"
+          ],
+          "elapsed_s": 1.13
+        },
+        {
+          "sequence": 2,
+          "response_text": "{\n  \"relevant_indices\": [\n    0,\n    1\n  ]\n}",
+          "finish_reasons": [
+            "FinishReason.STOP"
+          ],
+          "elapsed_s": 0.7818
+        },
+        {
+          "sequence": 3,
+          "response_text": "{\n  \"answer\": \"Bolaji a \u00e9t\u00e9 la premi\u00e8re embauche data en 2019. L'\u00e9quipe initiale a atteint 4 personnes pendant son mandat de Global Data Analyst de novembre 2019 \u00e0 septembre 2022, puis l'organisation est pass\u00e9e de 4 \u00e0 plus de 14 professionnels durant son mandat de Head of Data d'octobre 2022 \u00e0 mars 2025. L'\u00e9quipe soutenait cinq march\u00e9s op\u00e9rationnels africains, \u00e0 savoir le Togo, le B\u00e9nin, le Cameroun, le Gabon et le Congo, tandis que Singapour \u00e9tait le si\u00e8ge social de l'entreprise et non un march\u00e9 op\u00e9rationnel. Le dossier ne prouve pas un effectif initial de z\u00e9ro ni une croissance de z\u00e9ro \u00e0 quatorze.\",\n  \"confidence\": 1.0\n}",
+          "finish_reasons": [
+            "FinishReason.STOP"
+          ],
+          "elapsed_s": 1.0518
+        },
+        {
+          "sequence": 4,
+          "response_text": "{\n  \"is_grounded\": true,\n  \"addresses_question\": true,\n  \"unsupported_claims\": [],\n  \"corrected_answer\": \"\"\n}",
+          "finish_reasons": [
+            "FinishReason.STOP"
+          ],
+          "elapsed_s": 0.6178
+        }
+      ]
+    },
+    {
+      "id": "recruiter-sde-03-t2",
+      "category": "canonical",
+      "lang": "en",
+      "tags": [
+        "recruiter_regression"
+      ],
+      "question": "I am asking only about experience: has Bolaji personally deployed Kafka or Spark Structured Streaming, and which named project proves it?",
+      "answer": "Bolaji has never used Kafka and has no experience with it, meaning no project proves its deployment. Additionally, there is no documented personal production experience or named project proving the deployment of Spark Structured Streaming.",
+      "agent_type": "professional",
+      "evidence_count": 5,
+      "evidence": [
+        {
+          "source": "20_owner_confirmed_production_scope.txt",
+          "chunk_id": "20_owner_confirmed_production_scope.txt::0",
+          "section": "OWNER-CONFIRMED PRODUCTION RESPONSIBILITY",
+          "retrieval_rank": 1,
+          "retrieval_score": 44.0,
+          "parent_context": "",
+          "scope_context": "",
+          "evidence_type": "candidate_confirmed",
+          "metric_scope": {},
+          "content_preview": "Source: 20_owner_confirmed_production_scope.txt | Title: OWNER-CONFIRMED PRODUCTION RESPONSIBILITY | Section: OWNER-CONFIRMED PRODUCTION RESPONSIBILITY\n\nConfirmation recorded on November 19, 2026. This is the confirmation date, not a date assigned to the underlying work. Evidence classification: candidate_confirmed.\n\nAt Gozem, Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline. The owner subsequently clarified that he is both an architect and engineer and personally designed and operated the production services he used. This supersedes the earlier design-only qualification for these services.\n\nFor the Gozem Data Hub, Bolaji personally designed and operated AWS EC2 in production.\n\nBolaji personally set up an AWS S3 bucket in production. Bolaji personally operates an AWS S3 bucket in production, reading data from it and writing data back. He owns and operates the bucket on an ongoing basis. AWS S3 serves as an exchange layer with the product team and has also been used in projects. This clarification does not identify an employer or project for the S3 bucket and does not establish on-call responsibility.\n\nBolaji has no Kafka experience at all. Bolaji has never used Kafka. This is an explicit owner-confirmed absence of experience, not an inference from an omitted tool. It does not imply inability to learn Kafka or a deficiency in other streaming technologies.\n\nThese clarifications do not add personal Spark Structured Streaming, Apache NiFi or Lakeflow production experience. They do not establish CDC event counts, end-to-end latency or availability. The separately documented streaming-workload average remains a different measurement population."
+        },
+        {
+          "source": "90_website_canon_llms_full.txt",
+          "chunk_id": "90_website_canon_llms_full.txt::7",
+          "section": "Applied AI, automation, and reliability",
+          "retrieval_rank": 1,
+          "retrieval_score": 20.0,
+          "parent_context": "Bolaji BALOGOUN \u00b7 Biography",
+          "scope_context": "",
+          "evidence_type": "published",
+          "metric_scope": {
+            "id": "invoice_time_savings",
+            "value": "40+ hours",
+            "qualifier": "estimated savings, not established measured time savings",
+            "population": "per country Financing Manager",
+            "measurement_period": "per month",
+            "provenance": "explicit estimated savings in the cited invoice records"
+          },
+          "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN \u00b7 Data Engineer \u00b7 Data Architect (full content) | Section: Applied AI, automation, and reliability | Parent context: Bolaji BALOGOUN \u00b7 Biography\n\nBolaji co-led Gozem\u2019s AI strategy. The group shipped 30+ production automation tools during his Data Director mandate. He prototyped invoice extraction in Vertex AI Studio and built a workflow with validation and human review. Estimated savings were 40+ hours per country Financing Manager each month. The Vodun Days command center gave Operations minute-level visibility into driver supply. On the peak day, ride requests were 48% above the average for the other event days and the rider match rate was 88%.\n\nHe also built application-ready data flows from MongoDB, BigQuery, Google Cloud Storage, and Sheets, plus a near-real-time MongoDB CDC pipeline that published change events through Pub/Sub, processed them in Dataflow, updated BigQuery, and supported real-time visualization in Looker Studio. These systems paired data products with operational services and decision workflows."
+        },
+        {
+          "source": "90_website_canon_llms_full.txt",
+          "chunk_id": "90_website_canon_llms_full.txt::14",
+          "section": "Gozem Data Hub: operational apps & analytics platform",
+          "retrieval_rank": 1,
+          "retrieval_score": 21.0,
+          "parent_context": "Bolaji BALOGOUN \u00b7 Biography > Data Director \u00b7 GOZEM \u00b7 Apr 2025 - Jul 2026",
+          "scope_context": "Data Director \u00b7 GOZEM \u00b7 Apr 2025 - Jul 2026",
+          "evidence_type": "published",
+          "metric_scope": {},
+          "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN \u00b7 Data Engineer \u00b7 Data Architect (full content) | Section: Gozem Data Hub: operational apps & analytics platform | Parent context: Bolaji BALOGOUN \u00b7 Biography > Data Director \u00b7 GOZEM \u00b7 Apr 2025 - Jul 2026\n\nResult: Unified analytics, AI, and operational tools into a single platform serving 700+ stakeholders across five countries.\nProblem: As Gozem evolved from a startup into a scale-up, the demand for operational applications, automation workflows, analytics products, and AI-powered tools grew rapidly across the organization.\n\nProduct and engineering teams remained primarily focused on revenue-generating marketplace initiatives, limiting their capacity to support the growing number of operational use cases. Many requests to the Data team recurred, including ad hoc analyses, data extractions, and operational workflows that required intervention from analysts and engineers.\n\nThe Data team also lacked a shared environment for its growing portfolio of tools, applications, analytics assets, and AI services. It had two goals.\n\n1. Give operational teams direct access to data products, analytics, and tools to reduce recurring requests to the Data team.\n2. Establish a common platform for the Data team to quickly design, deploy, and govern applications, automation, and AI solutions at scale.\nSolution: Architected and led the development of **Gozem Data Hub**, a centralized data and AI workspace for delivering self-service products across the organization.\n\nThe platform brought operational applications, analytics tools, AI solutions, automation workflows, and data exploration into one environment with shared standards for authentication, authorization, deployment, and governance.\n\nThe Data team used reusable architecture and AI-assisted engineering workflows to deliver production applications for operational teams. These applications moved a large share of analytical and operational requests from manual tickets to self-service tools that business users could operate directly.\n\nBusiness teams could independently access insights, applications, and AI tools, and the Data team had more time for higher-value initiatives.\nTools: React \u00b7 FastAPI \u00b7 AWS EC2 \u00b7 BigQuery \u00b7 MongoDB \u00b7 Nginx \u00b7 Docker \u00b7 Google Cloud Storage \u00b7 Artifact Registry \u00b7 Python"
+        },
+        {
+          "source": "90_website_canon_llms_full.txt",
+          "chunk_id": "90_website_canon_llms_full.txt::47",
+          "section": "Tech stack",
+          "retrieval_rank": 2,
+          "retrieval_score": 0.032258,
+          "parent_context": "Bolaji BALOGOUN \u00b7 Biography",
+          "scope_context": "",
+          "evidence_type": "published",
+          "metric_scope": {},
+          "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN \u00b7 Data Engineer \u00b7 Data Architect (full content) | Section: Tech stack | Parent context: Bolaji BALOGOUN \u00b7 Biography\n\nBolaji personally uses Cloud Functions and Vertex AI in production.\n\n\n- Data platforms & governance: BigQuery \u00b7 ClickHouse \u00b7 BigLake \u00b7 Databricks (projects and labs) \u00b7 Dataplex \u00b7 Unity Catalog\n- Databases & storage: PostgreSQL \u00b7 MongoDB \u00b7 Google Cloud Storage \u00b7 AWS S3 \u00b7 Delta Lake \u00b7 Apache Iceberg\n- Pipelines & streaming: Airflow \u00b7 Dataform \u00b7 Dataflow \u00b7 Apache NiFi \u00b7 Lakeflow \u00b7 Spark \u00b7 Pub/Sub\n- Languages & frameworks: Python \u00b7 SQL \u00b7 R \u00b7 Bash \u00b7 Scala \u00b7 FastAPI\n- Cloud & delivery: Google Cloud \u00b7 Compute Engine \u00b7 AWS \u00b7 AWS EC2 \u00b7 Cloud Run \u00b7 Cloud Functions \u00b7 Docker \u00b7 Artifact Registry \u00b7 Git\n- Analytics & visualization: Data Studio \u00b7 Superset \u00b7 Metabase \u00b7 Grafana\n- AI & automation: Vertex AI \u00b7 Gemini \u00b7 Codex \u00b7 RAG \u00b7 LangGraph (iBola project) \u00b7 MCP"
+        },
+        {
+          "source": "04_previous_roles_early.txt",
+          "chunk_id": "04_previous_roles_early.txt::2",
+          "section": "BIG DATA BOOTCAMP - RINTIO (March - June 2018)",
+          "retrieval_rank": 3,
+          "retrieval_score": 0.030331,
+          "parent_context": "BOLAJI BALOGOUN - EARLY CAREER",
+          "scope_context": "BIG DATA BOOTCAMP - RINTIO (March - June 2018)",
+          "evidence_type": "curated",
+          "metric_scope": {},
+          "content_preview": "Source: 04_previous_roles_early.txt | Title: BOLAJI BALOGOUN - EARLY CAREER | Section: BIG DATA BOOTCAMP - RINTIO (March - June 2018) | Parent context: BOLAJI BALOGOUN - EARLY CAREER\n\nBolaji transitioned from Statistics to Data Science through this intensive 4-month program covering Data Engineering, Machine Learning, and Big Data infrastructure (Apache Spark, Hive, Python, SQL, Hadoop, ElasticSearch, Kibana, Apache Superset, GitLab), with hands-on projects on data visualization and large-scale processing. Key project: \"Duniya Data\", a collaborative agricultural insights app built with peers under mentor guidance."
+        }
+      ],
+      "grounding_checked": true,
+      "provenance": {
+        "code_revision": "6b44f0b30db84a5a",
+        "deployment_revision": null,
+        "corpus_revision": "3fae0c27dfb14d76",
+        "kb_revision": "3fae0c27dfb14d76",
+        "policy_revision": "e7d6cf761e1796ea",
+        "index_sync_pending": false,
+        "chunker_version": "3",
+        "model": "gemini-3.5-flash-lite",
+        "thinking_config": {
+          "thinking_level": "low"
+        },
+        "generation_thinking_config": {
+          "thinking_level": "low"
+        },
+        "generation_temperature": null,
+        "verifier_model": "gemini-3.5-flash-lite",
+        "verifier_thinking_level": "low",
+        "verifier_thinking_budget": null,
+        "prompt_versions": {
+          "inventory_followup": "1.1",
+          "guardrail": "2.1",
+          "condense": "1.1",
+          "batch_grade": "2.3",
+          "rewrite": "2.1",
+          "generate_professional": "3.17",
+          "generate_education": "3.6",
+          "generate_learning": "3.6",
+          "verify_grounding": "2.15",
+          "repair_grounding": "1.4",
+          "upper_bound_clarification": "1.0",
+          "skills_completeness_clarification": "1.0",
+          "insufficient_evidence": "1.1",
+          "disputed_evidence": "1.0",
+          "project_identity": "1.0",
+          "evidence_detail": "1.1",
+          "documentation_limit": "1.0",
+          "personal_production_limit": "1.1",
+          "degree_clarification": "1.0",
+          "language_retry": "1.0",
+          "structured_output_recovery": "1.0",
+          "out_of_scope": "2.0",
+          "translate": "1.0",
+          "notification_suppressed": "1.0"
+        }
+      },
+      "evidence_sources": [
+        "20_owner_confirmed_production_scope.txt",
+        "90_website_canon_llms_full.txt",
+        "90_website_canon_llms_full.txt",
+        "90_website_canon_llms_full.txt",
+        "04_previous_roles_early.txt"
+      ],
+      "unsupported_claims": [],
+      "latency_s": 4.747,
+      "fact_pass": false,
+      "fact_failures": [
+        "missing explicit documentation limit: Spark Structured Streaming"
+      ],
+      "scores": {
+        "relevance": 10,
+        "accuracy": 10,
+        "helpfulness": 10,
+        "faithfulness": 10,
+        "rationale": "The answer is a perfect, direct, and fully supported response to the user's specific questions about Kafka and Spark Structured Streaming experience."
+      },
+      "error": null,
+      "warning": null,
+      "judge_error": null,
+      "judge_diagnostics": {
+        "protocol": "bounded-format-recovery-1",
+        "attempts": [
+          {
+            "attempt": 1
+          }
+        ],
+        "retry_reasons": [],
+        "decoding_source": "text",
+        "status": "success"
+      },
+      "chars_in": 7029,
+      "chars_out": 239,
+      "sdk_responses": [
+        {
+          "sequence": 1,
+          "response_text": "{\n  \"score\": 100,\n  \"category\": \"professional\",\n  \"reasoning\": \"The query specifically asks about Bolaji's hands-on professional experience with Kafka and Spark Structured Streaming and requests supporting project evidence.\",\n  \"standalone_query\": \"Has Bolaji personally deployed Kafka or Spark Structured Streaming, and which named project proves it?\",\n  \"retrieval_query_en\": \"Has Bolaji personally deployed Kafka or Spark Structured Streaming, and which named project proves it?\"\n}",
+          "finish_reasons": [
+            "FinishReason.STOP"
+          ],
+          "elapsed_s": 0.9537
+        },
+        {
+          "sequence": 2,
+          "response_text": "{\n  \"relevant_indices\": [\n    0,\n    3,\n    4,\n    7,\n    9\n  ]\n}",
+          "finish_reasons": [
+            "FinishReason.STOP"
+          ],
+          "elapsed_s": 0.6501
+        },
+        {
+          "sequence": 3,
+          "response_text": "{\n  \"answer\": \"Bolaji has never used Kafka and has no experience with it, meaning no project proves its deployment. Additionally, there is no documented personal production experience or named project proving the deployment of Spark Structured Streaming.\",\n  \"confidence\": 1.0\n}",
+          "finish_reasons": [
+            "FinishReason.STOP"
+          ],
+          "elapsed_s": 1.7248
+        },
+        {
+          "sequence": 4,
+          "response_text": "{\n  \"is_grounded\": true,\n  \"addresses_question\": true,\n  \"unsupported_claims\": [],\n  \"corrected_answer\": \"\"\n}",
+          "finish_reasons": [
+            "FinishReason.STOP"
+          ],
+          "elapsed_s": 0.8447
+        }
+      ]
+    },
+    {
+      "id": "skill-004-fr",
+      "category": "canonical",
+      "lang": "fr",
+      "tags": [],
+      "question": "Qu'est-ce que le Gozem Data Hub ?",
+      "answer": "Le Gozem Data Hub est la plateforme centrale de donn\u00e9es et d'intelligence artificielle con\u00e7ue et architectur\u00e9e par Bolaji chez Gozem. Elle offre des environnements d'exploration de donn\u00e9es, des outils propuls\u00e9s par l'intelligence artificielle, des flux de travail op\u00e9rationnels et des analyses en libre-service, le tout s\u00e9curis\u00e9 par une gouvernance bas\u00e9e sur les r\u00f4les.",
+      "agent_type": "professional",
+      "evidence_count": 4,
+      "evidence": [
+        {
+          "source": "10_apps_and_projects.txt",
+          "chunk_id": "10_apps_and_projects.txt::5",
+          "section": "GOZEM DATA HUB (Gozem internal, flagship platform)",
+          "retrieval_rank": 1,
+          "retrieval_score": 0.032787,
+          "parent_context": "BOLAJI BALOGOUN - APPS & SIDE PROJECTS",
+          "scope_context": "",
+          "evidence_type": "curated",
+          "metric_scope": {},
+          "content_preview": "Source: 10_apps_and_projects.txt | Title: BOLAJI BALOGOUN - APPS & SIDE PROJECTS | Section: GOZEM DATA HUB (Gozem internal, flagship platform) | Parent context: BOLAJI BALOGOUN - APPS & SIDE PROJECTS\n\nWhat: the central data and AI workspace Bolaji chartered and architected at Gozem (data.gozem.co): data exploration environments, AI-powered tools, operational workflows, and self-service analytics behind role-based governance.\nStack: Python, BigQuery, Google Cloud Storage, Cloud Functions, AWS EC2, Docker, RBAC, Claude Code.\nOutcome: served over 700 people (employees, field agents, and partners) across five African countries by the end of his mandate. Two engineers he onboarded shipped two additional self-service apps onto the platform."
+        },
+        {
+          "source": "90_website_canon_llms_full.txt",
+          "chunk_id": "90_website_canon_llms_full.txt::12",
+          "section": "Data Director \u00b7 GOZEM \u00b7 Apr 2025 - Jul 2026",
+          "retrieval_rank": 3,
+          "retrieval_score": 0.016129,
+          "parent_context": "Bolaji BALOGOUN \u00b7 Biography",
+          "scope_context": "Data Director \u00b7 GOZEM \u00b7 Apr 2025 - Jul 2026",
+          "evidence_type": "published",
+          "metric_scope": {},
+          "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN \u00b7 Data Engineer \u00b7 Data Architect (full content) | Section: Data Director \u00b7 GOZEM \u00b7 Apr 2025 - Jul 2026 | Parent context: Bolaji BALOGOUN \u00b7 Biography\n\nLed multidisciplinary data teams including data engineering, analytics, data science, and machine learning across operations in five African countries. Directed enterprise data platform strategy, internal data products development, governance, and cloud FinOps, while co-leading the company\u2019s global AI strategy and implementation.\n\nMandate: 14+ data professionals \u00b7 Togo \u00b7 Benin \u00b7 Cameroon \u00b7 Gabon \u00b7 Congo \u00b7 Gozem Data Hub\n- Gozem Data Hub adopted by 700+ people (employees, field agents, and partners)\n- 30+ production automation tools shipped across the group\n- 250+ pipelines under monitoring"
+        },
+        {
+          "source": "09_blog_and_newsletter.txt",
+          "chunk_id": "09_blog_and_newsletter.txt::1",
+          "section": "BOLAJI BALOGOUN - BLOG, NEWSLETTER & PUBLICATIONS",
+          "retrieval_rank": 5,
+          "retrieval_score": 0.015873,
+          "parent_context": "",
+          "scope_context": "",
+          "evidence_type": "curated",
+          "metric_scope": {},
+          "content_preview": "Source: 09_blog_and_newsletter.txt | Title: BOLAJI BALOGOUN - BLOG, NEWSLETTER & PUBLICATIONS | Section: BOLAJI BALOGOUN - BLOG, NEWSLETTER & PUBLICATIONS\n\nPUBLICATION (2026): From Insight to Action: The Rise of Data Product Engineering in Scaleups\nBolaji's 2026 piece arguing that at scaleups, product teams concentrate on the revenue line, so internal data platforms need their own product discipline. The Gozem Data Hub, which he chartered and architected to serve over 700 people, is the working proof of this thesis on Data Product Engineering.\nWhat did Bolaji publish in 2026: From files to reliable tables: The promise of open table formats, and From Insight to Action: The Rise of Data Product Engineering in Scaleups.\nQu'a publi\u00e9 Bolaji en 2026 : From files to reliable tables: The promise of open table formats et From Insight to Action: The Rise of Data Product Engineering in Scaleups."
+        },
+        {
+          "source": "13_gozem_internal_projects.txt",
+          "chunk_id": "13_gozem_internal_projects.txt::1",
+          "section": "GOZEM DATA HUB - Central Data & AI Workspace",
+          "retrieval_rank": 7,
+          "retrieval_score": 0.015625,
+          "parent_context": "BOLAJI BALOGOUN - INTERNAL PROJECTS LED AT GOZEM (2019 - 2026, tenure ended July 2026) > DATA DIRECTOR ERA (April 2025 - July 2026)",
+          "scope_context": "DATA DIRECTOR ERA (April 2025 - July 2026)",
+          "evidence_type": "curated",
+          "metric_scope": {},
+          "content_preview": "Source: 13_gozem_internal_projects.txt | Title: BOLAJI BALOGOUN - INTERNAL PROJECTS LED AT GOZEM (2019 - 2026, tenure ended July 2026) | Section: GOZEM DATA HUB - Central Data & AI Workspace | Parent context: BOLAJI BALOGOUN - INTERNAL PROJECTS LED AT GOZEM (2019 - 2026, tenure ended July 2026) > DATA DIRECTOR ERA (April 2025 - July 2026)\n\n- Situation: business and operational teams alongside external partners across Gozem's countries lacked a unified workspace for data and AI applications with fast iteration.\n- Action: Bolaji chartered, architected, and led development of the Data Hub web app (data.gozem.co): data exploration environments, data-driven applications, AI-powered tools, operational workflows, and self-service analytics modules. He modeled the micro-services database and platform authentication, and built role-based access governance with 3 access tiers (user, service_admin, platform_admin) crossed with 3 team roles (viewer, worker, manager). He onboarded 2 engineers who shipped 2 additional self-service apps onto the platform.\n- Tools: Python, BigQuery, Google Cloud Storage, Cloud Functions, AWS EC2, Docker, RBAC, Claude Code.\n- Outcome: over 700 people (internal employees, field agents, and external partners) across Benin, Togo, Gabon, Cameroon, and Congo collaborating on one governed platform by the end of his mandate. The Hub is the working proof of his Data Product Engineering thesis, the subject of his 2026 publication."
+        }
+      ],
+      "grounding_checked": true,
+      "provenance": {
+        "code_revision": "6b44f0b30db84a5a",
+        "deployment_revision": null,
+        "corpus_revision": "3fae0c27dfb14d76",
+        "kb_revision": "3fae0c27dfb14d76",
+        "policy_revision": "e7d6cf761e1796ea",
+        "index_sync_pending": false,
+        "chunker_version": "3",
+        "model": "gemini-3.5-flash-lite",
+        "thinking_config": {
+          "thinking_level": "low"
+        },
+        "generation_thinking_config": {
+          "thinking_level": "low"
+        },
+        "generation_temperature": null,
+        "verifier_model": "gemini-3.5-flash-lite",
+        "verifier_thinking_level": "low",
+        "verifier_thinking_budget": null,
+        "prompt_versions": {
+          "inventory_followup": "1.1",
+          "guardrail": "2.1",
+          "condense": "1.1",
+          "batch_grade": "2.3",
+          "rewrite": "2.1",
+          "generate_professional": "3.17",
+          "generate_education": "3.6",
+          "generate_learning": "3.6",
+          "verify_grounding": "2.15",
+          "repair_grounding": "1.4",
+          "upper_bound_clarification": "1.0",
+          "skills_completeness_clarification": "1.0",
+          "insufficient_evidence": "1.1",
+          "disputed_evidence": "1.0",
+          "project_identity": "1.0",
+          "evidence_detail": "1.1",
+          "documentation_limit": "1.0",
+          "personal_production_limit": "1.1",
+          "degree_clarification": "1.0",
+          "language_retry": "1.0",
+          "structured_output_recovery": "1.0",
+          "out_of_scope": "2.0",
+          "translate": "1.0",
+          "notification_suppressed": "1.0"
+        }
+      },
+      "evidence_sources": [
+        "10_apps_and_projects.txt",
+        "90_website_canon_llms_full.txt",
+        "09_blog_and_newsletter.txt",
+        "13_gozem_internal_projects.txt"
+      ],
+      "unsupported_claims": [],
+      "latency_s": 2.936,
+      "fact_pass": false,
+      "fact_failures": [
+        "missing: 700"
+      ],
+      "scores": {
+        "relevance": 10,
+        "accuracy": 10,
+        "helpfulness": 9,
+        "faithfulness": 10,
+        "rationale": "The answer is a perfect summary of the provided context, accurately and relevantly defining the Gozem Data Hub, although it could have been slightly more helpful by including the scale of its adoption."
+      },
+      "error": null,
+      "warning": null,
+      "judge_error": null,
+      "judge_diagnostics": {
+        "protocol": "bounded-format-recovery-1",
+        "attempts": [
+          {
+            "attempt": 1
+          }
+        ],
+        "retry_reasons": [],
+        "decoding_source": "text",
+        "status": "success"
+      },
+      "chars_in": 4083,
+      "chars_out": 369,
+      "sdk_responses": [
+        {
+          "sequence": 1,
+          "response_text": "{\n  \"score\": 95,\n  \"category\": \"professional\",\n  \"reasoning\": \"The query asks about the Gozem Data Hub, which is directly related to Bolaji's professional experience as Data Director at Gozem.\",\n  \"standalone_query\": \"Qu'est-ce que le Gozem Data Hub ?\",\n  \"retrieval_query_en\": \"What is the Gozem Data Hub?\"\n}",
+          "finish_reasons": [
+            "FinishReason.STOP"
+          ],
+          "elapsed_s": 0.7137
+        },
+        {
+          "sequence": 2,
+          "response_text": "{\n  \"relevant_indices\": [\n    0,\n    2,\n    4,\n    6\n  ]\n}",
+          "finish_reasons": [
+            "FinishReason.STOP"
+          ],
+          "elapsed_s": 0.7055
+        },
+        {
+          "sequence": 3,
+          "response_text": "{\n  \"answer\": \"Le Gozem Data Hub est la plateforme centrale de donn\u00e9es et d'intelligence artificielle con\u00e7ue et architectur\u00e9e par Bolaji chez Gozem. Elle offre des environnements d'exploration de donn\u00e9es, des outils propuls\u00e9s par l'intelligence artificielle, des flux de travail op\u00e9rationnels et des analyses en libre-service, le tout s\u00e9curis\u00e9 par une gouvernance bas\u00e9e sur les r\u00f4les.\",\n  \"confidence\": 1\n}",
+          "finish_reasons": [
+            "FinishReason.STOP"
+          ],
+          "elapsed_s": 0.6638
+        },
+        {
+          "sequence": 4,
+          "response_text": "{\n  \"is_grounded\": true,\n  \"addresses_question\": true,\n  \"unsupported_claims\": [],\n  \"corrected_answer\": \"\"\n}",
+          "finish_reasons": [
+            "FinishReason.STOP"
+          ],
+          "elapsed_s": 0.7373
+        }
+      ]
+    }
+  ]
+}

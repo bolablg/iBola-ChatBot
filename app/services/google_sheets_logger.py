@@ -6,6 +6,7 @@ Logs all redirected messages with detailed information for classifier improvemen
 import json
 import os
 import sys
+import threading
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
@@ -35,9 +36,21 @@ class GoogleSheetsLogger:
         self.spreadsheet_id = spreadsheet_id or os.getenv("REDIRECT_LOG_SHEET_ID")
         self.service = None
         self.sheet_name = "Redirects"
+        self._initialization_attempted = False
+        self._initialization_lock = threading.Lock()
 
-        if GOOGLE_SHEETS_AVAILABLE and GCP_SA_CREDENTIALS_PATH:
-            self._initialize_service()
+    def _ensure_initialized(self):
+        """Initialize only for an allowed logging or statistics operation."""
+        with self._initialization_lock:
+            if self.service is not None or self._initialization_attempted:
+                return
+            self._initialization_attempted = True
+            if (
+                GOOGLE_SHEETS_AVAILABLE
+                and GCP_SA_CREDENTIALS_PATH
+                and self.spreadsheet_id
+            ):
+                self._initialize_service()
 
     def _initialize_service(self):
         """Initialize Google Sheets API service."""
@@ -151,6 +164,7 @@ class GoogleSheetsLogger:
         Returns:
             bool: True if logging was successful, False otherwise
         """
+        self._ensure_initialized()
         if not self.service or not self.spreadsheet_id:
             print("⚠️  Google Sheets service not available for redirect logging")
             return False
@@ -212,6 +226,7 @@ class GoogleSheetsLogger:
 
     def get_redirect_stats(self, days: int = 7) -> Dict[str, Any]:
         """Get statistics about recent redirects."""
+        self._ensure_initialized()
         if not self.service or not self.spreadsheet_id:
             return {"error": "Google Sheets service not available"}
 

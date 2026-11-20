@@ -56,11 +56,11 @@ This cross-team collaboration turned chaotic data into a strategic asset. The go
 
 TECHNICAL LEADERSHIP UNDER PRESSURE:
 
-When Gozem needed scalable data infrastructure and had no dedicated data engineer, Bolaji stepped up. He:
+During his Global Data Analyst role at Gozem (November 2019 - September 2022), Gozem needed scalable data infrastructure and had no dedicated data engineer. Bolaji stepped up. He:
 1. Evaluated options between building an open-source stack and a cloud-first approach.
 2. Chose a cloud-first approach (GCP) to minimize maintenance overhead.
 3. Self-taught BigQuery, Cloud Storage, and related tools.
 4. Deployed a fully functional cloud-based analytics infrastructure within a single quarter, migrating 10+ TB without operational interruption.
 5. Simultaneously served as data analyst, cloud data engineer, analytics engineer, and data governance specialist.
 
-This willingness to learn and deliver under pressure is a defining trait of Bolaji's leadership style.
+The initial cloud-platform choice and migration belonged to that earlier Global Data Analyst role. The later Head of Data FinOps work, involving Dataform adoption, incremental modeling, partitioning, clustering and workload monitoring, was a separate initiative. Recorded Google Cloud costs fell by 42.57% in one quarter during that later work. The records do not establish that the initial cloud-platform choice caused or contributed to the later reduction.

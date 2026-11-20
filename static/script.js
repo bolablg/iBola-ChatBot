@@ -382,8 +382,70 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // --- Optional first-hand context, separate from contact/lead capture ---
+    const renderContextualHandoff = (action, answerContent) => {
+        if (!answerContent || action.version !== 1 || !Array.isArray(action.links) || action.links.length !== 2) return;
+        if (!['heading', 'description', 'dismiss_text'].every(key => typeof action[key] === 'string' && action[key].length <= 240)) return;
+        const storageKey = 'ibola.contextual-handoff.v1';
+        try { if (sessionStorage.getItem(storageKey)) return; } catch (_) { return; }
+        const kinds = new Set();
+        for (const link of action.links) {
+            if (kinds.has(link.kind) || !['email', 'booking'].includes(link.kind)) return;
+            if (typeof link.text !== 'string' || typeof link.description !== 'string' || typeof link.url !== 'string') return;
+            kinds.add(link.kind);
+            try {
+                const url = new URL(link.url);
+                if (link.kind === 'email' && (url.protocol !== 'mailto:' || !/^[^@\s?&#]+@[^@\s?&#]+\.[^@\s?&#]+$/.test(decodeURIComponent(url.pathname)))) return;
+                if (link.kind === 'booking' && (url.protocol !== 'https:' || url.hostname !== 'calendar.app.google' || url.username || url.password || (url.port && url.port !== '443'))) return;
+            } catch (_) { return; }
+        }
+        // Persist before displaying: storage failure must not create repeated offers.
+        try { sessionStorage.setItem(storageKey, 'shown'); } catch (_) { return; }
+        const card = document.createElement('div');
+        card.className = 'contextual-handoff';
+        card.setAttribute('role', 'group');
+        card.setAttribute('aria-label', action.heading);
+        const heading = document.createElement('strong');
+        heading.className = 'handoff-heading';
+        heading.textContent = action.heading;
+        const description = document.createElement('p');
+        description.className = 'handoff-description';
+        description.textContent = action.description;
+        const links = document.createElement('div');
+        links.className = 'handoff-links';
+        action.links.forEach(link => {
+            const anchor = document.createElement('a');
+            anchor.className = 'handoff-link';
+            anchor.href = link.url;
+            anchor.title = link.description;
+            anchor.textContent = link.text;
+            if (link.kind === 'booking') {
+                anchor.target = '_blank';
+                anchor.rel = 'noopener noreferrer';
+            }
+            anchor.appendChild(createSvg(['M7 17L17 7', 'M7 7h10v10'], 13));
+            links.appendChild(anchor);
+        });
+        const dismiss = document.createElement('button');
+        dismiss.type = 'button';
+        dismiss.className = 'handoff-dismiss';
+        dismiss.textContent = action.dismiss_text;
+        dismiss.addEventListener('click', () => {
+            try { sessionStorage.setItem(storageKey, 'dismissed'); } catch (_) { /* already marked shown */ }
+            card.remove();
+        });
+        links.appendChild(dismiss);
+        card.appendChild(heading);
+        card.appendChild(description);
+        card.appendChild(links);
+        answerContent.appendChild(card);
+    };
+
     // --- Action Buttons ---
-    const addActionButtons = (actions) => {
+    const addActionButtons = (actions, answerContent) => {
+        actions.filter(action => action.type === 'contextual_handoff').forEach(action => renderContextualHandoff(action, answerContent));
+        actions = actions.filter(action => action.type !== 'contextual_handoff');
+        if (!actions.length) return;
         const group = document.createElement('div');
         group.classList.add('action-group');
 
@@ -530,8 +592,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (res.ok) {
                 const data = await res.json();
                 // Retain the rated turn's trace_id so feedback attaches to it
-                if (data.answer) await typeMessage(data.answer, 'bot', { traceId: data.trace_id, answerSources: data.answer_sources });
-                if (data.actions && data.actions.length > 0) addActionButtons(data.actions);
+                const answerContent = data.answer ? await typeMessage(data.answer, 'bot', { traceId: data.trace_id, answerSources: data.answer_sources }) : null;
+                if (data.actions && data.actions.length > 0) addActionButtons(data.actions, answerContent);
                 if (data.should_end_chat && !chatEnded) endChat();
                 trackEvent('bot_response', {
                     intent: data.intent || 'unknown',

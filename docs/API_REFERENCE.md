@@ -12,6 +12,12 @@ Interactive docs: `/docs` (Swagger UI) | `/redoc` (ReDoc)
 
 Full agentic RAG pipeline (LangGraph). Recommended for production use.
 
+Send `X-Ibola-No-Trace: 1` to disable optional Langfuse turn recording for the current request. The trimmed header must equal `1`; other values preserve normal tracing. This preference also works with `/chat` and `/ask`, including SSE, and is not stored in sessions or caches. Evaluation clients send it on prefix turns, final turns and latency probes.
+
+Send `X-Ibola-No-Notifications: 1` on the same chat endpoints to suppress redirect alerts, redirect Sheets logging and lead-message webhooks for the current request. These requests bypass response caching. Suppressed message completion states that no message was sent. Evaluation clients send both opt-out headers on every turn and probe. The flags are independent and do not disable Gemini processing or ordinary application logs.
+
+The tracing opt-out does not disable request logs, Gemini processing, contact behavior or the separate `/feedback` path.
+
 **Request:**
 ```json
 {

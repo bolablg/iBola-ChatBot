@@ -1,0 +1,39 @@
+OWNER-CONFIRMED PRODUCTION RESPONSIBILITY
+
+Confirmation recorded on November 19, 2026. This is the confirmation date, not a date assigned to the underlying work. Evidence classification: candidate_confirmed.
+
+At Gozem, Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline. The owner subsequently clarified that he is both an architect and engineer and personally designed and operated the production services he used. This supersedes the earlier design-only qualification for these services.
+
+For the Gozem Data Hub, Bolaji personally designed and operated AWS EC2 in production.
+
+Bolaji personally set up an AWS S3 bucket in production. Bolaji personally operates an AWS S3 bucket in production, reading data from it and writing data back. He owns and operates the bucket on an ongoing basis. AWS S3 serves as an exchange layer with the product team and has also been used in projects. This clarification does not identify an employer or project for the S3 bucket and does not establish on-call responsibility.
+
+Bolaji has no Kafka experience at all. Bolaji has never used Kafka. This is an explicit owner-confirmed absence of experience, not an inference from an omitted tool. It does not imply inability to learn Kafka or a deficiency in other streaming technologies.
+
+These clarifications do not add personal Spark Structured Streaming, Apache NiFi or Lakeflow production experience. They do not establish CDC event counts, end-to-end latency or availability. The separately documented streaming-workload average remains a different measurement population.
+
+CDC role and period, owner confirmation received November 20, 2026: During his Head of Data role at Gozem (October 2022 to March 2025), Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline.
+
+This confirmation locates the CDC work within that role period. It does not establish the project's exact start or completion dates, continuous operation throughout the entire role, on-call coverage, latency or uptime guarantees. It does not assign that role period to AWS EC2, AWS S3 or other services. The earlier Google Cloud migration remains separately attributed to the Global Data Analyst role.
+
+Confirmation provenance: Asked which role and period covered his design and operation of the MongoDB CDC pipeline, the owner answered: "Head of Data, Oct 2022–Mar 2025". Evidence classification: candidate_confirmed. The November 20 date records when this role clarification was received, not when the project started or ended.
+
+LATEST HANDS-ON CONFIRMATION
+
+The owner explicitly confirmed personal production operation of BigQuery and Apache Airflow, then clarified personal design and operation of the production services he actually used. The service-by-service inventory in 21_production_service_inventory.txt combines this confirmation with the documented usage contexts. It does not convert a comparison, lab, teaching module or generic inventory-only entry into a production project.
+
+Latest owner statements: "i operated bigquery, airflow, many other services"; "go through the knowledge base, you have them all"; "i am an architect and engineer. i designed and operated all the services i used."
+
+HISTORICAL CONFIRMATION RECORD
+
+The following earlier answers record the sequence of clarification. The current canonical design-and-operation statement above governs Pub/Sub and Dataflow; the earlier design-only answer does not limit that responsibility.
+
+Question: The KB documents a MongoDB CDC pipeline using Pub/Sub and Dataflow, but does not explicitly state your personal production responsibility. Which description is accurate?
+Answer: I personally designed it in production
+
+Question: The Gozem Data Hub case lists AWS EC2 in its stack. What can the KB explicitly confirm about your own EC2 responsibility?
+Answer: I personally designed and operated EC2 in production
+
+Additional owner statement: no  kafka experience at all. s3 in production as exchange layer with the product team, and in projects
+Additional owner statement: i set up bucket in s3 in production
+Additional owner statement: i own it on long run as i read data from it adn write back as well

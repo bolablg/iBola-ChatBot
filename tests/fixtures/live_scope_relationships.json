@@ -1,0 +1,162 @@
+[
+  {
+    "id": "recruiter-adi-05-t5",
+    "origin": "v1.2.7 actual-prefix HTTP replay eval_20261119_200641.json",
+    "question": "Le panneau de cette page indique une croissance de quatre à plus de quatorze personnes et cinq pays africains. Votre réponse parle de zéro à quatorze et de six pays, mais en nomme cinq. Quelle formulation puis-je retenir sans ajouter de faits non établis ?",
+    "language": "fr",
+    "answer": "Bolaji a été le premier Data Engineer chez Gozem en 2019. L'équipe est passée de 4 à plus de 14 professionnels durant son mandat de Head of Data (octobre 2022 - mars 2025). Le périmètre opérationnel couvrait cinq marchés africains : Togo, Bénin, Cameroun, Gabon et Congo. Singapour était le siège social de l'entreprise et non un marché opérationnel supplémentaire.",
+    "scores": {
+      "relevance": 10,
+      "accuracy": 3,
+      "helpfulness": 10,
+      "faithfulness": 4,
+      "rationale": "The answer correctly clarifies the user's confusion about team growth and country scope, but it is inaccurate and unfaithful by misstating the initial job title as 'Data Engineer'."
+    },
+    "documents": [
+      {
+        "page_content": "Source: 19_owner_confirmed_scope.txt | Title: BOLAJI BALOGOUN - OWNER-CONFIRMED CLAIM SCOPE | Section: GEOGRAPHIC SCOPE | Parent context: BOLAJI BALOGOUN - OWNER-CONFIRMED CLAIM SCOPE\n\nThe five African operating markets were Togo, Benin, Cameroon, Gabon, and Congo. Singapore was company headquarters only for this claim, not an additional African operating market or a team-member work location. Team size, operating markets and headquarters are separate attributes.",
+        "metadata": {
+          "source": "19_owner_confirmed_scope.txt",
+          "chunk_id": "19_owner_confirmed_scope.txt::3",
+          "section_header": "GEOGRAPHIC SCOPE",
+          "evidence_type": "candidate_confirmed",
+          "metric_scope": {}
+        }
+      },
+      {
+        "page_content": "Source: 16_current_status.txt | Title: BOLAJI BALOGOUN - CURRENT STATUS & AVAILABILITY (AS OF NOVEMBER 2026) | Section: WHAT HE BRINGS (headline numbers from his Gozem tenure): | Parent context: BOLAJI BALOGOUN - CURRENT STATUS & AVAILABILITY (AS OF NOVEMBER 2026)\n\n- Built and led a data organization from 4 to 14+ professionals during the Head of Data period (October 2022 - March 2025) supporting five African operating markets, reporting at C-level.\n- Chartered the Gozem Data Hub serving over 700 people (employees, field agents, and partners) across five African countries.\n- Cut Google Cloud costs by 42.57% in a single quarter while maintaining SLAs.\n- Shipped 30+ production AI-powered tools and set governance across 250+ production pipelines.\n- Co-led a group AI strategy: 49 validated use cases, 6 in implementation, near-full top-management adoption of daily AI assistance.\n- Flagged a 25M+ XOF fraud scheme through the fintech analytics infrastructure he built.",
+        "metadata": {
+          "source": "16_current_status.txt",
+          "chunk_id": "16_current_status.txt::2",
+          "section_header": "WHAT HE BRINGS (headline numbers from his Gozem tenure):",
+          "evidence_type": "curated",
+          "metric_scope": {}
+        }
+      },
+      {
+        "page_content": "Source: 11_leadership_style.txt | Title: BOLAJI BALOGOUN - LEADERSHIP STYLE & MANAGEMENT PHILOSOPHY | Section: MANAGEMENT EXPERIENCE: | Parent context: BOLAJI BALOGOUN - LEADERSHIP STYLE & MANAGEMENT PHILOSOPHY\n\nAt Gozem, Bolaji was the first data hire in 2019. The initial team grew to 4, then expanded from 4 to 14+ professionals during the Head of Data period (October 2022 - March 2025). The organization supported five African operating markets (Togo, Benin, Cameroon, Congo, Gabon) and spanned eight analytics domains. Singapore was company headquarters only. He coordinated end-to-end onboarding for 12 hires from 50+ evaluated candidates with 30/60/90-day ramp milestones. The hiring rubrics, interview loops, and onboarding programs he designed are still in use across the function.\n\nHis management approach included:\n- Recruiting and building distributed teams across multiple countries and cultures.\n- Introducing effective processes, mentorship programs, and continuous learning initiatives.\n- Leveraging LLM tools to boost team productivity and project delivery speed, including bringing Claude into leadership workflows and product engineering.\n- Wearing multiple hats when needed: data architect, data engineer, analytics engineer, and data governance specialist.\n- Pushing capability outward as much as upward: a self-service no-code exploration platform halved the routine query load on the central team by putting 12+ managers directly in the data.",
+        "metadata": {
+          "source": "11_leadership_style.txt",
+          "chunk_id": "11_leadership_style.txt::2",
+          "section_header": "MANAGEMENT EXPERIENCE:",
+          "evidence_type": "curated",
+          "metric_scope": {}
+        }
+      },
+      {
+        "page_content": "Source: 19_owner_confirmed_scope.txt | Title: BOLAJI BALOGOUN - OWNER-CONFIRMED CLAIM SCOPE | Section: GOZEM TEAM GROWTH AND ROLE PERIODS | Parent context: BOLAJI BALOGOUN - OWNER-CONFIRMED CLAIM SCOPE\n\nBolaji was the first data hire in 2019. The initial team grew to 4 during the Global Data Analyst era (November 2019 - September 2022). The organization then grew from 4 to 14+ during his Head of Data period (October 2022 - March 2025). His later Data Director period was April 2025 - July 2026. The full team build must not be dated entirely to that later mandate. This confirmation does not establish direct-report counts, manager layers, department budget authority, or the precise dates of all 12 hires.",
+        "metadata": {
+          "source": "19_owner_confirmed_scope.txt",
+          "chunk_id": "19_owner_confirmed_scope.txt::2",
+          "section_header": "GOZEM TEAM GROWTH AND ROLE PERIODS",
+          "evidence_type": "candidate_confirmed",
+          "metric_scope": {}
+        }
+      },
+      {
+        "page_content": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN · Data Engineer · Data Architect (full content) | Section: Platform engineering and leadership | Parent context: Bolaji BALOGOUN · Biography\n\nBolaji was Gozem’s first data hire. As Global Data Analyst, he built the analytics function, led the migration to Google Cloud and BigQuery, and automated more than 50 analytical and operational workflows. He later led the data function as Head of Data, growing the team from 4 to 14+ and overseeing governance, FinOps, analytics engineering, and fintech data products. As Data Director through July 2026, he led multidisciplinary data teams supporting five African operating countries and co-led Gozem’s AI strategy.",
+        "metadata": {
+          "source": "90_website_canon_llms_full.txt",
+          "chunk_id": "90_website_canon_llms_full.txt::3",
+          "section_header": "Platform engineering and leadership",
+          "evidence_type": "published",
+          "metric_scope": {}
+        }
+      }
+    ]
+  },
+  {
+    "id": "recruiter-sda-05-t2",
+    "origin": "v1.2.7 actual-prefix HTTP replay eval_20261119_200641.json",
+    "question": "Which production AWS services and streaming technologies has Bolaji personally designed or operated? In particular, is Kafka architecture delivery documented?",
+    "language": "en",
+    "answer": "Bolaji's experience includes personally designing and operating AWS EC2 and AWS S3 in production as part of the Gozem Data Hub. For streaming technologies, he has experience with Pub/Sub, Dataflow, Spark, Apache NiFi, and Lakeflow. There is no documented evidence that Bolaji has personally designed or operated Kafka architecture.",
+    "scores": {
+      "relevance": 10,
+      "accuracy": 3,
+      "helpfulness": 7,
+      "faithfulness": 4,
+      "rationale": "The answer correctly addresses the Kafka question, but it inaccurately claims production use of AWS S3 in the Gozem project and overstates the evidence for production operation of several streaming technologies, making claims not supported by the context."
+    },
+    "documents": [
+      {
+        "page_content": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN · Data Engineer · Data Architect (full content) | Section: Tech stack | Parent context: Bolaji BALOGOUN · Biography\n\nBolaji personally uses Cloud Functions and Vertex AI in production.\n\n\n- Data platforms & governance: BigQuery · ClickHouse · BigLake · Databricks (projects and labs) · Dataplex · Unity Catalog\n- Databases & storage: PostgreSQL · MongoDB · Google Cloud Storage · AWS S3 · Delta Lake · Apache Iceberg\n- Pipelines & streaming: Airflow · Dataform · Dataflow · Apache NiFi · Lakeflow · Spark · Pub/Sub\n- Languages & frameworks: Python · SQL · R · Bash · Scala · FastAPI\n- Cloud & delivery: Google Cloud · Compute Engine · AWS · AWS EC2 · Cloud Run · Cloud Functions · Docker · Artifact Registry · Git\n- Analytics & visualization: Data Studio · Superset · Metabase · Grafana\n- AI & automation: Vertex AI · Gemini · Codex · RAG · LangGraph (iBola project) · MCP",
+        "metadata": {
+          "source": "90_website_canon_llms_full.txt",
+          "chunk_id": "90_website_canon_llms_full.txt::47",
+          "section_header": "Tech stack",
+          "evidence_type": "published",
+          "metric_scope": {}
+        }
+      },
+      {
+        "page_content": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN · Data Engineer · Data Architect (full content) | Section: Data products at operating scale | Parent context: Bolaji BALOGOUN · Biography\n\nBolaji architected and led the development of the [Gozem Data Hub](https://www.bolablg.com/experience/gozem-director/#data-hub), a governed operational and analytics platform adopted by 700+ employees, field agents, and partners across five African countries. It provided self-service access to operational applications, analytics, AI tools, and automation. The published case documents React, FastAPI, AWS EC2, BigQuery, MongoDB, Nginx, Docker, Google Cloud Storage, Artifact Registry, and Python.\n\nThe data team monitored more than 250 pipelines. Bolaji established governance, observability, and reliability standards across 300+ workflow orchestration, transformation, and metrics-layer assets.",
+        "metadata": {
+          "source": "90_website_canon_llms_full.txt",
+          "chunk_id": "90_website_canon_llms_full.txt::4",
+          "section_header": "Data products at operating scale",
+          "evidence_type": "published",
+          "metric_scope": {}
+        }
+      },
+      {
+        "page_content": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN · Data Engineer · Data Architect (full content) | Section: Credentials | Parent context: Bolaji BALOGOUN · Biography\n\n- Google Cloud Professional Data Engineer Certificate · Google Cloud · Nov 2025\n- Stream Processing and Analysis with Apache Spark™ · Databricks Academy · Oct 2026\n- Monitoring and Optimizing Apache Spark Workloads on Databricks · Databricks Academy · Oct 2026\n- Developing Applications with Apache Spark™ · Databricks Academy · Oct 2026\n- Introduction to Apache Spark 4 · Databricks Academy · Oct 2026\n- DevOps Essentials for Data Engineering · Databricks Academy · Sep 2026\n- Build Data Pipelines with Lakeflow Spark Declarative Pipelines · Databricks Academy · Sep 2026\n- Deploy Workloads with Lakeflow Jobs · Databricks Academy · Sep 2026\n- Data Ingestion with Lakeflow Connect · Databricks Academy · Sep 2026\n- Academy Accreditation - Databricks Fundamentals · Databricks Academy · Sep 2026\n- AWS Data Engineering Foundations Certificate · AWS Training & Certification · Aug 2026\n- Apache Airflow Hands-on Certificate · Udemy · Feb 2024\n- McKinsey.org Forward Program · McKinsey & Company · Jul 2025",
+        "metadata": {
+          "source": "90_website_canon_llms_full.txt",
+          "chunk_id": "90_website_canon_llms_full.txt::42",
+          "section_header": "Credentials",
+          "evidence_type": "published",
+          "metric_scope": {}
+        }
+      }
+    ]
+  },
+  {
+    "id": "recruiter-sde-03-t4",
+    "origin": "v1.2.7 actual-prefix HTTP replay eval_20261119_200641.json",
+    "question": "What throughput, event volume, end-to-end latency or availability measurements are actually documented for those systems? Do not estimate missing numbers.",
+    "language": "en",
+    "answer": "For the near-real-time MongoDB CDC pipeline at Gozem, the documented experience indicates it provided minute-level visibility for Operations. However, the available documentation does not establish its individual event count, throughput ceiling, sub-second latency, or availability guarantee.",
+    "scores": {
+      "relevance": 10,
+      "accuracy": 5,
+      "helpfulness": 3,
+      "faithfulness": 10,
+      "rationale": "The answer correctly identifies that specific metrics for the CDC pipeline are not documented, but it is unhelpful and inaccurate by omission because it completely ignores the documented metrics for other systems that were also asked about."
+    },
+    "documents": [
+      {
+        "page_content": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN · Data Engineer · Data Architect (full content) | Section: Applied AI, automation, and reliability | Parent context: Bolaji BALOGOUN · Biography\n\nBolaji co-led Gozem’s AI strategy. The group shipped 30+ production automation tools during his Data Director mandate. He prototyped invoice extraction in Vertex AI Studio and built a workflow with validation and human review. Estimated savings were 40+ hours per country Financing Manager each month. The Vodun Days command center gave Operations minute-level visibility into driver supply. On the peak day, ride requests were 48% above the average for the other event days and the rider match rate was 88%.\n\nHe also built application-ready data flows from MongoDB, BigQuery, Google Cloud Storage, and Sheets, plus a near-real-time MongoDB CDC pipeline that published change events through Pub/Sub, processed them in Dataflow, updated BigQuery, and supported real-time visualization in Looker Studio. These systems paired data products with operational services and decision workflows.",
+        "metadata": {
+          "source": "90_website_canon_llms_full.txt",
+          "chunk_id": "90_website_canon_llms_full.txt::7",
+          "section_header": "Applied AI, automation, and reliability",
+          "evidence_type": "published",
+          "metric_scope": {
+            "id": "invoice_time_savings",
+            "value": "40+ hours",
+            "qualifier": "estimated savings, not established measured time savings",
+            "population": "per country Financing Manager",
+            "measurement_period": "per month",
+            "provenance": "explicit estimated savings in the cited invoice records"
+          }
+        }
+      },
+      {
+        "page_content": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN · Data Engineer · Data Architect (full content) | Section: Workload and measurement scope | Parent context: Bolaji BALOGOUN · Biography\n\nAt Gozem, batch workloads averaged approximately 5 TB of daily upserts into existing modeled tables. A separate streaming workload averaged 45 million telemetry and operational events per day; that event count was not all company activity and was not included in the batch measure. The platform contained nearly 300 Dataform models and Airflow DAGs combined, a different population from the 250+ monitored pipelines.",
+        "metadata": {
+          "source": "90_website_canon_llms_full.txt",
+          "chunk_id": "90_website_canon_llms_full.txt::5",
+          "section_header": "Workload and measurement scope",
+          "evidence_type": "published",
+          "metric_scope": {
+            "id": "streaming_workload_volume",
+            "average": "45 million telemetry and operational events per day",
+            "population": "separate Gozem streaming workload, distinct from 5 TB batch upserts",
+            "not_established": "not an individual MongoDB CDC pipeline count, throughput ceiling, sub-second latency or availability guarantee"
+          }
+        }
+      }
+    ]
+  }
+]

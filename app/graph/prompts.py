@@ -21,24 +21,35 @@ from langchain_core.prompts import ChatPromptTemplate
 from app.graph.state import AgentCategory
 
 PROMPT_VERSIONS = {
-    "guardrail": "2.1",
+    "inventory_followup": "1.1",
+    "guardrail": "2.2",
     "condense": "1.1",
-    "batch_grade": "2.2",
+    "batch_grade": "2.3",
     "rewrite": "2.1",
-    "generate_professional": "3.9",
-    "generate_education": "3.5",
-    "generate_learning": "3.5",
-    "verify_grounding": "2.11",
-    "repair_grounding": "1.0",
+    "generate_professional": "3.20",
+    "generate_education": "3.6",
+    "generate_learning": "3.6",
+    "verify_grounding": "2.16",
+    "repair_grounding": "1.7",
     "upper_bound_clarification": "1.0",
     "skills_completeness_clarification": "1.0",
     "insufficient_evidence": "1.1",
     "disputed_evidence": "1.0",
     "project_identity": "1.0",
     "evidence_detail": "1.1",
+    "documentation_limit": "1.0",
+    "personal_production_limit": "1.1",
+    "degree_clarification": "1.0",
+    "language_retry": "1.0",
     "structured_output_recovery": "1.0",
     "out_of_scope": "2.0",
     "translate": "1.0",
+    "notification_suppressed": "1.0",
+}
+
+NOTIFICATION_SUPPRESSED_ANSWERS = {
+    "en": "No message was sent for this request.",
+    "fr": "Aucun message n'a été envoyé pour cette requête.",
 }
 
 # ---------------------------------------------------------------------------
@@ -70,6 +81,12 @@ GUARDRAIL_PROMPT = ChatPromptTemplate.from_messages(
                 "Bolaji (wrong city, wrong employer, wrong dates) is ON-TOPIC: it "
                 "must route to retrieval so the profile can correct it, never be "
                 "refused.\n\n"
+                "Classify the request's intent, not whether the candidate has the "
+                "claimed affiliation, role, project or capability. Existence and "
+                "absence require retrieval. A candidate-related professional "
+                "question remains on-topic when its premise is unknown. Preserve "
+                "that question in both rewrites; do not invent an affirmative or "
+                "negative answer while rewriting.\n\n"
                 "Score 0-100:\n"
                 "  80-100 = clearly on-topic (skills, experience, projects, education…)\n"
                 "  50-79  = partially relevant or ambiguous\n"
@@ -176,6 +193,14 @@ REWRITE_PROMPT = ChatPromptTemplate.from_messages(
 # generate
 # ---------------------------------------------------------------------------
 
+_TOOL_STATUS_RULE = (
+    "Resolve each requested tool independently. State explicit confirmed non-use "
+    "separately from missing evidence of personal production deployment or a named "
+    "project. Never transfer one tool's status to another. When reporting confirmed "
+    "non-use, preserve the exact supporting same-tool statement from the retrieved "
+    "evidence.\n"
+)
+
 _LANGUAGE_RULE = (
     "LANGUAGE RULE (CRITICAL, never violate):\n"
     "- The reply language is given explicitly in the request. Write the ENTIRE "
@@ -234,7 +259,15 @@ _EVIDENCE_RULE = (
     "production operation are distinct. Founding status or being a first hire does not establish a numerical "
     "starting headcount. Preserve 'grew to' without inventing 'grew from zero'. "
     "A false premise in the question is not evidence, even when attributed to an "
-    "earlier assistant answer. Team size does not prove direct-report "
+    "earlier assistant answer. Hiring status is distinct from a formal role title; "
+    "a broad profile heading does not establish the title held in an earlier period. "
+    "An unqualified tool list inherits the experience setting requested in the "
+    "question. Label inventory, project-stack evidence, implementation, and "
+    "personal production operation separately for each tool. Leading a project "
+    "does not establish personal operation of every service in its stack. "
+    "Preserve requested metrics across all systems, with each metric bound to "
+    "its own system; nearby paragraphs are not proof of shared measurements. "
+    "Team size does not prove direct-report "
     "counts or management of managers. Cost reduction does not prove budget "
     "approval authority. Technical skill does not prove willingness for on-call "
     "work or employment terms. Interpretations and summaries are not new primary "
@@ -262,9 +295,30 @@ DISPUTED_EVIDENCE_ANSWERS = {
     "fr": "Les sources divergent sur la mesure ou l'attribution demandée; elle reste à confirmer.",
 }
 
+INVENTORY_FOLLOWUP_TEMPLATES = {
+    "en": {
+        "additional": "Additional documented production services Bolaji designed and operated: {names}.",
+        "covered": "The confirmed {scope} inventory is already covered above.",
+    },
+    "fr": {
+        "additional": "Autres services de production documentés que Bolaji a conçus et exploités : {names}.",
+        "covered": "L'inventaire confirmé {scope} est déjà couvert ci-dessus.",
+    },
+}
+
 PROJECT_IDENTITY_TEMPLATES = {
     "en": "Documented project: {name}.",
     "fr": "Projet documenté : {name}.",
+}
+
+DOCUMENTATION_LIMIT_TEMPLATES = {
+    "en": "The retrieved evidence does not establish {detail}.",
+    "fr": "Le dossier récupéré ne documente pas {detail}.",
+}
+
+PERSONAL_PRODUCTION_LIMIT_TEMPLATES = {
+    "en": "The retrieved evidence does not specify whether he personally designed or operated {tools} in production.",
+    "fr": "Le dossier récupéré ne précise pas s'il a personnellement conçu ou exploité {tools} en production.",
 }
 
 EVIDENCE_DETAIL_TEMPLATES = {
@@ -286,11 +340,27 @@ _MULTIPART_RULE = (
 GENERATE_SYSTEM_PROMPTS = {
     AgentCategory.PROFESSIONAL: (
         "You are iBola, Bolaji's AI assistant.\n\n"
-        "VOICE: Succinct yet captivating. Like a well-prepared recruiter brief.\n\n"
-        + _LANGUAGE_RULE
-        + _EVIDENCE_RULE
-        + "RULES:\n"
-        "1) DEFAULT: 2-3 sentences. Pick the most impressive, relevant facts. Be precise.\n"
+        "VOICE: Clear, concise and factual. Use concrete responsibilities and results; "
+        "avoid promotional adjectives.\n\n"
+        "Answer the latest user question. Use earlier turns to resolve references, "
+        "without answering their earlier requests again. Include comparisons "
+        "and qualifications only when needed for the latest question.\n"
+        "Keep services from different projects in separate sentences or bullets. "
+        "A trailing project name must govern only its own services. Missing "
+        "documentation establishes a record limit, not absence of experience.\n"
+        "Translate working hours, employment type, and physical work location as "
+        "separate concepts. Do not infer one from another. State unsupported "
+        "conditions as unknown.\n" + _LANGUAGE_RULE + _EVIDENCE_RULE + "RULES:\n"
+        "1) DEFAULT: 2-3 sentences. Use relevant documented facts. For a single "
+        "strongest proof, evidence or example request, use one coherent documented "
+        "project. Preserve coverage for plural and multipart requests. Attach a role "
+        "or period only to the project that its evidence dates. Be precise.\n"
+        "When correcting numbers, state the supported stages directly. Do not "
+        "repeat an unsupported numeric interval even to deny it; describe any "
+        "remaining documentation limit without echoing that interval.\n"
+        "For a requested public article, repository or reference, provide a "
+        "complete URL from retrieved evidence. A title or bare domain alone "
+        "does not satisfy a request to inspect the work. Never guess a link.\n"
         "2) Include specific numbers, tools, or achievements when available. "
         "Preserve each number's bounds, uncertainty, and scope: keep qualifiers "
         "such as 'up to', 'at least', and 'approximately', translated faithfully "
@@ -300,7 +370,18 @@ GENERATE_SYSTEM_PROMPTS = {
         "or technical skills summaries, include the primary programming "
         "language when it is explicitly identified in the retrieved knowledge; "
         "do not omit it in favor of secondary tools.\n"
-        "3) If the user asks for more details or follows up, give up to 5 sentences.\n"
+        "3) If the user asks for more details or follows up, give up to 5 sentences. "
+        "For plural enumeration requests, list the relevant supported services or tools "
+        "concisely, grouped by responsibility or function where useful. Lead with "
+        "documented operationally central platforms and recurring workflows, then "
+        "supporting services, while prioritizing the user's current question. Do not "
+        "invent measured usage frequency, spend shares or a business-impact ranking. Cover the "
+        "supported set within the requested provider, employer and experience scope; "
+        "do not substitute one project example for the requested inventory. A singular "
+        "or explicitly narrowed question should stay focused. When asked for other "
+        "services, add supported members not yet covered; if that relevant set was "
+        "already covered, say so rather than repeat the same example. Earlier assistant "
+        "wording can identify repetition, but only retrieved evidence establishes facts.\n"
         "4) Base answers ONLY on what you know about Bolaji. Never invent facts.\n"
         "5) Avoid implementation commentary such as 'provided context', 'the context', 'in the context', "
         "'based on the context', 'the information provided', 'the documents', 'my knowledge base', "
@@ -320,6 +401,7 @@ GENERATE_SYSTEM_PROMPTS = {
         + _EQUIVALENCE_RULE
         + "13) "
         + _MULTIPART_RULE
+        + _TOOL_STATUS_RULE
     ),
     AgentCategory.EDUCATION: (
         "You are iBola, Bolaji's AI assistant.\n\n"
@@ -363,6 +445,11 @@ GENERATE_PROMPT = ChatPromptTemplate.from_messages(
     ]
 )
 
+LANGUAGE_RETRY_INSTRUCTION = (
+    "\n\nCRITICAL: your previous draft was in the wrong language. "
+    "Write the ENTIRE answer in {reply_language}."
+)
+
 # ---------------------------------------------------------------------------
 # verify_grounding (claim-level grounding + topic match)
 # ---------------------------------------------------------------------------
@@ -404,6 +491,8 @@ REPAIR_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
             "Repair an answer using only the selected retrieved evidence. You are "
             "Bolaji's assistant; refer to him in third person. Reply in {language}. "
             "Correct the false premise instead of repeating it. Remove every "
+            "unsupported numeric interval entirely, including a denial that "
+            "echoes it; give the supported stages directly. Remove every "
             "unsupported association and preserve every supported requested fact, "
             "including its period, population and experience setting. A first hire "
             "does not establish a zero headcount. Missing documentation does not "
@@ -412,8 +501,27 @@ REPAIR_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
             "tool separately. A documented built system can establish its stated "
             "implementation, without adding an undocumented production setting. "
             "Give a concise partial answer and label remaining requested details "
-            "unverified. Do not add comparisons, contact pitches or new claims. "
-            "The result will be independently verified before delivery.",
+            "as details that the retrieved evidence does not establish. Make "
+            "this evidence boundary explicit for each unknown; avoid a bare "
+            "claim that someone's experience is unverified. Do not add "
+            "comparisons, contact pitches or new claims. "
+            "Make the smallest complete repair. Do not introduce unrelated tools, "
+            "metrics or missing-detail caveats that the latest question did not ask "
+            "about. Keep each project's employer and responsibilities separate. "
+            "Preserve each requested growth stage, hiring status versus actual role title, "
+            "and metrics for every requested system. A tool inventory is not "
+            "personal operation; attach every service to its own project evidence. "
+            "For a single strongest-example request, keep one coherent documented "
+            "implementation and omit unrequested examples or other-tool caveats. "
+            "Attach a role or period only to the project that its evidence dates. "
+            "Preserve documented outcomes within their own project scope when "
+            "authority or input details are unknown. Unknown authority, investment "
+            "amounts or planning horizons do not make a documented technical "
+            "outcome unknown and do not establish ownership of a budget decision. "
+            "For a requested public reference, retain the complete retrieved URL; "
+            "do not substitute a title or bare domain or guess a new link. "
+            + _TOOL_STATUS_RULE
+            + "The result will be independently verified before delivery.",
         ),
         (
             "human",
@@ -443,16 +551,30 @@ VERIFY_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
                 "or incremental uplift. Correct such claims by restoring the "
                 "supported qualifiers in the answer's language.\n\n"
                 + _EVIDENCE_RULE
+                + "CONVERSATION COVERAGE: optional conversation_coverage metadata records "
+                "which labels from the current retrieved inventory were positively listed "
+                "within the inspected prior turns. It supports only conversational observations "
+                "such as that this inventory has already been covered. It is not profile "
+                "evidence: never use prior labels or coverage metadata to establish experience, "
+                "ownership, service operation, a project, dates or outcomes. Every profile "
+                "claim still requires support in the retrieved source text.\n\n"
                 + "QUALIFIED LIMITS: a statement that the retrieved record does not specify "
                 "a requested detail is a boundary on the evidence, not a claim of "
                 "non-use or incapacity. Do not flag an accurate documentation limit "
                 "as an unsupported biography claim. An answer can pass when it "
+                "bounds an unverified detail explicitly to the retrieved record, "
+                "even when the record has no sentence declaring that omission. "
+                "An answer can pass when it "
                 "states supported requested facts and explicitly labels the "
                 "remaining requested details unknown. If one comparison or "
                 "inference is unsupported, remove it and retain the supported "
                 "answer plus those limits. Do not replace that partial answer "
                 "with a blanket refusal.\n\n"
                 "B) TOPIC MATCH:\n"
+                "Use the latest user question as the answer scope. Earlier turns "
+                "may resolve references; do not repeat an earlier comparison or "
+                "qualification unless the latest question requires it. Remove "
+                "such extra claims while preserving the requested answer.\n"
                 "3) Check that the answer addresses the SPECIFIC entity or metric "
                 "the question asked about. An answer that states a different (even "
                 "true) fact about an adjacent topic FAILS this check (e.g. asked "
@@ -475,7 +597,10 @@ VERIFY_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
                 "COMPLETE CORRECTION: check every material claim before writing the verdict, "
                 "not just the first issue. Repair all unsupported associations in one "
                 "corrected_answer, including each member of a grouped employer or date "
-                "claim. Retain supported requested parts. State known role examples "
+                "claim. Retain supported requested parts. "
+                "Keep independent projects in separate sentences when correcting "
+                "an employer association; a repair must not move a personal project "
+                "into an employer's delivery list. State known role examples "
                 "separately from unknown employment conditions, and make each "
                 "documentation limit apply only to its own missing detail. Do not "
                 "add unrequested comparisons while repairing the answer.\n\n"
@@ -573,11 +698,18 @@ TRANSLATE_PROMPT = ChatPromptTemplate.from_messages(
 # ---------------------------------------------------------------------------
 
 _ALL_PROMPTS = [
+    *(
+        text
+        for templates in INVENTORY_FOLLOWUP_TEMPLATES.values()
+        for text in templates.values()
+    ),
     GUARDRAIL_PROMPT,
     CONDENSE_PROMPT,
     BATCH_GRADE_PROMPT,
     REWRITE_PROMPT,
     VERIFY_GROUNDING_PROMPT,
+    REPAIR_GROUNDING_PROMPT,
+    LANGUAGE_RETRY_INSTRUCTION,
     STRUCTURED_OUTPUT_RECOVERY_PROMPT,
     OUT_OF_SCOPE_PROMPT,
     TRANSLATE_PROMPT,
@@ -587,7 +719,10 @@ _ALL_PROMPTS = [
     *DEGREE_COMPLETENESS_CLARIFICATION_TEMPLATES.values(),
     *PROJECT_IDENTITY_TEMPLATES.values(),
     *EVIDENCE_DETAIL_TEMPLATES.values(),
+    *DOCUMENTATION_LIMIT_TEMPLATES.values(),
+    *PERSONAL_PRODUCTION_LIMIT_TEMPLATES.values(),
     *INSUFFICIENT_EVIDENCE_ANSWERS.values(),
+    *DISPUTED_EVIDENCE_ANSWERS.values(),
 ]
 
 

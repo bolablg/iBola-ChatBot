@@ -1,0 +1,153 @@
+{
+  "origin_commit": "8cb2e42ce2d982860ded59e761f8f58d8dfca7d4",
+  "origin_report": "eval_20261120_042527.json",
+  "kind": "actual_failed_evaluation",
+  "case": {
+    "id": "recruiter-adi-05-t5",
+    "category": "canonical",
+    "lang": "fr",
+    "tags": [
+      "recruiter_regression"
+    ],
+    "question": "Le panneau de cette page indique une croissance de quatre \u00e0 plus de quatorze personnes et cinq pays africains. Votre r\u00e9ponse parle de z\u00e9ro \u00e0 quatorze et de six pays, mais en nomme cinq. Quelle formulation puis-je retenir sans ajouter de faits non \u00e9tablis ?",
+    "answer": "Bolaji a &#233;t&#233; la premi&#232;re embauche data en 2019, et l'organisation est pass&#233;e de 4 &#224; plus de 14 professionnels durant son mandat de Head of Data d'octobre 2022 &#224; mars 2025. L'\u00e9quipe soutenait cinq march\u00e9s op\u00e9rationnels africains : Togo, B\u00e9nin, Cameroun, Gabon et Congo. Le dossier ne prouve pas un effectif initial de z\u00e9ro. \u00c9tapes confirm\u00e9es de l'\u00e9quipe (Chronologie confirm\u00e9e de l'\u00e9quipe) : \u00ab Bolaji a \u00e9t\u00e9 la premi\u00e8re embauche data en 2019. L'\u00e9quipe initiale a atteint 4 personnes pendant le mandat Global Data Analyst (novembre 2019 - septembre 2022). \u00bb",
+    "agent_type": "professional",
+    "evidence_count": 2,
+    "evidence": [
+      {
+        "source": "19_owner_confirmed_scope.txt",
+        "chunk_id": "19_owner_confirmed_scope.txt::2",
+        "section": "GOZEM TEAM GROWTH AND ROLE PERIODS",
+        "retrieval_rank": 1,
+        "retrieval_score": 19.0,
+        "parent_context": "BOLAJI BALOGOUN - OWNER-CONFIRMED CLAIM SCOPE",
+        "scope_context": "",
+        "evidence_type": "candidate_confirmed",
+        "metric_scope": {},
+        "content_preview": "Source: 19_owner_confirmed_scope.txt | Title: BOLAJI BALOGOUN - OWNER-CONFIRMED CLAIM SCOPE | Section: GOZEM TEAM GROWTH AND ROLE PERIODS | Parent context: BOLAJI BALOGOUN - OWNER-CONFIRMED CLAIM SCOPE\n\nBolaji was the first data hire in 2019. The initial team grew to 4 during the Global Data Analyst era (November 2019 - September 2022). The organization then grew from 4 to 14+ during his Head of Data period (October 2022 - March 2025). His later Data Director period was April 2025 - July 2026. The full team build must not be dated entirely to that later mandate. This confirmation does not establish direct-report counts, manager layers, department budget authority, or the precise dates of all 12 hires."
+      },
+      {
+        "source": "19_owner_confirmed_scope.txt",
+        "chunk_id": "19_owner_confirmed_scope.txt::4",
+        "section": "FRENCH SUMMARY OF CONFIRMED TEAM STAGES",
+        "retrieval_rank": 1,
+        "retrieval_score": 23.0,
+        "parent_context": "BOLAJI BALOGOUN - OWNER-CONFIRMED CLAIM SCOPE",
+        "scope_context": "",
+        "evidence_type": "candidate_confirmed",
+        "metric_scope": {},
+        "content_preview": "Source: 19_owner_confirmed_scope.txt | Title: BOLAJI BALOGOUN - OWNER-CONFIRMED CLAIM SCOPE | Section: FRENCH SUMMARY OF CONFIRMED TEAM STAGES | Parent context: BOLAJI BALOGOUN - OWNER-CONFIRMED CLAIM SCOPE\n\nTraduction fran\u00e7aise des faits confirm\u00e9s ci-dessus, sans nouvelle affirmation : Bolaji a \u00e9t\u00e9 la premi\u00e8re embauche data en 2019. L'\u00e9quipe initiale a atteint 4 personnes pendant le mandat Global Data Analyst (novembre 2019 - septembre 2022). L'organisation est ensuite pass\u00e9e de 4 \u00e0 plus de 14 professionnels durant le mandat Head of Data (octobre 2022 - mars 2025). L'\u00e9quipe soutenait cinq march\u00e9s op\u00e9rationnels africains : Togo, B\u00e9nin, Cameroun, Gabon et Congo. Singapour \u00e9tait uniquement le si\u00e8ge social de l'entreprise, et non un march\u00e9 op\u00e9rationnel suppl\u00e9mentaire ni un lieu de travail des membres de l'\u00e9quipe. Le dossier ne prouve pas un effectif initial de z\u00e9ro."
+      }
+    ],
+    "grounding_checked": true,
+    "provenance": {
+      "code_revision": "23930e1d5c9547c5",
+      "deployment_revision": null,
+      "corpus_revision": "3fae0c27dfb14d76",
+      "kb_revision": "3fae0c27dfb14d76",
+      "policy_revision": "39e385a48345ba48",
+      "index_sync_pending": false,
+      "chunker_version": "3",
+      "model": "gemini-3.5-flash-lite",
+      "thinking_config": {
+        "thinking_level": "low"
+      },
+      "generation_thinking_config": {
+        "thinking_level": "low"
+      },
+      "generation_temperature": null,
+      "verifier_model": "gemini-3.5-flash-lite",
+      "verifier_thinking_level": "low",
+      "verifier_thinking_budget": null,
+      "prompt_versions": {
+        "inventory_followup": "1.1",
+        "guardrail": "2.1",
+        "condense": "1.1",
+        "batch_grade": "2.3",
+        "rewrite": "2.1",
+        "generate_professional": "3.17",
+        "generate_education": "3.6",
+        "generate_learning": "3.6",
+        "verify_grounding": "2.15",
+        "repair_grounding": "1.4",
+        "upper_bound_clarification": "1.0",
+        "skills_completeness_clarification": "1.0",
+        "insufficient_evidence": "1.1",
+        "disputed_evidence": "1.0",
+        "project_identity": "1.0",
+        "evidence_detail": "1.1",
+        "documentation_limit": "1.0",
+        "personal_production_limit": "1.1",
+        "degree_clarification": "1.0",
+        "language_retry": "1.0",
+        "structured_output_recovery": "1.0",
+        "out_of_scope": "2.0",
+        "translate": "1.0"
+      }
+    },
+    "evidence_sources": [
+      "19_owner_confirmed_scope.txt",
+      "19_owner_confirmed_scope.txt"
+    ],
+    "unsupported_claims": [],
+    "latency_s": 7.149,
+    "fact_pass": false,
+    "fact_failures": [
+      "missing: singapour|singapore",
+      "missing: siege|headquarters"
+    ],
+    "scores": {
+      "relevance": 10,
+      "accuracy": 10,
+      "helpfulness": 10,
+      "faithfulness": 10,
+      "rationale": "The answer perfectly addresses the user's confusion about specific numbers, providing the correct figures for team growth and country count, with all claims being accurate and directly supported by the context."
+    },
+    "error": null,
+    "warning": null,
+    "judge_error": null,
+    "judge_diagnostics": {
+      "protocol": "bounded-format-recovery-1",
+      "attempts": [
+        {
+          "attempt": 1
+        }
+      ],
+      "retry_reasons": [],
+      "decoding_source": "text",
+      "status": "success"
+    },
+    "chars_in": 1908,
+    "chars_out": 584
+  },
+  "sdk_responses": [
+    {
+      "sequence": 1,
+      "response_text": "{\n  \"score\": 95,\n  \"category\": \"professional\",\n  \"reasoning\": \"The user is asking for clarification on factual discrepancies regarding team size and countries in Bolaji's professional experience at Gozem.\",\n  \"standalone_query\": \"Le panneau de cette page indique une croissance de quatre \u00e0 plus de quatorze personnes et cinq pays africains. Votre r\u00e9ponse parle de z\u00e9ro \u00e0 quatorze et de six pays, mais en nomme cinq. Quelle formulation puis-je retenir sans ajouter de faits non \u00e9tablis ?\",\n  \"retrieval_query_en\": \"The panel on this page indicates a growth from four to over fourteen people and five African countries. Your response talks about zero to fourteen and six countries, but names five. Which formulation should I retain without adding unestablished facts?\"\n}",
+      "finish_reasons": [
+        "FinishReason.STOP"
+      ]
+    },
+    {
+      "sequence": 2,
+      "response_text": "{\n  \"relevant_indices\": [\n    0,\n    1\n  ]\n}",
+      "finish_reasons": [
+        "FinishReason.STOP"
+      ]
+    },
+    {
+      "sequence": 3,
+      "response_text": "{\n  \"answer\": \"Bolaji a \\u0026\\u0023233;t\\u0026\\u0023233; la premi\\u0026\\u0023232;re embauche data en 2019, et l\\u0027organisation est pass\\u0026\\u0023233;e de 4 \\u0026\\u0023224; plus de 14 professionnels durant son mandat de Head of Data d\\u0027octobre 2022 \\u0026\\u0023224; mars 2025. L\\u0027\u00e9quipe soutenait cinq march\u00e9s op\u00e9rationnels africains : Togo, B\u00e9nin, Cameroun, Gabon et Congo. Le dossier ne prouve pas un effectif initial de z\u00e9ro.\",\n  \"confidence\": 1\n}",
+      "finish_reasons": [
+        "FinishReason.STOP"
+      ]
+    },
+    {
+      "sequence": 4,
+      "response_text": "{\n  \"is_grounded\": true,\n  \"addresses_question\": true,\n  \"unsupported_claims\": [],\n  \"corrected_answer\": \"\"\n}",
+      "finish_reasons": [
+        "FinishReason.STOP"
+      ]
+    }
+  ]
+}

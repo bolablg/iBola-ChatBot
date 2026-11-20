@@ -1,0 +1,296 @@
+{
+  "origin": "Unpaired medium-verifier trial, frozen e546608, not synthetic or a passing release",
+  "cases": [
+    {
+      "id": "recruiter-sda-01-t1",
+      "question": "This is a recruiter simulation for a fictional Senior Data Architect search at a growing multi-country mobility business. We need someone who has personally shaped a production data platform. Which experience makes Bolaji a credible candidate, and what did he own?",
+      "evidence": [
+        {
+          "source": "20_owner_confirmed_production_scope.txt",
+          "chunk_id": "20_owner_confirmed_production_scope.txt::0",
+          "section": "OWNER-CONFIRMED PRODUCTION RESPONSIBILITY",
+          "retrieval_rank": 1,
+          "retrieval_score": 33.0,
+          "parent_context": "",
+          "scope_context": "",
+          "evidence_type": "candidate_confirmed",
+          "metric_scope": {},
+          "content_preview": "Source: 20_owner_confirmed_production_scope.txt | Title: OWNER-CONFIRMED PRODUCTION RESPONSIBILITY | Section: OWNER-CONFIRMED PRODUCTION RESPONSIBILITY\n\nConfirmation recorded on November 19, 2026. This is the confirmation date, not a date assigned to the underlying work. Evidence classification: candidate_confirmed.\n\nAt Gozem, Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline. The owner subsequently clarified that he is both an architect and engineer and personally designed and operated the production services he used. This supersedes the earlier design-only qualification for these services.\n\nFor the Gozem Data Hub, Bolaji personally designed and operated AWS EC2 in production.\n\nBolaji personally set up an AWS S3 bucket in production. Bolaji personally operates an AWS S3 bucket in production, reading data from it and writing data back. He owns and operates the bucket on an ongoing basis. AWS S3 serves as an exchange layer with the product team and has also been used in projects. This clarification does not identify an employer or project for the S3 bucket and does not establish on-call responsibility.\n\nBolaji has no Kafka experience at all. Bolaji has never used Kafka. This is an explicit owner-confirmed absence of experience, not an inference from an omitted tool. It does not imply inability to learn Kafka or a deficiency in other streaming technologies.\n\nThese clarifications do not add personal Spark Structured Streaming, Apache NiFi or Lakeflow production experience. They do not establish CDC event counts, end-to-end latency or availability. The separately documented streaming-workload average remains a different measurement population."
+        },
+        {
+          "source": "00_identity.txt",
+          "chunk_id": "00_identity.txt::4",
+          "section": "WHY BOLAJI - VALUE PROPOSITION:",
+          "retrieval_rank": 2,
+          "retrieval_score": 0.031054,
+          "parent_context": "BOLAJI BALOGOUN - IDENTITY & CONTACT",
+          "scope_context": "",
+          "evidence_type": "curated",
+          "metric_scope": {},
+          "content_preview": "Source: 00_identity.txt | Title: BOLAJI BALOGOUN - IDENTITY & CONTACT | Section: WHY BOLAJI - VALUE PROPOSITION: | Parent context: BOLAJI BALOGOUN - IDENTITY & CONTACT\n\nBolaji is a data and AI executive and an impact-driven builder. He does not just set strategy: he architects and deploys the systems himself while leading the team that scales them. He has built data platforms serving millions of users in markets most engineers never touch.\n\nWhat makes Bolaji different from other senior data and AI candidates:\n\n1. Builder-leader hybrid: at Gozem he led a data organization of 14+ professionals supporting five African operating markets AND still coded, architected, and shipped production systems. Most leaders at this level stop building. Bolaji does both.\n\n2. Self-taught adaptability: he taught himself Google Cloud Platform with zero prior cloud experience and deployed a full production analytics infrastructure within a single quarter because the business needed it, migrating 10+ TB without operational interruption. He learns fast under pressure and delivers.\n\n3. Full-stack data and AI: Bolaji has worked every layer of the data stack, from statistics and econometrics to data engineering, machine learning, AI product delivery, and team leadership. The combination across the entire stack is the differentiator.\n\n4. Real-world African market expertise: he built production systems supporting five African operating markets with real infrastructure constraints, multilingual contexts, and distributed teams, serving millions of real users daily.\n\nWhy interview Bolaji for a senior data or AI role:\nHe combines 10+ years of hands-on technical depth (Python, SQL, GCP, Airflow, LLMs, agentic AI) with proven leadership of a team he grew from 4 to 14+ during the Head of Data period (October 2022 - March 2025). He chartered the Gozem Data Hub serving over 700 people, cut Google Cloud costs by 42.57% in a single quarter, shipped 30+ production AI tools (RAG chatbots, document intelligence, fraud screening, market monitoring), and set governance across 250+ production pipelines. He is equally comfortable writing BigQuery SQL, designing system architecture, mentoring engineers, or presenting to executive leadership."
+        },
+        {
+          "source": "90_website_canon_llms_full.txt",
+          "chunk_id": "90_website_canon_llms_full.txt::4",
+          "section": "Data products at operating scale",
+          "retrieval_rank": 4,
+          "retrieval_score": 0.016393,
+          "parent_context": "Bolaji BALOGOUN · Biography",
+          "scope_context": "",
+          "evidence_type": "published",
+          "metric_scope": {},
+          "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN · Data Engineer · Data Architect (full content) | Section: Data products at operating scale | Parent context: Bolaji BALOGOUN · Biography\n\nBolaji architected and led the development of the [Gozem Data Hub](https://www.bolablg.com/experience/gozem-director/#data-hub), a governed operational and analytics platform adopted by 700+ employees, field agents, and partners across five African countries. It provided self-service access to operational applications, analytics, AI tools, and automation. The published case documents React, FastAPI, AWS EC2, BigQuery, MongoDB, Nginx, Docker, Google Cloud Storage, Artifact Registry, and Python.\n\nThe data team monitored more than 250 pipelines. Bolaji established governance, observability, and reliability standards across 300+ workflow orchestration, transformation, and metrics-layer assets."
+        },
+        {
+          "source": "90_website_canon_llms_full.txt",
+          "chunk_id": "90_website_canon_llms_full.txt::21",
+          "section": "Scaling the data organization for multi-country growth",
+          "retrieval_rank": 5,
+          "retrieval_score": 0.016393,
+          "parent_context": "Bolaji BALOGOUN · Biography > Head of Data · GOZEM · Oct 2022 - Mar 2025",
+          "scope_context": "Head of Data · GOZEM · Oct 2022 - Mar 2025",
+          "evidence_type": "published",
+          "metric_scope": {},
+          "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN · Data Engineer · Data Architect (full content) | Section: Scaling the data organization for multi-country growth | Parent context: Bolaji BALOGOUN · Biography > Head of Data · GOZEM · Oct 2022 - Mar 2025\n\nResult: Grew the Data organization from 4 to 14+ professionals and matured it into a business-aligned function supporting multi country and business growth.\nProblem: As Gozem transitioned from startup to scale-up, growing analytics demand, platform complexity, operational reporting requirements, and business specialization created the need for a larger and more structured data organization. The team needed to plan for new capabilities, specialize roles, formalize hiring and governance, and coordinate with business stakeholders.\nSolution: Assessed organizational capability gaps and designed the operating model for the data function across Analytics, Data Engineering, and Data Science. Defined role charters, hiring plans, career expectations, competency frameworks, and team structures based on business priorities and anticipated growth.\n\nPartnered with HR on workforce planning, hiring business cases, candidate evaluation frameworks, technical assessments, interviews, hiring decisions, onboarding, and performance management. Used **Breezy HR** to manage recruiting.\n\nCentralized the data team's requests in **Asana** and built dashboards from exported request data. The dashboards tracked request volume, demand sources, work categories, delivery times, team utilization, and capacity trends. Used these measures to inform staffing, prioritization, coaching, and resource allocation.\n\nIntroduced a domain-based partnership with business leaders that clarified data ownership, strengthened governance, and set clear accountability for KPIs. Made the data team part of recurring operational, strategic, and Growth decisions.\nTools: Breezy HR · Google Workspace · Asana · BigQuery · Looker Studio"
+        },
+        {
+          "source": "20_owner_confirmed_production_scope.txt",
+          "chunk_id": "20_owner_confirmed_production_scope.txt::2",
+          "section": "HISTORICAL CONFIRMATION RECORD",
+          "retrieval_rank": 7,
+          "retrieval_score": 0.015873,
+          "parent_context": "OWNER-CONFIRMED PRODUCTION RESPONSIBILITY",
+          "scope_context": "",
+          "evidence_type": "candidate_confirmed",
+          "metric_scope": {},
+          "content_preview": "Source: 20_owner_confirmed_production_scope.txt | Title: OWNER-CONFIRMED PRODUCTION RESPONSIBILITY | Section: HISTORICAL CONFIRMATION RECORD | Parent context: OWNER-CONFIRMED PRODUCTION RESPONSIBILITY\n\nThe following earlier answers record the sequence of clarification. The current canonical design-and-operation statement above governs Pub/Sub and Dataflow; the earlier design-only answer does not limit that responsibility.\n\nQuestion: The KB documents a MongoDB CDC pipeline using Pub/Sub and Dataflow, but does not explicitly state your personal production responsibility. Which description is accurate?\nAnswer: I personally designed it in production\n\nQuestion: The Gozem Data Hub case lists AWS EC2 in its stack. What can the KB explicitly confirm about your own EC2 responsibility?\nAnswer: I personally designed and operated EC2 in production\n\nAdditional owner statement: no  kafka experience at all. s3 in production as exchange layer with the product team, and in projects\nAdditional owner statement: i set up bucket in s3 in production\nAdditional owner statement: i own it on long run as i read data from it adn write back as well"
+        }
+      ],
+      "captured_candidates": [
+        {
+          "sequence": 3,
+          "schema": "GeneratedAnswer",
+          "result": {
+            "answer": "Bolaji is a credible candidate as a builder-leader who personally designs and operates production systems alongside leading data organizations. At Gozem, he architected the Gozem Data Hub adopted by 700+ users across five markets and personally designed and operated production services including AWS EC2, Pub/Sub, and Dataflow for the MongoDB CDC pipeline.",
+            "confidence": 1.0
+          }
+        },
+        {
+          "sequence": 4,
+          "schema": "GroundingVerdict",
+          "result": {
+            "is_grounded": false,
+            "addresses_question": true,
+            "unsupported_claims": [
+              "Personal production design and operation scope for dataflow and pub/sub requiring strict constraint alignment"
+            ],
+            "corrected_answer": "Bolaji is a credible candidate as a builder-leader who personally designs and operates production systems alongside leading data organizations. At Gozem, he architected the Gozem Data Hub adopted by 700+ users across five markets and personally designed and operated production services including AWS EC2, Pub/Sub, and Dataflow for the MongoDB CDC pipeline."
+          }
+        },
+        {
+          "sequence": 5,
+          "schema": "GeneratedAnswer",
+          "result": {
+            "answer": "Bolaji is a credible candidate as a builder-leader who combines 10+ years of technical depth with proven team leadership. At Gozem, he architected the Gozem Data Hub adopted by 700+ users across five African countries and personally designed and operated AWS EC2, Pub/Sub, and Dataflow in production for the MongoDB CDC pipeline, as well as an AWS S3 bucket in production serving as an exchange layer with the product team. The retrieved evidence does not establish personal production experience for Kafka, Spark Structured Streaming, Apache NiFi, or Lakeflow.",
+            "confidence": 0.95
+          }
+        }
+      ],
+      "final_answer": "I don't have enough verified information to answer that specific question.",
+      "grounding_checked": false
+    },
+    {
+      "id": "recruiter-sda-05-t2",
+      "question": "Which production AWS services and streaming technologies has Bolaji personally designed or operated? In particular, is Kafka architecture delivery documented?",
+      "evidence": [
+        {
+          "source": "21_production_service_inventory.txt",
+          "chunk_id": "21_production_service_inventory.txt::1",
+          "section": "PRODUCTION SERVICE INVENTORY",
+          "retrieval_rank": 1,
+          "retrieval_score": 34.0,
+          "parent_context": "BOLAJI BALOGOUN - CONFIRMED PRODUCTION SERVICE INVENTORY",
+          "scope_context": "",
+          "evidence_type": "candidate_confirmed",
+          "metric_scope": {},
+          "content_preview": "Source: 21_production_service_inventory.txt | Title: BOLAJI BALOGOUN - CONFIRMED PRODUCTION SERVICE INVENTORY | Section: PRODUCTION SERVICE INVENTORY | Parent context: BOLAJI BALOGOUN - CONFIRMED PRODUCTION SERVICE INVENTORY\n\nFor an unrestricted service list, lead with the documented operational core: BigQuery, Apache Airflow, Dataform and Google Cloud Storage. Follow with relevant streaming, application, AI, compute, delivery and observability services. BigQuery was the central warehouse used daily; Airflow orchestrated workflows and Dataform supplied production modeling and transformations. This presentation order follows the owner's preference for operational centrality and the documented platform roles, not a measured ranking of frequency, spend or business impact. A narrower provider or service question takes precedence.\n\nBolaji personally designed and operated the following documented production services as an architect and engineer:\nService inventory: BigQuery, Apache Airflow, Dataform, Google Cloud Storage, Pub/Sub, Dataflow, Cloud Run, Cloud Functions, Vertex AI, AWS EC2, AWS S3, Artifact Registry, Cloud Logging and Cloud Build.\nGCP services: BigQuery, Dataform, Google Cloud Storage, Pub/Sub, Dataflow, Cloud Run, Cloud Functions, Vertex AI, Artifact Registry, Cloud Logging and Cloud Build.\nAWS services: AWS EC2 and AWS S3.\nApache Airflow is documented orchestration software; this inventory does not infer a managed hosting provider for it.\n- Warehouse and transformation at Gozem: BigQuery and Dataform. Supporting record: 05_skills_and_tools.txt, CLOUD & DATA PLATFORMS and DATA INGESTION & TRANSFORMATION; 90_website_canon_llms_full.txt, Data platform modernization and FinOps transformation. BigQuery operation was also explicitly reaffirmed by the owner.\n- Storage at Gozem: Google Cloud Storage. Supporting record: 03_previous_role_gozem_gda.txt, cloud migration; 05_skills_and_tools.txt, CLOUD & DATA PLATFORMS.\n- Orchestration at Gozem: Apache Airflow. Supporting record: 05_skills_and_tools.txt, DEVOPS & CI/CD; 13_gozem_internal_projects.txt, DATA QUALITY OBSERVABILITY SYSTEM. Airflow operation was explicitly reaffirmed by the owner.\n- Streaming at Gozem: Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline. Supporting record: 20_owner_confirmed_production_scope.txt, current clarification; 90_website_canon_llms_full.txt, application-ready data flows.\n- Application and AI services at Gozem: Cloud Run, Cloud Functions and Vertex AI. Supporting record: 05_skills_and_tools.txt, CLOUD & DATA PLATFORMS and AI & LLM ENGINEERING; 18_confirmed_clarifications.txt, HANDS-ON VERTEX AI AND TECHNICAL SUPERVISION; 90_website_canon_llms_full.txt, Tech stack. Cloud Run is also used for the production iBola project. Personal service responsibility does not mean sole implementation of the recommendation model, its API or mobile integration.\n- Delivery and observability at Gozem: Artifact Registry, Cloud Logging and Cloud Build. Supporting record: 05_skills_and_tools.txt, CLOUD & DATA PLATFORMS and DEVOPS & CI/CD, combined with the owner's design-and-operation confirmation.\n- AWS compute: Bolaji personally designed and operated AWS EC2 in production for the Gozem Data Hub. Supporting record: 20_owner_confirmed_production_scope.txt.\n- AWS storage: Bolaji personally designed and operated AWS S3 in production, including bucket setup and ongoing reading and writing as an exchange layer with the product team. The employer or project for that bucket is not specified. Supporting record: 20_owner_confirmed_production_scope.txt.\n\nThe personal responsibility above is owner-confirmed for the services actually used in these documented production contexts. The confirmation does not add Kafka experience, make projects or labs into production use, establish every upstream database's administration, or establish on-call responsibility or a service-level guarantee. Additional database and BI technologies have their own documented contexts in the skills and project records."
+        },
+        {
+          "source": "20_owner_confirmed_production_scope.txt",
+          "chunk_id": "20_owner_confirmed_production_scope.txt::0",
+          "section": "OWNER-CONFIRMED PRODUCTION RESPONSIBILITY",
+          "retrieval_rank": 1,
+          "retrieval_score": 36.0,
+          "parent_context": "",
+          "scope_context": "",
+          "evidence_type": "candidate_confirmed",
+          "metric_scope": {},
+          "content_preview": "Source: 20_owner_confirmed_production_scope.txt | Title: OWNER-CONFIRMED PRODUCTION RESPONSIBILITY | Section: OWNER-CONFIRMED PRODUCTION RESPONSIBILITY\n\nConfirmation recorded on November 19, 2026. This is the confirmation date, not a date assigned to the underlying work. Evidence classification: candidate_confirmed.\n\nAt Gozem, Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline. The owner subsequently clarified that he is both an architect and engineer and personally designed and operated the production services he used. This supersedes the earlier design-only qualification for these services.\n\nFor the Gozem Data Hub, Bolaji personally designed and operated AWS EC2 in production.\n\nBolaji personally set up an AWS S3 bucket in production. Bolaji personally operates an AWS S3 bucket in production, reading data from it and writing data back. He owns and operates the bucket on an ongoing basis. AWS S3 serves as an exchange layer with the product team and has also been used in projects. This clarification does not identify an employer or project for the S3 bucket and does not establish on-call responsibility.\n\nBolaji has no Kafka experience at all. Bolaji has never used Kafka. This is an explicit owner-confirmed absence of experience, not an inference from an omitted tool. It does not imply inability to learn Kafka or a deficiency in other streaming technologies.\n\nThese clarifications do not add personal Spark Structured Streaming, Apache NiFi or Lakeflow production experience. They do not establish CDC event counts, end-to-end latency or availability. The separately documented streaming-workload average remains a different measurement population."
+        },
+        {
+          "source": "90_website_canon_llms_full.txt",
+          "chunk_id": "90_website_canon_llms_full.txt::7",
+          "section": "Applied AI, automation, and reliability",
+          "retrieval_rank": 1,
+          "retrieval_score": 16.0,
+          "parent_context": "Bolaji BALOGOUN · Biography",
+          "scope_context": "",
+          "evidence_type": "published",
+          "metric_scope": {
+            "id": "invoice_time_savings",
+            "value": "40+ hours",
+            "qualifier": "estimated savings, not established measured time savings",
+            "population": "per country Financing Manager",
+            "measurement_period": "per month",
+            "provenance": "explicit estimated savings in the cited invoice records"
+          },
+          "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN · Data Engineer · Data Architect (full content) | Section: Applied AI, automation, and reliability | Parent context: Bolaji BALOGOUN · Biography\n\nBolaji co-led Gozem’s AI strategy. The group shipped 30+ production automation tools during his Data Director mandate. He prototyped invoice extraction in Vertex AI Studio and built a workflow with validation and human review. Estimated savings were 40+ hours per country Financing Manager each month. The Vodun Days command center gave Operations minute-level visibility into driver supply. On the peak day, ride requests were 48% above the average for the other event days and the rider match rate was 88%.\n\nHe also built application-ready data flows from MongoDB, BigQuery, Google Cloud Storage, and Sheets, plus a near-real-time MongoDB CDC pipeline that published change events through Pub/Sub, processed them in Dataflow, updated BigQuery, and supported real-time visualization in Looker Studio. These systems paired data products with operational services and decision workflows."
+        },
+        {
+          "source": "90_website_canon_llms_full.txt",
+          "chunk_id": "90_website_canon_llms_full.txt::47",
+          "section": "Tech stack",
+          "retrieval_rank": 4,
+          "retrieval_score": 0.030777,
+          "parent_context": "Bolaji BALOGOUN · Biography",
+          "scope_context": "",
+          "evidence_type": "published",
+          "metric_scope": {},
+          "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN · Data Engineer · Data Architect (full content) | Section: Tech stack | Parent context: Bolaji BALOGOUN · Biography\n\nBolaji personally uses Cloud Functions and Vertex AI in production.\n\n\n- Data platforms & governance: BigQuery · ClickHouse · BigLake · Databricks (projects and labs) · Dataplex · Unity Catalog\n- Databases & storage: PostgreSQL · MongoDB · Google Cloud Storage · AWS S3 · Delta Lake · Apache Iceberg\n- Pipelines & streaming: Airflow · Dataform · Dataflow · Apache NiFi · Lakeflow · Spark · Pub/Sub\n- Languages & frameworks: Python · SQL · R · Bash · Scala · FastAPI\n- Cloud & delivery: Google Cloud · Compute Engine · AWS · AWS EC2 · Cloud Run · Cloud Functions · Docker · Artifact Registry · Git\n- Analytics & visualization: Data Studio · Superset · Metabase · Grafana\n- AI & automation: Vertex AI · Gemini · Codex · RAG · LangGraph (iBola project) · MCP"
+        },
+        {
+          "source": "20_owner_confirmed_production_scope.txt",
+          "chunk_id": "20_owner_confirmed_production_scope.txt::2",
+          "section": "HISTORICAL CONFIRMATION RECORD",
+          "retrieval_rank": 5,
+          "retrieval_score": 0.015873,
+          "parent_context": "OWNER-CONFIRMED PRODUCTION RESPONSIBILITY",
+          "scope_context": "",
+          "evidence_type": "candidate_confirmed",
+          "metric_scope": {},
+          "content_preview": "Source: 20_owner_confirmed_production_scope.txt | Title: OWNER-CONFIRMED PRODUCTION RESPONSIBILITY | Section: HISTORICAL CONFIRMATION RECORD | Parent context: OWNER-CONFIRMED PRODUCTION RESPONSIBILITY\n\nThe following earlier answers record the sequence of clarification. The current canonical design-and-operation statement above governs Pub/Sub and Dataflow; the earlier design-only answer does not limit that responsibility.\n\nQuestion: The KB documents a MongoDB CDC pipeline using Pub/Sub and Dataflow, but does not explicitly state your personal production responsibility. Which description is accurate?\nAnswer: I personally designed it in production\n\nQuestion: The Gozem Data Hub case lists AWS EC2 in its stack. What can the KB explicitly confirm about your own EC2 responsibility?\nAnswer: I personally designed and operated EC2 in production\n\nAdditional owner statement: no  kafka experience at all. s3 in production as exchange layer with the product team, and in projects\nAdditional owner statement: i set up bucket in s3 in production\nAdditional owner statement: i own it on long run as i read data from it adn write back as well"
+        }
+      ],
+      "captured_candidates": [
+        {
+          "sequence": 3,
+          "schema": "GeneratedAnswer",
+          "result": {
+            "answer": "Bolaji personally designed and operated AWS EC2 and AWS S3 in production. He has no Kafka experience at all and has never used Kafka.",
+            "confidence": 1.0
+          }
+        },
+        {
+          "sequence": 4,
+          "schema": "GroundingVerdict",
+          "result": {
+            "is_grounded": true,
+            "addresses_question": false,
+            "unsupported_claims": [],
+            "corrected_answer": "Bolaji personally designed and operated AWS EC2 and AWS S3 in production (AWS EC2 for the Gozem Data Hub, while the employer or project for the S3 bucket is not specified). For streaming technologies, he personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline at Gozem. He has no Kafka experience at all and has never used Kafka."
+          }
+        },
+        {
+          "sequence": 5,
+          "schema": "GeneratedAnswer",
+          "result": {
+            "answer": "Bolaji has personally designed and operated the following production AWS services: AWS EC2 for the Gozem Data Hub, and an AWS S3 bucket in production where he set it up, owns it on the long run, and reads and writes data as an exchange layer with the product team (the specific employer or project for that S3 bucket is not specified). For streaming technologies, he personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline at Gozem. Regarding Kafka architecture delivery, Bolaji has no Kafka experience at all and has never used Kafka; this is an explicit owner-confirmed absence of experience.",
+            "confidence": 1.0
+          }
+        }
+      ],
+      "final_answer": "I don't have enough verified information to answer that specific question.",
+      "grounding_checked": false
+    },
+    {
+      "id": "recruiter-sde-01-t1",
+      "question": "This is a recruiter simulation for a Senior Data Engineer role at a fictional marketplace using GCP. What is the strongest evidence that Bolaji can personally build and operate production data pipelines rather than only manage a team?",
+      "evidence": [
+        {
+          "source": "20_owner_confirmed_production_scope.txt",
+          "chunk_id": "20_owner_confirmed_production_scope.txt::0",
+          "section": "OWNER-CONFIRMED PRODUCTION RESPONSIBILITY",
+          "retrieval_rank": 1,
+          "retrieval_score": 36.0,
+          "parent_context": "",
+          "scope_context": "",
+          "evidence_type": "candidate_confirmed",
+          "metric_scope": {},
+          "content_preview": "Source: 20_owner_confirmed_production_scope.txt | Title: OWNER-CONFIRMED PRODUCTION RESPONSIBILITY | Section: OWNER-CONFIRMED PRODUCTION RESPONSIBILITY\n\nConfirmation recorded on November 19, 2026. This is the confirmation date, not a date assigned to the underlying work. Evidence classification: candidate_confirmed.\n\nAt Gozem, Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline. The owner subsequently clarified that he is both an architect and engineer and personally designed and operated the production services he used. This supersedes the earlier design-only qualification for these services.\n\nFor the Gozem Data Hub, Bolaji personally designed and operated AWS EC2 in production.\n\nBolaji personally set up an AWS S3 bucket in production. Bolaji personally operates an AWS S3 bucket in production, reading data from it and writing data back. He owns and operates the bucket on an ongoing basis. AWS S3 serves as an exchange layer with the product team and has also been used in projects. This clarification does not identify an employer or project for the S3 bucket and does not establish on-call responsibility.\n\nBolaji has no Kafka experience at all. Bolaji has never used Kafka. This is an explicit owner-confirmed absence of experience, not an inference from an omitted tool. It does not imply inability to learn Kafka or a deficiency in other streaming technologies.\n\nThese clarifications do not add personal Spark Structured Streaming, Apache NiFi or Lakeflow production experience. They do not establish CDC event counts, end-to-end latency or availability. The separately documented streaming-workload average remains a different measurement population."
+        },
+        {
+          "source": "00_identity.txt",
+          "chunk_id": "00_identity.txt::4",
+          "section": "WHY BOLAJI - VALUE PROPOSITION:",
+          "retrieval_rank": 2,
+          "retrieval_score": 0.031754,
+          "parent_context": "BOLAJI BALOGOUN - IDENTITY & CONTACT",
+          "scope_context": "",
+          "evidence_type": "curated",
+          "metric_scope": {},
+          "content_preview": "Source: 00_identity.txt | Title: BOLAJI BALOGOUN - IDENTITY & CONTACT | Section: WHY BOLAJI - VALUE PROPOSITION: | Parent context: BOLAJI BALOGOUN - IDENTITY & CONTACT\n\nBolaji is a data and AI executive and an impact-driven builder. He does not just set strategy: he architects and deploys the systems himself while leading the team that scales them. He has built data platforms serving millions of users in markets most engineers never touch.\n\nWhat makes Bolaji different from other senior data and AI candidates:\n\n1. Builder-leader hybrid: at Gozem he led a data organization of 14+ professionals supporting five African operating markets AND still coded, architected, and shipped production systems. Most leaders at this level stop building. Bolaji does both.\n\n2. Self-taught adaptability: he taught himself Google Cloud Platform with zero prior cloud experience and deployed a full production analytics infrastructure within a single quarter because the business needed it, migrating 10+ TB without operational interruption. He learns fast under pressure and delivers.\n\n3. Full-stack data and AI: Bolaji has worked every layer of the data stack, from statistics and econometrics to data engineering, machine learning, AI product delivery, and team leadership. The combination across the entire stack is the differentiator.\n\n4. Real-world African market expertise: he built production systems supporting five African operating markets with real infrastructure constraints, multilingual contexts, and distributed teams, serving millions of real users daily.\n\nWhy interview Bolaji for a senior data or AI role:\nHe combines 10+ years of hands-on technical depth (Python, SQL, GCP, Airflow, LLMs, agentic AI) with proven leadership of a team he grew from 4 to 14+ during the Head of Data period (October 2022 - March 2025). He chartered the Gozem Data Hub serving over 700 people, cut Google Cloud costs by 42.57% in a single quarter, shipped 30+ production AI tools (RAG chatbots, document intelligence, fraud screening, market monitoring), and set governance across 250+ production pipelines. He is equally comfortable writing BigQuery SQL, designing system architecture, mentoring engineers, or presenting to executive leadership."
+        },
+        {
+          "source": "90_website_canon_llms_full.txt",
+          "chunk_id": "90_website_canon_llms_full.txt::4",
+          "section": "Data products at operating scale",
+          "retrieval_rank": 5,
+          "retrieval_score": 0.015873,
+          "parent_context": "Bolaji BALOGOUN · Biography",
+          "scope_context": "",
+          "evidence_type": "published",
+          "metric_scope": {},
+          "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN · Data Engineer · Data Architect (full content) | Section: Data products at operating scale | Parent context: Bolaji BALOGOUN · Biography\n\nBolaji architected and led the development of the [Gozem Data Hub](https://www.bolablg.com/experience/gozem-director/#data-hub), a governed operational and analytics platform adopted by 700+ employees, field agents, and partners across five African countries. It provided self-service access to operational applications, analytics, AI tools, and automation. The published case documents React, FastAPI, AWS EC2, BigQuery, MongoDB, Nginx, Docker, Google Cloud Storage, Artifact Registry, and Python.\n\nThe data team monitored more than 250 pipelines. Bolaji established governance, observability, and reliability standards across 300+ workflow orchestration, transformation, and metrics-layer assets."
+        },
+        {
+          "source": "03_previous_role_gozem_gda.txt",
+          "chunk_id": "03_previous_role_gozem_gda.txt::1",
+          "section": "KEY ACHIEVEMENTS:",
+          "retrieval_rank": 8,
+          "retrieval_score": 0.015385,
+          "parent_context": "BOLAJI BALOGOUN - PREVIOUS ROLE: GLOBAL DATA ANALYST AT GOZEM",
+          "scope_context": "",
+          "evidence_type": "curated",
+          "metric_scope": {},
+          "content_preview": "Source: 03_previous_role_gozem_gda.txt | Title: BOLAJI BALOGOUN - PREVIOUS ROLE: GLOBAL DATA ANALYST AT GOZEM | Section: KEY ACHIEVEMENTS: | Parent context: BOLAJI BALOGOUN - PREVIOUS ROLE: GLOBAL DATA ANALYST AT GOZEM\n\nMigrated Gozem's data infrastructure to Google Cloud:\n- Situation: the data infrastructure ran on legacy batch processes that could not keep up with growing operational and analytical needs across countries. There was no data warehouse. Bolaji had never worked with GCP or AWS before.\n- Action: self-taught Google BigQuery, Cloud Storage, and related tools. Opted for a cloud-first approach to avoid maintenance overhead. Designed a BigQuery-based data warehouse with 50+ scheduled ETL pipelines.\n- Tools: Google BigQuery, Google Cloud Storage, Google Dataflow, Apache Airflow, Python.\n- Outcome: migrated 10+ TB within a single quarter, without operational interruption, into a fully functional cloud-based analytics infrastructure. Founded the analytics engineering function on top of it.\n\nAutomated operational monitoring:\n- Situation: operations monitoring relied on a manual recurring job to spot business scenarios across markets, taking up to 2 days of analyst work per cycle.\n- Action: automated the workflow within the first 6 months of the role. Python jobs querying PostgreSQL surfaced supply gaps, driver behaviour anomalies, and fraudulent trip patterns into Google Sheets for the operations team.\n- Outcome: replaced a 2-day manual job with a 5-15 minute automated cycle.\n\nAutomated incentive payments:\n- Situation: the agent and partner incentive payment process took multiple days, with manual reviews creating delays, errors, and heavy load on the finance team.\n- Action: built automated data pipelines combining predictive analytics and near-real-time monitoring, with structured logs and dispute trails for finance and support.\n- Outcome: reduced a multi-day manual process to minutes and facilitated more driver engagement.\n\nBuilt the fraud patterns database:\n- Situation: financial defaults from undetected fraud patterns were eroding margins, with no central knowledge base of known schemes.\n- Action: implemented a fraud patterns database fed by automated daily collection monitoring, surfacing anomalies the same day they appeared.\n- Outcome: zero unknown financial defaults during the period. Laid the groundwork for the later ML-based fraud screening pipeline.\n\nMarketing segmentation and cohort analysis:\n- Situation: marketing campaigns were broadly targeted because the team lacked a structured user profiling layer.\n- Action: built a profiling database covering riders and drivers, with RFM segmentation and cohort analysis used by Marketing for targeted campaigns.\n- Outcome: supported targeted campaigns and retention analysis. The approximately 9% retention improvement belongs to the separate seasonal driver-retention analysis, not user retention.\n\nSeasonal driver-retention analysis:\n- Action: identified driver churn associated with the agricultural season and informed an incentive response.\n- Outcome: supported an approximately 9% improvement in driver retention. The measurement interval is not confirmed as quarter-over-quarter.\n\nBusiness health monitoring and daily insights:\n- Situation: country managers and top management lacked a single daily lens on business health across markets.\n- Action: consolidated 20+ KPIs into a daily report spanning all business areas, built in Google Sheets and transitioned to Google Data Studio and Tableau after the BigQuery migration.\n- Outcome: daily insights presented to country managers and top management, surfacing trends and anomalies for operational decisions.\n\nBuilt and led a distributed analytics team:\n- Action: founded the analytics engineering function and grew a distributed team of 4, delivering automated dashboards, KPI reporting, and weekly market insights."
+        }
+      ],
+      "captured_candidates": [
+        {
+          "sequence": 3,
+          "schema": "GeneratedAnswer",
+          "result": {
+            "answer": "Bolaji personally designed and operated Pub/Sub and Dataflow in production for Gozem's MongoDB CDC pipeline. Additionally, he self-taught GCP with zero prior cloud experience and migrated over 10 TB within a single quarter by building a BigQuery-based data warehouse with 50+ scheduled ETL pipelines.",
+            "confidence": 1.0
+          }
+        },
+        {
+          "sequence": 4,
+          "schema": "GroundingVerdict",
+          "result": {
+            "is_grounded": false,
+            "addresses_question": true,
+            "unsupported_claims": [
+              "migrated over 10 TB within a single quarter by building a BigQuery-based data warehouse with 50+ scheduled ETL pipelines without binding it locally to the explicitly documented earlier Global Data Analyst role at Gozem"
+            ],
+            "corrected_answer": "Bolaji personally designed and operated Pub/Sub and Dataflow in production for Gozem's MongoDB CDC pipeline. Additionally, in his earlier role as Global Data Analyst at Gozem, he self-taught GCP with zero prior cloud experience and migrated over 10+ TB within a single quarter by building a BigQuery-based data warehouse with 50+ scheduled ETL pipelines."
+          }
+        },
+        {
+          "sequence": 5,
+          "schema": "GroundingVerdict",
+          "result": {
+            "is_grounded": false,
+            "addresses_question": true,
+            "unsupported_claims": [
+              "over 10+ TB"
+            ],
+            "corrected_answer": "Bolaji personally designed and operated Pub/Sub and Dataflow in production for Gozem's MongoDB CDC pipeline. Additionally, in his earlier role as Global Data Analyst at Gozem, he self-taught GCP with zero prior cloud experience and migrated 10+ TB within a single quarter by building a BigQuery-based data warehouse with 50+ scheduled ETL pipelines."
+          }
+        }
+      ],
+      "final_answer": "I don't have enough verified information to answer that specific question.",
+      "grounding_checked": false
+    }
+  ]
+}
