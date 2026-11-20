@@ -25,17 +25,21 @@ PROMPT_VERSIONS = {
     "condense": "1.1",
     "batch_grade": "2.3",
     "rewrite": "2.1",
-    "generate_professional": "3.10",
+    "generate_professional": "3.11",
     "generate_education": "3.6",
     "generate_learning": "3.6",
-    "verify_grounding": "2.12",
-    "repair_grounding": "1.1",
+    "verify_grounding": "2.13",
+    "repair_grounding": "1.2",
     "upper_bound_clarification": "1.0",
     "skills_completeness_clarification": "1.0",
     "insufficient_evidence": "1.1",
     "disputed_evidence": "1.0",
     "project_identity": "1.0",
     "evidence_detail": "1.1",
+    "documentation_limit": "1.0",
+    "personal_production_limit": "1.0",
+    "degree_clarification": "1.0",
+    "language_retry": "1.0",
     "structured_output_recovery": "1.0",
     "out_of_scope": "2.0",
     "translate": "1.0",
@@ -275,6 +279,16 @@ PROJECT_IDENTITY_TEMPLATES = {
     "fr": "Projet documenté : {name}.",
 }
 
+DOCUMENTATION_LIMIT_TEMPLATES = {
+    "en": "The retrieved evidence does not establish {detail}.",
+    "fr": "Le dossier récupéré ne documente pas {detail}.",
+}
+
+PERSONAL_PRODUCTION_LIMIT_TEMPLATES = {
+    "en": "The retrieved evidence does not establish personal production design or operation of {tools}.",
+    "fr": "Le dossier récupéré ne documente pas la conception ou l'exploitation personnelle en production de {tools}.",
+}
+
 EVIDENCE_DETAIL_TEMPLATES = {
     "en": '{label} ({section}{scope}): "{quote}"',
     "fr": "{label} ({section}{scope}) : « {quote} »",
@@ -371,6 +385,11 @@ GENERATE_PROMPT = ChatPromptTemplate.from_messages(
     ]
 )
 
+LANGUAGE_RETRY_INSTRUCTION = (
+    "\n\nCRITICAL: your previous draft was in the wrong language. "
+    "Write the ENTIRE answer in {reply_language}."
+)
+
 # ---------------------------------------------------------------------------
 # verify_grounding (claim-level grounding + topic match)
 # ---------------------------------------------------------------------------
@@ -420,7 +439,10 @@ REPAIR_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
             "tool separately. A documented built system can establish its stated "
             "implementation, without adding an undocumented production setting. "
             "Give a concise partial answer and label remaining requested details "
-            "unverified. Do not add comparisons, contact pitches or new claims. "
+            "as details that the retrieved evidence does not establish. Make "
+            "this evidence boundary explicit for each unknown; avoid a bare "
+            "claim that someone's experience is unverified. Do not add "
+            "comparisons, contact pitches or new claims. "
             "Preserve each requested growth stage, hiring status versus actual role title, "
             "and metrics for every requested system. A tool inventory is not "
             "personal operation; attach every service to its own project evidence. "
@@ -458,6 +480,9 @@ VERIFY_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
                 "a requested detail is a boundary on the evidence, not a claim of "
                 "non-use or incapacity. Do not flag an accurate documentation limit "
                 "as an unsupported biography claim. An answer can pass when it "
+                "bounds an unverified detail explicitly to the retrieved record, "
+                "even when the record has no sentence declaring that omission. "
+                "An answer can pass when it "
                 "states supported requested facts and explicitly labels the "
                 "remaining requested details unknown. If one comparison or "
                 "inference is unsupported, remove it and retain the supported "
@@ -589,6 +614,8 @@ _ALL_PROMPTS = [
     BATCH_GRADE_PROMPT,
     REWRITE_PROMPT,
     VERIFY_GROUNDING_PROMPT,
+    REPAIR_GROUNDING_PROMPT,
+    LANGUAGE_RETRY_INSTRUCTION,
     STRUCTURED_OUTPUT_RECOVERY_PROMPT,
     OUT_OF_SCOPE_PROMPT,
     TRANSLATE_PROMPT,
@@ -598,7 +625,10 @@ _ALL_PROMPTS = [
     *DEGREE_COMPLETENESS_CLARIFICATION_TEMPLATES.values(),
     *PROJECT_IDENTITY_TEMPLATES.values(),
     *EVIDENCE_DETAIL_TEMPLATES.values(),
+    *DOCUMENTATION_LIMIT_TEMPLATES.values(),
+    *PERSONAL_PRODUCTION_LIMIT_TEMPLATES.values(),
     *INSUFFICIENT_EVIDENCE_ANSWERS.values(),
+    *DISPUTED_EVIDENCE_ANSWERS.values(),
 ]
 
 

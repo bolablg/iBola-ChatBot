@@ -25,6 +25,7 @@ from app.graph.prompts import (
     GENERATE_SYSTEM_PROMPTS,
     GUARDRAIL_PROMPT,
     INSUFFICIENT_EVIDENCE_ANSWERS,
+    LANGUAGE_RETRY_INSTRUCTION,
     OUT_OF_SCOPE_PROMPT,
     REPAIR_GROUNDING_PROMPT,
     REWRITE_PROMPT,
@@ -1144,7 +1145,7 @@ def _translate_answer(answer: str, reply_language: str) -> str:
     return response.content.strip() or answer
 
 
-def _select_context_docs(graded_docs: List[Document]) -> List[Document]:
+def _select_context_docs(graded_docs: List[Document], query="") -> List[Document]:
     """Pick the generation context: budgeted and near-duplicate-free."""
     try:
         from app.settings import get_settings
@@ -1160,10 +1161,17 @@ def _select_context_docs(graded_docs: List[Document]) -> List[Document]:
             return 0.0
         return len(ta & tb) / min(len(ta), len(tb))
 
-    selected: List[Document] = []
+    from app.services.evidence_policy import retained_facet_indices
+
+    protected = retained_facet_indices(graded_docs, query)
+    selected: List[Document] = [
+        doc for i, doc in enumerate(graded_docs) if i in protected
+    ][: min(3, budget)]
     for doc in graded_docs:
         if len(selected) >= budget:
             break
+        if doc in selected:
+            continue
         if any(
             _overlap(doc.page_content, kept.page_content) > overlap_cap
             for kept in selected
@@ -1215,9 +1223,20 @@ def generate_node(state: dict) -> dict:
     # Build context from graded documents: settings-driven budget with a
     # near-duplicate filter (five tight chunks beat fifty loose ones; dupes
     # waste tokens and invite hallucinated merges).
-    from app.services.evidence_policy import prepare_evidence
+    from app.services.evidence_policy import (
+        prepare_evidence,
+        request_scope,
+        supplement_facets,
+    )
 
-    context_docs = _select_context_docs(prepare_evidence(graded_docs, query))
+    scope = request_scope(state)
+    try:
+        graded_docs = supplement_facets(
+            _get_hybrid_search(), scope, graded_docs, protected_only=True
+        )
+    except Exception as exc:
+        logger.warning("Generation facet lookup unavailable: %s", exc)
+    context_docs = _select_context_docs(prepare_evidence(graded_docs, scope), scope)
     if not context_docs:
         steps.append(
             ReasoningStep(node="generate", action="insufficient_evidence", detail="")
@@ -1265,7 +1284,7 @@ def generate_node(state: dict) -> dict:
                 today=today,
                 context=context,
                 chat_history=history_str or "(none)",
-                query=query,
+                query=scope,
             )
         )
 
@@ -1287,8 +1306,7 @@ def generate_node(state: dict) -> dict:
             )
             try:
                 retry = _call_generate(
-                    f"\n\nCRITICAL: your previous draft was in the wrong "
-                    f"language. Write the ENTIRE answer in {reply_language}."
+                    LANGUAGE_RETRY_INSTRUCTION.format(reply_language=reply_language)
                 )
                 retried = _sanitize_answer(retry.answer)
                 if _validate_answer_language(retried, reply_language, user_language):
@@ -1354,17 +1372,9 @@ def _insufficient_answer(state: dict) -> str:
 
 def _verification_scope(state):
     """Follow-up scope may come from condensation; facts still require evidence."""
-    return "\n".join(
-        dict.fromkeys(
-            filter(
-                None,
-                (
-                    state.get("original_query"),
-                    state.get("query"),
-                ),
-            )
-        )
-    )
+    from app.services.evidence_policy import request_scope
+
+    return request_scope(state)
 
 
 def verify_grounding_node(state: dict) -> dict:

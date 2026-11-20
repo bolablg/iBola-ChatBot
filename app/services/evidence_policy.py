@@ -150,7 +150,7 @@ def _claim_clauses(text: str):
     )
     result = []
     for sentence in re.split(
-        r"[.;\n]|\b(?:but|mais|yet|however|though|therefore|donc)\b|"
+        r"[.;\n]|:(?=\s*(?:he|Bolaji|il)\b)|\b(?:but|mais|yet|however|though|therefore|donc)\b|"
         r",(?=\s*(?:indicating|implying|meaning|ce qui|cela))|\bso that means\b",
         text,
         flags=re.I,
@@ -233,7 +233,11 @@ def preserve_requested_evidence(
     answer: str, documents: List[Document], query: str, language: str
 ):
     """Restore at most three missing details as exact, scoped retrieved quotes."""
-    from app.graph.prompts import EVIDENCE_DETAIL_TEMPLATES
+    from app.graph.prompts import (
+        DOCUMENTATION_LIMIT_TEMPLATES,
+        EVIDENCE_DETAIL_TEMPLATES,
+        PERSONAL_PRODUCTION_LIMIT_TEMPLATES,
+    )
 
     if not answer.strip():
         return answer, []
@@ -285,6 +289,32 @@ def preserve_requested_evidence(
             used.add(key)
             restored.append(rule["id"])
             break
+    for rule in policy_data().get("required_limits", []):
+        detail = rule.get("restore_limit", {}).get(lang)
+        if len(restored) >= 3 or not detail:
+            continue
+        if rule["id"] in constraint_failures(answer, documents, query):
+            answer += " " + DOCUMENTATION_LIMIT_TEMPLATES[lang].format(detail=detail)
+            restored.append(rule["id"])
+    before = set(constraint_failures(answer, documents, query))
+    prefix = "requested_personal_production_scope:"
+    tools = sorted(
+        identifier[len(prefix) :]
+        for identifier in before
+        if identifier.startswith(prefix)
+    )
+    if tools:
+        candidate = (
+            answer
+            + " "
+            + PERSONAL_PRODUCTION_LIMIT_TEMPLATES[lang].format(tools=", ".join(tools))
+        )
+        after = set(constraint_failures(candidate, documents, query))
+        if not any(identifier.startswith(prefix) for identifier in after) and not (
+            after - before
+        ):
+            answer = candidate
+            restored.append("requested_personal_production_scope")
     return answer, restored
 
 
@@ -504,6 +534,20 @@ def constraint_failures(
             if rule.get("scope_id")
             else bool(sources & set(rule.get("sources", [])))
         )
+        if rule.get("direct_support_pattern") and any(
+            d.metadata.get("evidence_type")
+            not in {"interpretation", "summary", "pending_confirmation"}
+            and any(
+                re.search(rule["direct_support_pattern"], clause)
+                and not _UNCERTAIN.search(clause)
+                and not re.search(
+                    r"(?i)\b(?:never|not|no|ne|pas|aucun|\w+n't)\b", clause
+                )
+                for clause in _claim_clauses(_fold(d.page_content))
+            )
+            for d in documents
+        ):
+            applicable = False
         if applicable and re.search(rule["query_pattern"], _fold(query)):
             if documentation_limits(answer, [rule["target_pattern"]]):
                 failures.append(rule["id"])
@@ -518,6 +562,33 @@ def constraint_failures(
             )
         )
         if applicable and re.search(rule["query_pattern"], _fold(query)):
+            if rule.get("governing_role_pattern"):
+                active_role = ""
+                invalid = False
+                for sentence in re.split(r"[.!?;\n]", answer):
+                    if not sentence.strip():
+                        continue
+                    roles = list(re.finditer(rule["governing_role_pattern"], sentence))
+                    for claim in re.finditer(rule["claim_pattern"], sentence):
+                        prefix_roles = list(
+                            re.finditer(
+                                rule["governing_role_pattern"],
+                                sentence[: claim.start()],
+                            )
+                        )
+                        governing = (
+                            prefix_roles[-1].group() if prefix_roles else active_role
+                        )
+                        if not re.fullmatch(rule["answer_pattern"], governing):
+                            invalid = True
+                        active_role = governing
+                    if roles:
+                        # Carry an explicitly named role through adjacent
+                        # sentences, until another role changes the subject.
+                        active_role = roles[-1].group()
+                if invalid:
+                    failures.append(rule["id"])
+                continue
             claims = (
                 [m.group() for m in re.finditer(rule["claim_pattern"], answer)]
                 if rule.get("claim_pattern")
@@ -544,6 +615,7 @@ def _request_scope_failures(answer, documents, query):
             return aliases.get(value.casefold(), value.casefold())
 
         personal = []
+        implementation = []
         project = set()
 
         def projects(text):
@@ -566,6 +638,11 @@ def _request_scope_failures(answer, documents, query):
                     rule.get("exclude_support_pattern", r"(?!)"), span
                 ):
                     continue
+                if re.search(rule["implementation_support_pattern"], span):
+                    implementation.extend(
+                        (canonical(s), projects(span))
+                        for s in re.findall(rule["subject_pattern"], span)
+                    )
                 for match in re.finditer(rule["personal_support_pattern"], span):
                     for group in rule["support_subject_groups"]:
                         personal.extend(
@@ -581,6 +658,21 @@ def _request_scope_failures(answer, documents, query):
                     canonical(s)
                     for s in re.findall(rule["subject_pattern"], match.group("tools"))
                 )
+            # The published case expresses its stack as a single Tools row,
+            # qualified by this same chunk's explicit project section.
+            if Path(doc.metadata.get("source", "")).name in rule[
+                "project_stack_sources"
+            ] and re.search(
+                rule["project_anchor_pattern"], doc.metadata.get("section_header", "")
+            ):
+                rows = list(re.finditer(rule["project_tools_pattern"], text))
+                if len(rows) == 1:
+                    project.update(
+                        canonical(s)
+                        for s in re.findall(
+                            rule["subject_pattern"], rows[0].group("tools")
+                        )
+                    )
         clauses = [
             part
             for clause in _claim_clauses(_fold(answer))
@@ -589,6 +681,14 @@ def _request_scope_failures(answer, documents, query):
                 clause,
             )
         ]
+        qualified = set()
+        for clause in clauses:
+            if _UNCERTAIN.search(clause) and re.search(
+                rule["qualification_pattern"], clause
+            ):
+                qualified.update(
+                    canonical(s) for s in re.findall(rule["subject_pattern"], clause)
+                )
         previous_projects = set()
         for clause in clauses:
             explicit_projects = projects(clause)
@@ -603,7 +703,11 @@ def _request_scope_failures(answer, documents, query):
             }
             if not subjects:
                 continue
-            if _UNCERTAIN.search(clause):
+            uncertainty = _UNCERTAIN.search(clause)
+            strong_claim = re.search(rule["personal_assertion_pattern"], clause)
+            if uncertainty and (
+                not strong_claim or uncertainty.start() < strong_claim.start()
+            ):
                 continue
             # Explicit labels describe an inventory, not experience or operation.
             if re.search(rule["inventory_label_pattern"], clause) and not re.search(
@@ -620,19 +724,44 @@ def _request_scope_failures(answer, documents, query):
             }
             if (
                 re.search(rule["project_answer_pattern"], clause)
-                and not re.search(rule["operation_pattern"], clause)
+                and not strong_claim
                 and (
                     re.search(rule["project_anchor_pattern"], clause)
                     or rule["project_key"] in referenced_projects
                 )
             ):
                 proven.update(project)
+            if not strong_claim:
+                # A supported implementation does not establish its production
+                # setting. Named qualifications may bound that weaker claim,
+                # but never cancel an affirmative personal-operation assertion.
+                proven.update(
+                    tool
+                    for tool, supported_projects in implementation
+                    if tool in qualified and claimed_projects <= supported_projects
+                )
+                if rule["project_key"] in claimed_projects:
+                    proven.update(project & qualified)
             for subject in sorted(subjects - proven):
                 failures.append(rule["id"] + ":" + subject)
     return failures
 
 
-def supplement_facets(search, query: str, documents: List[Document], limit=3):
+def request_scope(state):
+    """Resolve a referential request using bounded user text, never assistant facts."""
+    original = state.get("original_query") or state.get("query", "")
+    parts = [original, state.get("query", "")]
+    if re.search(
+        r"(?i)\b(?:those|these|that|this|it|them|ces|ceux|celles|cela|ca)\b", original
+    ):
+        recent = state.get("chat_history", [])[-1:]
+        parts.extend(turn[0] for turn in recent if turn)
+    return "\n".join(dict.fromkeys(filter(None, parts)))
+
+
+def supplement_facets(
+    search, query: str, documents: List[Document], limit=3, protected_only=False
+):
     """Bounded lexical facet lookups over the already loaded corpus, no API calls."""
     corpus = getattr(search, "documents", None)
     if not isinstance(corpus, list):
@@ -640,6 +769,10 @@ def supplement_facets(search, query: str, documents: List[Document], limit=3):
     selected = []
     policy = policy_data()
     for facet in policy.get("facets", []):
+        if protected_only and not (
+            facet.get("retain_for_query") and facet.get("support_pattern")
+        ):
+            continue
         if len(selected) >= limit:
             break
         if not re.search(facet["query_pattern"], _fold(query)):
@@ -678,7 +811,14 @@ def supplement_facets(search, query: str, documents: List[Document], limit=3):
                 candidates.append((score, doc))
         if not candidates:
             continue
-        score, doc = max(candidates, key=lambda item: item[0])
+        score, doc = min(
+            candidates,
+            key=lambda item: (
+                -item[0],
+                item[1].metadata.get("chunk_id", ""),
+                item[1].page_content,
+            ),
+        )
         copy_doc = copy.deepcopy(doc)
         copy_doc.metadata.update(
             retrieval_rank=1,
