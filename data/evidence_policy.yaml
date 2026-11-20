@@ -1,4 +1,4 @@
-version: 19
+version: 20
 source_types:
   21_production_service_inventory.txt: candidate_confirmed
   20_owner_confirmed_production_scope.txt: candidate_confirmed
@@ -965,7 +965,7 @@ editorial_constraints:
 
 role_project_relations:
 - id: cdc_role_attribution_requires_direct_evidence
-  description: Personal CDC responsibility is documented, but its work period must be bound directly to that project. Dataflow use in the earlier cloud migration and a nearby role title do not date CDC delivery. Keep undated projects separate from dated work, and retain only role associations directly supported by the same project record.
+  description: Retain only role associations directly supported by the same project's actor and responsibility record. Dataflow use in the earlier cloud migration and a nearby role title do not date CDC delivery. A confirmed work-role interval locates the work within that role; it does not establish exact project start or completion dates, continuous operation throughout that interval, or dates for another service.
   project_pattern: '(?i)\bMongoDB\s+(?:CDC|change\s+data\s+capture)\b|\bCDC\s+pipeline\b'
   role_pattern: '(?i)Global Data Analyst|Head of Data|Data Director|Director of Data'
   role_aliases:

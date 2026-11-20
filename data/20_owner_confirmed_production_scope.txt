@@ -12,6 +12,12 @@ Bolaji has no Kafka experience at all. Bolaji has never used Kafka. This is an e
 
 These clarifications do not add personal Spark Structured Streaming, Apache NiFi or Lakeflow production experience. They do not establish CDC event counts, end-to-end latency or availability. The separately documented streaming-workload average remains a different measurement population.
 
+CDC role and period, owner confirmation received November 20, 2026: During his Head of Data role at Gozem (October 2022 to March 2025), Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline.
+
+This confirmation locates the CDC work within that role period. It does not establish the project's exact start or completion dates, continuous operation throughout the entire role, on-call coverage, latency or uptime guarantees. It does not assign that role period to AWS EC2, AWS S3 or other services. The earlier Google Cloud migration remains separately attributed to the Global Data Analyst role.
+
+Confirmation provenance: Asked which role and period covered his design and operation of the MongoDB CDC pipeline, the owner answered: "Head of Data, Oct 2022–Mar 2025". Evidence classification: candidate_confirmed. The November 20 date records when this role clarification was received, not when the project started or ended.
+
 LATEST HANDS-ON CONFIRMATION
 
 The owner explicitly confirmed personal production operation of BigQuery and Apache Airflow, then clarified personal design and operation of the production services he actually used. The service-by-service inventory in 21_production_service_inventory.txt combines this confirmation with the documented usage contexts. It does not convert a comparison, lab, teaching module or generic inventory-only entry into a production project.
