@@ -1,4 +1,4 @@
-version: 15
+version: 16
 source_types:
   21_production_service_inventory.txt: candidate_confirmed
   20_owner_confirmed_production_scope.txt: candidate_confirmed
@@ -59,6 +59,7 @@ assertion_rules:
     (?:authority|ownership|approval)|(?:department|operating|multi.year) budget|approval authority|(?:autorite|responsabilite|approbation)
     (?:du |de )?budget|budget (?:departemental|pluriannuel|de fonctionnement))\s*:\s*(?:yes|confirmed))
 - id: non_use_requires_explicit_negative_evidence
+  resolve_confirmed_non_use_reference: true
   answer_pattern: (?i)(?:has (?:not|never) (?:directly )?(?:used|worked with)|never used|no (?:direct )?production
     experience (?:with|in))\s+[^.;,]+|(?i:(?:n'a (?:jamais|pas) (?:directement )?utilise|aucune experience
     (?:directe )?en production (?:avec|sur))\s+[^.;,]+)
@@ -641,14 +642,14 @@ required_details:
     \b(?:Bolaji|he)\s+(?:has\s+)?(?:personally\s+)?
     (?:designed|operated|built|implemented|used|designs|operates|uses)\s+
     (?:(?:production|services?|components?|including|the|and|operated|using)\s+){0,6}
-    (?:Pub/Sub|Dataflow)(?:\s*(?:,|and|et)\s*(?:Pub/Sub|Dataflow))*
+    (?:(?:Google\s+Cloud|Google)\s+)?(?:Pub/Sub|Dataflow)(?:\s*(?:,|and|et)\s*(?:(?:Google\s+Cloud|Google)\s+)?(?:Pub/Sub|Dataflow))*
     (?:\s+in\s+production)?(?:\s+at\s+Gozem,?)?\s+for\s+(?:(?:the|a)\s+)?
-    (?:Gozem(?:\x27s)?\s+)?MongoDB\s+CDC(?:\s+pipeline)?(?:\s+at\s+Gozem)?\b
+    (?:Gozem(?:\x27s)?\s+)?MongoDB\s+(?:CDC|change\s+data\s+capture)(?:\s+pipeline)?(?:\s+at\s+Gozem)?\b
     |
     (?:Chez\s+Gozem,?\s+)?
     \b(?:Bolaji|il)\s+a\s+(?:personnellement\s+)?
     (?:concu|exploite|construit|implemente|utilise)(?:\s+et\s+exploite)?\s+
-    (?:Pub/Sub|Dataflow)(?:\s*(?:,|et)\s*(?:Pub/Sub|Dataflow))*
+    (?:(?:Google\s+Cloud|Google)\s+)?(?:Pub/Sub|Dataflow)(?:\s*(?:,|et)\s*(?:(?:Google\s+Cloud|Google)\s+)?(?:Pub/Sub|Dataflow))*
     (?:\s+en\s+production)?(?:\s+chez\s+Gozem,?)?\s+pour\s+(?:(?:le|un)\s+)?
     (?:pipeline\s+)?(?:MongoDB\s+CDC|CDC\s+MongoDB)(?:\s+(?:chez|de)\s+Gozem)?\b
     )
@@ -907,6 +908,26 @@ experience_confirmations:
   description: Explicit owner-confirmed absence must be stated when the requested tool is covered by that retrieved confirmation. Do not retain an outdated unknown or infer inability. Without an explicit confirmation, retain a documentation limit.
   source: 20_owner_confirmed_production_scope.txt
   negative_pattern: '(?i)Bolaji has no (?P<subject>[A-Za-z][A-Za-z /-]{0,45}?) experience at all'
+
+role_project_relations:
+- id: cdc_role_attribution_requires_direct_evidence
+  description: Personal CDC responsibility is documented, but its work period must be bound directly to that project. Dataflow use in the earlier cloud migration and a nearby role title do not date CDC delivery. Keep undated projects separate from dated work, and retain only role associations directly supported by the same project record.
+  project_pattern: '(?i)\bMongoDB\s+(?:CDC|change\s+data\s+capture)\b|\bCDC\s+pipeline\b'
+  role_pattern: '(?i)Global Data Analyst|Head of Data|Data Director|Director of Data'
+  role_aliases:
+    director of data: data director
+  role_prefix_pattern: '(?i)(?:as(?: a| the)?|during(?: his| the)?|(?:when|while)\s+(?:he|Bolaji)\s+was|in\s+his(?:\s+earlier)?|en tant que|pendant(?: son| le)?(?: mandat de)?)\s+$'
+  role_heading_pattern: '(?i)(?P<role>Global Data Analyst|Head of Data|Data Director|Director of Data)(?:\s+at Gozem|\s+role|\s*\([^)]*\))*'
+  scope_reset_pattern: '(?i)^\s*(?:Separately|For a separate project|For another project|Distinctement|Named production implementation\s*\()'
+  source_quote_reset_pattern: '(?i)^\s*Named production implementation\s*\('
+  scope_limit_subject_pattern: '(?i)\b(?:role|period|date|mandate|poste|periode)\w*\b'
+  evidence_limit_prefix_pattern: '(?i)(?:does not establish|not documented|not established|ne precise pas|unknown|unconfirmed|unverified)[^.!?;\n]{0,80}\b(?:that|whether|if|que|si)\b'
+  evidence_limit_suffix_pattern: '(?i)^\s*whether\b[^.!?;\n]+\b(?:is|remains)\s+(?:unknown|unconfirmed|unverified|undocumented)\b'
+  denied_project_prefix_pattern: '(?i)\b(?:never|did not|has not)\s+(?:(?:personally|directly)\s+)?(?:design(?:ed)?|operat(?:e|ed)|built|build|implement(?:ed)?)\s+(?:the\s+)?$'
+  after_project_role_pattern: '(?i)\s*(?:pipeline\s+)?(?:at\s+Gozem\s+)?(?:as(?: a| the)?|during(?: his| the)?(?: role as)?)\s+'
+  unrelated_project_prefix_pattern: '(?i)\b(?:independently of|separate from|unrelated to|not for)\s+(?:the\s+)?$'
+  support_relation_pattern: '(?i)\b(?:Bolaji|he|il)\s+(?:(?:has|had|a|personally|directly|personnellement)\s+){0,3}(?:designed|operated|built|implemented|concu|exploite|construit|implemente)(?:\s+and\s+(?:designed|operated|built|implemented))?\s+(?:the\s+)?(?:MongoDB\s+(?:CDC|change\s+data\s+capture)(?:\s+pipeline)?|CDC\s+pipeline|(?:Google\s+Cloud\s+)?Pub/Sub\s+and\s+(?:Google\s+Cloud\s+)?Dataflow(?:\s+in\s+production)?\s+for\s+(?:the\s+)?MongoDB\s+(?:CDC|change\s+data\s+capture)(?:\s+pipeline)?)\b'
+  support_exclude_pattern: '(?i)\b(?:if|hypothetical|fictional|would|could|never|not|unverified|unknown|undocumented)\b'
 
 relationship_constraints:
 - id: cdc_migration_metrics_require_separate_scope

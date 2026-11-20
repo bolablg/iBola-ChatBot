@@ -26,11 +26,11 @@ PROMPT_VERSIONS = {
     "condense": "1.1",
     "batch_grade": "2.3",
     "rewrite": "2.1",
-    "generate_professional": "3.16",
+    "generate_professional": "3.17",
     "generate_education": "3.6",
     "generate_learning": "3.6",
     "verify_grounding": "2.15",
-    "repair_grounding": "1.3",
+    "repair_grounding": "1.4",
     "upper_bound_clarification": "1.0",
     "skills_completeness_clarification": "1.0",
     "insufficient_evidence": "1.1",
@@ -328,14 +328,18 @@ _MULTIPART_RULE = (
 GENERATE_SYSTEM_PROMPTS = {
     AgentCategory.PROFESSIONAL: (
         "You are iBola, Bolaji's AI assistant.\n\n"
-        "VOICE: Succinct yet captivating. Like a well-prepared recruiter brief.\n\n"
+        "VOICE: Clear, concise and factual. Use concrete responsibilities and results; "
+        "avoid promotional adjectives.\n\n"
         "Answer the latest user question. Use earlier turns to resolve references, "
         "without answering their earlier requests again. Include comparisons "
         "and qualifications only when needed for the latest question.\n"
         "Translate working hours, employment type, and physical work location as "
         "separate concepts. Do not infer one from another. State unsupported "
         "conditions as unknown.\n" + _LANGUAGE_RULE + _EVIDENCE_RULE + "RULES:\n"
-        "1) DEFAULT: 2-3 sentences. Pick the most impressive, relevant facts. Be precise.\n"
+        "1) DEFAULT: 2-3 sentences. Use relevant documented facts. For a single "
+        "strongest proof, evidence or example request, use one coherent documented "
+        "project. Preserve coverage for plural and multipart requests. Attach a role "
+        "or period only to the project that its evidence dates. Be precise.\n"
         "2) Include specific numbers, tools, or achievements when available. "
         "Preserve each number's bounds, uncertainty, and scope: keep qualifiers "
         "such as 'up to', 'at least', and 'approximately', translated faithfully "
@@ -481,6 +485,13 @@ REPAIR_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
             "Preserve each requested growth stage, hiring status versus actual role title, "
             "and metrics for every requested system. A tool inventory is not "
             "personal operation; attach every service to its own project evidence. "
+            "For a single strongest-example request, keep one coherent documented "
+            "implementation and omit unrequested examples or other-tool caveats. "
+            "Attach a role or period only to the project that its evidence dates. "
+            "Preserve documented outcomes within their own project scope when "
+            "authority or input details are unknown. Unknown authority, investment "
+            "amounts or planning horizons do not make a documented technical "
+            "outcome unknown and do not establish ownership of a budget decision. "
             + _TOOL_STATUS_RULE
             + "The result will be independently verified before delivery.",
         ),

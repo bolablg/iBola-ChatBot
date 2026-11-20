@@ -191,6 +191,27 @@ def _claim_clauses(text: str):
     return result
 
 
+def _record_limit_subject(clause):
+    """A complete nominal evidence limit, never a neighboring action claim."""
+    match = re.fullmatch(
+        r"(?i)\s*(?P<subject>[a-z][a-z0-9 /+#_'()-]{0,140}?)\s+"
+        r"(?:(?:is|are|remains?)\s+(?:unsupported\s+by\s+"
+        r"(?:(?:direct|personal|production|documented)\s+){0,3}"
+        r"(?:evidence|documentation)|not\s+(?:(?:explicitly|directly)\s+)?"
+        r"(?:documented|established|confirmed|verified|specified)|"
+        r"unknown|unconfirmed|unverified|undocumented)|"
+        r"(?:has|have)\s+not\s+been\s+(?:documented|established|confirmed|verified))\s*",
+        _fold(clause),
+    )
+    if not match or re.search(
+        r"(?i)\b(?:is|are|was|were|has|have|had|used|uses|operated|operates|"
+        r"designed|designs|deployed|deploys|built|builds|ran|maintained|worked|works)\b",
+        match.group("subject"),
+    ):
+        return None
+    return match.group("subject")
+
+
 def documentation_limits(answer: str, targets: List[str]) -> List[str]:
     """Return requested details without an explicit, locally scoped unknown."""
     # Equivalent relationship nouns retain their governing uncertainty clause.
@@ -252,6 +273,11 @@ def documentation_limits(answer: str, targets: List[str]) -> List[str]:
             and _UNCERTAIN.search(clause)
             for clause in clauses
         )
+        and not any(
+            (subject := _record_limit_subject(clause))
+            and re.search(_fold(target), subject, re.I)
+            for clause in clauses
+        )
         and not any(re.search(_fold(target), span, re.I) for span in shared)
     ]
 
@@ -289,7 +315,8 @@ def experience_resolution_failures(answer, documents, subjects):
             rf"(?i)(?:no|aucune)\s+(?:(?:prior|professional|production)\s+)?{tool}\s+experience|"
             rf"(?:no\s+|aucune\s+|pas\s+d')experience\s+(?:(?:with|of|avec|en|de)\s+)?{tool}|"
             rf"(?:never|not)\s+(?:used|worked with)\s+{tool}|"
-            rf"(?:jamais|pas)\s+utilise\s+{tool}"
+            rf"(?:jamais|pas)\s+utilise\s+{tool}|"
+            rf"absence of experience\s+(?:with|in)\s+{tool}"
         )
         if not any(
             negative.search(clause) and not _UNCERTAIN.search(clause)
@@ -297,6 +324,29 @@ def experience_resolution_failures(answer, documents, subjects):
         ):
             missing.append(subject)
     return missing
+
+
+def _normalize_non_use_reference(answer, documents):
+    """Resolve a local redundant 'it' only after a confirmed named absence.
+
+    Used solely by the non-use assertion checker. The delivered text and final
+    LLM verification input remain unchanged; source-predicate proof is retained.
+    """
+    for subject in confirmed_non_use(documents):
+        tool = re.escape(subject)
+        absence = (
+            rf"(?:no\s+{tool}\s+experience(?:\s+at\s+all)?|"
+            rf"no\s+experience\s+(?:with|in)\s+{tool}|"
+            rf"(?:an?\s+)?(?:(?:explicit|owner[ -]confirmed)\s+){{0,2}}"
+            rf"absence\s+of\s+experience\s+(?:with|in)\s+{tool})"
+        )
+        pattern = re.compile(
+            rf"(?i)(?:^|(?<=[.!?;]))\s*(?:Regarding\s+{tool},\s*)?"
+            rf"(?:Bolaji|he)\s+has\s+{absence},?\s+and\s+"
+            rf"(?:(?:he|Bolaji)\s+)?(?:has\s+)?never\s+used\s+(?P<reference>it)\b"
+        )
+        answer = pattern.sub(lambda match: match.group()[:-2] + subject, answer)
+    return answer
 
 
 def preserve_project_identity(
@@ -441,7 +491,7 @@ def describe_constraints(ids):
             "required_details",
             "request_scopes",
             "experience_confirmations",
-            "relationship_constraints",
+            "role_project_relations",
             "relationship_constraints",
         )
         for rule in policy.get(group, [])
@@ -545,6 +595,99 @@ def _has_detail_activation(answer, rule):
     return False
 
 
+def _project_role_claims(text, rule, supporting=False):
+    """Track explicit role scope for one project independently of other work."""
+    claims = set()
+    active = heading = ""
+    for paragraph in re.split(r"\n\s*\n", _fold(text)):
+        active = heading
+        for clause in _claim_clauses(paragraph):
+            plain = clause.strip(" \t#*:-")
+            if not plain:
+                continue
+            title = re.fullmatch(rule["role_heading_pattern"], plain)
+            if title:
+                active = heading = title.group("role")
+                continue
+            if re.match(rule.get("source_quote_reset_pattern", r"(?!)"), clause):
+                active = heading = ""
+            elif re.match(rule["scope_reset_pattern"], clause):
+                active = heading
+            roles = list(re.finditer(rule["role_pattern"], clause))
+            valid = [
+                role
+                for role in roles
+                if re.search(rule["role_prefix_pattern"], clause[: role.start()])
+            ]
+            markers = list(re.finditer(rule["project_pattern"], clause))
+            uncertain_role = (
+                _UNCERTAIN.search(clause)
+                and re.search(rule["scope_limit_subject_pattern"], clause)
+                and not valid
+            )
+            qualified = roles and re.search(
+                rule["evidence_limit_prefix_pattern"], clause[: roles[0].start()]
+            )
+            if (
+                uncertain_role
+                or qualified
+                or re.search(rule.get("evidence_limit_suffix_pattern", r"(?!)"), clause)
+            ):
+                active = heading
+                continue
+            support_relations = (
+                list(re.finditer(rule["support_relation_pattern"], clause))
+                if supporting and not re.search(rule["support_exclude_pattern"], clause)
+                else []
+            )
+            if markers:
+                for marker in markers:
+                    if (
+                        re.search(
+                            rule.get("denied_project_prefix_pattern", r"(?!)"),
+                            clause[: marker.start()],
+                        )
+                        or re.search(
+                            rule["evidence_limit_prefix_pattern"],
+                            clause[: marker.start()],
+                        )
+                        or re.search(
+                            rule.get("unrelated_project_prefix_pattern", r"(?!)"),
+                            clause[: marker.start()],
+                        )
+                    ):
+                        continue
+                    if supporting and not any(
+                        relation.start() <= marker.start()
+                        and marker.end() <= relation.end()
+                        for relation in support_relations
+                    ):
+                        continue
+                    before = [role for role in valid if role.start() < marker.start()]
+                    after = [role for role in valid if role.start() > marker.start()]
+                    local_after = [
+                        role
+                        for role in after
+                        if re.fullmatch(
+                            rule["after_project_role_pattern"],
+                            clause[marker.end() : role.start()],
+                        )
+                    ]
+                    governing = (
+                        local_after[0].group()
+                        if local_after
+                        else before[-1].group() if before else active
+                    )
+                    if governing:
+                        key = _binding(governing)
+                        claims.add(rule.get("role_aliases", {}).get(key, key))
+            if valid:
+                active = valid[-1].group()
+            elif roles or not markers:
+                active = heading
+    return claims
+
+
 def constraint_failures(
     answer: str, documents: List[Document], query: str = ""
 ) -> List[str]:
@@ -560,6 +703,20 @@ def constraint_failures(
         not in {"interpretation", "summary", "pending_confirmation"}
     ]
     failures.extend(_request_scope_failures(answer, documents, query))
+    for relation in policy.get("role_project_relations", []):
+        claimed = _project_role_claims(answer, relation)
+        if not claimed:
+            continue
+        supported = set().union(
+            *(
+                _project_role_claims(doc.page_content, relation, supporting=True)
+                for doc in documents
+                if doc.metadata.get("evidence_type")
+                not in {"interpretation", "summary", "pending_confirmation"}
+            )
+        )
+        if claimed - supported:
+            failures.append(relation["id"])
     for rule in policy.get("relationship_constraints", []):
         if rule.get("binding_mode") == "local_cooccurrence":
             for clause in _claim_clauses(answer):
@@ -602,7 +759,12 @@ def constraint_failures(
             if not cause:
                 pending = max(0, pending - 1)
     for rule in policy.get("assertion_rules", []):
-        for clause in _claim_clauses(answer):
+        checked_answer = (
+            _normalize_non_use_reference(answer, documents)
+            if rule.get("resolve_confirmed_non_use_reference")
+            else answer
+        )
+        for clause in _claim_clauses(checked_answer):
             if rule.get("negation_pattern") and re.search(
                 rule["negation_pattern"], clause
             ):
@@ -1051,6 +1213,12 @@ def _request_scope_failures(answer, documents, query):
                 canonical(s) for s in re.findall(rule["subject_pattern"], clause)
             }
             if not subjects:
+                continue
+            record_limit = _record_limit_subject(clause)
+            if record_limit and all(
+                re.search(r"\b" + re.escape(subject) + r"\b", record_limit, re.I)
+                for subject in subjects
+            ):
                 continue
             uncertainty = _UNCERTAIN.search(clause)
             strong_claim = re.search(rule["personal_assertion_pattern"], clause)

@@ -29,6 +29,7 @@ Usage:
 
 import argparse
 import concurrent.futures
+import contextvars
 import json
 import os
 import statistics
@@ -47,6 +48,8 @@ REPORT_DIR = PROJECT_ROOT / "local" / "eval_reports"
 # Judge model is PINNED: change it only deliberately, never implicitly, or
 # score drift between runs becomes indistinguishable from quality drift.
 JUDGE_MODEL = os.environ.get("EVAL_JUDGE_MODEL", "gemini-2.5-pro")
+JUDGE_PROTOCOL_VERSION = "bounded-format-recovery-1"
+_JUDGE_DIAGNOSTICS = contextvars.ContextVar("judge_diagnostics", default=None)
 
 # Approximate prices (USD per 1M tokens) for the cost estimate. Tokens are
 # estimated at 4 chars/token; treat the resulting figure as an order of
@@ -302,6 +305,14 @@ class Judge:
         )
 
     def score(self, question, gold, answer, context):
+        diagnostics = {
+            "protocol": JUDGE_PROTOCOL_VERSION,
+            "attempts": [],
+            "retry_reasons": [],
+            "decoding_source": None,
+            "status": "error",
+        }
+        _JUDGE_DIAGNOSTICS.set(diagnostics)
         prompt = (
             JUDGE_RUBRIC.replace("{question}", question)
             .replace("{gold}", gold)
@@ -309,6 +320,8 @@ class Judge:
             .replace("{context}", context or "(no context provided)")
         )
         for attempt in range(2):
+            record = {"attempt": attempt + 1}
+            diagnostics["attempts"].append(record)
             try:
                 response = self.client.models.generate_content(
                     model=self.model,
@@ -318,17 +331,81 @@ class Judge:
                         "response_mime_type": "application/json",
                     },
                 )
-                break
             except Exception as exc:
                 code = getattr(exc, "code", getattr(exc, "status_code", None))
+                record["provider_error"] = str(code)
                 if str(code) not in {"429", "503"} or attempt:
                     raise
+                diagnostics["retry_reasons"].append(f"provider_{code}")
                 time.sleep(0.5)
-        data = json.loads(response.text)
-        return {
+                continue
+            # Provider denials are terminal, including when a payload exists.
+            _check_judge_denial(response)
+            try:
+                data, source = _decode_judge_object(response)
+            except (TypeError, ValueError) as exc:
+                record["format_error"] = type(exc).__name__
+                if attempt:
+                    raise ValueError(
+                        "Judge returned no JSON object after two calls"
+                    ) from exc
+                diagnostics["retry_reasons"].append("invalid_json_object")
+                continue
+            diagnostics["decoding_source"] = source
+            break
+        # A decoded object is a completed judgment. Keep the original scoring
+        # semantics and never recover based on its scores or conversion errors.
+        scores = {
             k: max(0, min(10, int(data.get(k, 0))))
             for k in ("relevance", "accuracy", "helpfulness", "faithfulness")
         } | {"rationale": str(data.get("rationale", ""))[:300]}
+        diagnostics["status"] = "success"
+        return scores
+
+
+def _judge_field(value, name, default=None):
+    return (
+        value.get(name, default)
+        if isinstance(value, dict)
+        else getattr(value, name, default)
+    )
+
+
+def _judge_enum(value):
+    value = getattr(value, "value", value)
+    return value.upper().rsplit(".", 1)[-1] if isinstance(value, str) else None
+
+
+def _check_judge_denial(response):
+    feedback = _judge_field(response, "prompt_feedback")
+    block = _judge_enum(_judge_field(feedback, "block_reason"))
+    if block and block not in {"BLOCK_REASON_UNSPECIFIED", "UNSPECIFIED", "NONE"}:
+        raise ValueError(f"Judge provider blocked the prompt: {block}")
+    candidates = _judge_field(response, "candidates", [])
+    for candidate in candidates if isinstance(candidates, (list, tuple)) else []:
+        reason = _judge_enum(_judge_field(candidate, "finish_reason"))
+        if reason and reason not in {"STOP", "MAX_TOKENS"}:
+            raise ValueError(f"Judge provider terminated the response: {reason}")
+        ratings = _judge_field(candidate, "safety_ratings", [])
+        if isinstance(ratings, (list, tuple)) and any(
+            _judge_field(rating, "blocked") is True for rating in ratings
+        ):
+            raise ValueError("Judge provider blocked the response")
+
+
+def _decode_judge_object(response):
+    parsed = _judge_field(response, "parsed")
+    if isinstance(parsed, dict):
+        try:
+            json.dumps(parsed, allow_nan=False)
+        except (TypeError, ValueError):
+            pass
+        else:
+            return parsed, "parsed"
+    data = json.loads(_judge_field(response, "text"))
+    if not isinstance(data, dict):
+        raise ValueError("Judge JSON root is not an object")
+    return data, "text"
 
 
 def _extract_workflow_error(result):
@@ -362,6 +439,7 @@ def _extract_workflow_warning(result):
 
 
 def run_one(target, judge, row):
+    _JUDGE_DIAGNOSTICS.set(None)
     start = time.time()
     try:
         result = target.ask(
@@ -416,6 +494,7 @@ def run_one(target, judge, row):
         "error": error,
         "warning": warning,
         "judge_error": judge_error,
+        "judge_diagnostics": _JUDGE_DIAGNOSTICS.get(),
         "chars_in": len(row["question"]) + len(context),
         "chars_out": len(answer),
     }
