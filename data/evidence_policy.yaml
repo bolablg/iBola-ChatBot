@@ -1,4 +1,4 @@
-version: 3
+version: 4
 source_types:
   90_website_canon_llms_full.txt: published
   18_confirmed_clarifications.txt: candidate_confirmed
@@ -58,9 +58,9 @@ assertion_rules:
   description: A tool inventory or teaching module does not establish personal production experience. Bind each tool to the named actor's operation and experience setting. Retain documented implementations at their stated scope, or label production ownership unverified.
   answer_pattern: '(?i)(?:\bproduction\b[^.;\n]*\b(?:Pub/Sub|Dataflow)\b[^.;\n]*|\b(?:Pub/Sub|Dataflow)\b[^.;\n]*\bproduction\b[^.;\n]*)'
   support_pattern: |-
-    (?ix)\b(?:Bolaji|he|il)\s+(?:(?:personally|directly|personnellement|directement|a)\s+)?
+    (?ix)\b(?:Bolaji|he|il)\s+(?:(?:has|had|a|personally|directly|personnellement|directement)\s+){0,3}
     (?:
-      (?:used|operated|built|designed|deployed|utilise|exploite|construit|concu|deploye)\s+
+      (?:uses?|used|operates?|operated|builds?|built|designs?|designed|deploys?|deployed|utilise|exploite|construit|concu|deploye)\s+
       (?P<tools_before>(?:Google\s+)?(?:Pub/Sub|Dataflow)(?:\s*(?:,|and|et|with|avec)\s*(?:Google\s+)?(?:Pub/Sub|Dataflow))*)
       (?:\s+(?:pipelines?|systems?|applications?))?\s+(?:in|en)\s+production
     |
@@ -73,6 +73,20 @@ assertion_rules:
   clause_support: true
   local_negation: true
   exclude_support_pattern: '(?i)\b(?:taught|teaches|teaching|supervised|delivered|designed)\b[^.;\n]{0,60}\b(?:training|bootcamp|certificate|certification|module|lab|prototype|formation|atelier)\b|\b(?:for|during|in|en|pour)\s+(?:a\s+|an\s+)?(?:training|bootcamp|lab|prototype|formation|atelier)\b'
+- id: first_hire_title_requires_explicit_role
+  description: A first data hire is hiring status, not an engineering job title. Retain the documented hiring status and assert a formal first-role title only when that same title is explicitly established.
+  answer_pattern: '(?i)(?:first|premier)\s+(?P<title>data engineer|data scientist|data architect|ingenieur (?:data|donnees)|scientifique des donnees)\b'
+  support_pattern: '(?i)(?:first|premier)\s+(?P<title>data engineer|data scientist|data architect|ingenieur (?:data|donnees)|scientifique des donnees)\b'
+  binding_groups: [title]
+  clause_support: true
+  local_negation: true
+- id: system_visibility_requires_own_evidence
+  negation_pattern: '(?i)\b(?:not|pas|et non)\s+(?:(?:the|a|le|un)\s+)?(?:MongoDB\s+)?CDC\b'
+  description: Visibility for an event command center must not be attributed to a CDC pipeline. Retain each system's own documented measurement and explicitly mark unestablished pipeline metrics unknown.
+  answer_pattern: '(?i)(?:\bCDC\b[^.;\n]{0,220}(?:minute.level|visibility|visibilite)|(?:minute.level|visibility|visibilite)[^.;\n]{0,220}\bCDC\b)'
+  support_pattern: '(?i)(?:\bCDC\b[^.;\n]{0,220}(?:minute.level|visibility|visibilite)|(?:minute.level|visibility|visibilite)[^.;\n]{0,220}\bCDC\b)'
+  clause_support: true
+  local_negation: true
 metric_constraints:
 - id: event_volume_average_and_population
   description: The documented average belongs to the Gozem streaming workload, not an established maximum or
@@ -97,9 +111,17 @@ metric_constraints:
   - (?i)(?:six|6)\s+(?:implemented|completed|deployed|production)\s+(?:AI\s+)?use cases
   - (?i)(?:six|6)\s+(?:AI\s+)?use cases\s+(?:were|are|have been)\s+(?:implemented|completed|deployed)
 facets:
+- id: streaming_workload_measurement
+  query_pattern: '(?is)(?=.*(?:throughput|event volume|latency|availability|measurements|debit|latence|disponibilite))(?=.*(?:streaming|CDC|MongoDB|flux))'
+  terms: separate streaming workload averaged telemetry operational events
+  sources: [90_website_canon_llms_full.txt]
+  support_pattern: 'A separate streaming workload averaged 45 million telemetry and operational events per day'
+  retain_for_query: true
 - id: streaming_implementation
-  query_pattern: '(?i)\b(?:streaming|Pub/Sub|Dataflow|Kafka)\b'
+  query_pattern: '(?i)(?!.*\b(?:throughput|volume|latency|availability)\b).*\b(?:streaming|Pub/Sub|Dataflow|Kafka)\b'
   terms: MongoDB CDC change events Pub/Sub Dataflow BigQuery
+  support_pattern: '(?is)MongoDB CDC pipeline.{0,140}Pub/Sub.{0,100}Dataflow'
+  retain_for_query: true
   sources: [90_website_canon_llms_full.txt, 13_gozem_internal_projects.txt]
 - id: ai_project_overview
   query_pattern: (?i)(?:AI work|AI projects?|travaux en IA|projets? (?:en )?IA|LLM projects?)
@@ -163,6 +185,8 @@ facets:
 - id: cloud_services
   query_pattern: (?i)\b(?:aws|ec2|kafka)\b
   terms: AWS EC2 production Data Hub platform tools
+  support_pattern: '(?is)Gozem Data Hub.{0,850}AWS EC2'
+  retain_for_query: true
   sources:
   - 10_apps_and_projects.txt
   - 13_gozem_internal_projects.txt
@@ -367,12 +391,28 @@ required_identity:
   query_pattern: (?i)\b(?:aws|ec2)\b
   answer_pattern: (?i)(?:EC2|700|operational.{0,15}platform|governed.{0,20}platform)
 required_details:
+- id: initial_team_growth_stage_missing
+  description: Preserve the initial team reaching its documented size separately from the later expansion; do not omit that requested stage or infer a zero baseline.
+  sources: [19_owner_confirmed_scope.txt, 11_leadership_style.txt]
+  support_pattern: 'initial team grew to 4'
+  query_pattern: '(?i)(?:growth|croissance|developp).{0,180}(?:countries|pays)|(?:team|equipe).{0,100}(?:dates|limites|boundaries)'
+  answer_pattern: '(?i)(?:initial|premiere|d.abord|Global Data Analyst).{0,100}(?:to|a|jusqu.a|attein\w*)\s+(?:4|quatre)|(?:to|a|jusqu.a|attein\w*)\s+(?:4|quatre).{0,100}(?:initial|premiere|Global Data Analyst)'
+- id: requested_streaming_workload_average_missing
+  description: Include the retrieved average event count for the separate streaming workload when the request asks about measurements across the systems. Its population is distinct from an individual CDC pipeline, throughput ceiling or latency guarantee.
+  scope_id: streaming_workload_volume
+  sources: [90_website_canon_llms_full.txt]
+  query_pattern: '(?i)throughput|event volume|latency|availability|debit|volume|latence|disponibilite'
+  answer_pattern: '(?is)(?=.*(?:average|averaged|moyenn\w*))(?=.*45\s*(?:million|m\b))(?=.*(?:separate|distinct|separe\w*).{0,55}(?:streaming|workload|flux)|.*(?:streaming|workload|flux).{0,55}(?:separate|distinct|separe\w*))'
+  restore_quote:
+    language: en
+    label: Separate workload measurement
+    pattern: 'A separate streaming workload averaged 45 million telemetry and operational events per day;[^.]+\.'
 - id: team_growth_first_hire
   description: Preserve the retrieved first-hire year and initial team growth to a size without inferring a zero baseline.
   sources: [19_owner_confirmed_scope.txt]
   support_pattern: 'first data hire in 2019'
   query_pattern: '(?i)(?:growth|croissance|developp).{0,180}(?:countries|pays)|(?:team|equipe).{0,100}(?:dates|limites|boundaries)'
-  answer_pattern: '(?i)(?:first|premier).{0,60}2019'
+  answer_pattern: '(?i)(?:first data hire|first.{0,15}data (?:recruit|employee)|premier data hire|premier.{0,25}(?:recrutement|recrute|collaborateur|employe|data hire).{0,15}(?:data|donnees)).{0,50}2019|2019.{0,50}(?:first data hire|premier.{0,25}(?:recrutement|recrute|collaborateur|employe|data hire).{0,15}(?:data|donnees))'
 - id: team_growth_own_period
   description: Preserve the retrieved later growth endpoints and their Head of Data period instead of attaching the full growth to the latest role.
   sources: [19_owner_confirmed_scope.txt]
@@ -466,3 +506,39 @@ required_details:
       scope_match: (?i)Head of Data.*2022.*2025
       scope_label: mandat Head of Data, octobre 2022 - mars 2025
       pattern: L\x27adoption de Metabase a atteint plus de 12 utilisateurs managers actifs[^\n]*centrale\.
+
+request_scopes:
+- id: requested_personal_production_scope
+  description: The question requests personal production design or operation. An unqualified experience list inherits that setting. For every mentioned tool, provide direct actor/tool/setting proof, an explicitly labeled inventory or project-stack fact, or a locally scoped statement that personal production operation remains unverified. Project leadership does not establish operation of every service.
+  query_pattern: '(?is)(?=.*\bproduction\b)(?=.*\b(?:personally|personal|personnellement|personnel\w*)\b)'
+  subject_pattern: '(?i)\b(?:AWS EC2|AWS S3|EC2|S3|Pub/Sub|Dataflow|Apache NiFi|NiFi|Spark|Lakeflow)\b'
+  subject_aliases:
+    ec2: aws ec2
+    s3: aws s3
+    nifi: apache nifi
+  personal_support_pattern: |-
+    (?ix)\b(?:Bolaji|he|il)\s+(?:(?:has|had|a|personally|directly|personnellement|directement)\s+){0,3}
+    (?:
+      (?:uses?|used|operates?|operated|builds?|built|designs?|designed|deploys?|deployed|utilise|exploite|construit|concu|deploye)\s+
+      (?P<tools_before>(?:AWS\s+)?(?:EC2|S3|Pub/Sub|Dataflow|Spark|Apache\s+NiFi|NiFi|Lakeflow)(?:\s*(?:,|and|et|with|avec)\s*(?:AWS\s+)?(?:EC2|S3|Pub/Sub|Dataflow|Spark|Apache\s+NiFi|NiFi|Lakeflow))*)
+      (?:\s+(?:pipelines?|systems?|applications?))?\s+(?:in|en)\s+production
+    |
+      (?:has|had)\s+(?:personal\s+)?production\s+experience\s+with\s+
+      (?P<tools_after>(?:AWS\s+)?(?:EC2|S3|Pub/Sub|Dataflow|Spark|Apache\s+NiFi|NiFi|Lakeflow)(?:\s*(?:,|and|et)\s*(?:AWS\s+)?(?:EC2|S3|Pub/Sub|Dataflow|Spark|Apache\s+NiFi|NiFi|Lakeflow))*)
+    |
+      (?:uses?|used|operates?|operated|builds?|built|designs?|designed|deploys?|deployed)\s+(?:a\s+|an\s+)?production\s+
+      (?P<tools_front>(?:[\w/+-]+\s+){0,10}?(?:pipelines?|stacks?|systems?|services?|platforms?))
+    )
+  support_subject_groups: [tools_before, tools_after, tools_front]
+  project_support_pattern: '(?is)Gozem Data Hub.{0,900}?(?:published case documents|documented stack (?:includes|contains))\s+(?P<tools>[^.\n]+)'
+  project_names:
+    data_hub: '(?i)\b(?:Gozem\s+)?Data Hub\b'
+    gozem: '(?i)\bGozem\b'
+    rintio: '(?i)\bRintio\b'
+  project_key: data_hub
+  project_reference_pattern: '(?i)^(?:its\b|this (?:project|platform)\b|the (?:documented|published) stack\b)'
+  project_anchor_pattern: '(?i)\b(?:Gozem\s+)?Data Hub\b'
+  project_answer_pattern: '(?i)(?:documented|published).{0,30}(?:stack|case|part of)|architected and led|stack.{0,15}(?:includes|documents|contains)'
+  inventory_label_pattern: '(?i)^\s*(?:listed tools|tool inventory|inventory|documented tool list|outils listes)|\b(?:inventory|tool list|catalogue)\b.{0,30}(?:lists|includes|contains)|(?:appear\w*|listed)\s+in.{0,20}(?:inventory|tool list)'
+  exclude_support_pattern: '(?i)\b(?:taught|teaches|teaching|supervised|delivered|designed)\b[^.;\n]{0,60}\b(?:training|bootcamp|module|lab|prototype|formation|atelier)\b|\b(?:for|during|in|en|pour)\s+(?:a\s+|an\s+)?(?:training|bootcamp|lab|prototype|formation|atelier)\b'
+  operation_pattern: '(?i)\b(?:personally|operated|operating|operates|use|uses|used|using|designed|designing|designs|deployed|deploys|builds|built|exploite|utilise|concu)\b'

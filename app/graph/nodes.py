@@ -741,7 +741,9 @@ def retrieve_node(state: dict) -> dict:
         docs = _prioritize_career_year(original, query, docs)
         from app.services.evidence_policy import prepare_evidence, supplement_facets
 
-        docs = supplement_facets(search, original or query, docs)
+        docs = supplement_facets(
+            search, "\n".join(filter(None, (original, query))), docs
+        )
         docs = prepare_evidence(docs, original or query)
 
         return {
@@ -840,6 +842,11 @@ def grade_documents_node(state: dict) -> dict:
         valid_indices = {
             idx for idx in result.relevant_indices if 0 <= idx < len(documents)
         }
+        from app.services.evidence_policy import retained_facet_indices
+
+        valid_indices |= retained_facet_indices(
+            documents, "\n".join(filter(None, (state.get("original_query"), query)))
+        )
         graded = [doc for index, doc in enumerate(documents) if index in valid_indices]
 
     except Exception:
@@ -1345,6 +1352,21 @@ def _insufficient_answer(state: dict) -> str:
     )
 
 
+def _verification_scope(state):
+    """Follow-up scope may come from condensation; facts still require evidence."""
+    return "\n".join(
+        dict.fromkeys(
+            filter(
+                None,
+                (
+                    state.get("original_query"),
+                    state.get("query"),
+                ),
+            )
+        )
+    )
+
+
 def verify_grounding_node(state: dict) -> dict:
     """Validate the exact delivered text, including deterministic restorations."""
     from app.graph.answer_completeness import (
@@ -1360,9 +1382,12 @@ def verify_grounding_node(state: dict) -> dict:
         preserve_requested_evidence,
     )
 
-    query = state.get("original_query") or state.get("query", "")
+    query = _verification_scope(state)
     docs = prepare_evidence(state.get("context_documents", []) or [], query)
-    language = _detect_reply_language(query, state.get("user_language", "en"))
+    language = _detect_reply_language(
+        state.get("original_query") or state.get("query", ""),
+        state.get("user_language", "en"),
+    )
     draft = state.get("answer", "")
     draft, primary_added = preserve_primary_language(draft, docs, query, language)
     draft, degree_added = preserve_requested_degrees(draft, docs, query, language)
@@ -1452,6 +1477,7 @@ def _verify_grounding_llm_node(state: dict) -> dict:
     agent_type = state.get("agent_type", "professional")
     context_docs = state.get("context_documents", []) or []
     question = state.get("original_query") or state.get("query", "")
+    scope_query = _verification_scope(state)
     steps = list(state.get("reasoning_steps", []))
 
     try:
@@ -1491,13 +1517,13 @@ def _verify_grounding_llm_node(state: dict) -> dict:
         preserve_requested_evidence,
     )
 
-    violations = constraint_failures(answer, context_docs, question)
+    violations = constraint_failures(answer, context_docs, scope_query)
     try:
         llm = _get_llm(temperature=0.0)
         structured_llm = llm.with_structured_output(GroundingVerdict)
         verdict: GroundingVerdict = structured_llm.invoke(
             VERIFY_GROUNDING_PROMPT.format_messages(
-                question=question or "(unknown)",
+                question=scope_query or "(unknown)",
                 context=context,
                 answer=answer,
                 constraint_failures=describe_constraints(violations),
@@ -1548,23 +1574,23 @@ def _verify_grounding_llm_node(state: dict) -> dict:
     corrected, _ = preserve_project_identity(
         corrected,
         context_docs,
-        question,
+        scope_query,
         _detect_reply_language(question, state.get("user_language", "en")),
     )
     corrected, _ = preserve_requested_evidence(
         corrected,
         context_docs,
-        question,
+        scope_query,
         _detect_reply_language(question, state.get("user_language", "en")),
     )
-    repair_failures = constraint_failures(corrected, context_docs, question)
+    repair_failures = constraint_failures(corrected, context_docs, scope_query)
     # One recovery for an empty/incomplete first correction. The exact candidate
     # still needs both deterministic checks and independent verification below.
     if not corrected or repair_failures:
         try:
             repair = llm.with_structured_output(GeneratedAnswer).invoke(
                 REPAIR_GROUNDING_PROMPT.format_messages(
-                    question=question or "(unknown)",
+                    question=scope_query or "(unknown)",
                     context=context,
                     answer=corrected or answer,
                     language=_detect_reply_language(
@@ -1586,13 +1612,13 @@ def _verify_grounding_llm_node(state: dict) -> dict:
             corrected, _ = preserve_project_identity(
                 corrected,
                 context_docs,
-                question,
+                scope_query,
                 _detect_reply_language(question, state.get("user_language", "en")),
             )
             corrected, _ = preserve_requested_evidence(
                 corrected,
                 context_docs,
-                question,
+                scope_query,
                 _detect_reply_language(question, state.get("user_language", "en")),
             )
             steps.append(
@@ -1606,11 +1632,11 @@ def _verify_grounding_llm_node(state: dict) -> dict:
             corrected = ""
             logger.warning("Bounded grounding repair unavailable")
     # A correction is another draft, not proof. Recheck changed text once.
-    if corrected and not constraint_failures(corrected, context_docs, question):
+    if corrected and not constraint_failures(corrected, context_docs, scope_query):
         try:
             recheck = structured_llm.invoke(
                 VERIFY_GROUNDING_PROMPT.format_messages(
-                    question=question or "(unknown)",
+                    question=scope_query or "(unknown)",
                     context=context,
                     answer=corrected,
                     constraint_failures="none",

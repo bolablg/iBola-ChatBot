@@ -154,6 +154,30 @@ def check_facts(answer, row, actions=None, result=None):
 
         for target in documentation_limits(answer, row["must_mark_unknown"]):
             failures.append(f"missing explicit documentation limit: {target}")
+    if row.get("check_source_scope") and result is not None:
+        from langchain_core.documents import Document
+
+        from app.services.evidence_policy import constraint_failures
+
+        documents = []
+        for item in result.get("evidence", []) or []:
+            metadata = dict(item.get("metadata", {}))
+            for key in ("source", "chunk_id", "evidence_type", "metric_scope"):
+                if key in item:
+                    metadata[key] = item[key]
+            metadata["section_header"] = item.get(
+                "section", metadata.get("section_header", "")
+            )
+            documents.append(
+                Document(
+                    page_content=item.get(
+                        "content_preview", item.get("page_content", "")
+                    ),
+                    metadata=metadata,
+                )
+            )
+        for violation in constraint_failures(answer, documents, row["question"]):
+            failures.append("source-scope constraint: " + violation)
     for clause in row.get("must_contain", []):
         clause_f = _accent_fold(clause.lower())
         if not any(alt.strip() in low for alt in clause_f.split("|")):

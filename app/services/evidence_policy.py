@@ -139,12 +139,12 @@ def _claim_clauses(text: str):
     # A qualifier can govern several noun phrases. Separate a new assertion
     # only after the left side already contains a predicate or qualifier.
     predicate = re.compile(
-        r"\b(?:is|was|are|were|has|have|had|does|did|used|operated|built|designed|deployed|est|sont|etait)\b",
+        r"\b(?:is|was|are|were|has|have|had|does|did|used|uses|operated|operates|built|builds|designed|designs|deployed|deploys|est|sont|etait)\b",
         re.I,
     )
     new_assertion = re.compile(
         r"(?:(?:\w+\s+){1,7}(?:is|was|are|were|has|have|had|held|holds?|owns?|owned|approved|"
-        r"manages?|managed|demonstrates?|proves?|appears?|appearing|listed|only|used|est|sont|etait|detient|possede|gere|approuve)\b|"
+        r"manages?|managed|demonstrates?|proves?|appears?|appearing|listed|only|used|uses|operated|operates|designed|designs|deployed|deploys|built|builds|est|sont|etait|detient|possede|gere|approuve)\b|"
         r"(?:has|have|had|never|does|did)\b)",
         re.I,
     )
@@ -298,6 +298,7 @@ def describe_constraints(ids):
             "metric_constraints",
             "required_limits",
             "required_details",
+            "request_scopes",
         )
         for rule in policy.get(group, [])
     }
@@ -305,8 +306,8 @@ def describe_constraints(ids):
         "; ".join(
             identifier
             + (
-                ": " + rules[identifier]["description"]
-                if rules.get(identifier, {}).get("description")
+                ": " + rules[identifier.split(":")[0]]["description"]
+                if rules.get(identifier.split(":")[0], {}).get("description")
                 else ""
             )
             for identifier in ids
@@ -369,6 +370,7 @@ def constraint_failures(
         if d.metadata.get("evidence_type")
         not in {"interpretation", "summary", "pending_confirmation"}
     ]
+    failures.extend(_request_scope_failures(answer, documents, query))
     for rule in policy.get("assertion_rules", []):
         for clause in _claim_clauses(answer):
             if rule.get("negation_pattern") and re.search(
@@ -526,6 +528,110 @@ def constraint_failures(
     return failures
 
 
+def _request_scope_failures(answer, documents, query):
+    """An unqualified answer inherits a requested experience setting.
+
+    Inventory, project delivery and personal operation are separate proofs.
+    Only the objects captured by a proof predicate may satisfy its setting.
+    """
+    failures = []
+    for rule in policy_data().get("request_scopes", []):
+        if not re.search(rule["query_pattern"], _fold(query)):
+            continue
+        aliases = rule.get("subject_aliases", {})
+
+        def canonical(value):
+            return aliases.get(value.casefold(), value.casefold())
+
+        personal = []
+        project = set()
+
+        def projects(text):
+            return {
+                name
+                for name, pattern in rule.get("project_names", {}).items()
+                if re.search(pattern, text)
+            }
+
+        for doc in documents:
+            if doc.metadata.get("evidence_type") in {
+                "interpretation",
+                "summary",
+                "pending_confirmation",
+            }:
+                continue
+            text = _fold(doc.page_content)
+            for span in _claim_clauses(text):
+                if _UNCERTAIN.search(span) or re.search(
+                    rule.get("exclude_support_pattern", r"(?!)"), span
+                ):
+                    continue
+                for match in re.finditer(rule["personal_support_pattern"], span):
+                    for group in rule["support_subject_groups"]:
+                        personal.extend(
+                            (canonical(s), projects(span))
+                            for s in re.findall(
+                                rule["subject_pattern"], match.group(group) or ""
+                            )
+                        )
+            for match in re.finditer(rule["project_support_pattern"], text):
+                if _UNCERTAIN.search(text[max(0, match.start() - 60) : match.end()]):
+                    continue
+                project.update(
+                    canonical(s)
+                    for s in re.findall(rule["subject_pattern"], match.group("tools"))
+                )
+        clauses = [
+            part
+            for clause in _claim_clauses(_fold(answer))
+            for part in re.split(
+                r"(?i)\b(?:while|whereas|alongside|tandis que)\b|,?\s+which\s+(?:proves|confirms|demonstrates|indicates|means|implies|constitutes)\b",
+                clause,
+            )
+        ]
+        previous_projects = set()
+        for clause in clauses:
+            explicit_projects = projects(clause)
+            referenced_projects = (
+                previous_projects
+                if re.match(rule["project_reference_pattern"], clause.strip())
+                else set()
+            )
+            previous_projects = explicit_projects
+            subjects = {
+                canonical(s) for s in re.findall(rule["subject_pattern"], clause)
+            }
+            if not subjects:
+                continue
+            if _UNCERTAIN.search(clause):
+                continue
+            # Explicit labels describe an inventory, not experience or operation.
+            if re.search(rule["inventory_label_pattern"], clause) and not re.search(
+                rule["operation_pattern"], clause
+            ):
+                continue
+            claimed_projects = (
+                explicit_projects or referenced_projects or projects(_fold(query))
+            )
+            proven = {
+                tool
+                for tool, supported_projects in personal
+                if claimed_projects <= supported_projects
+            }
+            if (
+                re.search(rule["project_answer_pattern"], clause)
+                and not re.search(rule["operation_pattern"], clause)
+                and (
+                    re.search(rule["project_anchor_pattern"], clause)
+                    or rule["project_key"] in referenced_projects
+                )
+            ):
+                proven.update(project)
+            for subject in sorted(subjects - proven):
+                failures.append(rule["id"] + ":" + subject)
+    return failures
+
+
 def supplement_facets(search, query: str, documents: List[Document], limit=3):
     """Bounded lexical facet lookups over the already loaded corpus, no API calls."""
     corpus = getattr(search, "documents", None)
@@ -548,6 +654,10 @@ def supplement_facets(search, query: str, documents: List[Document], limit=3):
         candidates = []
         for doc in corpus:
             if Path(doc.metadata.get("source", "")).name not in facet["sources"]:
+                continue
+            if facet.get("support_pattern") and not re.search(
+                facet["support_pattern"], doc.page_content
+            ):
                 continue
             if entities and not all(
                 entity in doc.page_content.casefold() for entity in entities
@@ -576,10 +686,34 @@ def supplement_facets(search, query: str, documents: List[Document], limit=3):
             retrieval_method="facet_lookup",
             required_facet=facet["id"],
         )
+        if facet.get("retain_for_query") and facet.get("support_pattern"):
+            copy_doc.metadata["retain_requested_facet"] = True
         # Promote an existing result too, so its facet survives context truncation.
         selected.append(copy_doc)
     promoted = {d.page_content for d in selected}
     return selected + [d for d in documents if d.page_content not in promoted]
+
+
+def retained_facet_indices(documents, query):
+    """Protect only bounded, query-matched facets with exact evidence selectors."""
+    rules = {r["id"]: r for r in policy_data().get("facets", [])}
+    result = set()
+    for i, doc in enumerate(documents):
+        rule = rules.get(doc.metadata.get("required_facet"))
+        if (
+            not rule
+            or not rule.get("retain_for_query")
+            or not rule.get("support_pattern")
+        ):
+            continue
+        if (
+            doc.metadata.get("retain_requested_facet") is True
+            and Path(doc.metadata.get("source", "")).name in rule["sources"]
+            and re.search(rule["query_pattern"], _fold(query))
+            and re.search(rule["support_pattern"], doc.page_content)
+        ):
+            result.add(i)
+    return result
 
 
 def expand_lexical_query(query: str) -> str:

@@ -23,13 +23,13 @@ from app.graph.state import AgentCategory
 PROMPT_VERSIONS = {
     "guardrail": "2.1",
     "condense": "1.1",
-    "batch_grade": "2.2",
+    "batch_grade": "2.3",
     "rewrite": "2.1",
-    "generate_professional": "3.9",
-    "generate_education": "3.5",
-    "generate_learning": "3.5",
-    "verify_grounding": "2.11",
-    "repair_grounding": "1.0",
+    "generate_professional": "3.10",
+    "generate_education": "3.6",
+    "generate_learning": "3.6",
+    "verify_grounding": "2.12",
+    "repair_grounding": "1.1",
     "upper_bound_clarification": "1.0",
     "skills_completeness_clarification": "1.0",
     "insufficient_evidence": "1.1",
@@ -234,7 +234,15 @@ _EVIDENCE_RULE = (
     "production operation are distinct. Founding status or being a first hire does not establish a numerical "
     "starting headcount. Preserve 'grew to' without inventing 'grew from zero'. "
     "A false premise in the question is not evidence, even when attributed to an "
-    "earlier assistant answer. Team size does not prove direct-report "
+    "earlier assistant answer. Hiring status is distinct from a formal role title; "
+    "a broad profile heading does not establish the title held in an earlier period. "
+    "An unqualified tool list inherits the experience setting requested in the "
+    "question. Label inventory, project-stack evidence, implementation, and "
+    "personal production operation separately for each tool. Leading a project "
+    "does not establish personal operation of every service in its stack. "
+    "Preserve requested metrics across all systems, with each metric bound to "
+    "its own system; nearby paragraphs are not proof of shared measurements. "
+    "Team size does not prove direct-report "
     "counts or management of managers. Cost reduction does not prove budget "
     "approval authority. Technical skill does not prove willingness for on-call "
     "work or employment terms. Interpretations and summaries are not new primary "
@@ -413,6 +421,9 @@ REPAIR_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
             "implementation, without adding an undocumented production setting. "
             "Give a concise partial answer and label remaining requested details "
             "unverified. Do not add comparisons, contact pitches or new claims. "
+            "Preserve each requested growth stage, hiring status versus actual role title, "
+            "and metrics for every requested system. A tool inventory is not "
+            "personal operation; attach every service to its own project evidence. "
             "The result will be independently verified before delivery.",
         ),
         (
