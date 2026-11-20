@@ -26,11 +26,11 @@ PROMPT_VERSIONS = {
     "condense": "1.1",
     "batch_grade": "2.3",
     "rewrite": "2.1",
-    "generate_professional": "3.19",
+    "generate_professional": "3.20",
     "generate_education": "3.6",
     "generate_learning": "3.6",
-    "verify_grounding": "2.15",
-    "repair_grounding": "1.6",
+    "verify_grounding": "2.16",
+    "repair_grounding": "1.7",
     "upper_bound_clarification": "1.0",
     "skills_completeness_clarification": "1.0",
     "insufficient_evidence": "1.1",
@@ -345,6 +345,9 @@ GENERATE_SYSTEM_PROMPTS = {
         "Answer the latest user question. Use earlier turns to resolve references, "
         "without answering their earlier requests again. Include comparisons "
         "and qualifications only when needed for the latest question.\n"
+        "Keep services from different projects in separate sentences or bullets. "
+        "A trailing project name must govern only its own services. Missing "
+        "documentation establishes a record limit, not absence of experience.\n"
         "Translate working hours, employment type, and physical work location as "
         "separate concepts. Do not infer one from another. State unsupported "
         "conditions as unknown.\n" + _LANGUAGE_RULE + _EVIDENCE_RULE + "RULES:\n"
@@ -502,6 +505,9 @@ REPAIR_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
             "this evidence boundary explicit for each unknown; avoid a bare "
             "claim that someone's experience is unverified. Do not add "
             "comparisons, contact pitches or new claims. "
+            "Make the smallest complete repair. Do not introduce unrelated tools, "
+            "metrics or missing-detail caveats that the latest question did not ask "
+            "about. Keep each project's employer and responsibilities separate. "
             "Preserve each requested growth stage, hiring status versus actual role title, "
             "and metrics for every requested system. A tool inventory is not "
             "personal operation; attach every service to its own project evidence. "
@@ -591,7 +597,10 @@ VERIFY_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
                 "COMPLETE CORRECTION: check every material claim before writing the verdict, "
                 "not just the first issue. Repair all unsupported associations in one "
                 "corrected_answer, including each member of a grouped employer or date "
-                "claim. Retain supported requested parts. State known role examples "
+                "claim. Retain supported requested parts. "
+                "Keep independent projects in separate sentences when correcting "
+                "an employer association; a repair must not move a personal project "
+                "into an employer's delivery list. State known role examples "
                 "separately from unknown employment conditions, and make each "
                 "documentation limit apply only to its own missing detail. Do not "
                 "add unrequested comparisons while repairing the answer.\n\n"

@@ -357,8 +357,7 @@ def _normalize_non_use_reference(answer, documents):
             rf"absence\s+of\s+experience\s+(?:with|in)\s+{tool})"
         )
         pattern = re.compile(
-            rf"(?i)(?:^|(?<=[.!?;]))\s*(?:Regarding\s+{tool},\s*)?"
-            rf"(?:Bolaji|he)\s+has\s+{absence},?\s+and\s+"
+            rf"(?i)\b(?:Bolaji|he)\s+has\s+{absence},?\s+and\s+"
             rf"(?:(?:he|Bolaji)\s+)?(?:has\s+)?never\s+used\s+(?P<reference>it)\b"
         )
         answer = pattern.sub(lambda match: match.group()[:-2] + subject, answer)
@@ -1027,7 +1026,26 @@ def constraint_failures(
                             sentence.split(":", 1)[0],
                         )
                     ]
-                    for claim in re.finditer(rule["claim_pattern"], sentence):
+                    claims = list(re.finditer(rule["claim_pattern"], sentence))
+                    for claim in claims:
+                        if re.fullmatch(
+                            rule.get("topic_intro_pattern", r"(?!)"),
+                            sentence[: claim.end()],
+                        ) and re.match(r"\s*,", sentence[claim.end() :]):
+                            # The topic still needs its own governing role. A
+                            # later ETL claim cannot cleanse a wrong-role action
+                            # introduced here, even when it uses only a pronoun.
+                            later_roles = [r for r in roles if r.start() > claim.end()]
+                            governing = active_role
+                            if later_roles:
+                                first = later_roles[0]
+                                governing = (
+                                    first.group() if first in valid_roles else ""
+                                )
+                            if not re.fullmatch(rule["answer_pattern"], governing):
+                                invalid = True
+                            active_role = governing
+                            continue
                         prefix_roles = [
                             r for r in valid_roles if r.start() < claim.start()
                         ]
@@ -1134,6 +1152,33 @@ def _service_claim_items(clause, rule, projects):
     return units
 
 
+def _postfixed_record_limit(clause, rule):
+    """Recognize a complete nominal list governed by a record-limit predicate.
+
+    Only registered subjects and nominal modifiers are accepted. An action,
+    conditional, pronoun assertion or neighboring sentence cannot be swallowed.
+    """
+    match = re.fullmatch(
+        r"(?is)\s*(?:remaining requested details such as\s+)?(?P<subjects>.+?)\s+"
+        r"(?:is|are)\s+details\s+that\s+the\s+retrieved\s+"
+        r"(?:evidence|record|documentation)\s+does\s+not\s+"
+        r"(?:establish|document|confirm)\s*",
+        clause,
+    )
+    if not match:
+        return False
+    nominal = match.group("subjects")
+    if not re.search(rule["subject_pattern"], nominal):
+        return False
+    patterns = [re.escape(s) for s in rule.get("record_limit_subjects", ())]
+    patterns.extend(rule.get("record_limit_modifiers", ()))
+    patterns.append(rule["subject_pattern"])
+    remainder = nominal
+    for pattern in patterns:
+        remainder = re.sub(pattern, " ", remainder, flags=re.I)
+    return bool(re.fullmatch(r"(?i)[\s,]*(?:(?:and|or|et|ou)[\s,]*)*", remainder))
+
+
 def _request_scope_failures(answer, documents, query):
     """An unqualified answer inherits a requested experience setting.
 
@@ -1220,6 +1265,7 @@ def _request_scope_failures(answer, documents, query):
         units = [
             unit
             for clause in clauses
+            if not _postfixed_record_limit(clause, rule)
             for unit in _service_claim_units(clause, rule, projects)
         ]
         for clause, _ in units:

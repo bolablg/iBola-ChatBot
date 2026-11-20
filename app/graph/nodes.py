@@ -1722,9 +1722,11 @@ def _verify_grounding_llm_node(state: dict) -> dict:
         _detect_reply_language(question, state.get("user_language", "en")),
     )
     repair_failures = constraint_failures(corrected, context_docs, scope_query)
+    repair_attempted = False
     # One recovery for an empty/incomplete first correction. The exact candidate
     # still needs both deterministic checks and independent verification below.
     if not corrected or repair_failures:
+        repair_attempted = True
         try:
             repair = (
                 _get_llm(temperature=0.0)
@@ -1781,7 +1783,8 @@ def _verify_grounding_llm_node(state: dict) -> dict:
         context_docs,
         _detect_reply_language(question, state.get("user_language", "en")),
     )
-    if corrected and not constraint_failures(corrected, context_docs, scope_query):
+    final_failures = constraint_failures(corrected, context_docs, scope_query)
+    if corrected and not final_failures:
         try:
             recheck = structured_llm.invoke(
                 VERIFY_GROUNDING_PROMPT.format_messages(
@@ -1799,13 +1802,80 @@ def _verify_grounding_llm_node(state: dict) -> dict:
                     "unsupported_claims": verdict.unsupported_claims + violations,
                     "reasoning_steps": steps,
                 }
+            final_failures = list(recheck.unsupported_claims)
+            # A second verifier correction is still only a draft. Use a spare
+            # SDK call only when no separate repair was attempted. Retries have
+            # already consumed the same counter, so this cannot add a fourth call.
+            if (
+                not repair_attempted
+                and (_grounding_provider_calls.get() or 0) > 0
+                and recheck.corrected_answer.strip()
+            ):
+                candidate = _sanitize_answer(recheck.corrected_answer.strip())
+                candidate, _ = preserve_percentage_qualifiers(
+                    candidate,
+                    context_docs,
+                    _detect_reply_language(question, state.get("user_language", "en")),
+                )
+                candidate, _ = preserve_project_identity(
+                    candidate,
+                    context_docs,
+                    scope_query,
+                    _detect_reply_language(question, state.get("user_language", "en")),
+                )
+                candidate, _ = preserve_requested_evidence(
+                    candidate,
+                    context_docs,
+                    scope_query,
+                    _detect_reply_language(question, state.get("user_language", "en")),
+                )
+                candidate = normalize_metric_omission_attribution(
+                    candidate,
+                    context_docs,
+                    _detect_reply_language(question, state.get("user_language", "en")),
+                )
+                final_failures = constraint_failures(
+                    candidate, context_docs, scope_query
+                )
+                if (
+                    candidate
+                    and " ".join(candidate.split()) != " ".join(corrected.split())
+                    and " ".join(candidate.split()) != " ".join(answer.split())
+                    and not final_failures
+                ):
+                    approval = structured_llm.invoke(
+                        VERIFY_GROUNDING_PROMPT.format_messages(
+                            question=scope_query or "(unknown)",
+                            context=context,
+                            answer=candidate,
+                            constraint_failures="none",
+                        )
+                    )
+                    final_failures = list(approval.unsupported_claims)
+                    if approval.is_grounded and approval.addresses_question:
+                        steps.append(
+                            ReasoningStep(
+                                node="verify_grounding",
+                                action="correction_reverified",
+                                detail="independent approval within the shared SDK budget",
+                            )
+                        )
+                        return {
+                            "answer": candidate,
+                            "confidence": min(state.get("confidence", 0.5), 0.5),
+                            "grounding_checked": True,
+                            "unsupported_claims": verdict.unsupported_claims
+                            + violations,
+                            "reasoning_steps": steps,
+                        }
         except Exception:
             logger.warning("Corrected answer verification unavailable")
     steps.append(
         ReasoningStep(
             node="verify_grounding",
             action="withheld",
-            detail="correction did not pass bounded final verification",
+            detail="correction did not pass bounded final verification: "
+            + "; ".join(final_failures)[:400],
         )
     )
     return {

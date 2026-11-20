@@ -10,6 +10,7 @@ from langchain_core.documents import Document
 from app.graph.nodes import verify_grounding_node
 from app.graph.prompts import INSUFFICIENT_EVIDENCE_ANSWERS
 from app.graph.state import GroundingVerdict
+from app.services.evidence_policy import constraint_failures
 from scripts.run_eval import check_facts, load_golden
 
 CASES = json.loads(
@@ -33,6 +34,9 @@ def test_actual_release_scope_corrections_require_full_content_reverification(
         GroundingVerdict(
             is_grounded=accepted, corrected_answer="Unverified second repair."
         ),
+        GroundingVerdict(
+            is_grounded=False, corrected_answer="Unverified third repair."
+        ),
     ]
     with patch("app.graph.nodes._get_llm", return_value=llm):
         result = verify_grounding_node(
@@ -45,11 +49,13 @@ def test_actual_release_scope_corrections_require_full_content_reverification(
                 "confidence": 0.9,
             }
         )
-    assert invoke.call_count == 2
+    assert 2 <= invoke.call_count <= 3
+    if accepted:
+        assert invoke.call_count == 2
     assert result["grounding_checked"] is accepted
     assert "Unverified second repair" not in result["answer"]
     recheck = "\n".join(
-        str(message.content) for message in invoke.call_args_list[-1].args[0]
+        str(message.content) for message in invoke.call_args_list[1].args[0]
     )
     assert case["corrected_answer"] in recheck
     if accepted:
@@ -65,6 +71,17 @@ def test_actual_release_scope_corrections_require_full_content_reverification(
             },
         )[0]
     else:
+        if invoke.call_count == 3:
+            assert "Unverified second repair." in str(invoke.call_args_list[2].args[0])
+        else:
+            # A mandatory requested-detail constraint can reject the second
+            # draft before spending the spare independent verification call.
+            assert constraint_failures(
+                "Unverified second repair.",
+                [Document(**doc) for doc in case["documents"]],
+                case["question"],
+            )
+        assert "Unverified third repair" not in result["answer"]
         assert result["answer"] == INSUFFICIENT_EVIDENCE_ANSWERS[case["language"]]
         assert result["confidence"] == 0.0
         assert result["answer"] != case["draft"]
