@@ -279,7 +279,7 @@ class AgenticRAGService:
         )
         from app.services.provenance import runtime_provenance
 
-        return {
+        response = {
             "answer": final_state.get("answer", ""),
             "actions": final_state.get("actions", []),
             "agent_type": agent_type,
@@ -300,6 +300,20 @@ class AgenticRAGService:
             "trace_id": trace_id,
             "provenance": runtime_provenance(),
         }
+        from app.graph.nodes import _detect_reply_language
+        from app.services.contextual_handoff import contextual_handoff
+        from app.settings import get_settings
+
+        offer = contextual_handoff(
+            response,
+            user_input,
+            chat_history,
+            _detect_reply_language(user_input, user_language),
+            enabled=get_settings().handoff.enabled,
+        )
+        if offer:
+            response["actions"] = [offer]
+        return response
 
     @staticmethod
     def _record_trace(

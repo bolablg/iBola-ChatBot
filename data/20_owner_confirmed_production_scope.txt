@@ -2,7 +2,7 @@ OWNER-CONFIRMED PRODUCTION RESPONSIBILITY
 
 Confirmation recorded on November 19, 2026. This is the confirmation date, not a date assigned to the underlying work. Evidence classification: candidate_confirmed.
 
-At Gozem, Bolaji personally designed Pub/Sub and Dataflow components of the MongoDB CDC pipeline in production. This confirms personal production design of that pipeline; personal operation of Pub/Sub and Dataflow is not established by this clarification.
+At Gozem, Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline. The owner subsequently clarified that he is both an architect and engineer and personally designed and operated the production services he used. This supersedes the earlier design-only qualification for these services.
 
 For the Gozem Data Hub, Bolaji personally designed and operated AWS EC2 in production.
 
@@ -12,7 +12,15 @@ Bolaji has no Kafka experience at all. Bolaji has never used Kafka. This is an e
 
 These clarifications do not add personal Spark Structured Streaming, Apache NiFi or Lakeflow production experience. They do not establish CDC event counts, end-to-end latency or availability. The separately documented streaming-workload average remains a different measurement population.
 
-CONFIRMATION RECORD
+LATEST HANDS-ON CONFIRMATION
+
+The owner explicitly confirmed personal production operation of BigQuery and Apache Airflow, then clarified personal design and operation of the production services he actually used. The service-by-service inventory in 21_production_service_inventory.txt combines this confirmation with the documented usage contexts. It does not convert a comparison, lab, teaching module or generic inventory-only entry into a production project.
+
+Latest owner statements: "i operated bigquery, airflow, many other services"; "go through the knowledge base, you have them all"; "i am an architect and engineer. i designed and operated all the services i used."
+
+HISTORICAL CONFIRMATION RECORD
+
+The following earlier answers record the sequence of clarification. The current canonical design-and-operation statement above governs Pub/Sub and Dataflow; the earlier design-only answer does not limit that responsibility.
 
 Question: The KB documents a MongoDB CDC pipeline using Pub/Sub and Dataflow, but does not explicitly state your personal production responsibility. Which description is accurate?
 Answer: I personally designed it in production

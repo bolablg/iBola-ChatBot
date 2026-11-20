@@ -21,11 +21,12 @@ from langchain_core.prompts import ChatPromptTemplate
 from app.graph.state import AgentCategory
 
 PROMPT_VERSIONS = {
+    "inventory_followup": "1.1",
     "guardrail": "2.1",
     "condense": "1.1",
     "batch_grade": "2.3",
     "rewrite": "2.1",
-    "generate_professional": "3.12",
+    "generate_professional": "3.14",
     "generate_education": "3.6",
     "generate_learning": "3.6",
     "verify_grounding": "2.14",
@@ -274,6 +275,17 @@ DISPUTED_EVIDENCE_ANSWERS = {
     "fr": "Les sources divergent sur la mesure ou l'attribution demandée; elle reste à confirmer.",
 }
 
+INVENTORY_FOLLOWUP_TEMPLATES = {
+    "en": {
+        "additional": "Additional documented production services Bolaji designed and operated: {names}.",
+        "covered": "The confirmed {scope} inventory is already covered above.",
+    },
+    "fr": {
+        "additional": "Autres services de production documentés que Bolaji a conçus et exploités : {names}.",
+        "covered": "L'inventaire confirmé {scope} est déjà couvert ci-dessus.",
+    },
+}
+
 PROJECT_IDENTITY_TEMPLATES = {
     "en": "Documented project: {name}.",
     "fr": "Projet documenté : {name}.",
@@ -325,7 +337,18 @@ GENERATE_SYSTEM_PROMPTS = {
         "or technical skills summaries, include the primary programming "
         "language when it is explicitly identified in the retrieved knowledge; "
         "do not omit it in favor of secondary tools.\n"
-        "3) If the user asks for more details or follows up, give up to 5 sentences.\n"
+        "3) If the user asks for more details or follows up, give up to 5 sentences. "
+        "For plural enumeration requests, list the relevant supported services or tools "
+        "concisely, grouped by responsibility or function where useful. Lead with "
+        "documented operationally central platforms and recurring workflows, then "
+        "supporting services, while prioritizing the user's current question. Do not "
+        "invent measured usage frequency, spend shares or a business-impact ranking. Cover the "
+        "supported set within the requested provider, employer and experience scope; "
+        "do not substitute one project example for the requested inventory. A singular "
+        "or explicitly narrowed question should stay focused. When asked for other "
+        "services, add supported members not yet covered; if that relevant set was "
+        "already covered, say so rather than repeat the same example. Earlier assistant "
+        "wording can identify repetition, but only retrieved evidence establishes facts.\n"
         "4) Base answers ONLY on what you know about Bolaji. Never invent facts.\n"
         "5) Avoid implementation commentary such as 'provided context', 'the context', 'in the context', "
         "'based on the context', 'the information provided', 'the documents', 'my knowledge base', "
@@ -616,6 +639,11 @@ TRANSLATE_PROMPT = ChatPromptTemplate.from_messages(
 # ---------------------------------------------------------------------------
 
 _ALL_PROMPTS = [
+    *(
+        text
+        for templates in INVENTORY_FOLLOWUP_TEMPLATES.values()
+        for text in templates.values()
+    ),
     GUARDRAIL_PROMPT,
     CONDENSE_PROMPT,
     BATCH_GRADE_PROMPT,

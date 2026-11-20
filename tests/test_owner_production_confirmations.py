@@ -62,7 +62,6 @@ def test_owner_confirms_exact_actor_tool_setting_and_responsibility(owner_docs, 
 @pytest.mark.parametrize(
     "answer",
     [
-        "Bolaji personally operated Pub/Sub and Dataflow in production.",
         "At Rintio, Bolaji personally operated AWS EC2 in production.",
         "For Gozem Data Hub, Bolaji personally operated AWS S3 in production.",
         "At Rintio, Bolaji personally designed Pub/Sub and Dataflow in production.",
@@ -156,3 +155,12 @@ def test_same_frozen_question_requires_new_confirmation_without_rewriting_histor
         ],
     }
     assert not check_facts(answer, row, result=old)[0]
+
+
+def test_latest_owner_confirmation_establishes_streaming_operation(owner_docs):
+    answer = "At Gozem, Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline."
+    assert not constraint_failures(
+        answer,
+        owner_docs,
+        "Which technologies did he personally operate in production?",
+    )

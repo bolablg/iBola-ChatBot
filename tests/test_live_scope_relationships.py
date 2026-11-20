@@ -24,7 +24,7 @@ CASES = json.loads(
 GOOD = {
     "recruiter-adi-05-t5": "Bolaji a été le premier recrutement data en 2019. L'équipe initiale a grandi jusqu'à 4 personnes pendant sa période de Global Data Analyst. L'équipe est ensuite passée de 4 à plus de 14 personnes durant le mandat Head of Data, d'octobre 2022 à mars 2025. Le périmètre couvre cinq marchés opérationnels africains. Singapour était uniquement le siège de l'entreprise.",
     "recruiter-sda-05-t2": "Bolaji architected and led the Gozem Data Hub; its documented stack includes AWS EC2. The retrieved inventory lists AWS S3 and streaming tools. Personal production operation of EC2, S3, Pub/Sub, Dataflow, Spark, Apache NiFi and Lakeflow is not established by this evidence. Personal Kafka architecture delivery is not documented.",
-    "recruiter-sde-03-t4": "A separate streaming workload averaged 45 million telemetry and operational events per day. That is not an individual MongoDB CDC pipeline count, throughput ceiling, sub-second latency or availability guarantee. Those CDC measurements are not established. The Vodun Days command center provided minute-level Operations visibility; that is a separate system.",
+    "recruiter-sde-03-t4": "At Gozem, batch workloads averaged approximately 5 TB of daily upserts into existing modeled tables. A separate streaming workload averaged 45 million telemetry and operational events per day. That is not an individual MongoDB CDC pipeline count, throughput ceiling, sub-second latency or availability guarantee. Those CDC measurements are not established. The Vodun Days command center provided minute-level Operations visibility; that is a separate system.",
 }
 
 
@@ -434,7 +434,7 @@ def test_generation_reserves_exact_facets_after_grader_or_overlap_eviction():
     assert "CDC and streaming" not in scope
     assert "Unsupported Kafka" not in scope and "Invented S3" not in scope
     measurement = Document(
-        page_content="A separate streaming workload averaged 45 million telemetry and operational events per day; this is not an individual MongoDB CDC pipeline count.",
+        page_content="At Gozem, batch workloads averaged approximately 5 TB of daily upserts into existing modeled tables. A separate streaming workload averaged 45 million telemetry and operational events per day; this is not an individual MongoDB CDC pipeline count.",
         metadata={
             "source": "90_website_canon_llms_full.txt",
             "section_header": "Workload and measurement scope",

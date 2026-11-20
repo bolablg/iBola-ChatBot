@@ -897,7 +897,8 @@ def request_scope(state):
     original = state.get("original_query") or state.get("query", "")
     parts = [original, state.get("query", "")]
     if re.search(
-        r"(?i)\b(?:those|these|that|this|it|them|ces|ceux|celles|cela|ca)\b", original
+        r"(?i)\b(?:those|these|that|this|it|them|other|others|ces|ceux|celles|cela|ca|autres)\b",
+        original,
     ):
         recent = state.get("chat_history", [])[-1:]
         parts.extend(turn[0] for turn in recent if turn)

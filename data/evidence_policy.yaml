@@ -1,5 +1,6 @@
-version: 9
+version: 10
 source_types:
+  21_production_service_inventory.txt: candidate_confirmed
   20_owner_confirmed_production_scope.txt: candidate_confirmed
   90_website_canon_llms_full.txt: published
   18_confirmed_clarifications.txt: candidate_confirmed
@@ -128,7 +129,7 @@ metric_constraints:
   - '(?i)(?:completed|deployed|delivered)\s+(?:all\s+)?(?:six|6)\s+(?:(?:AI|strategic|high.priority)\s+)?(?:use cases|initiatives|implementations)'
 facets:
 - id: confirmed_team_stages
-  query_pattern: '(?i)(?:growth|croissance|developp).{0,180}(?:countries|pays)|(?:team|equipe).{0,100}(?:dates|limites|boundaries)'
+  query_pattern: '(?i)(?:growth|croissance|developp).{0,180}(?:countries|pays)|(?:team|equipe).{0,100}\b(?:dates|limites|boundaries)\b'
   terms: first data hire initial team grew Global Data Analyst
   sources: [19_owner_confirmed_scope.txt]
   section_pattern: '^GOZEM TEAM GROWTH AND ROLE PERIODS$'
@@ -155,23 +156,32 @@ facets:
   section_pattern: '^EMPLOYMENT TIMELINE:$'
   support_pattern: 'Head of Data at Gozem: October 2022 - March 2025'
   retain_for_query: true
+- id: production_service_inventory
+  query_pattern: '(?is)\A(?=[^\n]*\b(?:which|what|list|name|other|quels|quelles|liste|autres)\b)(?=[^\n]*\b(?:services|technologies|tools|outils)\b)(?=.*\b(?:Bolaji|he|his|il|son|ses)\b)(?=.*(?:production|personal|operat|design|used|document|GCP|AWS|exploit|concu|utilis))'
+  terms: production personally designed operated services inventory BigQuery Airflow AWS
+  sources: [21_production_service_inventory.txt]
+  section_pattern: '^PRODUCTION SERVICE INVENTORY$'
+  support_pattern: 'Service inventory: BigQuery, Apache Airflow, Dataform, Google Cloud Storage'
+  retain_for_query: true
 - id: owner_confirmed_production_responsibility
   query_pattern: '(?is)(?=.*(?:personal|personnel))(?=.*(?:production|AWS|EC2|S3|streaming|Pub/Sub|Dataflow|Kafka))'
   terms: personally production designed operated MongoDB CDC Pub/Sub Dataflow AWS EC2 S3 Kafka
   sources: [20_owner_confirmed_production_scope.txt]
-  support_pattern: '(?is)Bolaji personally designed Pub/Sub and Dataflow.{0,160}production.*Bolaji personally designed and operated AWS EC2 in production'
+  support_pattern: '(?is)Bolaji personally designed(?: and operated)? Pub/Sub and Dataflow.{0,160}production.*Bolaji personally designed and operated AWS EC2 in production'
   retain_for_query: true
-- id: owner_confirmed_production_responsibility
-  query_pattern: '(?is)(?=.*(?:personal|personnel))(?=.*(?:production|AWS|EC2|S3|streaming|Pub/Sub|Dataflow|Kafka))'
-  terms: personally production designed operated EC2 S3 MongoDB CDC Pub/Sub Dataflow Kafka
-  sources: [20_owner_confirmed_production_scope.txt]
-  support_pattern: '(?is)Bolaji personally designed Pub/Sub and Dataflow components.{0,100}production.{0,300}Bolaji personally designed and operated AWS EC2 in production'
+- id: budget_cloud_cost_evidence
+  query_pattern: '(?is)(?=.*(?:budget|investment|investissement))(?=.*(?:cloud|cost|cout))'
+  terms: cloud cost FinOps BigQuery one quarter
+  sources: [90_website_canon_llms_full.txt]
+  section_pattern: '(?i)^Data platform modernization and FinOps transformation$'
+  support_pattern: '42\.57%.*one quarter'
   retain_for_query: true
 - id: streaming_workload_measurement
   query_pattern: '(?is)(?=.*(?:throughput|event volume|latency|availability|measurements|debit|latence|disponibilite))(?=.*(?:streaming|CDC|MongoDB|flux|event processing))'
   terms: separate streaming workload averaged telemetry operational events
   sources: [90_website_canon_llms_full.txt]
-  support_pattern: 'A separate streaming workload averaged 45 million telemetry and operational events per day'
+  section_pattern: '(?i)^Workload and measurement scope$'
+  support_pattern: '(?s)batch workloads averaged approximately 5 TB.*A separate streaming workload averaged 45 million telemetry and operational events per day'
   retain_for_query: true
 - id: streaming_implementation
   query_pattern: '(?i)(?!.*\b(?:throughput|volume|latency|availability)\b).*\b(?:streaming|Pub/Sub|Dataflow|Kafka)\b'
@@ -461,6 +471,38 @@ required_identity:
   query_pattern: (?i)\b(?:aws|ec2)\b
   answer_pattern: (?i)(?:EC2|700|operational.{0,15}platform|governed.{0,20}platform)
 required_details:
+- id: plural_production_service_inventory_missing
+  description: Broad plural production-service enumeration should cover the documented inventory rather than repeat a single project. Provider-specific and singular requests remain focused.
+  sources: [21_production_service_inventory.txt]
+  section_pattern: '^PRODUCTION SERVICE INVENTORY$'
+  support_pattern: 'Service inventory: BigQuery, Apache Airflow, Dataform, Google Cloud Storage'
+  query_pattern: '(?is)\A(?![^\n]*\b(?:other|others|additional|autres)\b)(?!.*\b(?:AWS|GCP|Google Cloud|streaming)\b)(?=[^\n]*\b(?:which|what|list|quels|quelles|liste)\b)(?=[^\n]*\b(?:services|technologies)\b)(?=.*production)(?=.*(?:personal|personnel|designed|operated|concu|exploit))'
+  answer_pattern: '(?is)(?=.*\bBigQuery\b)(?=.*\b(?:Google Cloud Storage|Cloud Storage|GCS)\b)(?=.*\bDataform\b)(?=.*\bAirflow\b)(?=.*\bPub/Sub\b)(?=.*\bDataflow\b)(?=.*\bCloud Run\b)(?=.*\bCloud Functions\b)(?=.*\bVertex AI\b)(?=.*\bArtifact Registry\b)(?=.*\bCloud Logging\b)(?=.*\bCloud Build\b)(?=.*\bEC2\b)(?=.*\bS3\b)'
+  restore_quote:
+    language: en
+    label: Documented production services
+    pattern: 'Service inventory: BigQuery[^\n]+\.'
+- id: requested_batch_workload_measurement_missing
+  description: A broad request for measurements across systems must preserve the separate batch average, daily period and upsert population. Do not apply this to a CDC-only or streaming-only request.
+  sources: [90_website_canon_llms_full.txt]
+  section_pattern: '(?i)^Workload and measurement scope$'
+  support_pattern: 'batch workloads averaged approximately 5 TB of daily upserts'
+  query_pattern: '(?is)\A(?=[^\n]*(?:systems|workloads|systemes|charges))(?=[^\n]*(?:throughput|measurements|event volume|debit|mesures|volume))(?![^\n]*(?:only|uniquement))(?:(?=[^\n]*\b(?:batch|lot)\b)(?=[^\n]*\b(?:streaming|flux)\b)|(?![^\n]*\b(?:streaming|CDC|MongoDB|batch|flux|lot)\b))'
+  answer_pattern: '(?is)(?=.*(?:approximate\w*|about|around|environ))(?=.*5\s*(?:TB|To))(?=.*(?:day|daily|jour))(?=.*(?:batch|lot))(?=.*(?:upsert|mise a jour|insert))'
+  restore_quote:
+    language: en
+    label: Separate batch workload measurement
+    pattern: 'At Gozem, batch workloads averaged approximately 5 TB of daily upserts into existing modeled tables\.'
+- id: personal_pipeline_project_identity_missing
+  description: When using the retrieved personal MongoDB CDC implementation as production pipeline proof, preserve its named employer and implementation context.
+  sources: [20_owner_confirmed_production_scope.txt]
+  support_pattern: 'At Gozem, Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline'
+  query_pattern: '(?is)\A(?![^\n]*\b(?:BigQuery|Airflow|Pub/Sub|Dataflow|MongoDB|CDC|EC2|S3)\b)(?=.*production)(?=.*(?:personally|personal|hands.on))(?=.*(?:pipeline|engineering))(?=.*(?:strongest|best|evidence|proof))'
+  answer_pattern: '(?i)Gozem'
+  restore_quote:
+    language: en
+    label: Named production implementation
+    pattern: 'At Gozem, Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline\.'
 - id: requested_spoken_languages_missing
   description: Preserve both documented human languages and their proficiency levels when spoken-language capability is requested. Programming-only questions do not establish this intent.
   sources: [00_identity.txt]
@@ -516,7 +558,7 @@ required_details:
   description: Preserve the initial team reaching its documented size separately from the later expansion; do not omit that requested stage or infer a zero baseline.
   sources: [19_owner_confirmed_scope.txt, 11_leadership_style.txt]
   support_pattern: 'initial team grew to 4'
-  query_pattern: '(?i)(?:growth|croissance|developp).{0,180}(?:countries|pays)|(?:team|equipe).{0,100}(?:dates|limites|boundaries)'
+  query_pattern: '(?i)(?:growth|croissance|developp).{0,180}(?:countries|pays)|(?:team|equipe).{0,100}\b(?:dates|limites|boundaries)\b'
   answer_pattern: '(?i)(?:initial|premiere|d.abord|Global Data Analyst).{0,100}(?:to|a|jusqu.a|attein\w*)\s+(?:4|quatre)|(?:to|a|jusqu.a|attein\w*)\s+(?:4|quatre).{0,100}(?:initial|premiere|Global Data Analyst)'
   restore_quotes:
     en:
@@ -544,7 +586,7 @@ required_details:
   description: Preserve the retrieved first-hire year and initial team growth to a size without inferring a zero baseline.
   sources: [19_owner_confirmed_scope.txt]
   support_pattern: 'first data hire in 2019'
-  query_pattern: '(?i)(?:growth|croissance|developp).{0,180}(?:countries|pays)|(?:team|equipe).{0,100}(?:dates|limites|boundaries)'
+  query_pattern: '(?i)(?:growth|croissance|developp).{0,180}(?:countries|pays)|(?:team|equipe).{0,100}\b(?:dates|limites|boundaries)\b'
   answer_pattern: '(?i)(?:first data hire|first.{0,15}data (?:recruit|employee)|premier data hire|premier\w*.{0,25}(?:embauch\w*|recru\w*|collaborat\w*|employ\w*|data hire).{0,15}(?:data|donnees)).{0,50}2019|2019.{0,50}(?:first data hire|premier\w*.{0,25}(?:embauch\w*|recru\w*|collaborat\w*|employ\w*|data hire).{0,15}(?:data|donnees))'
   restore_quotes:
     en:
@@ -562,13 +604,13 @@ required_details:
   description: Preserve the retrieved later growth endpoints and their Head of Data period instead of attaching the full growth to the latest role.
   sources: [19_owner_confirmed_scope.txt]
   support_pattern: 'grew from 4 to 14\+ during his Head of Data period \(October 2022 - March 2025\)'
-  query_pattern: '(?i)(?:growth|croissance|developp).{0,180}(?:countries|pays)|(?:team|equipe).{0,100}(?:dates|limites|boundaries)'
+  query_pattern: '(?i)(?:growth|croissance|developp).{0,180}(?:countries|pays)|(?:team|equipe).{0,100}\b(?:dates|limites|boundaries)\b'
   answer_pattern: '(?i)(?:4|quatre).{0,45}(?:14|quatorze).{0,150}2022.{0,60}2025|2022.{0,60}2025.{0,150}(?:4|quatre).{0,45}(?:14|quatorze)'
 - id: operating_markets_and_headquarters
   description: Retain the documented operating-market count and headquarters-only distinction. Headquarters does not establish an employee work location or another operating market.
   sources: [19_owner_confirmed_scope.txt]
   support_pattern: 'Singapore was company headquarters only'
-  query_pattern: '(?i)(?:growth|croissance|developp).{0,180}(?:countries|pays)|(?:team|equipe).{0,100}(?:dates|limites|boundaries)'
+  query_pattern: '(?i)(?:growth|croissance|developp).{0,180}(?:countries|pays)|(?:team|equipe).{0,100}\b(?:dates|limites|boundaries)\b'
   answer_pattern: '(?is)(?=.*(?:five|cinq|5).{0,45}(?:African|africain|operating|operationnel))(?=.*(?:Singapore|Singapour).{0,65}(?:headquarters|siege))'
 - scope_id: recommendation_order_share
   query_pattern: (?i)(?=.*(?:12|metric|figure|mesure|chiffre))(?=.*(?:recommend|recommand))

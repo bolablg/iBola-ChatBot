@@ -83,6 +83,13 @@ class SearchSettings(BaseSettings):
     reranker_model: str = "BAAI/bge-reranker-v2-m3"
 
 
+class HandoffSettings(BaseSettings):
+    """Optional first-hand context invitation, local validation first."""
+
+    model_config = SettingsConfigDict(env_prefix="HANDOFF_")
+    enabled: bool = False
+
+
 class CacheSettings(BaseSettings):
     """Cache configuration."""
 
@@ -182,6 +189,7 @@ class AppSettings(BaseSettings):
     llm: LLMSettings = Field(default_factory=LLMSettings)
     search: SearchSettings = Field(default_factory=SearchSettings)
     cache: CacheSettings = Field(default_factory=CacheSettings)
+    handoff: HandoffSettings = Field(default_factory=HandoffSettings)
     tracing: TracingSettings = Field(default_factory=TracingSettings)
 
     @field_validator("gemini_api_key")

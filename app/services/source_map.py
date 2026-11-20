@@ -53,6 +53,14 @@ _SOURCE_MAP = {
         "path": None,
     },
     "19_owner_confirmed_scope": {"label": "Owner-confirmed scope", "path": None},
+    "20_owner_confirmed_production_scope": {
+        "label": "Owner-confirmed responsibility",
+        "path": None,
+    },
+    "21_production_service_inventory": {
+        "label": "Owner-confirmed services",
+        "path": None,
+    },
     "evidence_policy.yaml": {"label": "Claim status", "path": None},
     "90_website_canon_llms_full": {
         "label": "Published profile",

@@ -1337,8 +1337,23 @@ def generate_node(state: dict) -> dict:
             )
         )
 
+    from app.services.service_inventory import inventory_followup
+
+    followup = inventory_followup(state, context_docs, reply_language)
+    if followup is not None:
+        steps.append(
+            ReasoningStep(
+                node="generate",
+                action="inventory_coverage",
+                detail="retrieved inventory minus prior listed labels",
+            )
+        )
     try:
-        result = _call_generate()
+        result = (
+            GeneratedAnswer(answer=followup, confidence=0.9)
+            if followup is not None
+            else _call_generate()
+        )
         answer = _sanitize_answer(result.answer)
         confidence = result.confidence
 

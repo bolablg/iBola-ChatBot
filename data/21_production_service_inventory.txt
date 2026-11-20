@@ -1,0 +1,27 @@
+BOLAJI BALOGOUN - CONFIRMED PRODUCTION SERVICE INVENTORY
+
+Confirmation recorded November 19, 2026, not a date assigned to the underlying work. Evidence classification: candidate_confirmed. This inventory combines the owner's latest personal design-and-operation confirmation with each documented service's actual use context. It supersedes the earlier design-only limitation on Pub/Sub and Dataflow operation.
+
+PRODUCTION SERVICE INVENTORY
+
+For an unrestricted service list, lead with the documented operational core: BigQuery, Apache Airflow, Dataform and Google Cloud Storage. Follow with relevant streaming, application, AI, compute, delivery and observability services. BigQuery was the central warehouse used daily; Airflow orchestrated workflows and Dataform supplied production modeling and transformations. This presentation order follows the owner's preference for operational centrality and the documented platform roles, not a measured ranking of frequency, spend or business impact. A narrower provider or service question takes precedence.
+
+Bolaji personally designed and operated the following documented production services as an architect and engineer:
+Service inventory: BigQuery, Apache Airflow, Dataform, Google Cloud Storage, Pub/Sub, Dataflow, Cloud Run, Cloud Functions, Vertex AI, AWS EC2, AWS S3, Artifact Registry, Cloud Logging and Cloud Build.
+GCP services: BigQuery, Dataform, Google Cloud Storage, Pub/Sub, Dataflow, Cloud Run, Cloud Functions, Vertex AI, Artifact Registry, Cloud Logging and Cloud Build.
+AWS services: AWS EC2 and AWS S3.
+Apache Airflow is documented orchestration software; this inventory does not infer a managed hosting provider for it.
+- Warehouse and transformation at Gozem: BigQuery and Dataform. Supporting record: 05_skills_and_tools.txt, CLOUD & DATA PLATFORMS and DATA INGESTION & TRANSFORMATION; 90_website_canon_llms_full.txt, Data platform modernization and FinOps transformation. BigQuery operation was also explicitly reaffirmed by the owner.
+- Storage at Gozem: Google Cloud Storage. Supporting record: 03_previous_role_gozem_gda.txt, cloud migration; 05_skills_and_tools.txt, CLOUD & DATA PLATFORMS.
+- Orchestration at Gozem: Apache Airflow. Supporting record: 05_skills_and_tools.txt, DEVOPS & CI/CD; 13_gozem_internal_projects.txt, DATA QUALITY OBSERVABILITY SYSTEM. Airflow operation was explicitly reaffirmed by the owner.
+- Streaming at Gozem: Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline. Supporting record: 20_owner_confirmed_production_scope.txt, current clarification; 90_website_canon_llms_full.txt, application-ready data flows.
+- Application and AI services at Gozem: Cloud Run, Cloud Functions and Vertex AI. Supporting record: 05_skills_and_tools.txt, CLOUD & DATA PLATFORMS and AI & LLM ENGINEERING; 18_confirmed_clarifications.txt, HANDS-ON VERTEX AI AND TECHNICAL SUPERVISION; 90_website_canon_llms_full.txt, Tech stack. Cloud Run is also used for the production iBola project. Personal service responsibility does not mean sole implementation of the recommendation model, its API or mobile integration.
+- Delivery and observability at Gozem: Artifact Registry, Cloud Logging and Cloud Build. Supporting record: 05_skills_and_tools.txt, CLOUD & DATA PLATFORMS and DEVOPS & CI/CD, combined with the owner's design-and-operation confirmation.
+- AWS compute: Bolaji personally designed and operated AWS EC2 in production for the Gozem Data Hub. Supporting record: 20_owner_confirmed_production_scope.txt.
+- AWS storage: Bolaji personally designed and operated AWS S3 in production, including bucket setup and ongoing reading and writing as an exchange layer with the product team. The employer or project for that bucket is not specified. Supporting record: 20_owner_confirmed_production_scope.txt.
+
+The personal responsibility above is owner-confirmed for the services actually used in these documented production contexts. The confirmation does not add Kafka experience, make projects or labs into production use, establish every upstream database's administration, or establish on-call responsibility or a service-level guarantee. Additional database and BI technologies have their own documented contexts in the skills and project records.
+
+CONFIRMATION PROVENANCE
+
+On November 19, 2026, the owner stated: "i operated bigquery, airflow, many other services"; "go through the knowledge base, you have them all"; "i am an architect and engineer. i designed and operated all the services i used."

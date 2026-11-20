@@ -120,3 +120,49 @@ def test_legacy_chat_exposes_answer_sources(test_client, conversation_service):
     assert response.json()["cached"] is True
     assert response.json()["answer_sources"] == sources
     assert conversation_service.process_query.call_count == 1
+
+
+@pytest.mark.parametrize(
+    "path,stream", [("/chat", False), ("/ask-agentic", False), ("/ask-agentic", True)]
+)
+def test_contextual_handoff_survives_json_sse_and_cache(
+    test_client, conversation_service, path, stream
+):
+    action = {
+        "type": "contextual_handoff",
+        "version": 1,
+        "heading": "Need more context?",
+        "links": [{"kind": "email", "url": "mailto:hello@bolablg.com?body=A%26B"}],
+    }
+    conversation_service.process_query.return_value = {
+        "answer": "The scope is not documented.",
+        "agent_type": "professional",
+        "grounding_checked": True,
+        "actions": [action],
+    }
+    payload = {
+        "user_input": "Which scope?",
+        "session_id": "handoff-delivery",
+        "stream": stream,
+    }
+    response = test_client.post(path, json=payload)
+    assert response.status_code == 200
+    if stream:
+        events = [
+            json.loads(line.removeprefix("data: "))
+            for line in response.text.splitlines()
+            if line.startswith("data: ")
+        ]
+        assert next(event for event in events if event.get("status") == "done")[
+            "actions"
+        ] == [action]
+    else:
+        assert response.json()["actions"] == [action]
+        from app.routes import streaming
+
+        streaming.cache_service.get_cached_response.return_value = (
+            streaming.cache_service.set_cached_response.call_args.args[3]
+        )
+        cached = test_client.post(path, json=payload).json()
+        assert cached["actions"] == [action] and cached["cached"]
+        assert conversation_service.process_query.call_count == 1

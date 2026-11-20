@@ -135,6 +135,17 @@ def check_facts(answer, row, actions=None, result=None):
     passes only when the response ships quick-reply action chips.
     """
     low = _accent_fold(answer.lower())
+
+    # Normalize grammatical gender only for an affirmative strict comparator.
+    # A negated or inclusive comparison must not satisfy a strict-bound fact.
+    def strict_comparator(match):
+        prefix = _re_mod.split(r"[.!?;\n]", low[: match.start()])[-1][-70:]
+        suffix = _re_mod.split(r"[.!?;\n]", low[match.end() :])[0][:100]
+        denied = _LOCAL_DENIAL.search(prefix)
+        inclusive = _re_mod.search(r"\b(?:ou|or)\s+(?:egal\w*|equal\w*)", suffix)
+        return "nonaffirmative_comparator" if denied or inclusive else "superieur a"
+
+    low = _re_mod.sub(r"\bsuperieur(?:e)?(?:s)?\s+a\b", strict_comparator, low)
     failures = []
     for pattern in row.get("must_match", []):
         if not _re_mod.search(pattern, answer, _re_mod.IGNORECASE | _re_mod.DOTALL):
