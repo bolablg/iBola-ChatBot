@@ -8,6 +8,16 @@ name: CI/CD Pipeline — Lint → Test → Stage → Security → Deploy
 # ============================================================
 
 on:
+  workflow_dispatch:
+    inputs:
+      validation:
+        description: Validation to run without publishing or deploying
+        required: true
+        default: full
+        type: choice
+        options:
+          - full
+          - production_smoke
   push:
     branches:
       - '**'
@@ -22,7 +32,7 @@ on:
     - cron: '0 3 * * *'
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.event_name }}-${{ github.ref }}-${{ github.event.schedule || inputs.validation || 'code' }}
   cancel-in-progress: true
 
 # ============================================================
@@ -171,7 +181,7 @@ jobs:
   # JOB 1c: Nightly full golden-set eval (PART 5 C4)
   # ============================================================
   nightly-eval:
-    if: github.event_name == 'schedule' && github.event.schedule == '0 3 * * *'
+    if: (github.event_name == 'schedule' && github.event.schedule == '0 3 * * *') || (github.event_name == 'workflow_dispatch' && inputs.validation == 'full')
     runs-on: ubuntu-latest
     env:
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
@@ -191,16 +201,17 @@ jobs:
           python -m pip install --require-hashes -r requirements.lock
 
       - name: Run full golden-set eval
+        id: evaluation
         env:
           GCHAT_WEBHOOK_URL: https://test-webhook.com
           GCP_PROJECT_ID: test-project
           REDIRECT_LOG_SHEET_ID: test_sheet_id_placeholder
-        run: python scripts/run_eval.py --concurrency 4
+        run: python scripts/run_eval.py --concurrency 4 --report-path local/eval_reports/nightly.json
 
       - name: Gate against accepted baseline
+        id: quality_gate
         run: |
-          REPORT=$(ls -t local/eval_reports/*.json | head -1)
-          python scripts/eval_gate.py --report "$REPORT" --strict
+          python scripts/eval_gate.py --report local/eval_reports/nightly.json --strict
 
       - name: Upload eval report
         if: always()
@@ -210,16 +221,39 @@ jobs:
           path: local/eval_reports/
           retention-days: 90
 
-      - name: Alert on failure
-        if: failure()
+      - name: Notify validation outcome
+        if: always()
+        continue-on-error: true
         env:
           GCHAT_WEBHOOK_URL: ${{ secrets.GCHAT_WEBHOOK_URL }}
+          NOTIFY_JOB_STATUS: ${{ job.status }}
+          NOTIFY_EVAL: ${{ steps.evaluation.outcome }}
+          NOTIFY_GATE: ${{ steps.quality_gate.outcome }}
         run: |
-          if [ -n "$GCHAT_WEBHOOK_URL" ]; then
-            curl -s -X POST -H 'Content-Type: application/json' \
-              -d '{"text": "Nightly full golden-set eval FAILED for ibola-chatbot. Check the workflow run and report artifact."}' \
-              "$GCHAT_WEBHOOK_URL"
+          if [ ! -f scripts/workflow_notification.py ]; then
+            echo "::warning::Detailed notification unavailable: repository checkout did not complete."
+            if [ -n "$GCHAT_WEBHOOK_URL" ]; then
+              if curl --fail --silent --show-error --output /dev/null --max-time 15 --retry 0 --proto '=https' \
+                -H 'Content-Type: application/json' \
+                --data-binary "{\"text\":\"iBola workflow outcome unavailable: checkout or setup did not complete. Run: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}\"}" \
+                "$GCHAT_WEBHOOK_URL"; then
+                echo "Basic Google Chat notification accepted."
+              else
+                echo "::warning::Basic notification delivery may be uncertain; no automatic retry."
+              fi
+            fi
+            exit 1
           fi
+          python -m scripts.workflow_notification --kind nightly --report local/eval_reports/nightly.json --receipt local/workflow_notifications/nightly.json
+
+      - name: Upload notification receipt
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: notification-nightly-${{ github.run_id }}-${{ github.run_attempt }}
+          path: local/workflow_notifications/nightly.json
+          if-no-files-found: warn
 
   # ============================================================
   # JOB 2: Auto-merge to staging (if tests pass)
@@ -290,7 +324,7 @@ jobs:
   # JOB 3: Security scan on staging
   # ============================================================
   security-scan:
-    if: github.ref == 'refs/heads/staging'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/staging'
     runs-on: ubuntu-latest
 
     steps:
@@ -346,7 +380,7 @@ jobs:
   # ============================================================
   create-prod-pr:
     needs: security-scan
-    if: github.ref == 'refs/heads/staging'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/staging'
     runs-on: ubuntu-latest
 
     steps:
@@ -388,7 +422,7 @@ jobs:
   # profile facts reaching users between deploys.
   # ============================================================
   weekly-prod-smoke:
-    if: github.event_name == 'schedule' && github.event.schedule == '0 6 * * 1'
+    if: (github.event_name == 'schedule' && github.event.schedule == '0 6 * * 1') || (github.event_name == 'workflow_dispatch' && inputs.validation == 'production_smoke')
     runs-on: ubuntu-latest
 
     steps:
@@ -416,6 +450,7 @@ jobs:
           python -m pip install --require-hashes -r requirements.lock
 
       - name: Run smoke eval against production
+        id: evaluation
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
@@ -430,9 +465,11 @@ jobs:
           -H 'X-Ibola-No-Notifications: 1' \
               -d '{"user_input":"What is Bolaji latest role?","session_id":"weekly-warmup","user_language":"en"}' || true
           done
-          python scripts/run_eval.py --tags smoke --base-url "$PROD_URL" --concurrency 4
-          REPORT=$(ls -t local/eval_reports/*.json | head -1)
-          python scripts/eval_gate.py --report "$REPORT" --strict
+          python scripts/run_eval.py --tags smoke --base-url "$PROD_URL" --concurrency 4 --report-path local/eval_reports/production-smoke.json
+
+      - name: Gate production smoke against accepted baseline
+        id: quality_gate
+        run: python scripts/eval_gate.py --report local/eval_reports/production-smoke.json --strict
 
       - name: Upload production smoke eval report
         if: always()
@@ -443,16 +480,39 @@ jobs:
           retention-days: 30
           if-no-files-found: warn
 
-      - name: Alert on failure
-        if: failure()
+      - name: Notify validation outcome
+        if: always()
+        continue-on-error: true
         env:
           GCHAT_WEBHOOK_URL: ${{ secrets.GCHAT_WEBHOOK_URL }}
+          NOTIFY_JOB_STATUS: ${{ job.status }}
+          NOTIFY_EVAL: ${{ steps.evaluation.outcome }}
+          NOTIFY_GATE: ${{ steps.quality_gate.outcome }}
         run: |
-          if [ -n "$GCHAT_WEBHOOK_URL" ]; then
-            curl -s -X POST -H 'Content-Type: application/json' \
-              -d '{"text": "Weekly production smoke eval FAILED for ibola-chatbot. Check the workflow run."}' \
-              "$GCHAT_WEBHOOK_URL"
+          if [ ! -f scripts/workflow_notification.py ]; then
+            echo "::warning::Detailed notification unavailable: repository checkout did not complete."
+            if [ -n "$GCHAT_WEBHOOK_URL" ]; then
+              if curl --fail --silent --show-error --output /dev/null --max-time 15 --retry 0 --proto '=https' \
+                -H 'Content-Type: application/json' \
+                --data-binary "{\"text\":\"iBola workflow outcome unavailable: checkout or setup did not complete. Run: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}\"}" \
+                "$GCHAT_WEBHOOK_URL"; then
+                echo "Basic Google Chat notification accepted."
+              else
+                echo "::warning::Basic notification delivery may be uncertain; no automatic retry."
+              fi
+            fi
+            exit 1
           fi
+          python -m scripts.workflow_notification --kind production_smoke --report local/eval_reports/production-smoke.json --receipt local/workflow_notifications/production-smoke.json
+
+      - name: Upload notification receipt
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: notification-production-smoke-${{ github.run_id }}-${{ github.run_attempt }}
+          path: local/workflow_notifications/production-smoke.json
+          if-no-files-found: warn
 
   # ============================================================
   # JOB 5: Deploy to production (main branch)
@@ -544,6 +604,7 @@ jobs:
             $LANGFUSE_ARGS
 
       - name: Smoke-eval the canary before cutover
+        id: canary_gate
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
@@ -568,9 +629,8 @@ jobs:
           -H 'X-Ibola-No-Notifications: 1' \
               -d '{"user_input":"What is Bolaji latest role?","session_id":"warmup","user_language":"en"}' || true
           done
-          python scripts/run_eval.py --tags smoke --base-url "$CANARY_URL" --concurrency 4
-          REPORT=$(ls -t local/eval_reports/*.json | head -1)
-          python scripts/eval_gate.py --report "$REPORT" --strict
+          python scripts/run_eval.py --tags smoke --base-url "$CANARY_URL" --concurrency 4 --report-path local/eval_reports/canary.json
+          python scripts/eval_gate.py --report local/eval_reports/canary.json --strict
 
       - name: Upload canary eval report
         if: always()
@@ -581,23 +641,18 @@ jobs:
           retention-days: 30
 
       - name: Promote canary to full traffic
+        id: promotion
         run: |
           gcloud run services update-traffic ibola-chatbot \
             --region us-central1 \
             --to-latest
 
-      - name: Clean up canary tag and alert on failure
+      - name: Clean up canary tag on failure
+        id: cleanup
         if: failure()
-        env:
-          GCHAT_WEBHOOK_URL: ${{ secrets.GCHAT_WEBHOOK_URL }}
         run: |
           gcloud run services update-traffic ibola-chatbot \
-            --region us-central1 --remove-tags canary || true
-          if [ -n "$GCHAT_WEBHOOK_URL" ]; then
-            curl -s -X POST -H 'Content-Type: application/json' \
-              -d '{"text": "DEPLOY FAILED for ibola-chatbot: canary smoke or promotion failed. Traffic stays on the previous revision; canary tag removed. Check the workflow run."}' \
-              "$GCHAT_WEBHOOK_URL"
-          fi
+            --region us-central1 --remove-tags canary
 
       - name: Create GitHub Release with notes
         env:
@@ -641,3 +696,39 @@ jobs:
             --title "Release $TAG" \
             --notes "$NOTES" \
             --latest
+
+      - name: Notify deployment outcome
+        if: always()
+        continue-on-error: true
+        env:
+          GCHAT_WEBHOOK_URL: ${{ secrets.GCHAT_WEBHOOK_URL }}
+          NOTIFY_JOB_STATUS: ${{ job.status }}
+          NOTIFY_EVAL: ${{ steps.canary_gate.outcome }}
+          NOTIFY_GATE: ${{ steps.canary_gate.outcome }}
+          NOTIFY_PROMOTE: ${{ steps.promotion.outcome }}
+          NOTIFY_CLEANUP: ${{ steps.cleanup.outcome }}
+        run: |
+          if [ ! -f scripts/workflow_notification.py ]; then
+            echo "::warning::Detailed notification unavailable: repository checkout did not complete."
+            if [ -n "$GCHAT_WEBHOOK_URL" ]; then
+              if curl --fail --silent --show-error --output /dev/null --max-time 15 --retry 0 --proto '=https' \
+                -H 'Content-Type: application/json' \
+                --data-binary "{\"text\":\"iBola workflow outcome unavailable: checkout or setup did not complete. Run: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}\"}" \
+                "$GCHAT_WEBHOOK_URL"; then
+                echo "Basic Google Chat notification accepted."
+              else
+                echo "::warning::Basic notification delivery may be uncertain; no automatic retry."
+              fi
+            fi
+            exit 1
+          fi
+          python -m scripts.workflow_notification --kind deploy --report local/eval_reports/canary.json --receipt local/workflow_notifications/deploy.json
+
+      - name: Upload notification receipt
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: notification-deploy-${{ github.run_id }}-${{ github.run_attempt }}
+          path: local/workflow_notifications/deploy.json
+          if-no-files-found: warn

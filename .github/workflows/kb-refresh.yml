@@ -71,6 +71,7 @@ jobs:
           python -m pip install --require-hashes -r requirements.lock
 
       - name: Sync canon and rebuild derived KB + vector store
+        id: sync
         env:
           GCP_PROJECT_ID: kb-refresh
           REDIRECT_LOG_SHEET_ID: kb-refresh-placeholder
@@ -88,6 +89,7 @@ jobs:
           fi
 
       - name: Commit to kb-refresh branch (enters the quality funnel)
+        id: publish
         if: steps.diff.outputs.changed == 'true'
         run: |
           git config user.name "github-actions[bot]"
@@ -96,13 +98,38 @@ jobs:
           git commit -m "kb: refresh from website canon ($(date -u +%Y-%m-%d))"
           git push --force origin kb-refresh
 
-      - name: Alert on failure
-        if: failure()
+      - name: Notify refresh outcome
+        if: always()
+        continue-on-error: true
         env:
           GCHAT_WEBHOOK_URL: ${{ secrets.GCHAT_WEBHOOK_URL }}
+          NOTIFY_JOB_STATUS: ${{ job.status }}
+          NOTIFY_SYNC: ${{ steps.sync.outcome }}
+          NOTIFY_DIFF: ${{ steps.diff.outcome }}
+          NOTIFY_CHANGED: ${{ steps.diff.outputs.changed }}
+          NOTIFY_PUBLISH: ${{ steps.publish.outcome }}
         run: |
-          if [ -n "$GCHAT_WEBHOOK_URL" ]; then
-            curl -s -X POST -H 'Content-Type: application/json' \
-              -d '{"text": "KB refresh FAILED for ibola-chatbot: the brain may be stale vs the website. Check the kb-refresh workflow run."}' \
-              "$GCHAT_WEBHOOK_URL"
+          if [ ! -f scripts/workflow_notification.py ]; then
+            echo "::warning::Detailed notification unavailable: repository checkout did not complete."
+            if [ -n "$GCHAT_WEBHOOK_URL" ]; then
+              if curl --fail --silent --show-error --output /dev/null --max-time 15 --retry 0 --proto '=https' \
+                -H 'Content-Type: application/json' \
+                --data-binary "{\"text\":\"iBola workflow outcome unavailable: checkout or setup did not complete. Run: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}\"}" \
+                "$GCHAT_WEBHOOK_URL"; then
+                echo "Basic Google Chat notification accepted."
+              else
+                echo "::warning::Basic notification delivery may be uncertain; no automatic retry."
+              fi
+            fi
+            exit 1
           fi
+          python -m scripts.workflow_notification --kind kb_refresh --receipt local/workflow_notifications/kb-refresh.json
+
+      - name: Upload notification receipt
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: notification-kb-refresh-${{ github.run_id }}-${{ github.run_attempt }}
+          path: local/workflow_notifications/kb-refresh.json
+          if-no-files-found: warn
