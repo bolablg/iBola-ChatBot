@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 
-def test_answer_delivery_sources_and_concurrent_submit():
+def test_answer_delivery_hides_source_metadata_and_preserves_concurrent_submit():
     node = shutil.which("node")
     if node is None:
         pytest.skip("Node is required for browser-script regression checks")
