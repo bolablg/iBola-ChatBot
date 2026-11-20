@@ -1,4 +1,4 @@
-version: 13
+version: 14
 source_types:
   21_production_service_inventory.txt: candidate_confirmed
   20_owner_confirmed_production_scope.txt: candidate_confirmed
@@ -499,6 +499,16 @@ required_limits:
   - 16_current_status.txt
   query_pattern: (?i)\bon.call\b
   target_pattern: on.call|production support
+- id: production_on_call_scope_unknown
+  description: Personal production design and operation do not establish on-call responsibility. Retain the retrieved record's explicit limitation without inferring willingness, refusal, rotation, response times or an uptime guarantee.
+  sources: [20_owner_confirmed_production_scope.txt, 21_production_service_inventory.txt]
+  support_pattern: '(?i)(?:does not|do not)[^.\n]{0,260}establish on.call responsibility'
+  query_pattern: '(?i)\bon.call\b'
+  target_pattern: on.call
+  explicit_record_boundary_pattern: '(?i)evidence|record|documentation|documented|dossier|documente'
+  restore_limit:
+    en: on-call responsibility
+    fr: les responsabilités d'astreinte
 - id: clinical_domain_not_established
   description: Preserve documented leadership examples while distinguishing whether retrieved evidence establishes clinical-domain leadership. This boundary concerns the evidence, not an assertion of absent capability or experience.
   direct_support_pattern: '(?i)(?:Bolaji|he|il).{0,40}(?:led|directed|managed|dirige).{0,60}(?:clinical|healthcare|public.health)'
@@ -576,7 +586,7 @@ required_details:
   sources: [20_owner_confirmed_production_scope.txt]
   support_pattern: 'For the Gozem Data Hub, Bolaji personally designed and operated AWS EC2 in production'
   query_pattern: '(?is)\A(?=[^\n]*AWS)(?=[^\n]*(?:personal|personnel))(?=[^\n]*(?:services|technologies|EC2))'
-  answer_pattern: '(?i)(?:For the Gozem Data Hub, Bolaji personally designed and operated AWS EC2 in production|(?:Bolaji|he)\s+(?:has\s+)?personally\s+(?:designed\s+and\s+operated|operated\s+and\s+designed)\s+(?:AWS\s+)?EC2\s+in production\s+for\s+(?:the\s+)?Gozem Data Hub)'
+  answer_pattern: '(?i)(?:For the Gozem Data Hub, Bolaji personally designed and operated AWS EC2 in production|(?:Bolaji|he)\s+(?:has\s+)?personally\s+(?:designed\s+and\s+operated|operated\s+and\s+designed)\s+(?:AWS\s+)?EC2\s+in production\s+for\s+(?:the\s+)?Gozem Data Hub|(?:Bolaji|he)\s+(?:has\s+)?personally\s+designed and operated\s+(?:the following\s+)?production AWS services:\s*(?:AWS\s+)?EC2\s+for\s+(?:the\s+)?Gozem Data Hub\b)'
   restore_quote:
     language: en
     label: EC2 production project
@@ -843,6 +853,11 @@ request_scopes:
     data_hub: '(?i)\b(?:Gozem\s+)?Data Hub\b'
     gozem: '(?i)\bGozem\b'
     rintio: '(?i)\bRintio\b'
+    mongo_cdc: '(?i)\bMongoDB\s+CDC\b|\bCDC\s+pipeline\b'
+  project_item_separator_pattern: '(?i)(?:,\s*(?:(?:and|et)\s+)?|\s+(?:and|et)\s+)(?:an?\s+)?(?=(?:AWS\s+)?(?:EC2|S3|Pub/Sub|Dataflow|Spark|Apache\s+NiFi|NiFi|Lakeflow)\b)'
+  project_predicate_separator_pattern: '(?i)\s+and\s+(?=(?:(?:he|Bolaji)\s+)?personally\s+(?:designed|operated|used|deployed)\b)'
+  shared_location_prefix_pattern: '(?i)^\s*(?:at|for|within|chez|dans)\s+[^,;.!?\n]{1,80},\s*'
+  unknown_project_pattern: '(?i)(?:employer|project)[^.!?;\n]{0,85}(?:not\s+(?:specified|documented)|unknown)'
   project_key: data_hub
   project_reference_pattern: '(?i)^(?:its\b|this (?:project|platform)\b|the (?:documented|published) stack\b)'
   project_anchor_pattern: '(?i)\b(?:Gozem\s+)?Data Hub\b'

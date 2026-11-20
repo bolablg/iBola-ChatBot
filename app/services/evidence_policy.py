@@ -193,6 +193,12 @@ def _claim_clauses(text: str):
 
 def documentation_limits(answer: str, targets: List[str]) -> List[str]:
     """Return requested details without an explicit, locally scoped unknown."""
+    # Equivalent relationship nouns retain their governing uncertainty clause.
+    # This changes matching, never the delivered answer or supporting evidence.
+    answer = re.sub(r"(?i)\bdirect[ -]report(?:s| counts?)\b", "direct reports", answer)
+    answer = re.sub(
+        r"(?i)\bmanager[ -]of[ -]managers layers?\b", "manager layers", answer
+    )
     clauses = _claim_clauses(_fold(answer))
     # A final predicate can govern coordinated objects even when an earlier
     # comparison elsewhere in the sentence contains another finite verb.
@@ -704,6 +710,14 @@ def constraint_failures(
             if rule.get("scope_id")
             else bool(sources & set(rule.get("sources", [])))
         )
+        if applicable and rule.get("support_pattern"):
+            applicable = any(
+                Path(d.metadata.get("source", "")).name in rule.get("sources", [])
+                and d.metadata.get("evidence_type")
+                not in {"interpretation", "summary", "pending_confirmation"}
+                and re.search(rule["support_pattern"], _fold(d.page_content))
+                for d in documents
+            )
         if rule.get("direct_support_pattern") and any(
             d.metadata.get("evidence_type")
             not in {"interpretation", "summary", "pending_confirmation"}
@@ -719,7 +733,15 @@ def constraint_failures(
         ):
             applicable = False
         if applicable and re.search(rule["query_pattern"], _fold(query)):
-            if documentation_limits(answer, [rule["target_pattern"]]):
+            missing = bool(documentation_limits(answer, [rule["target_pattern"]]))
+            if rule.get("explicit_record_boundary_pattern"):
+                missing = missing or not any(
+                    re.search(rule["target_pattern"], clause)
+                    and _UNCERTAIN.search(clause)
+                    and re.search(rule["explicit_record_boundary_pattern"], clause)
+                    for clause in _claim_clauses(answer)
+                )
+            if missing:
                 failures.append(rule["id"])
     for rule in policy.get("required_details", []):
         applicable = (
@@ -810,6 +832,58 @@ def constraint_failures(
     return failures
 
 
+def _service_claim_units(clause, rule, projects):
+    """Separate personal predicates, retaining an explicit leading location."""
+    predicate_separator = rule.get("project_predicate_separator_pattern")
+    if predicate_separator and re.search(predicate_separator, clause):
+        prefix = re.match(rule.get("shared_location_prefix_pattern", r"(?!)"), clause)
+        parts = re.split(predicate_separator, clause)
+        return [
+            unit
+            for index, part in enumerate(parts)
+            for unit in _service_claim_items(
+                ((prefix.group() if prefix else "") if index else "") + part,
+                rule,
+                projects,
+            )
+        ]
+    return _service_claim_items(clause, rule, projects)
+
+
+def _service_claim_items(clause, rule, projects):
+    """Split project-bound list items without distributing a trailing project.
+
+    The inherited predicate still requires actor/tool/production proof for each
+    item. An unknown employer does not establish or cancel personal operation.
+    """
+    separator = rule.get("project_item_separator_pattern")
+    if not separator or not re.search(rule["personal_assertion_pattern"], clause):
+        return [(clause, False)]
+    units = []
+    start = 0
+    inherited = False
+    for match in re.finditer(separator, clause):
+        left, right = clause[start : match.start()], clause[match.end() :]
+        tool = re.search(rule["subject_pattern"], left)
+        # An earlier project-delivery predicate is not this service's binding.
+        # Require the left item's own postfix project or unknown relationship.
+        relationship = left[tool.end() :] if tool else ""
+        before, after = projects(relationship), projects(right)
+        unknown_relationship = re.search(
+            rule.get("unknown_project_pattern", r"(?!)"), right
+        )
+        left_unknown = re.search(
+            rule.get("unknown_project_pattern", r"(?!)"), relationship
+        )
+        if (before or left_unknown) and (
+            (after and after != before) or unknown_relationship
+        ):
+            units.append((left, inherited))
+            start, inherited = match.end(), True
+    units.append((clause[start:], inherited))
+    return units
+
+
 def _request_scope_failures(answer, documents, query):
     """An unqualified answer inherits a requested experience setting.
 
@@ -893,7 +967,12 @@ def _request_scope_failures(answer, documents, query):
             )
         ]
         qualified = set()
-        for clause in clauses:
+        units = [
+            unit
+            for clause in clauses
+            for unit in _service_claim_units(clause, rule, projects)
+        ]
+        for clause, _ in units:
             if _UNCERTAIN.search(clause) and re.search(
                 rule["qualification_pattern"], clause
             ):
@@ -901,7 +980,7 @@ def _request_scope_failures(answer, documents, query):
                     canonical(s) for s in re.findall(rule["subject_pattern"], clause)
                 )
         previous_projects = set()
-        for clause in clauses:
+        for clause, inherited_personal in units:
             explicit_projects = projects(clause)
             referenced_projects = (
                 previous_projects
@@ -916,8 +995,10 @@ def _request_scope_failures(answer, documents, query):
                 continue
             uncertainty = _UNCERTAIN.search(clause)
             strong_claim = re.search(rule["personal_assertion_pattern"], clause)
-            if uncertainty and (
-                not strong_claim or uncertainty.start() < strong_claim.start()
+            if (
+                uncertainty
+                and not inherited_personal
+                and (not strong_claim or uncertainty.start() < strong_claim.start())
             ):
                 continue
             # An explicitly labeled inventory does not assert personal operation.
@@ -936,13 +1017,14 @@ def _request_scope_failures(answer, documents, query):
             if (
                 re.search(rule["project_answer_pattern"], clause)
                 and not strong_claim
+                and not inherited_personal
                 and (
                     re.search(rule["project_anchor_pattern"], clause)
                     or rule["project_key"] in referenced_projects
                 )
             ):
                 proven.update(project)
-            if not strong_claim:
+            if not strong_claim and not inherited_personal:
                 # A supported implementation does not establish its production
                 # setting. Named qualifications may bound that weaker claim,
                 # but never cancel an affirmative personal-operation assertion.

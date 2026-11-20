@@ -111,7 +111,7 @@ class TracingSettings(BaseSettings):
 
     model_config = SettingsConfigDict(env_prefix="LANGFUSE_", populate_by_name=True)
 
-    enabled: bool = False
+    enabled: Optional[bool] = None
     public_key: Optional[str] = None
     secret_key: Optional[str] = None
     host: str = Field(
@@ -121,8 +121,10 @@ class TracingSettings(BaseSettings):
 
     @property
     def is_active(self) -> bool:
-        """Trace when explicitly enabled OR when both keys are configured."""
-        return bool(self.enabled or (self.public_key and self.secret_key))
+        """Explicit enable/disable wins; only an unset flag auto-detects keys."""
+        if self.enabled is not None:
+            return self.enabled
+        return bool(self.public_key and self.secret_key)
 
 
 class AppSettings(BaseSettings):

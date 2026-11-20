@@ -243,7 +243,7 @@ class InProcessTarget:
         session_id = f"eval-{uuid.uuid4().hex[:12]}"
         chat_history = [tuple(pair) for pair in (history or [])]
         result = self.service.process_query(
-            question, chat_history, session_id, lang, {}
+            question, chat_history, session_id, lang, {"no_trace": True}
         )
         return result
 
