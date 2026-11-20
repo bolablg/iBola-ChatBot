@@ -44,6 +44,12 @@ PROMPT_VERSIONS = {
     "structured_output_recovery": "1.0",
     "out_of_scope": "2.0",
     "translate": "1.0",
+    "notification_suppressed": "1.0",
+}
+
+NOTIFICATION_SUPPRESSED_ANSWERS = {
+    "en": "No message was sent for this request.",
+    "fr": "Aucun message n'a été envoyé pour cette requête.",
 }
 
 # ---------------------------------------------------------------------------

@@ -238,4 +238,7 @@ def test_in_process_eval_uses_request_local_no_trace():
     target = InProcessTarget.__new__(InProcessTarget)
     target.service = Mock()
     target.ask("A fixture question", history=[["Earlier", "Answer"]])
-    assert target.service.process_query.call_args.args[-1] == {"no_trace": True}
+    assert target.service.process_query.call_args.args[-1] == {
+        "no_trace": True,
+        "no_notifications": True,
+    }

@@ -94,15 +94,20 @@ async def ask_agentic(payload: AskInput, request: Request):
     session_id = payload.session_id
     user_input = payload.user_input
     user_language = payload.user_language
+    no_notifications = (
+        request.headers.get("x-ibola-no-notifications", "").strip() == "1"
+    )
 
     history = get_history(session_id)
     chat_history = [(h[0], h[1]) for h in history]
     cache_context = cache_service.response_context(
         session_id, chat_history, service.session_data.get(session_id, {})
     )
-    cached = await cache_service.get_cached_response(
-        user_input, "agentic", user_language, context=cache_context
-    )
+    cached = None
+    if not no_notifications:
+        cached = await cache_service.get_cached_response(
+            user_input, "agentic", user_language, context=cache_context
+        )
     if cached and not payload.stream:
         cached["cached"] = True
         cached["session_id"] = session_id
@@ -115,6 +120,7 @@ async def ask_agentic(payload: AskInput, request: Request):
 
     request_info = {
         "no_trace": request.headers.get("x-ibola-no-trace", "").strip() == "1",
+        "no_notifications": no_notifications,
         "ip_address": request.client.host if request.client else "unknown",
         "user_agent": request.headers.get("user-agent", "unknown"),
         "referrer": request.headers.get("referer", "unknown"),
@@ -166,9 +172,10 @@ async def ask_agentic(payload: AskInput, request: Request):
 
     # Lead capture is owned by the service; verified answers are final.
 
-    await cache_service.set_cached_response(
-        user_input, "agentic", user_language, result, context=cache_context
-    )
+    if not no_notifications:
+        await cache_service.set_cached_response(
+            user_input, "agentic", user_language, result, context=cache_context
+        )
     record_chat_turn(session_id, user_input, result)
     result.pop("_retryable", None)
 

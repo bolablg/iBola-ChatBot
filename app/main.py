@@ -534,7 +534,7 @@ async def chat_options():
         headers={
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Ibola-No-Trace",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Ibola-No-Trace, X-Ibola-No-Notifications",
             "Access-Control-Max-Age": "86400",
         },
     )
@@ -547,6 +547,9 @@ async def chat(payload: ChatInput, request: Request):
     session_id = payload.session_id
     user_input = payload.user_input
     user_language = payload.user_language
+    no_notifications = (
+        request.headers.get("x-ibola-no-notifications", "").strip() == "1"
+    )
 
     try:
         logger.info(
@@ -564,9 +567,11 @@ async def chat(payload: ChatInput, request: Request):
         cache_context = cache_service.response_context(
             session_id, chat_history_tuples, service.session_data.get(session_id, {})
         )
-        cached_response = await cache_service.get_cached_response(
-            user_input, "chat", user_language, context=cache_context
-        )
+        cached_response = None
+        if not no_notifications:
+            cached_response = await cache_service.get_cached_response(
+                user_input, "chat", user_language, context=cache_context
+            )
 
         if cached_response:
             logger.info(
@@ -586,6 +591,7 @@ async def chat(payload: ChatInput, request: Request):
         # Collect request information for logging
         request_info = {
             "no_trace": request.headers.get("x-ibola-no-trace", "").strip() == "1",
+            "no_notifications": no_notifications,
             "ip_address": request.client.host if request.client else "unknown",
             "user_agent": request.headers.get("user-agent", "unknown"),
             "referrer": request.headers.get("referer", "unknown"),
@@ -648,13 +654,14 @@ async def chat(payload: ChatInput, request: Request):
             "trace_id": result.get("trace_id"),
         }
 
-        await cache_service.set_cached_response(
-            user_input,
-            "chat",
-            user_language,
-            response_for_frontend,
-            context=cache_context,
-        )
+        if not no_notifications:
+            await cache_service.set_cached_response(
+                user_input,
+                "chat",
+                user_language,
+                response_for_frontend,
+                context=cache_context,
+            )
         # The service owns lead capture; do not rewrite a verified answer.
 
         record_chat_turn(session_id, user_input, result)

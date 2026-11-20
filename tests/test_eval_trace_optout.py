@@ -57,7 +57,8 @@ def test_eval_prefix_and_final_http_calls_always_opt_out():
     )
     assert client.post.call_count == 2
     assert all(
-        call.kwargs["headers"] == {"X-Ibola-No-Trace": "1"}
+        call.kwargs["headers"]
+        == {"X-Ibola-No-Trace": "1", "X-Ibola-No-Notifications": "1"}
         for call in client.post.call_args_list
     )
 
@@ -71,4 +72,7 @@ def test_eval_sse_probe_always_opts_out(runner):
     ]
     with patch("httpx.Client", return_value=client):
         runner.measure_first_token("https://example.test", ["A profile question"])
-    assert client.stream.call_args.kwargs["headers"] == {"X-Ibola-No-Trace": "1"}
+    assert client.stream.call_args.kwargs["headers"] == {
+        "X-Ibola-No-Trace": "1",
+        "X-Ibola-No-Notifications": "1",
+    }

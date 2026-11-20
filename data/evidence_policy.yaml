@@ -1,4 +1,4 @@
-version: 16
+version: 17
 source_types:
   21_production_service_inventory.txt: candidate_confirmed
   20_owner_confirmed_production_scope.txt: candidate_confirmed
@@ -772,9 +772,21 @@ required_details:
 - id: operating_markets_and_headquarters
   description: Retain the documented operating-market count and headquarters-only distinction. Headquarters does not establish an employee work location or another operating market.
   sources: [19_owner_confirmed_scope.txt]
-  support_pattern: 'Singapore was company headquarters only'
+  support_pattern: 'Singapore was company headquarters only|Singapour était uniquement le siège social de l\x27entreprise'
   query_pattern: '(?i)(?:growth|croissance|developp).{0,180}(?:countries|pays)|(?:team|equipe).{0,100}\b(?:dates|limites|boundaries)\b'
   answer_pattern: '(?is)(?=.*(?:five|cinq|5).{0,45}(?:African|africain|operating|operationnel))(?=.*(?:Singapore|Singapour).{0,65}(?:headquarters|siege))'
+  restore_quotes:
+    en:
+      language: en
+      section_pattern: '^GEOGRAPHIC SCOPE$'
+      label: Confirmed geographic scope
+      pattern: 'The five African operating markets were Togo, Benin, Cameroon, Gabon, and Congo\. Singapore was company headquarters only for this claim, not an additional African operating market or a team-member work location\.'
+    fr:
+      language: fr
+      section_pattern: '^FRENCH SUMMARY OF CONFIRMED TEAM STAGES$'
+      label: Périmètre géographique confirmé
+      section_label: Chronologie confirmée de l'équipe
+      pattern: 'L\x27équipe soutenait cinq marchés opérationnels africains : Togo, Bénin, Cameroun, Gabon et Congo\. Singapour était uniquement le siège social de l\x27entreprise, et non un marché opérationnel supplémentaire ni un lieu de travail des membres de l\x27équipe\.'
 - scope_id: recommendation_order_share
   query_pattern: (?i)(?=.*(?:12|metric|figure|mesure|chiffre))(?=.*(?:recommend|recommand))
   id: recommendation_delivered_order_denominator_missing

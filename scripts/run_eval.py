@@ -246,12 +246,16 @@ class InProcessTarget:
         session_id = f"eval-{uuid.uuid4().hex[:12]}"
         chat_history = [tuple(pair) for pair in (history or [])]
         result = self.service.process_query(
-            question, chat_history, session_id, lang, {"no_trace": True}
+            question,
+            chat_history,
+            session_id,
+            lang,
+            {"no_trace": True, "no_notifications": True},
         )
         return result
 
 
-EVAL_HTTP_HEADERS = {"X-Ibola-No-Trace": "1"}
+EVAL_HTTP_HEADERS = {"X-Ibola-No-Trace": "1", "X-Ibola-No-Notifications": "1"}
 
 
 class HTTPTarget:

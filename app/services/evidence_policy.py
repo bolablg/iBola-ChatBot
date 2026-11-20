@@ -954,6 +954,8 @@ def constraint_failures(
             if rule.get("scope_id")
             else any(
                 Path(doc.metadata.get("source", "")).name in rule.get("sources", [])
+                and doc.metadata.get("evidence_type")
+                in {None, "curated", "published", "candidate_confirmed"}
                 and re.search(rule["support_pattern"], doc.page_content)
                 and (
                     not rule.get("section_pattern")
