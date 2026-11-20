@@ -1,0 +1,150 @@
+[
+  {
+    "id": "recruiter-adi-02-t5",
+    "origin": "v1.2.6 live HTTP replay, eval_20261119_175200.json",
+    "question": "Our team mandates Power BI semantic models and DAX, with no ramp-up allowance. Has he actually used those in production, or would that be an experience gap?",
+    "history": [
+      [
+        "You describe management reporting, but I need finance-grade metric consistency. What evidence shows how he reconciled KPI definitions, data quality and conflicting stakeholder numbers?",
+        "Bolaji designed and implemented an enterprise metrics governance framework, establishing a single source of truth for business metrics. This included creating a centralized metrics catalog documenting KPI derivations, relationships, and calculation formulas, which standardized KPI computation through reusable BigQuery and Dataform assets. His work also resolved long-standing reporting disputes between Finance, Operations, and Product by setting a governance bar across over 250 production pipelines."
+      ],
+      [
+        "The framework across five markets is relevant. What measured adoption or efficiency result came from his self-service analytics work, and what was the denominator and time period?",
+        "Bolaji's self-service analytics work, specifically the Gozem Data Hub, served over 700 people including employees, field agents, and partners across five African countries by the end of his mandate. Two engineers he onboarded subsequently shipped two additional self-service apps onto the platform. I don't have information about information on measured adoption or efficiency results from his self-service analytics work, nor the denominator and time period for such results. It does mention the number of people served by the Gozem Data Hub and the number of additional self-service apps shipped. You may be able to find more information by emailing hello@bolablg.com."
+      ]
+    ],
+    "language": "en",
+    "delivered_answer": "Bolaji's documented experience in data visualization and BI includes Looker, Looker Studio, Metabase, Plotly (Python), Kibana, and Apache Superset. While Power BI and Looker Studio share concepts such as dashboarding and modeling, his documented experience does not establish direct Power BI, DAX, or Tableau production use or proficiency, indicating this would be an experience gap.",
+    "observed_unsupported_claims": [],
+    "documents": [
+      {
+        "page_content": "Source: 05_skills_and_tools.txt | Title: BOLAJI BALOGOUN - SKILLS & TOOLS WITH APPLICATION CONTEXT | Section: TOOL CATEGORY COMPARISONS (transferable concepts): | Parent context: BOLAJI BALOGOUN - SKILLS & TOOLS WITH APPLICATION CONTEXT\n\nThese comparisons describe shared concepts. They do not document direct production use, equal proficiency, or feature parity. Actual tools used are identified in the separate \"Used at\" entries above.\n- dbt and Dataform share SQL-based modeling, DAG, testing, documentation, and data-warehouse CI/CD concepts. Bolaji's documented framework implementation was in Dataform at Gozem; this comparison does not establish direct dbt use.\n  Est-ce que Bolaji connait dbt: son experience documentee porte sur Dataform et son framework de templates chez Gozem. Les concepts SQL, DAG et tests sont transferables; l'utilisation directe de dbt n'est pas etablie par cette comparaison.\n- Power BI and Looker Studio share dashboard, modeling, visual-storytelling, sharing, and governance concepts. This comparison does not establish Power BI, DAX, or Tableau production use or proficiency. The documented Gozem tools in the BI record are Looker and Looker Studio.\n- Snowflake/Redshift and BigQuery/ClickHouse share cloud-warehouse, MPP SQL, partitioning, clustering, and cost-tuning concepts. This comparison does not establish direct Snowflake or Redshift use.\n- Airflow and Dagster share workflow-orchestration, scheduling, monitoring, and pipeline-management concepts. This comparison does not establish direct Dagster use.",
+        "metadata": {
+          "source": "05_skills_and_tools.txt",
+          "chunk_id": "05_skills_and_tools.txt::10",
+          "section_header": "TOOL CATEGORY COMPARISONS (transferable concepts):",
+          "evidence_type": "interpretation"
+        }
+      },
+      {
+        "page_content": "Source: 05_skills_and_tools.txt | Title: BOLAJI BALOGOUN - SKILLS & TOOLS WITH APPLICATION CONTEXT | Section: DATA VISUALIZATION & BI: | Parent context: BOLAJI BALOGOUN - SKILLS & TOOLS WITH APPLICATION CONTEXT\n\n- Looker and Looker Studio: dashboards, data modeling layers.\n  Used at: Gozem (performance monitoring, data quality dashboards, management reporting).\n\n- Metabase: self-service analytics.\n  Used at: Gozem (the no-code exploration layer that halved routine query load on the central data team, with 12+ active manager users).\n\n- Plotly (Python) and analytics web apps: interactive charts and data applications.\n  Used at: Gozem (Data Hub self-service analytics modules), personal projects.\n\n- Kibana and Apache Superset: log and BI dashboards.\n  Used at: Rintio (agricultural data dashboards and leadership reporting).",
+        "metadata": {
+          "source": "05_skills_and_tools.txt",
+          "chunk_id": "05_skills_and_tools.txt::6",
+          "section_header": "DATA VISUALIZATION & BI:",
+          "evidence_type": "curated"
+        }
+      }
+    ]
+  },
+  {
+    "id": "recruiter-adi-05-t5",
+    "origin": "v1.2.6 live HTTP replay, eval_20261119_175200.json",
+    "question": "Le panneau de cette page indique une croissance de quatre à plus de quatorze personnes et cinq pays africains. Votre réponse parle de zéro à quatorze et de six pays, mais en nomme cinq. Quelle formulation puis-je retenir sans ajouter de faits non établis ?",
+    "history": [
+      [
+        "Vous mentionnez une équipe développée de zéro à plus de quatorze personnes dans six pays et à Singapour. Quelles sont les dates et les limites exactes de cette affirmation ? Je dois distinguer l’effectif hérité, les recrutements personnels et le périmètre opérationnel.",
+        "Bolaji a développé l'équipe data de Gozem de zéro à plus de 14 professionnels entre avril 2025 et juillet 2026, au cours de son mandat de Data Director. Il a personnellement coordonné l'intégration de 12 nouvelles recrues parmi plus de 50 candidats évalués, et ces professionnels étaient répartis dans six pays d'Afrique subsaharienne (Togo, Bénin, Cameroun, Congo, Gabon) et à Singapour. Cette équipe couvrait huit domaines analytiques."
+      ],
+      [
+        "Pour notre mission, je dois documenter des résultats vérifiables. La réduction de moitié des demandes de requêtes et les douze managers formés sont-elles mesurées sur une période connue, avec une méthode de comparaison documentée ?",
+        "Je n'ai pas de détails sur la période de mesure ou la méthode de comparaison pour la réduction des requêtes et l'adoption par les managers. Je peux vous fournir des informations sur le développement de pipelines de détection de fraude basés sur le ML ou sur la philosophie de leadership de Bolaji, ou vous pouvez le joindre à hello@bolablg.com."
+      ]
+    ],
+    "language": "fr",
+    "delivered_answer": "Je n'ai pas assez d'informations vérifiées pour répondre à cette question précise.",
+    "observed_unsupported_claims": [
+      "L'équipe est passée de zéro à 4 professionnels durant sa période en tant que Global Data Analyst"
+    ],
+    "documents": [
+      {
+        "page_content": "Source: 19_owner_confirmed_scope.txt | Title: BOLAJI BALOGOUN - OWNER-CONFIRMED CLAIM SCOPE | Section: GEOGRAPHIC SCOPE | Parent context: BOLAJI BALOGOUN - OWNER-CONFIRMED CLAIM SCOPE\n\nThe five African operating markets were Togo, Benin, Cameroon, Gabon, and Congo. Singapore was company headquarters only for this claim, not an additional African operating market or a team-member work location. Team size, operating markets and headquarters are separate attributes.",
+        "metadata": {
+          "source": "19_owner_confirmed_scope.txt",
+          "chunk_id": "19_owner_confirmed_scope.txt::3",
+          "section_header": "GEOGRAPHIC SCOPE",
+          "evidence_type": "candidate_confirmed"
+        }
+      },
+      {
+        "page_content": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN · Data Engineer · Data Architect (full content) | Section: Platform engineering and leadership | Parent context: Bolaji BALOGOUN · Biography\n\nBolaji was Gozem’s first data hire. As Global Data Analyst, he built the analytics function, led the migration to Google Cloud and BigQuery, and automated more than 50 analytical and operational workflows. He later led the data function as Head of Data, growing the team from 4 to 14+ and overseeing governance, FinOps, analytics engineering, and fintech data products. As Data Director through July 2026, he led multidisciplinary data teams supporting five African operating countries and co-led Gozem’s AI strategy.",
+        "metadata": {
+          "source": "90_website_canon_llms_full.txt",
+          "chunk_id": "90_website_canon_llms_full.txt::3",
+          "section_header": "Platform engineering and leadership",
+          "evidence_type": "published"
+        }
+      },
+      {
+        "page_content": "Source: 19_owner_confirmed_scope.txt | Title: BOLAJI BALOGOUN - OWNER-CONFIRMED CLAIM SCOPE | Section: GOZEM TEAM GROWTH AND ROLE PERIODS | Parent context: BOLAJI BALOGOUN - OWNER-CONFIRMED CLAIM SCOPE\n\nBolaji was the first data hire in 2019. The initial team grew to 4 during the Global Data Analyst era (November 2019 - September 2022). The organization then grew from 4 to 14+ during his Head of Data period (October 2022 - March 2025). His later Data Director period was April 2025 - July 2026. The full team build must not be dated entirely to that later mandate. This confirmation does not establish direct-report counts, manager layers, department budget authority, or the precise dates of all 12 hires.",
+        "metadata": {
+          "source": "19_owner_confirmed_scope.txt",
+          "chunk_id": "19_owner_confirmed_scope.txt::2",
+          "section_header": "GOZEM TEAM GROWTH AND ROLE PERIODS",
+          "evidence_type": "candidate_confirmed"
+        }
+      },
+      {
+        "page_content": "Source: 16_current_status.txt | Title: BOLAJI BALOGOUN - CURRENT STATUS & AVAILABILITY (AS OF NOVEMBER 2026) | Section: WHAT HE BRINGS (headline numbers from his Gozem tenure): | Parent context: BOLAJI BALOGOUN - CURRENT STATUS & AVAILABILITY (AS OF NOVEMBER 2026)\n\n- Built and led a data organization from 4 to 14+ professionals during the Head of Data period (October 2022 - March 2025) supporting five African operating markets, reporting at C-level.\n- Chartered the Gozem Data Hub serving over 700 people (employees, field agents, and partners) across five African countries.\n- Cut Google Cloud costs by 42.57% in a single quarter while maintaining SLAs.\n- Shipped 30+ production AI-powered tools and set governance across 250+ production pipelines.\n- Co-led a group AI strategy: 49 validated use cases, 6 in implementation, near-full top-management adoption of daily AI assistance.\n- Flagged a 25M+ XOF fraud scheme through the fintech analytics infrastructure he built.",
+        "metadata": {
+          "source": "16_current_status.txt",
+          "chunk_id": "16_current_status.txt::2",
+          "section_header": "WHAT HE BRINGS (headline numbers from his Gozem tenure):",
+          "evidence_type": "curated"
+        }
+      },
+      {
+        "page_content": "Source: 14_career_advice.txt | Title: BOLAJI BALOGOUN - CAREER ADVICE FOR ASPIRING DATA AND AI PROFESSIONALS | Section: BOLAJI BALOGOUN - CAREER ADVICE FOR ASPIRING DATA AND AI PROFESSIONALS\n\nThis advice is grounded in Bolaji's own career journey, from a Statistics degree in Benin to Data Director owning a group data function with a team he grew from 4 to 14+ during the Head of Data period (October 2022 - March 2025) supporting five African operating markets.",
+        "metadata": {
+          "source": "14_career_advice.txt",
+          "chunk_id": "14_career_advice.txt::0",
+          "section_header": "BOLAJI BALOGOUN - CAREER ADVICE FOR ASPIRING DATA AND AI PROFESSIONALS",
+          "evidence_type": "curated"
+        }
+      }
+    ]
+  },
+  {
+    "id": "recruiter-sda-05-t2",
+    "origin": "v1.2.6 live HTTP replay, eval_20261119_175200.json",
+    "question": "Which production AWS services and streaming technologies has Bolaji personally designed or operated? In particular, is Kafka architecture delivery documented?",
+    "history": [
+      [
+        "Recruiter simulation for a fictional Senior Data Architect role: an AWS-native platform needs Kafka streaming, schema evolution, and strong operational ownership. What relevant production architecture experience can you establish for Bolaji?",
+        "Bolaji is always open to the right challenge in AI and data. Share the opportunity details or schedule a call to discuss."
+      ]
+    ],
+    "language": "en",
+    "delivered_answer": "Bolaji architected and led the development of the Gozem Data Hub, which utilized AWS EC2 for operational applications in production. He also personally uses AWS S3 for storage. Information regarding Kafka architecture delivery is not available in the provided documentation. Bolaji has production experience with other streaming technologies such as Pub/Sub and Dataflow.",
+    "observed_unsupported_claims": [],
+    "documents": [
+      {
+        "page_content": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN · Data Engineer · Data Architect (full content) | Section: Tech stack | Parent context: Bolaji BALOGOUN · Biography\n\nBolaji personally uses Cloud Functions and Vertex AI in production.\n\n\n- Data platforms & governance: BigQuery · ClickHouse · BigLake · Databricks (projects and labs) · Dataplex · Unity Catalog\n- Databases & storage: PostgreSQL · MongoDB · Google Cloud Storage · AWS S3 · Delta Lake · Apache Iceberg\n- Pipelines & streaming: Airflow · Dataform · Dataflow · Apache NiFi · Lakeflow · Spark · Pub/Sub\n- Languages & frameworks: Python · SQL · R · Bash · Scala · FastAPI\n- Cloud & delivery: Google Cloud · Compute Engine · AWS · AWS EC2 · Cloud Run · Cloud Functions · Docker · Artifact Registry · Git\n- Analytics & visualization: Data Studio · Superset · Metabase · Grafana\n- AI & automation: Vertex AI · Gemini · Codex · RAG · LangGraph (iBola project) · MCP",
+        "metadata": {
+          "source": "90_website_canon_llms_full.txt",
+          "chunk_id": "90_website_canon_llms_full.txt::47",
+          "section_header": "Tech stack",
+          "evidence_type": "published"
+        }
+      },
+      {
+        "page_content": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN · Data Engineer · Data Architect (full content) | Section: Data products at operating scale | Parent context: Bolaji BALOGOUN · Biography\n\nBolaji architected and led the development of the [Gozem Data Hub](https://www.bolablg.com/experience/gozem-director/#data-hub), a governed operational and analytics platform adopted by 700+ employees, field agents, and partners across five African countries. It provided self-service access to operational applications, analytics, AI tools, and automation. The published case documents React, FastAPI, AWS EC2, BigQuery, MongoDB, Nginx, Docker, Google Cloud Storage, Artifact Registry, and Python.\n\nThe data team monitored more than 250 pipelines. Bolaji established governance, observability, and reliability standards across 300+ workflow orchestration, transformation, and metrics-layer assets.",
+        "metadata": {
+          "source": "90_website_canon_llms_full.txt",
+          "chunk_id": "90_website_canon_llms_full.txt::4",
+          "section_header": "Data products at operating scale",
+          "evidence_type": "published"
+        }
+      },
+      {
+        "page_content": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN · Data Engineer · Data Architect (full content) | Section: Credentials | Parent context: Bolaji BALOGOUN · Biography\n\n- Google Cloud Professional Data Engineer Certificate · Google Cloud · Nov 2025\n- Stream Processing and Analysis with Apache Spark™ · Databricks Academy · Oct 2026\n- Monitoring and Optimizing Apache Spark Workloads on Databricks · Databricks Academy · Oct 2026\n- Developing Applications with Apache Spark™ · Databricks Academy · Oct 2026\n- Introduction to Apache Spark 4 · Databricks Academy · Oct 2026\n- DevOps Essentials for Data Engineering · Databricks Academy · Sep 2026\n- Build Data Pipelines with Lakeflow Spark Declarative Pipelines · Databricks Academy · Sep 2026\n- Deploy Workloads with Lakeflow Jobs · Databricks Academy · Sep 2026\n- Data Ingestion with Lakeflow Connect · Databricks Academy · Sep 2026\n- Academy Accreditation - Databricks Fundamentals · Databricks Academy · Sep 2026\n- AWS Data Engineering Foundations Certificate · AWS Training & Certification · Aug 2026\n- Apache Airflow Hands-on Certificate · Udemy · Feb 2024\n- McKinsey.org Forward Program · McKinsey & Company · Jul 2025",
+        "metadata": {
+          "source": "90_website_canon_llms_full.txt",
+          "chunk_id": "90_website_canon_llms_full.txt::42",
+          "section_header": "Credentials",
+          "evidence_type": "published"
+        }
+      }
+    ]
+  }
+]

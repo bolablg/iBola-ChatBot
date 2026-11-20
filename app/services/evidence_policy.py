@@ -139,24 +139,33 @@ def _claim_clauses(text: str):
     # A qualifier can govern several noun phrases. Separate a new assertion
     # only after the left side already contains a predicate or qualifier.
     predicate = re.compile(
-        r"\b(?:is|was|are|were|has|have|had|does|did|est|sont|etait)\b", re.I
+        r"\b(?:is|was|are|were|has|have|had|does|did|used|operated|built|designed|deployed|est|sont|etait)\b",
+        re.I,
     )
     new_assertion = re.compile(
         r"(?:(?:\w+\s+){1,7}(?:is|was|are|were|has|have|had|held|holds?|owns?|owned|approved|"
-        r"manages?|managed|demonstrates?|proves?|est|sont|etait|detient|possede|gere|approuve)\b|"
+        r"manages?|managed|demonstrates?|proves?|appears?|appearing|listed|only|used|est|sont|etait|detient|possede|gere|approuve)\b|"
         r"(?:has|have|had|never|does|did)\b)",
         re.I,
     )
     result = []
     for sentence in re.split(
-        r"[.;\n]|\b(?:but|mais|yet|however|though)\b", text, flags=re.I
+        r"[.;\n]|\b(?:but|mais|yet|however|though|therefore|donc)\b|"
+        r",(?=\s*(?:indicating|implying|meaning|ce qui|cela))|\bso that means\b",
+        text,
+        flags=re.I,
     ):
         start = 0
         for separator in re.finditer(
-            r",\s*(?:(?:and|et)\s+)?|\s+(?:and|et)\s+", sentence, re.I
+            r",\s*(?:(?:and|et)\s+)?|\s+(?:and|et|with|avec)\s+", sentence, re.I
         ):
             left = sentence[start : separator.start()]
             right = sentence[separator.end() :]
+            if separator.group().strip().casefold() in {
+                "with",
+                "avec",
+            } and not re.search(r"\bproduction\b", left, re.I):
+                continue
             governed_detail = _UNCERTAIN.search(left) and re.match(
                 r"(?i)(?:who|what|which|how|whether|where|when|qui|quel\w*|comment|si|ou|quand)\b",
                 right,
@@ -306,6 +315,46 @@ def describe_constraints(ids):
     )
 
 
+def _denied_assertion(clause, match):
+    """A local denial applies to this assertion, not another tool or inference."""
+    return bool(
+        re.search(
+            r"(?i)\b(?:not|no|never|pas|aucun|aucune)\s+"
+            r"(?:(?:a|an|un|une|confirmed|established|proven|confirme\w*|etabli\w*)\s+){0,3}$",
+            clause[: match.start()],
+        )
+        or re.search(
+            r"(?i)\bno (?:evidence|documentation) (?:of|for) (?:an? )?$",
+            clause[: match.start()],
+        )
+        or _UNCERTAIN.match(
+            re.sub(
+                r"(?i)^\s*(?:is|remains|est|reste)\s+",
+                "",
+                clause[match.end() :].lstrip(" :"),
+            )
+        )
+    )
+
+
+def _binding(value):
+    words = (
+        "zero one two three four five six seven eight nine ten eleven twelve "
+        "thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty"
+    ).split()
+    french = (
+        "zero un deux trois quatre cinq six sept huit neuf dix onze douze "
+        "treize quatorze quinze seize dix-sept dix-huit dix-neuf vingt"
+    ).split()
+    numbers = {
+        word: str(i)
+        for vocabulary in (words, french)
+        for i, word in enumerate(vocabulary)
+    }
+    folded = _fold(value).casefold().strip()
+    return numbers.get(folded, folded)
+
+
 def constraint_failures(
     answer: str, documents: List[Document], query: str = ""
 ) -> List[str]:
@@ -322,20 +371,65 @@ def constraint_failures(
     ]
     for rule in policy.get("assertion_rules", []):
         for clause in _claim_clauses(answer):
+            if rule.get("negation_pattern") and re.search(
+                rule["negation_pattern"], clause
+            ):
+                continue
             matches = list(re.finditer(rule["answer_pattern"], clause))
-            if not matches or uncertain.search(clause):
+            if rule.get("local_negation"):
+                matches = [m for m in matches if not _denied_assertion(clause, m)]
+            if not matches or (
+                not rule.get("local_uncertainty") and uncertain.search(clause)
+            ):
                 continue
             if rule.get("affirmation_pattern") and not re.search(
                 rule["affirmation_pattern"], clause
             ):
                 continue
-            support = [
-                m.group()
-                for text in evidence
-                for m in re.finditer(rule["support_pattern"], text)
-                if not uncertain.search(text[max(0, m.start() - 60) : m.end() + 60])
-            ]
-            if rule.get("match_subject"):
+            support_matches = []
+            support = []
+            for text in evidence:
+                spans = _claim_clauses(text) if rule.get("clause_support") else [text]
+                for span in spans:
+                    if rule.get("negation_pattern") and re.search(
+                        rule["negation_pattern"], span
+                    ):
+                        continue
+                    if rule.get("exclude_support_pattern") and re.search(
+                        rule["exclude_support_pattern"], span
+                    ):
+                        continue
+                    if rule.get("support_required_pattern") and not re.search(
+                        rule["support_required_pattern"], span
+                    ):
+                        continue
+                    for m in re.finditer(rule["support_pattern"], span):
+                        qualifier = (
+                            span
+                            if rule.get("clause_support")
+                            else span[max(0, m.start() - 60) : m.end() + 60]
+                        )
+                        if uncertain.search(qualifier) or (
+                            rule.get("local_negation") and _denied_assertion(span, m)
+                        ):
+                            continue
+                        support_matches.append(m)
+                        support.append(
+                            span if rule.get("clause_support") else m.group()
+                        )
+            if rule.get("binding_groups"):
+                bindings = rule["binding_groups"]
+                proven = all(
+                    any(
+                        all(
+                            _binding(m.group(key)) == _binding(s.group(key))
+                            for key in bindings
+                        )
+                        for s in support_matches
+                    )
+                    for m in matches
+                )
+            elif rule.get("match_subject"):
                 # A negative statement about one tool cannot prove non-use of another.
                 proven = all(
                     any(
@@ -346,21 +440,39 @@ def constraint_failures(
                     for match in matches
                 )
             elif rule.get("subject_pattern"):
+                # Proof subjects come only from the operation's captured objects,
+                # never all tool names elsewhere in the supporting clause.
+                support_subject_text = (
+                    [
+                        m.group(group) or ""
+                        for m in support_matches
+                        for group in rule["support_subject_groups"]
+                    ]
+                    if rule.get("support_subject_groups")
+                    else support
+                )
                 proven_subjects = {
                     subject.casefold()
-                    for text in support
+                    for text in support_subject_text
                     for subject in re.findall(rule["subject_pattern"], text)
                 }
-                proven = all(
-                    {
+                subjects = {
+                    subject.casefold()
+                    for subject in re.findall(
+                        rule["subject_pattern"],
+                        (
+                            clause
+                            if rule.get("subjects_from_query")
+                            else " ".join(m.group() for m in matches)
+                        ),
+                    )
+                }
+                if not subjects and rule.get("subjects_from_query"):
+                    subjects = {
                         subject.casefold()
-                        for subject in re.findall(
-                            rule["subject_pattern"], match.group()
-                        )
+                        for subject in re.findall(rule["subject_pattern"], query)
                     }
-                    <= proven_subjects
-                    for match in matches
-                )
+                proven = bool(subjects) and subjects <= proven_subjects
             else:
                 proven = bool(support)
             if not proven:
