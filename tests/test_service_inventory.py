@@ -539,3 +539,19 @@ def test_annotated_inventory_cannot_fall_outside_returned_evidence_cap(docs):
         )
         is None
     )
+
+
+def test_real_browser_inventory_header_does_not_repeat_a_complete_list(docs):
+    prior = "Bolaji personally designed and operated a comprehensive set of production services spanning Google Cloud and AWS. His core inventory includes BigQuery, Apache Airflow, Dataform, Google Cloud Storage, Pub/Sub, Dataflow, Cloud Run, Cloud Functions, Vertex AI, AWS EC2, AWS S3, Artifact Registry, Cloud Logging, and Cloud Build."
+    state = {"original_query": FOLLOWUP, "chat_history": [(QUESTION, prior)]}
+    assert (
+        inventory_followup(state, docs, "English")
+        == "The confirmed production-service inventory is already covered above."
+    )
+    coverage = next(
+        d.metadata["conversation_coverage"]
+        for d in docs
+        if "conversation_coverage" in d.metadata
+    )
+    assert coverage["all_relevant_labels_previously_listed"]
+    assert not coverage["remaining_labels"]
