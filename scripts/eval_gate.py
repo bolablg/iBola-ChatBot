@@ -82,8 +82,15 @@ def main():
         )
 
     for row in report.get("results", []):
-        if "recruiter_regression" in row.get("tags", []) and not row.get("fact_pass"):
-            failures.append(f"recruiter regression failed: {row['id']}")
+        if "recruiter_regression" in row.get("tags", []):
+            if not row.get("fact_pass"):
+                failures.append(f"recruiter regression failed: {row['id']}")
+            for dimension in ("accuracy", "faithfulness"):
+                score = (row.get("scores") or {}).get(dimension)
+                if not isinstance(score, (int, float)) or score < 8:
+                    failures.append(
+                        f"recruiter regression {row['id']} {dimension}: {score}, requires >= 8"
+                    )
 
     if agg.get("errors"):
         failures.append(

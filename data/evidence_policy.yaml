@@ -1,4 +1,4 @@
-version: 2
+version: 3
 source_types:
   90_website_canon_llms_full.txt: published
   18_confirmed_clarifications.txt: candidate_confirmed
@@ -38,6 +38,41 @@ assertion_rules:
   support_pattern: (?i)(?:personally (?:used|deployed|operated).{0,35}\b(?:Lakeflow|Databricks|Delta Lake|Unity
     Catalog)\b.{0,20}in production)
   subject_pattern: (?i)\b(?:Lakeflow|Databricks|Delta Lake|Unity Catalog)\b
+- id: growth_baseline_requires_explicit_endpoints
+  description: A first hire or growth to a size does not establish a zero starting size. Retain the documented growth endpoints and their own role period; remove the inferred baseline.
+  answer_pattern: '(?i)(?:team|organization|organisation|equipe|effectif)[^.;\n]{0,100}(?:from|de)\s+(?:zero|0)\s+(?:to|a)\s+(?:plus de\s+)?(?P<endpoint>\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|quatre|quatorze)'
+  support_pattern: '(?i)(?:team|organization|organisation|equipe|effectif)[^.;\n]{0,100}(?:from|de)\s+(?:zero|0)\s+(?:to|a)\s+(?:plus de\s+)?(?P<endpoint>\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|quatre|quatorze)'
+  binding_groups: [endpoint]
+  clause_support: true
+  local_negation: true
+- id: deficiency_requires_same_tool_evidence
+  description: Missing documentation is a verification gap, not an established experience gap or incapacity. Remove the inferred deficiency and explicitly keep each requested tool unverified unless the same tool has explicit evidence of non-use or deficiency.
+  answer_pattern: '(?i)\b(?:experience gap|skills? gap|capability gap|lack of (?:experience|proficiency)|lacks? (?:experience|proficiency)|lacune (?:d.experience|de competences?)|manque (?:d.experience|de competences?))\b'
+  support_pattern: '(?i)\b(?:experience gap|skills? gap|capability gap|lack of (?:experience|proficiency)|lacks? (?:experience|proficiency)|lacune (?:d.experience|de competences?)|manque (?:d.experience|de competences?))\b'
+  subject_pattern: '(?i)\b(?:Power BI|DAX|Tableau|dbt|Kafka|Snowflake|Redshift|Dagster|Pub/Sub|Dataflow|Lakeflow|Databricks)\b'
+  subjects_from_query: true
+  local_uncertainty: true
+  clause_support: true
+  local_negation: true
+- id: streaming_production_requires_scoped_evidence
+  description: A tool inventory or teaching module does not establish personal production experience. Bind each tool to the named actor's operation and experience setting. Retain documented implementations at their stated scope, or label production ownership unverified.
+  answer_pattern: '(?i)(?:\bproduction\b[^.;\n]*\b(?:Pub/Sub|Dataflow)\b[^.;\n]*|\b(?:Pub/Sub|Dataflow)\b[^.;\n]*\bproduction\b[^.;\n]*)'
+  support_pattern: |-
+    (?ix)\b(?:Bolaji|he|il)\s+(?:(?:personally|directly|personnellement|directement|a)\s+)?
+    (?:
+      (?:used|operated|built|designed|deployed|utilise|exploite|construit|concu|deploye)\s+
+      (?P<tools_before>(?:Google\s+)?(?:Pub/Sub|Dataflow)(?:\s*(?:,|and|et|with|avec)\s*(?:Google\s+)?(?:Pub/Sub|Dataflow))*)
+      (?:\s+(?:pipelines?|systems?|applications?))?\s+(?:in|en)\s+production
+    |
+      (?:has|had)\s+(?:personal\s+)?production\s+experience\s+with\s+
+      (?P<tools_after>(?:Google\s+)?(?:Pub/Sub|Dataflow)(?:\s*(?:,|and|et)\s*(?:Google\s+)?(?:Pub/Sub|Dataflow))*)
+    )
+  subject_pattern: '(?i)\b(?:Pub/Sub|Dataflow)\b'
+  support_subject_groups: [tools_before, tools_after]
+  negation_pattern: '(?i)\b(?:not|no|pas|non)\s+(?:(?:a|in|personal|confirmed|documented|en)\s+){0,3}production\b'
+  clause_support: true
+  local_negation: true
+  exclude_support_pattern: '(?i)\b(?:taught|teaches|teaching|supervised|delivered|designed)\b[^.;\n]{0,60}\b(?:training|bootcamp|certificate|certification|module|lab|prototype|formation|atelier)\b|\b(?:for|during|in|en|pour)\s+(?:a\s+|an\s+)?(?:training|bootcamp|lab|prototype|formation|atelier)\b'
 metric_constraints:
 - id: event_volume_average_and_population
   description: The documented average belongs to the Gozem streaming workload, not an established maximum or
@@ -62,6 +97,10 @@ metric_constraints:
   - (?i)(?:six|6)\s+(?:implemented|completed|deployed|production)\s+(?:AI\s+)?use cases
   - (?i)(?:six|6)\s+(?:AI\s+)?use cases\s+(?:were|are|have been)\s+(?:implemented|completed|deployed)
 facets:
+- id: streaming_implementation
+  query_pattern: '(?i)\b(?:streaming|Pub/Sub|Dataflow|Kafka)\b'
+  terms: MongoDB CDC change events Pub/Sub Dataflow BigQuery
+  sources: [90_website_canon_llms_full.txt, 13_gozem_internal_projects.txt]
 - id: ai_project_overview
   query_pattern: (?i)(?:AI work|AI projects?|travaux en IA|projets? (?:en )?IA|LLM projects?)
   terms: Gozem LLM invoice extraction support chatbot AI strategy RAG
@@ -328,6 +367,24 @@ required_identity:
   query_pattern: (?i)\b(?:aws|ec2)\b
   answer_pattern: (?i)(?:EC2|700|operational.{0,15}platform|governed.{0,20}platform)
 required_details:
+- id: team_growth_first_hire
+  description: Preserve the retrieved first-hire year and initial team growth to a size without inferring a zero baseline.
+  sources: [19_owner_confirmed_scope.txt]
+  support_pattern: 'first data hire in 2019'
+  query_pattern: '(?i)(?:growth|croissance|developp).{0,180}(?:countries|pays)|(?:team|equipe).{0,100}(?:dates|limites|boundaries)'
+  answer_pattern: '(?i)(?:first|premier).{0,60}2019'
+- id: team_growth_own_period
+  description: Preserve the retrieved later growth endpoints and their Head of Data period instead of attaching the full growth to the latest role.
+  sources: [19_owner_confirmed_scope.txt]
+  support_pattern: 'grew from 4 to 14\+ during his Head of Data period \(October 2022 - March 2025\)'
+  query_pattern: '(?i)(?:growth|croissance|developp).{0,180}(?:countries|pays)|(?:team|equipe).{0,100}(?:dates|limites|boundaries)'
+  answer_pattern: '(?i)(?:4|quatre).{0,45}(?:14|quatorze).{0,150}2022.{0,60}2025|2022.{0,60}2025.{0,150}(?:4|quatre).{0,45}(?:14|quatorze)'
+- id: operating_markets_and_headquarters
+  description: Retain the documented operating-market count and headquarters-only distinction. Headquarters does not establish an employee work location or another operating market.
+  sources: [19_owner_confirmed_scope.txt]
+  support_pattern: 'Singapore was company headquarters only'
+  query_pattern: '(?i)(?:growth|croissance|developp).{0,180}(?:countries|pays)|(?:team|equipe).{0,100}(?:dates|limites|boundaries)'
+  answer_pattern: '(?is)(?=.*(?:five|cinq|5).{0,45}(?:African|africain|operating|operationnel))(?=.*(?:Singapore|Singapour).{0,65}(?:headquarters|siege))'
 - scope_id: recommendation_order_share
   query_pattern: (?i)(?=.*(?:12|metric|figure|mesure|chiffre))(?=.*(?:recommend|recommand))
   id: recommendation_delivered_order_denominator_missing

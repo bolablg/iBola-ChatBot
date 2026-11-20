@@ -11,6 +11,8 @@ from __future__ import annotations
 import logging
 import re
 import time
+from contextvars import ContextVar
+from functools import wraps
 from typing import Any, Dict, List
 
 from langchain_core.documents import Document
@@ -24,6 +26,7 @@ from app.graph.prompts import (
     GUARDRAIL_PROMPT,
     INSUFFICIENT_EVIDENCE_ANSWERS,
     OUT_OF_SCOPE_PROMPT,
+    REPAIR_GROUNDING_PROMPT,
     REWRITE_PROMPT,
     STRUCTURED_OUTPUT_RECOVERY_PROMPT,
     TRANSLATE_PROMPT,
@@ -72,6 +75,29 @@ _LLM_TIMEOUT_SECONDS = 15.0
 _LLM_MAX_RETRIES = 1
 _LLM_MAX_OUTPUT_TOKENS = 750
 _STRUCTURED_OUTPUT_RECOVERY_RETRIES = 1
+_grounding_provider_calls = ContextVar("grounding_provider_calls", default=None)
+
+
+def _bounded_grounding_calls(function):
+    @wraps(function)
+    def wrapped(*args, **kwargs):
+        token = _grounding_provider_calls.set(3)
+        try:
+            return function(*args, **kwargs)
+        finally:
+            _grounding_provider_calls.reset(token)
+
+    return wrapped
+
+
+def _provider_generate(client, **kwargs):
+    """Count SDK invocations, including transient and parse retries."""
+    remaining = _grounding_provider_calls.get()
+    if remaining is not None:
+        if remaining <= 0:
+            raise RuntimeError("Grounding provider call budget exhausted")
+        _grounding_provider_calls.set(remaining - 1)
+    return client.models.generate_content(**kwargs)
 
 
 def _is_transient_llm_error(exc: Exception) -> bool:
@@ -157,7 +183,8 @@ class _SyncGeminiLLM:
         prompt = "\n\n".join(parts)
 
         response = _invoke_with_retry(
-            lambda: self._client.models.generate_content(
+            lambda: _provider_generate(
+                self._client,
                 model=self._model,
                 contents=prompt,
                 config={
@@ -198,7 +225,8 @@ class _StructuredOutput:
 
         def generate(prompt_text):
             return _invoke_with_retry(
-                lambda: self._llm._client.models.generate_content(
+                lambda: _provider_generate(
+                    self._llm._client,
                     model=self._llm._model,
                     contents=prompt_text,
                     config=genai.types.GenerateContentConfig(
@@ -1412,6 +1440,7 @@ def verify_grounding_node(state: dict) -> dict:
     return result
 
 
+@_bounded_grounding_calls
 def _verify_grounding_llm_node(state: dict) -> dict:
     """Claim-level verification after generate: fail closed on unsupported
     claims AND on grounded-but-wrong-topic substitutions.
@@ -1528,6 +1557,54 @@ def _verify_grounding_llm_node(state: dict) -> dict:
         question,
         _detect_reply_language(question, state.get("user_language", "en")),
     )
+    repair_failures = constraint_failures(corrected, context_docs, question)
+    # One recovery for an empty/incomplete first correction. The exact candidate
+    # still needs both deterministic checks and independent verification below.
+    if not corrected or repair_failures:
+        try:
+            repair = llm.with_structured_output(GeneratedAnswer).invoke(
+                REPAIR_GROUNDING_PROMPT.format_messages(
+                    question=question or "(unknown)",
+                    context=context,
+                    answer=corrected or answer,
+                    language=_detect_reply_language(
+                        question, state.get("user_language", "en")
+                    ),
+                    constraint_failures=describe_constraints(
+                        list(dict.fromkeys(violations + repair_failures))
+                    )
+                    + "; "
+                    + "; ".join(verdict.unsupported_claims),
+                )
+            )
+            corrected = _sanitize_answer(repair.answer.strip())
+            corrected, _ = preserve_percentage_qualifiers(
+                corrected,
+                context_docs,
+                _detect_reply_language(question, state.get("user_language", "en")),
+            )
+            corrected, _ = preserve_project_identity(
+                corrected,
+                context_docs,
+                question,
+                _detect_reply_language(question, state.get("user_language", "en")),
+            )
+            corrected, _ = preserve_requested_evidence(
+                corrected,
+                context_docs,
+                question,
+                _detect_reply_language(question, state.get("user_language", "en")),
+            )
+            steps.append(
+                ReasoningStep(
+                    node="verify_grounding",
+                    action="bounded_repair",
+                    detail="empty or source-scope-incomplete correction",
+                )
+            )
+        except Exception:
+            corrected = ""
+            logger.warning("Bounded grounding repair unavailable")
     # A correction is another draft, not proof. Recheck changed text once.
     if corrected and not constraint_failures(corrected, context_docs, question):
         try:
