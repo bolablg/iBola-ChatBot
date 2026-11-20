@@ -26,11 +26,11 @@ PROMPT_VERSIONS = {
     "condense": "1.1",
     "batch_grade": "2.3",
     "rewrite": "2.1",
-    "generate_professional": "3.14",
+    "generate_professional": "3.15",
     "generate_education": "3.6",
     "generate_learning": "3.6",
     "verify_grounding": "2.15",
-    "repair_grounding": "1.2",
+    "repair_grounding": "1.3",
     "upper_bound_clarification": "1.0",
     "skills_completeness_clarification": "1.0",
     "insufficient_evidence": "1.1",
@@ -180,6 +180,14 @@ REWRITE_PROMPT = ChatPromptTemplate.from_messages(
 # ---------------------------------------------------------------------------
 # generate
 # ---------------------------------------------------------------------------
+
+_TOOL_STATUS_RULE = (
+    "Resolve each requested tool independently. State explicit confirmed non-use "
+    "separately from missing evidence of personal production deployment or a named "
+    "project. Never transfer one tool's status to another. When reporting confirmed "
+    "non-use, preserve the exact supporting same-tool statement from the retrieved "
+    "evidence.\n"
+)
 
 _LANGUAGE_RULE = (
     "LANGUAGE RULE (CRITICAL, never violate):\n"
@@ -368,6 +376,7 @@ GENERATE_SYSTEM_PROMPTS = {
         + _EQUIVALENCE_RULE
         + "13) "
         + _MULTIPART_RULE
+        + _TOOL_STATUS_RULE
     ),
     AgentCategory.EDUCATION: (
         "You are iBola, Bolaji's AI assistant.\n\n"
@@ -472,7 +481,8 @@ REPAIR_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
             "Preserve each requested growth stage, hiring status versus actual role title, "
             "and metrics for every requested system. A tool inventory is not "
             "personal operation; attach every service to its own project evidence. "
-            "The result will be independently verified before delivery.",
+            + _TOOL_STATUS_RULE
+            + "The result will be independently verified before delivery.",
         ),
         (
             "human",

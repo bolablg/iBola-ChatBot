@@ -1,4 +1,4 @@
-version: 12
+version: 13
 source_types:
   21_production_service_inventory.txt: candidate_confirmed
   20_owner_confirmed_production_scope.txt: candidate_confirmed
@@ -8,6 +8,11 @@ source_types:
   17_highlights_pitch.txt: summary
   19_owner_confirmed_scope.txt: candidate_confirmed
 assertion_rules:
+- id: operating_model_requires_retrieved_support
+  description: An operating-model design claim requires retrieved evidence of that responsibility. General team leadership or platform strategy is insufficient. The documented operating model concerns the data function.
+  answer_pattern: '(?i)(?:(?:design\w*|creat\w*|built|build\w*|develop\w*|defin\w*|establish\w*)[^.!?;\n]{0,80}operating models?|operating models?[^.!?;\n]{0,60}(?:design\w*|creat\w*|built|build\w*|develop\w*|defin\w*|establish\w*))'
+  affirmation_pattern: '(?i)\b(?:Bolaji|he|his|il|son|ses)\b'
+  support_pattern: 'designed the operating model for the data function across Analytics, Data Engineering, and Data Science'
 - id: streaming_operation_requires_operation_evidence
   description: Personal production design of a streaming implementation does not establish personal production operation of its services. Retain the documented design responsibility and mark operation unconfirmed unless the same tool has direct operation evidence.
   answer_pattern: '(?i)\b(?:operated|operates|operating|ran|maintained|exploite\w*)\s+[^.;\n]{0,85}\b(?:Pub/Sub|Dataflow)\b'
@@ -136,8 +141,15 @@ metric_constraints:
   - (?i)(?:six|6)\s+(?:AI\s+)?use cases\s+(?:were|are|have been)\s+(?:implemented|completed|deployed)
   - '(?i)(?:completed|deployed|delivered)\s+(?:all\s+)?(?:six|6)\s+(?:(?:AI|strategic|high.priority)\s+)?(?:use cases|initiatives|implementations)'
 facets:
+- id: actual_management_responsibilities
+  query_pattern: '(?is)(?=.*(?:Bolaji|Gozem|\bhis\b|\bhe\b|\bses\b|\bson\b))(?=.*(?:management|leadership|coordina\w*|delivery|connaiss\w*|knowledge))(?=.*(?:responsibilit\w*|coordina\w*|transfer\w*|knowledge|connaiss\w*|countries|locations|pays|sites))'
+  terms: operating model data function role charters workforce planning coordination
+  sources: [90_website_canon_llms_full.txt]
+  section_pattern: '^Scaling the data organization for multi-country growth$'
+  support_pattern: 'designed the operating model for the data function across Analytics, Data Engineering, and Data Science'
+  retain_for_query: true
 - id: requested_manager_layer_boundary
-  query_pattern: '(?i)manager.of.managers|(?:two|2|deux|\d+)\s+managers|manager(?:ial)? layers?|direct.report'
+  query_pattern: '(?i)manager.of.managers|(?:two|2|deux|\d+)\s+managers|manager(?:ial)? layers?|direct.report|line.management(?: authority)?'
   terms: direct-report counts manager layers
   sources: [19_owner_confirmed_scope.txt]
   section_pattern: '^GOZEM TEAM GROWTH AND ROLE PERIODS$'
@@ -463,8 +475,8 @@ required_limits:
 - id: requested_manager_layer_scope_unestablished
   description: Give documented team-building experience separately from the unestablished manager layers or direct-report count requested by a vacancy. Do not import the vacancy's staffing into Bolaji's history.
   sources: [19_owner_confirmed_scope.txt, 11_leadership_style.txt]
-  query_pattern: '(?i)manager.of.managers|(?:two|2|deux|\d+)\s+managers|manager(?:ial)? layers?|direct.report'
-  target_pattern: 'manager.layers?|manager.of.managers|direct.report|management layers|niveaux de management|rapports directs'
+  query_pattern: '(?i)manager.of.managers|(?:two|2|deux|\d+)\s+managers|manager(?:ial)? layers?|direct.report|line.management(?: authority)?'
+  target_pattern: 'manager.layers?|manager.of.managers|direct.report|management layers|line.management|niveaux de management|rapports directs'
   direct_support_pattern: '(?i)(?:Bolaji|he|il)\s+(?:directly\s+)?(?:managed|supervised|led)\s+(?P<count>\d+|one|two|three|un|deux|trois)\s+(?:managers|team leads)\b'
   query_binding_pattern: '(?i)(?P<count>\d+|one|two|three|un|deux|trois)\s+(?:managers|team leads)\b'
   direct_support_bindings: [count]
@@ -512,6 +524,19 @@ required_identity:
   query_pattern: (?i)\b(?:aws|ec2)\b
   answer_pattern: (?i)(?:EC2|700|operational.{0,15}platform|governed.{0,20}platform)
 required_details:
+- id: operating_model_data_function_scope_missing
+  description: The retrieved record documents one operating model for the data function. Every affirmative operating-model claim must preserve that scope, rather than imply company-wide organizational models. An appended scoped quotation cannot repair an earlier broader assertion.
+  sources: [90_website_canon_llms_full.txt]
+  section_pattern: '^Scaling the data organization for multi-country growth$'
+  support_pattern: 'designed the operating model for the data function across Analytics, Data Engineering, and Data Science'
+  query_pattern: '(?s).*'
+  claim_subject_pattern: '(?i)\b(?:Bolaji|he|his|il|son|ses)\b'
+  claim_pattern: '(?i)(?:(?:for|within)\s+the\s+data function,?\s+(?:\w+\s+){0,12}?)?(?:(?:company.wide|enterprise.wide|organization.wide|organization|whole.company)\s+)?\boperating models?\b(?:\s+(?:for|of)\s+the\s+data function)?'
+  answer_pattern: '(?is)\A(?!.*(?:company.wide|enterprise.wide|organization.wide|whole company))(?=.*(?:operating model\s+(?:for|of)\s+the\s+data function|(?:for|within)\s+the\s+data function[^.!?;\n]{0,100}operating model\b))'
+  restore_quote:
+    language: en
+    label: Data-function responsibility
+    pattern: 'Assessed organizational capability gaps and designed the operating model for the data function across Analytics, Data Engineering, and Data Science\.'
 - id: leadership_principles_complete_missing
   description: Preserve the three named operating principles in naming or application questions, distinct from the separate leadership philosophy.
   sources: [11_leadership_style.txt]

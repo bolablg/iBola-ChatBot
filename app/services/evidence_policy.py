@@ -787,6 +787,13 @@ def constraint_failures(
                 if rule.get("claim_pattern")
                 else [answer]
             )
+            if rule.get("claim_subject_pattern"):
+                claims = [
+                    m.group()
+                    for clause in _claim_clauses(answer)
+                    if re.search(rule["claim_subject_pattern"], clause)
+                    for m in re.finditer(rule["claim_pattern"], clause)
+                ]
             if any(not re.search(rule["answer_pattern"], claim) for claim in claims):
                 failures.append(rule["id"])
     requested_confirmations = [

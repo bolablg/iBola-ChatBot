@@ -248,6 +248,9 @@ class InProcessTarget:
         return result
 
 
+EVAL_HTTP_HEADERS = {"X-Ibola-No-Trace": "1"}
+
+
 class HTTPTarget:
     """Runs questions against a deployed instance's /ask-agentic endpoint.
 
@@ -267,6 +270,7 @@ class HTTPTarget:
     def _post(self, question, session_id, lang):
         resp = self.client.post(
             f"{self.base_url}/ask-agentic",
+            headers=EVAL_HTTP_HEADERS,
             json={
                 "user_input": question,
                 "session_id": session_id,
@@ -434,6 +438,7 @@ def measure_first_token(base_url, questions, lang="en"):
                 with client.stream(
                     "POST",
                     f"{base_url}/ask-agentic",
+                    headers=EVAL_HTTP_HEADERS,
                     json={
                         "user_input": question,
                         "session_id": f"ft-{uuid.uuid4().hex[:8]}",

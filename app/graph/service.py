@@ -333,6 +333,8 @@ class AgenticRAGService:
         -> answer, plus latency and grounding outcome. Returns the trace_id
         so the response and user feedback can link back to this turn.
         """
+        if (request_info or {}).get("no_trace") is True:
+            return None
         try:
             from app.services.provenance import runtime_provenance
             from app.services.tracing import get_tracer, hash_visitor

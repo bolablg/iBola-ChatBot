@@ -534,7 +534,7 @@ async def chat_options():
         headers={
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Ibola-No-Trace",
             "Access-Control-Max-Age": "86400",
         },
     )
@@ -585,6 +585,7 @@ async def chat(payload: ChatInput, request: Request):
 
         # Collect request information for logging
         request_info = {
+            "no_trace": request.headers.get("x-ibola-no-trace", "").strip() == "1",
             "ip_address": request.client.host if request.client else "unknown",
             "user_agent": request.headers.get("user-agent", "unknown"),
             "referrer": request.headers.get("referer", "unknown"),

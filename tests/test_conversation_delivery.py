@@ -207,3 +207,92 @@ def test_verification_method_survives_json_sse_and_cache(
         assert (
             test_client.post(path, json=payload).json()["verification_method"] == method
         )
+
+
+@pytest.mark.parametrize(
+    "path,stream",
+    [
+        ("/chat", False),
+        ("/ask-agentic", False),
+        ("/ask-agentic", True),
+        ("/ask", False),
+    ],
+)
+@pytest.mark.parametrize(
+    "header,disabled",
+    [(None, False), ("1", True), (" 1 ", True), ("true", False), ("0", False)],
+)
+def test_external_trace_optout_is_current_request_only(
+    test_client, conversation_service, monkeypatch, path, stream, header, disabled
+):
+    from app.graph.service import AgenticRAGService
+
+    tracer = Mock(enabled=True)
+    tracer.record_turn.return_value = "ordinary-trace"
+    get_tracer = Mock(return_value=tracer)
+    monkeypatch.setattr("app.services.tracing.get_tracer", get_tracer)
+    seen = []
+
+    def process(question, history, session_id, lang, info):
+        seen.append(info)
+        trace = AgenticRAGService._record_trace(
+            session_id=session_id,
+            user_input=question,
+            final_state={"answer": "A bounded answer.", "agent_type": "professional"},
+            evidence=[],
+            elapsed=0.01,
+            request_info=info,
+        )
+        return {
+            "answer": "A bounded answer.",
+            "agent_type": "professional",
+            "trace_id": trace,
+        }
+
+    conversation_service.process_query.side_effect = process
+    payload = {
+        "user_input": "Which scope?",
+        "session_id": "same-privacy-session",
+        "stream": stream,
+    }
+    response = test_client.post(
+        path,
+        json=payload,
+        headers={} if header is None else {"X-Ibola-No-Trace": header},
+    )
+    assert response.status_code == 200
+    if stream:
+        events = [
+            json.loads(line.removeprefix("data: "))
+            for line in response.text.splitlines()
+            if line.startswith("data: ")
+        ]
+        body = next(e for e in events if e.get("status") == "done")
+    else:
+        body = response.json()
+    assert seen[-1]["no_trace"] is disabled
+    assert body["trace_id"] == (None if disabled else "ordinary-trace")
+    assert get_tracer.call_count == (0 if disabled else 1)
+    response = test_client.post(path, json={**payload, "stream": False})
+    assert seen[-1]["no_trace"] is False
+    assert response.json()["trace_id"] == "ordinary-trace"
+    assert "no_trace" not in conversation_service.session_data
+
+
+@pytest.mark.parametrize("header", [None, "1"])
+def test_cache_hits_drop_old_trace_with_or_without_optout(
+    test_client, conversation_service, header
+):
+    from app.routes import streaming
+
+    streaming.cache_service.get_cached_response.return_value = {
+        "answer": "Cached answer.",
+        "trace_id": "older-turn",
+    }
+    response = test_client.post(
+        "/ask-agentic",
+        json={"user_input": "Which scope?", "session_id": "privacy-cache"},
+        headers={} if header is None else {"X-Ibola-No-Trace": header},
+    )
+    assert response.json()["trace_id"] is None
+    conversation_service.process_query.assert_not_called()

@@ -114,6 +114,7 @@ async def ask_agentic(payload: AskInput, request: Request):
         return cached
 
     request_info = {
+        "no_trace": request.headers.get("x-ibola-no-trace", "").strip() == "1",
         "ip_address": request.client.host if request.client else "unknown",
         "user_agent": request.headers.get("user-agent", "unknown"),
         "referrer": request.headers.get("referer", "unknown"),

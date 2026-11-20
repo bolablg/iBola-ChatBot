@@ -93,6 +93,7 @@ def run_session(base_url, session, judge):
         start = time.time()
         response = client.post(
             f"{base_url}/ask-agentic",
+            headers={"X-Ibola-No-Trace": "1"},
             json={
                 "user_input": question,
                 "session_id": session_id,
@@ -178,6 +179,7 @@ def measure_first_token(base_url, questions, lang="en"):
                 with client.stream(
                     "POST",
                     f"{base_url}/ask-agentic",
+                    headers={"X-Ibola-No-Trace": "1"},
                     json={
                         "user_input": question,
                         "session_id": f"sse-{uuid.uuid4().hex[:8]}",
