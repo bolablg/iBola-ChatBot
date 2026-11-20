@@ -1,15 +1,49 @@
-version: 3
+version: 22
 source_types:
+  21_production_service_inventory.txt: candidate_confirmed
+  20_owner_confirmed_production_scope.txt: candidate_confirmed
   90_website_canon_llms_full.txt: published
   18_confirmed_clarifications.txt: candidate_confirmed
   15_professional_narrative.txt: interpretation
   17_highlights_pitch.txt: summary
   19_owner_confirmed_scope.txt: candidate_confirmed
 assertion_rules:
+- id: onsite_availability_requires_same_actor_evidence
+  description: Working hours and employment type do not establish physical location. Preserve remote, full-time and consulting as their own categories. Do not translate them into affirmative availability for on-site work, présentiel or en mode present without retrieved availability for the same actor and location arrangement.
+  answer_pattern: '(?i)\b(?:available|open|willing|disponible|ouvert|prete?|pret)\w*[^.;\n]{0,120}(?:on.site|in.person|presentiel|en mode present)\b|\b(?:on.site|in.person|presentiel|en mode present)[^.;\n]{0,80}\b(?:available|disponible)\b'
+  affirmation_pattern: '(?i)\b(?:Bolaji|he|il)\b'
+  support_pattern: '(?i)\bBolaji\s+(?:(?:is|est|remains|reste)\s+)?(?:(?:currently|actuellement|now)\s+)?(?:available|open|willing|disponible|ouvert|pret)\w*\s+(?:(?:to|for|pour|a|des|du|un|une|en|full.time|part.time)\s+){0,8}(?:(?:work|roles?|positions?|missions?|travail|travailler|opportunities)\s+(?:en\s+)?(?:on.site|in.person|presentiel|en mode present)|(?:on.site|in.person|presentiel|en mode present)\s+(?:work|roles?|positions?|missions?|travail|opportunities))\b'
+  uncertainty_prefix_pattern: '(?i)(?:(?:not (?:documented|established|confirmed)|does not (?:establish|document|confirm|specify))\s+(?:whether|if|that)\s+(?:he|Bolaji)\s+(?:is\s+)?(?:currently\s+)?|ne (?:precise|confirme|documente) pas s\x27il est\s+(?:actuellement\s+)?)$'
+  exclude_support_pattern: '(?i)\b(?:training|teaching|bootcamp|historical|previously|former|previous role|past role|earlier role|requirement|vacancy|fictional|hypothetical|formations?|auparavant|ancien\w*|interviews?|meetings?|conferences?|entretiens?|reunions?)\b'
+  support_continuation_pattern: '(?i)^\s*(?:(?:only|solely|exclusively|uniquement|seulement)\b|(?:this|that|it|availability|arrangement|ceci|cela|cette?)\b.{0,40}\b(?:only|solely|limited|restricted|confined|uniquement|seulement|limite|restreint|reserve)\w*\b|(?:for|pour)\s+[^.;\n]{1,35}\b(?:only|uniquement|seulement)\b)'
+  clause_support: true
+  local_negation: true
+  local_uncertainty: true
+- id: operating_model_requires_retrieved_support
+  description: An operating-model design claim requires retrieved evidence of that responsibility. General team leadership or platform strategy is insufficient. The documented operating model concerns the data function.
+  answer_pattern: '(?i)(?:(?:design\w*|creat\w*|built|build\w*|develop\w*|defin\w*|establish\w*)[^.!?;\n]{0,80}operating models?|operating models?[^.!?;\n]{0,60}(?:design\w*|creat\w*|built|build\w*|develop\w*|defin\w*|establish\w*))'
+  affirmation_pattern: '(?i)\b(?:Bolaji|he|his|il|son|ses)\b'
+  support_pattern: 'designed the operating model for the data function across Analytics, Data Engineering, and Data Science'
+- id: streaming_operation_requires_operation_evidence
+  description: Personal production design of a streaming implementation does not establish personal production operation of its services. Retain the documented design responsibility and mark operation unconfirmed unless the same tool has direct operation evidence.
+  answer_pattern: '(?i)\b(?:operated|operates|operating|ran|maintained|exploite\w*)\s+[^.;\n]{0,85}\b(?:Pub/Sub|Dataflow)\b'
+  support_pattern: '(?i)\b(?:Bolaji|he|il)\s+(?:(?:has|had|a|personally|directly|personnellement)\s+){0,3}(?:operated|operates|ran|maintained|exploite\w*|designed and operated)\s+(?P<tools>(?:AWS\s+)?(?:EC2|S3|Pub/Sub|Dataflow)(?:\s*(?:,|and|et|with)\s*(?:AWS\s+)?(?:EC2|S3|Pub/Sub|Dataflow))*)(?:\s+(?:components?|pipelines?|systems?))?\s+(?:in|en)\s+production'
+  subject_pattern: '(?i)\b(?:Pub/Sub|Dataflow)\b'
+  support_subject_groups: [tools]
+  clause_support: true
+  local_negation: true
 - id: manager_layers_require_direct_evidence
   answer_pattern: (?i)(?:manager.of.managers|management of managers)|(?i:management de managers|manager de
     managers)
   support_pattern: (?i)(?:directly managed|supervised|led)\s+(?:\w+\s+){0,3}(?:managers|team leads)\b
+- id: quantified_manager_layers_require_direct_evidence
+  description: Vacancy staffing requirements do not establish Bolaji's manager layers. An assertion about managers within his organization needs direct retrieved support for the same count and relationship. Manager users or stakeholders are a separate population.
+  answer_pattern: '(?i)(?:(?:team|organization|organisation|equipe|staff)[^.!?;\n]{0,120}?(?:including|included|includes|compris|dont|avec)|(?:Bolaji|he|il)\s+(?:directly\s+)?(?:managed|supervised|led|encadrait|dirigeait))\s+(?P<count>\d+|one|two|three|un|deux|trois)\s+(?:managers|team leads|responsables)\b'
+  support_pattern: '(?i)(?:(?:Bolaji|he|il)\s+(?:directly\s+)?(?:managed|supervised|led|encadrait|dirigeait)|(?:his|Bolaji.s)\s+(?:team|organization|organisation|equipe)[^.!?;\n]{0,80}(?:included|includes|comprised|comprenait))\s+(?P<count>\d+|one|two|three|un|deux|trois)\s+(?:managers|team leads|responsables)\b'
+  exclude_support_pattern: '(?i)training|users|utilisateurs|adoption|stakeholders|vacancy|requires|fictional|hypothetical'
+  binding_groups: [count]
+  clause_support: true
+  local_negation: true
 - id: budget_authority_requires_direct_evidence
   answer_pattern: (?i)(?:budget (?:authority|ownership|approval)|(?:department|operating|multi.year) budget|approval
     authority)|(?i:(?:autorite|responsabilite|approbation) (?:du |de )?budget|budget (?:departemental|pluriannuel|de
@@ -25,10 +59,11 @@ assertion_rules:
     (?:authority|ownership|approval)|(?:department|operating|multi.year) budget|approval authority|(?:autorite|responsabilite|approbation)
     (?:du |de )?budget|budget (?:departemental|pluriannuel|de fonctionnement))\s*:\s*(?:yes|confirmed))
 - id: non_use_requires_explicit_negative_evidence
-  answer_pattern: (?i)(?:has (?:not|never) (?:directly )?(?:used|worked with)|never used|no (?:direct )?production
+  resolve_confirmed_non_use_reference: true
+  answer_pattern: (?i)(?:has (?:not|never) (?:directly )?(?:used|worked with)|never used|no (?:(?:personal|direct) )?production
     experience (?:with|in))\s+[^.;,]+|(?i:(?:n'a (?:jamais|pas) (?:directement )?utilise|aucune experience
     (?:directe )?en production (?:avec|sur))\s+[^.;,]+)
-  support_pattern: (?i)(?:has (?:not|never) (?:directly )?(?:used|worked with)|never used|no (?:direct )?production
+  support_pattern: (?i)(?:has (?:not|never) (?:directly )?(?:used|worked with)|never used|no (?:(?:personal|direct) )?production
     experience (?:with|in))\s+[^.;,]+|(?i:(?:n'a (?:jamais|pas) (?:directement )?utilise|aucune experience
     (?:directe )?en production (?:avec|sur))\s+[^.;,]+)
   match_subject: true
@@ -58,11 +93,11 @@ assertion_rules:
   description: A tool inventory or teaching module does not establish personal production experience. Bind each tool to the named actor's operation and experience setting. Retain documented implementations at their stated scope, or label production ownership unverified.
   answer_pattern: '(?i)(?:\bproduction\b[^.;\n]*\b(?:Pub/Sub|Dataflow)\b[^.;\n]*|\b(?:Pub/Sub|Dataflow)\b[^.;\n]*\bproduction\b[^.;\n]*)'
   support_pattern: |-
-    (?ix)\b(?:Bolaji|he|il)\s+(?:(?:personally|directly|personnellement|directement|a)\s+)?
+    (?ix)\b(?:Bolaji|he|il)\s+(?:(?:has|had|a|personally|directly|personnellement|directement)\s+){0,3}
     (?:
-      (?:used|operated|built|designed|deployed|utilise|exploite|construit|concu|deploye)\s+
+      (?:uses?|used|operates?|operated|builds?|built|designs?|designed(?:\s+and\s+operated)?|deploys?|deployed|set\s+up|provisioned|configured|utilise|exploite|construit|concu|deploye)\s+(?:an?\s+)?
       (?P<tools_before>(?:Google\s+)?(?:Pub/Sub|Dataflow)(?:\s*(?:,|and|et|with|avec)\s*(?:Google\s+)?(?:Pub/Sub|Dataflow))*)
-      (?:\s+(?:pipelines?|systems?|applications?))?\s+(?:in|en)\s+production
+      (?:\s+(?:buckets?|pipelines?|systems?|applications?|components?)(?:\s+(?:of|for|within)\s+[^.;\n]{1,80}?)?)?\s+(?:in|en)\s+production
     |
       (?:has|had)\s+(?:personal\s+)?production\s+experience\s+with\s+
       (?P<tools_after>(?:Google\s+)?(?:Pub/Sub|Dataflow)(?:\s*(?:,|and|et)\s*(?:Google\s+)?(?:Pub/Sub|Dataflow))*)
@@ -73,6 +108,20 @@ assertion_rules:
   clause_support: true
   local_negation: true
   exclude_support_pattern: '(?i)\b(?:taught|teaches|teaching|supervised|delivered|designed)\b[^.;\n]{0,60}\b(?:training|bootcamp|certificate|certification|module|lab|prototype|formation|atelier)\b|\b(?:for|during|in|en|pour)\s+(?:a\s+|an\s+)?(?:training|bootcamp|lab|prototype|formation|atelier)\b'
+- id: first_hire_title_requires_explicit_role
+  description: A first data hire is hiring status, not an engineering job title. Retain the documented hiring status and assert a formal first-role title only when that same title is explicitly established.
+  answer_pattern: '(?i)(?:first|premier)\s+(?P<title>data engineer|data scientist|data architect|ingenieur (?:data|donnees)|scientifique des donnees)\b'
+  support_pattern: '(?i)(?:first|premier)\s+(?P<title>data engineer|data scientist|data architect|ingenieur (?:data|donnees)|scientifique des donnees)\b'
+  binding_groups: [title]
+  clause_support: true
+  local_negation: true
+- id: system_visibility_requires_own_evidence
+  negation_pattern: '(?i)\b(?:not|pas|et non)\s+(?:(?:the|a|le|un)\s+)?(?:MongoDB\s+)?CDC\b'
+  description: Visibility for an event command center must not be attributed to a CDC pipeline. Retain each system's own documented measurement and explicitly mark unestablished pipeline metrics unknown.
+  answer_pattern: '(?i)(?:\bCDC\b[^.;\n]{0,220}(?:minute.level|visibility|visibilite)|(?:minute.level|visibility|visibilite)[^.;\n]{0,220}\bCDC\b)'
+  support_pattern: '(?i)(?:\bCDC\b[^.;\n]{0,220}(?:minute.level|visibility|visibilite)|(?:minute.level|visibility|visibilite)[^.;\n]{0,220}\bCDC\b)'
+  clause_support: true
+  local_negation: true
 metric_constraints:
 - id: event_volume_average_and_population
   description: The documented average belongs to the Gozem streaming workload, not an established maximum or
@@ -82,6 +131,12 @@ metric_constraints:
   invalid_patterns:
   - (?i)(?:up to|maximum|capacity|at most).{0,35}(?:45\s*million|45\s*M\b)
   - (?i)(?:this production system\s+(?:processed|handled|ingested|averaged)|(?:MongoDB )?CDC (?:pipeline|system)(?:\x27s)?\s+(?:[\w/-]+\s+){0,5}(?:processed|processes|handles|handled|ingests|ingested|averages|averaged|throughput|volume))[^.;\n]{0,80}(?:45\s*million|45\s*M\b)
+  - '(?i)(?:streaming workload|45\s*(?:million|m\b))[^.;\n]{0,120}(?:included|includes|including|consist\w* of)[^.;\n]{0,70}(?:MongoDB\s+)?CDC'
+- id: streaming_average_wrong_system
+  description: The separate streaming workload average does not measure the event command center or market monitoring system. Preserve the explicitly distinct workload population.
+  invalid_patterns:
+  - '(?i)(?:Vodun|event command center|market monitoring)[^.;\n]{0,120}(?:processed|handles?|averaged|volume|throughput)[^.;\n]{0,50}45\s*(?:million|m\b)'
+  - '(?i)45\s*(?:million|m\b)[^.;\n]{0,70}(?:at|for|in|from|by)\s+(?:the\s+)?(?:Vodun|event command center|market monitoring)'
 - id: observational_event_matching
   description: The event match rate is observational, without an established causal treatment effect.
   source_spans:
@@ -96,10 +151,103 @@ metric_constraints:
   invalid_patterns:
   - (?i)(?:six|6)\s+(?:implemented|completed|deployed|production)\s+(?:AI\s+)?use cases
   - (?i)(?:six|6)\s+(?:AI\s+)?use cases\s+(?:were|are|have been)\s+(?:implemented|completed|deployed)
+  - '(?i)(?:completed|deployed|delivered)\s+(?:all\s+)?(?:six|6)\s+(?:(?:AI|strategic|high.priority)\s+)?(?:use cases|initiatives|implementations)'
 facets:
+- id: platform_definition_adoption_scope
+  query_pattern: '(?i)(?:what(?: is|\x27s)|define|describe|qu.est.ce\s+que|c.est quoi|presente|decris)\s+(?:(?:the|le|la)\s+)?(?:Gozem\s+)?Data\s+Hub\b'
+  terms: Gozem Data Hub central platform adoption people operational analytics governance
+  sources: [10_apps_and_projects.txt]
+  section_pattern: '(?i)^GOZEM DATA HUB'
+  support_pattern: 'served over 700 people'
+  retain_for_query: true
+- id: actual_management_responsibilities
+  query_pattern: '(?is)(?=.*(?:Bolaji|Gozem|\bhis\b|\bhe\b|\bses\b|\bson\b))(?=.*(?:management|leadership|coordina\w*|delivery|connaiss\w*|knowledge))(?=.*(?:responsibilit\w*|coordina\w*|transfer\w*|knowledge|connaiss\w*|countries|locations|pays|sites))'
+  terms: operating model data function role charters workforce planning coordination
+  sources: [90_website_canon_llms_full.txt]
+  section_pattern: '^Scaling the data organization for multi-country growth$'
+  support_pattern: 'designed the operating model for the data function across Analytics, Data Engineering, and Data Science'
+  retain_for_query: true
+- id: requested_manager_layer_boundary
+  query_pattern: '(?i)manager.of.managers|(?:two|2|deux|\d+)\s+managers|manager(?:ial)? layers?|direct.report|line.management(?: authority)?'
+  terms: direct-report counts manager layers
+  sources: [19_owner_confirmed_scope.txt]
+  section_pattern: '^GOZEM TEAM GROWTH AND ROLE PERIODS$'
+  support_pattern: 'does not establish direct-report counts, manager layers'
+  retain_for_query: true
+- id: requested_french_head_role_interval
+  query_pattern: '(?is)(?=.*head of data)(?=.*(?:encore|actuel|toujours))'
+  terms: Head Data octobre mars
+  sources: [91_role_timeline.txt]
+  section_pattern: '^QUEL ETAIT LE POSTE DE BOLAJI CHAQUE ANNEE:$'
+  support_pattern: 'Head of Data chez Gozem \(octobre 2022 - mars 2025\)'
+  retain_for_query: true
+- id: leadership_operating_principles
+  query_pattern: '(?is)\A(?![^\n]*\b(?:one|single|seul)\b)(?=.*(?:leadership|management))(?=.*(?:principles|principes))'
+  terms: metrics architecture budget adoption principles
+  sources: [11_leadership_style.txt]
+  section_pattern: '^THREE OPERATING PRINCIPLES:$'
+  support_pattern: 'metrics before dashboards; architecture is the budget; adoption is the deliverable'
+  retain_for_query: true
+- id: confirmed_team_stages
+  query_pattern: '(?i)(?:growth|croissance|developp).{0,180}(?:countries|pays)|(?:team|equipe).{0,100}\b(?:dates|limites|boundaries)\b'
+  terms: first data hire initial team grew Global Data Analyst
+  sources: [19_owner_confirmed_scope.txt]
+  section_pattern: '^GOZEM TEAM GROWTH AND ROLE PERIODS$'
+  support_pattern: 'first data hire in 2019.*initial team grew to 4'
+  retain_for_query: true
+- id: confirmed_team_stages_french
+  query_pattern: '(?is)(?=.*(?:croissance|equipe))(?=.*(?:pays|dates|limites))'
+  terms: première embauche data équipe initiale personnes
+  sources: [19_owner_confirmed_scope.txt]
+  section_pattern: '^FRENCH SUMMARY OF CONFIRMED TEAM STAGES$'
+  support_pattern: 'première embauche data en 2019.*initiale a atteint 4 personnes'
+  retain_for_query: true
+- id: human_language_proficiency
+  query_pattern: '(?is)\A(?:(?!.*\b(?:programming|programmation|coding)\b)|(?=.*\b(?:spoken|human|French|English|francais|anglais)\b))(?=.*(?:language|langue|francophone|anglophone))(?=.*(?:speak|spoken|parle|capabilit|proficien|fluen|couran|francophone|anglophone))'
+  terms: spoken languages native English French professional proficiency
+  sources: [00_identity.txt]
+  section_pattern: '^SPOKEN LANGUAGES:$'
+  support_pattern: 'French \(native\) and English \(full professional proficiency\)'
+  retain_for_query: true
+- id: current_head_role_interval
+  query_pattern: '(?is)(?=.*head of data)(?=.*(?:current|still|encore|actuel))'
+  terms: Head Data Gozem employment timeline
+  sources: [91_role_timeline.txt]
+  section_pattern: '^EMPLOYMENT TIMELINE:$'
+  support_pattern: 'Head of Data at Gozem: October 2022 - March 2025'
+  retain_for_query: true
+- id: production_service_inventory
+  query_pattern: '(?is)\A(?=[^\n]*\b(?:which|what|list|name|other|quels|quelles|liste|autres)\b)(?=[^\n]*\b(?:services|technologies|tools|outils)\b)(?=.*\b(?:Bolaji|he|his|il|son|ses)\b)(?=.*(?:production|personal|operat|design|used|document|GCP|AWS|exploit|concu|utilis))'
+  terms: production personally designed operated services inventory BigQuery Airflow AWS
+  sources: [21_production_service_inventory.txt]
+  section_pattern: '^PRODUCTION SERVICE INVENTORY$'
+  support_pattern: 'Service inventory: BigQuery, Apache Airflow, Dataform, Google Cloud Storage'
+  retain_for_query: true
+- id: owner_confirmed_production_responsibility
+  query_pattern: '(?is)(?=.*(?:personal|personnel))(?=.*(?:production|AWS|EC2|S3|streaming|Pub/Sub|Dataflow|Kafka))'
+  terms: personally production designed operated MongoDB CDC Pub/Sub Dataflow AWS EC2 S3 Kafka
+  sources: [20_owner_confirmed_production_scope.txt]
+  support_pattern: '(?is)Bolaji personally designed(?: and operated)? Pub/Sub and Dataflow.{0,160}production.*Bolaji personally designed and operated AWS EC2 in production'
+  retain_for_query: true
+- id: budget_cloud_cost_evidence
+  query_pattern: '(?is)(?=.*(?:budget|investment|investissement))(?=.*(?:cloud|cost|cout))'
+  terms: cloud cost FinOps BigQuery one quarter
+  sources: [90_website_canon_llms_full.txt]
+  section_pattern: '(?i)^Data platform modernization and FinOps transformation$'
+  support_pattern: '42\.57%.*one quarter'
+  retain_for_query: true
+- id: streaming_workload_measurement
+  query_pattern: '(?is)(?=.*(?:throughput|event volume|latency|availability|measurements|debit|latence|disponibilite))(?=.*(?:streaming|CDC|MongoDB|flux|event processing))'
+  terms: separate streaming workload averaged telemetry operational events
+  sources: [90_website_canon_llms_full.txt]
+  section_pattern: '(?i)^Workload and measurement scope$'
+  support_pattern: '(?s)batch workloads averaged approximately 5 TB.*A separate streaming workload averaged 45 million telemetry and operational events per day'
+  retain_for_query: true
 - id: streaming_implementation
-  query_pattern: '(?i)\b(?:streaming|Pub/Sub|Dataflow|Kafka)\b'
+  query_pattern: '(?i)(?!.*\b(?:throughput|volume|latency|availability)\b).*\b(?:streaming|Pub/Sub|Dataflow|Kafka)\b'
   terms: MongoDB CDC change events Pub/Sub Dataflow BigQuery
+  support_pattern: '(?is)MongoDB CDC pipeline.{0,140}Pub/Sub.{0,100}Dataflow'
+  retain_for_query: true
   sources: [90_website_canon_llms_full.txt, 13_gozem_internal_projects.txt]
 - id: ai_project_overview
   query_pattern: (?i)(?:AI work|AI projects?|travaux en IA|projets? (?:en )?IA|LLM projects?)
@@ -163,6 +311,8 @@ facets:
 - id: cloud_services
   query_pattern: (?i)\b(?:aws|ec2|kafka)\b
   terms: AWS EC2 production Data Hub platform tools
+  support_pattern: '(?is)Gozem Data Hub.{0,850}AWS EC2'
+  retain_for_query: true
   sources:
   - 10_apps_and_projects.txt
   - 13_gozem_internal_projects.txt
@@ -255,6 +405,15 @@ section_types:
   evidence_type: interpretation
   include_if_query_matches: (?i)\b(?:dbt|power bi|dax|dagster|snowflake|redshift)\b
 metric_scopes:
+- source: 90_website_canon_llms_full.txt
+  section_pattern: '(?i)(?:FinOps and analytical serving|Data platform modernization and FinOps transformation)'
+  fields:
+    id: finops_cost_reduction
+    value: 42.57 percent
+    qualifier: recorded reduction, one quarter
+    role: Head of Data
+    initiative: Dataform adoption, incremental modeling, partitioning, clustering and workload monitoring
+    not_established: causal attribution to the initial cloud-platform choice or migration; investment amount, approval authority or multi-year department budget ownership
 - source: 13_gozem_internal_projects.txt
   section_pattern: (?i)self.service no.code
   fields:
@@ -332,6 +491,18 @@ metric_scopes:
     not_established: not an individual MongoDB CDC pipeline count, throughput ceiling, sub-second latency or
       availability guarantee
 required_limits:
+- id: requested_manager_layer_scope_unestablished
+  description: Give documented team-building experience separately from the unestablished manager layers or direct-report count requested by a vacancy. Do not import the vacancy's staffing into Bolaji's history.
+  sources: [19_owner_confirmed_scope.txt, 11_leadership_style.txt]
+  query_pattern: '(?i)manager.of.managers|(?:two|2|deux|\d+)\s+managers|manager(?:ial)? layers?|direct.report|line.management(?: authority)?'
+  target_pattern: 'manager.layers?|manager.of.managers|direct.report|management layers|line.management|niveaux de management|rapports directs'
+  direct_support_pattern: '(?i)(?:Bolaji|he|il)\s+(?:directly\s+)?(?:managed|supervised|led)\s+(?P<count>\d+|one|two|three|un|deux|trois)\s+(?:managers|team leads)\b'
+  query_binding_pattern: '(?i)(?P<count>\d+|one|two|three|un|deux|trois)\s+(?:managers|team leads)\b'
+  direct_support_bindings: [count]
+  direct_support_exclude_pattern: '(?i)training|users|utilisateurs|adoption|stakeholders|vacancy|requires|fictional|hypothetical'
+  restore_limit:
+    en: manager layers and direct-report counts
+    fr: les niveaux de management et le nombre de rapports directs
 - id: self_service_measurement_period_unknown
   scope_id: self_service_adoption
   query_pattern: (?i)(?:measurement (?:period|interval|window)|time period|over what period|periode (?:connue|de
@@ -347,13 +518,28 @@ required_limits:
   - 16_current_status.txt
   query_pattern: (?i)\bon.call\b
   target_pattern: on.call|production support
+- id: production_on_call_scope_unknown
+  description: Personal production design and operation do not establish on-call responsibility. Retain the retrieved record's explicit limitation without inferring willingness, refusal, rotation, response times or an uptime guarantee.
+  sources: [20_owner_confirmed_production_scope.txt, 21_production_service_inventory.txt]
+  support_pattern: '(?i)(?:does not|do not)[^.\n]{0,260}establish on.call responsibility'
+  query_pattern: '(?i)\bon.call\b'
+  target_pattern: on.call
+  explicit_record_boundary_pattern: '(?i)evidence|record|documentation|documented|dossier|documente'
+  restore_limit:
+    en: on-call responsibility
+    fr: les responsabilités d'astreinte
 - id: clinical_domain_not_established
+  description: Preserve documented leadership examples while distinguishing whether retrieved evidence establishes clinical-domain leadership. This boundary concerns the evidence, not an assertion of absent capability or experience.
+  direct_support_pattern: '(?i)(?:Bolaji|he|il).{0,40}(?:led|directed|managed|dirige).{0,60}(?:clinical|healthcare|public.health)'
+  restore_limit:
+    en: clinical-domain leadership
+    fr: des responsabilités de direction dans le domaine clinique
   sources:
   - 11_leadership_style.txt
   - 19_owner_confirmed_scope.txt
   - 90_website_canon_llms_full.txt
   query_pattern: (?i)\b(?:clinical|healthcare|public.health)\b
-  target_pattern: clinical|healthcare|public.health
+  target_pattern: clinical|clinique|healthcare|public.health
 required_identity:
 - scope_id: self_service_adoption
   name: Metabase
@@ -367,24 +553,274 @@ required_identity:
   query_pattern: (?i)\b(?:aws|ec2)\b
   answer_pattern: (?i)(?:EC2|700|operational.{0,15}platform|governed.{0,20}platform)
 required_details:
+- id: requested_dataform_public_reference_missing
+  description: An inspectable public framework reference needs the complete URL in its retrieved project record. A title or bare domain is insufficient; do not guess a repository, scheme or path.
+  sources: [90_website_canon_llms_full.txt]
+  section_pattern: '^Advanced Dataform framework · 2025$'
+  support_pattern: 'Project page: https://www\.bolablg\.com/projects/dataform-modeling-lab/(?=$|[\s)\]"»]|[.,;](?=$|[\s)\]"»]))'
+  query_pattern: '(?is)(?=.*Dataform)(?=.*(?:public|article|repository|\brepo\b|inspect|link|lien|documentation))'
+  answer_pattern: '(?i)https://www\.bolablg\.com/projects/dataform-modeling-lab/(?=$|[\s)\]"»]|[.,;](?=$|[\s)\]"»]))'
+  restore_quotes:
+    en:
+      language: en
+      label: Public project reference
+      pattern: 'https://www\.bolablg\.com/projects/dataform-modeling-lab/(?=$|[\s)\]"»]|[.,;](?=$|[\s)\]"»]))'
+    fr:
+      language: fr
+      label: Référence publique du projet
+      section_label: Documentation du projet
+      pattern: 'https://www\.bolablg\.com/projects/dataform-modeling-lab/(?=$|[\s)\]"»]|[.,;](?=$|[\s)\]"»]))'
+- id: platform_definition_adoption_scope_missing
+  description: A platform definition should include the retrieved adoption bound and the mixed population it describes. Preserve the documented scope and period; do not turn the bound into an exact number, employee-only count, or current active-user metric.
+  sources: [10_apps_and_projects.txt, 13_gozem_internal_projects.txt]
+  section_pattern: '(?i)^GOZEM DATA HUB'
+  support_pattern: 'over 700 people'
+  query_pattern: '(?i)(?:what(?: is|\x27s)|define|describe|qu.est.ce\s+que|c.est quoi|presente|decris)\s+(?:(?:the|le|la)\s+)?(?:Gozem\s+)?Data\s+Hub\b'
+  answer_pattern: '(?i)(?:700\s*\+|(?:over|more than|plus de)\s+700)\s+(?:(?:internal and external|internes et externes)\s+)?(?:people|stakeholders|personnes|parties prenantes|utilisateurs)'
+  answer_clause_pattern: '(?i)(?:700\s*\+|(?:over|more than|plus de)\s+700)\s+(?:(?:internal and external|internes et externes)\s+)?(?:people|stakeholders|personnes|parties prenantes|utilisateurs)'
+  answer_clause_exclude_pattern: '(?i)\b(?:active|actif\w*)\b|\b(?:all(?: of whom)?|only|exclusively)\s+(?:(?:are|were)\s+)?(?:(?:company|internal)\s+)?(?:employees|staff|partners|field agents)\b|\b(?:employees|staff|partners|field agents)\s+only\b|\buniquement\s+(?:des\s+)?(?:employe\w*|partenaires|agents)\b'
+- id: operating_model_data_function_scope_missing
+  description: The retrieved record documents one operating model for the data function. Every affirmative operating-model claim must preserve that scope, rather than imply company-wide organizational models. An appended scoped quotation cannot repair an earlier broader assertion.
+  sources: [90_website_canon_llms_full.txt]
+  section_pattern: '^Scaling the data organization for multi-country growth$'
+  support_pattern: 'designed the operating model for the data function across Analytics, Data Engineering, and Data Science'
+  query_pattern: '(?s).*'
+  claim_subject_pattern: '(?i)\b(?:Bolaji|he|his|il|son|ses)\b'
+  claim_pattern: '(?i)(?:(?:for|within)\s+the\s+data function,?\s+(?:\w+\s+){0,12}?)?(?:(?:company.wide|enterprise.wide|organization.wide|organization|whole.company)\s+)?(?:(?:multiple|several|many|numerous|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|\d+)(?:\s+(?:distinct|different|separate))?\s+)?\boperating models?\b(?:,[ \t]*role charters,[ \t]*and[ \t]+competency frameworks)?(?:\s+(?:for|of)\s+the\s+data function)?'
+  answer_pattern: '(?is)\A(?!.*(?:company.wide|enterprise.wide|organization.wide|whole company))(?!.*\b(?:multiple|several|many|numerous|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|\d+)(?:\s+(?:distinct|different|separate))?\s+operating models\b)(?=.*(?:operating models?(?:,[ \t]*role charters,[ \t]*and[ \t]+competency frameworks)?\s+(?:for|of)\s+the\s+data function|(?:for|within)\s+the\s+data function[^.!?;\n]{0,100}operating models?\b))'
+  restore_quote:
+    language: en
+    label: Data-function responsibility
+    pattern: 'Assessed organizational capability gaps and designed the operating model for the data function across Analytics, Data Engineering, and Data Science\.'
+- id: leadership_principles_complete_missing
+  description: Preserve the three named operating principles in naming or application questions, distinct from the separate leadership philosophy.
+  sources: [11_leadership_style.txt]
+  section_pattern: '^THREE OPERATING PRINCIPLES:$'
+  support_pattern: 'metrics before dashboards; architecture is the budget; adoption is the deliverable'
+  query_pattern: '(?is)\A(?![^\n]*\b(?:one|single|seul)\b)(?=.*(?:leadership|management))(?=.*(?:principles|principes))'
+  answer_pattern: '(?is)(?=.*(?:metrics before dashboards|metriques avant les tableaux de bord))(?=.*(?:architecture is the budget|architecture est le budget))(?=.*(?:adoption is the deliverable|adoption est le livrable))'
+  restore_quotes:
+    en:
+      language: en
+      label: Named operating principles
+      pattern: 'metrics before dashboards; architecture is the budget; adoption is the deliverable\.'
+    fr:
+      language: fr
+      label: Principes opérationnels
+      section_label: Trois principes opérationnels
+      pattern: 'les metriques avant les tableaux de bord ; l\x27architecture est le budget ; l\x27adoption est le livrable\.'
+- id: requested_self_service_query_reduction_missing
+  description: Retain the halving of routine query volume addressed to the central data team, not a general company-query reduction or confirmed training outcome.
+  scope_id: self_service_adoption
+  sources: [13_gozem_internal_projects.txt]
+  section_pattern: '(?i)^SELF-SERVICE NO-CODE DATA EXPLORATION PLATFORM'
+  query_pattern: '(?i)(?:self.service|routine quer|requete|requetes|Metabase|moitie|query load)'
+  answer_pattern: '(?is)(?:halv\w* routine query volume (?:on|addressed to) the central data team|routine query volume (?:on|addressed to) the central data team [^.!?\n]{0,30}(?:halv\w*|half)|divise par deux le volume des requetes courantes adressees a l\x27equipe data centrale)'
+  restore_quotes:
+    en:
+      language: en
+      label: Routine query workload
+      pattern: '(?<=- Outcome: )adoption reached 12\+ active manager users, halving routine query volume on the central data team\.'
+    fr:
+      language: fr
+      label: Charge des requêtes courantes
+      section_label: Exploration Metabase en libre-service
+      pattern: 'L\x27adoption de Metabase a atteint plus de 12 utilisateurs managers actifs et a divisé par deux le volume des requêtes courantes adressées à l\x27équipe data centrale\.'
+- id: requested_ec2_project_binding_missing
+  description: Bind the confirmed EC2 production responsibility to Gozem Data Hub locally. This establishes no S3 employer or project.
+  sources: [20_owner_confirmed_production_scope.txt]
+  support_pattern: 'For the Gozem Data Hub, Bolaji personally designed and operated AWS EC2 in production'
+  query_pattern: '(?is)\A(?=[^\n]*AWS)(?=[^\n]*(?:personal|personnel))(?=[^\n]*(?:services|technologies|EC2))'
+  answer_pattern: '(?i)(?:For the Gozem Data Hub, Bolaji personally designed and operated AWS EC2 in production|(?:Bolaji|he)\s+(?:has\s+)?personally\s+(?:designed\s+and\s+operated|operated\s+and\s+designed)\s+(?:AWS\s+)?EC2\s+in production\s+for\s+(?:the\s+)?Gozem Data Hub|(?:Bolaji|he)\s+(?:has\s+)?personally\s+designed and operated\s+(?:the following\s+)?production AWS services:\s*(?:AWS\s+)?EC2\s+for\s+(?:the\s+)?Gozem Data Hub\b)'
+  restore_quote:
+    language: en
+    label: EC2 production project
+    pattern: 'For the Gozem Data Hub, Bolaji personally designed and operated AWS EC2 in production\.'
+- id: plural_production_service_inventory_missing
+  description: Broad plural production-service enumeration should cover the documented inventory rather than repeat a single project. Provider-specific and singular requests remain focused.
+  sources: [21_production_service_inventory.txt]
+  section_pattern: '^PRODUCTION SERVICE INVENTORY$'
+  support_pattern: 'Service inventory: BigQuery, Apache Airflow, Dataform, Google Cloud Storage'
+  query_pattern: '(?is)\A(?![^\n]*\b(?:other|others|additional|autres)\b)(?!.*\b(?:AWS|GCP|Google Cloud|streaming)\b)(?=[^\n]*\b(?:which|what|list|quels|quelles|liste)\b)(?=[^\n]*\b(?:services|technologies)\b)(?=.*production)(?=.*(?:personal|personnel|designed|operated|concu|exploit))'
+  answer_pattern: '(?is)(?=.*\bBigQuery\b)(?=.*\b(?:Google Cloud Storage|Cloud Storage|GCS)\b)(?=.*\bDataform\b)(?=.*\bAirflow\b)(?=.*\bPub/Sub\b)(?=.*\bDataflow\b)(?=.*\bCloud Run\b)(?=.*\bCloud Functions\b)(?=.*\bVertex AI\b)(?=.*\bArtifact Registry\b)(?=.*\bCloud Logging\b)(?=.*\bCloud Build\b)(?=.*\bEC2\b)(?=.*\bS3\b)'
+  restore_quote:
+    language: en
+    label: Documented production services
+    pattern: 'Service inventory: BigQuery[^\n]+\.'
+- id: requested_batch_workload_measurement_missing
+  description: A broad request for measurements across systems must preserve the separate batch average, daily period and upsert population. Do not apply this to a CDC-only or streaming-only request.
+  sources: [90_website_canon_llms_full.txt]
+  section_pattern: '(?i)^Workload and measurement scope$'
+  support_pattern: 'batch workloads averaged approximately 5 TB of daily upserts'
+  query_pattern: '(?is)\A(?=[^\n]*(?:systems|workloads|systemes|charges))(?=[^\n]*(?:throughput|measurements|event volume|debit|mesures|volume))(?![^\n]*(?:only|uniquement))(?:(?=[^\n]*\b(?:batch|lot)\b)(?=[^\n]*\b(?:streaming|flux)\b)|(?![^\n]*\b(?:streaming|CDC|MongoDB|batch|flux|lot)\b))'
+  answer_pattern: '(?is)(?=.*(?:approximate\w*|about|around|environ))(?=.*5\s*(?:TB|To))(?=.*(?:day|daily|jour))(?=.*(?:batch|lot))(?=.*(?:upsert|mise a jour|insert))'
+  restore_quote:
+    language: en
+    label: Separate batch workload measurement
+    pattern: 'At Gozem, batch workloads averaged approximately 5 TB of daily upserts into existing modeled tables\.'
+- id: personal_pipeline_project_identity_missing
+  description: When using the retrieved personal MongoDB CDC implementation as production pipeline proof, preserve its named employer and implementation context.
+  sources: [20_owner_confirmed_production_scope.txt]
+  support_pattern: 'At Gozem, Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline'
+  query_pattern: '(?is)\A(?![^\n]*\b(?:BigQuery|Airflow|Pub/Sub|Dataflow|MongoDB|CDC|EC2|S3)\b)(?=.*production)(?=.*(?:personally|personal|hands.on))(?=.*(?:pipeline|engineering))(?=.*(?:strongest|best|evidence|proof))'
+  answer_pattern: '(?i)Gozem'
+  answer_activation_pattern: '(?i)\b(?:Pub/Sub|Dataflow)\b'
+  activation_negation_prefix_pattern: '(?i)(?:without|(?:did|does|has|have|had)\s+not\s+(?:use|used|design|operate|deploy)|(?:doesn\x27t|didn\x27t)\s+use|never\s+(?:used|operated|designed))\s+$'
+  answer_match_required_pattern: '(?i)\bGozem\b'
+  answer_clause_exclude_pattern: '(?i)\b(?:not|never|unknown|unverified|unrelated|undocumented|no evidence)\b'
+  answer_clause_pattern: |-
+    (?ix)
+    (?:
+    (?:At\s+Gozem,?\s+)?
+    \b(?:Bolaji|he)\s+(?:has\s+)?(?:personally\s+)?
+    (?:designed|operated|built|implemented|used|designs|operates|uses)\s+
+    (?:(?:production|services?|components?|including|the|and|operated|using)\s+){0,6}
+    (?:(?:Google\s+Cloud|Google)\s+)?(?:Pub/Sub|Dataflow)(?:\s*(?:,|and|et)\s*(?:(?:Google\s+Cloud|Google)\s+)?(?:Pub/Sub|Dataflow))*
+    (?:\s+in\s+production)?(?:\s+at\s+Gozem,?)?\s+for\s+(?:(?:the|a)\s+)?
+    (?:Gozem(?:\x27s)?\s+)?MongoDB\s+(?:CDC|change\s+data\s+capture)(?:\s+pipeline)?(?:\s+at\s+Gozem)?\b
+    |
+    (?:Chez\s+Gozem,?\s+)?
+    \b(?:Bolaji|il)\s+a\s+(?:personnellement\s+)?
+    (?:concu|exploite|construit|implemente|utilise)(?:\s+et\s+exploite)?\s+
+    (?:(?:Google\s+Cloud|Google)\s+)?(?:Pub/Sub|Dataflow)(?:\s*(?:,|et)\s*(?:(?:Google\s+Cloud|Google)\s+)?(?:Pub/Sub|Dataflow))*
+    (?:\s+en\s+production)?(?:\s+chez\s+Gozem,?)?\s+pour\s+(?:(?:le|un)\s+)?
+    (?:pipeline\s+)?(?:MongoDB\s+CDC|CDC\s+MongoDB)(?:\s+(?:chez|de)\s+Gozem)?\b
+    )
+  restore_quote:
+    language: en
+    label: Named production implementation
+    pattern: 'At Gozem, Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline\.'
+- id: requested_spoken_languages_missing
+  description: Preserve both documented human languages and their proficiency levels when spoken-language capability is requested. Programming-only questions do not establish this intent.
+  sources: [00_identity.txt]
+  section_pattern: '^SPOKEN LANGUAGES:$'
+  support_pattern: 'French \(native\) and English \(full professional proficiency\)'
+  query_pattern: '(?is)\A(?:(?!.*\b(?:programming|programmation|coding)\b)|(?=.*\b(?:spoken|human|French|English|francais|anglais)\b))(?=.*(?:language|langue|francophone|anglophone))(?=.*(?:speak|spoken|parle|capabilit|proficien|fluen|couran|francophone|anglophone))'
+  answer_pattern: '(?is)(?=.*(?:French|francais|francaise).{0,30}(?:native|maternel))(?=.*(?:English|anglais).{0,40}(?:full professional|professionnel))'
+  restore_quotes:
+    en:
+      language: en
+      label: Documented spoken languages
+      pattern: 'French \(native\) and English \(full professional proficiency\)\.'
+    fr:
+      language: fr
+      label: Langues documentées
+      section_label: Langues parlées
+      pattern: 'le francais \(langue maternelle\) et l\x27anglais \(competence professionnelle complete\)\.'
+- id: requested_current_head_role_interval_missing
+  description: A current Head of Data question should preserve the named role's own end date from the retrieved employment table, without deriving it from a subsequent role.
+  sources: [91_role_timeline.txt]
+  section_pattern: '^EMPLOYMENT TIMELINE:$'
+  support_pattern: 'Head of Data at Gozem: October 2022 - March 2025'
+  query_pattern: '(?is)(?=.*head of data)(?=.*(?:current|still|encore|actuel))'
+  answer_pattern: '(?i)Head of Data[^.!?\n]{0,100}(?:March 2025|mars 2025)'
+  restore_quotes:
+    en:
+      language: en
+      label: Head of Data role interval
+      pattern: 'Head of Data at Gozem: October 2022 - March 2025 \(Oct 2022 - Mar 2025\)'
+    fr:
+      language: fr
+      label: Période historique du poste
+      section_pattern: '^QUEL ETAIT LE POSTE DE BOLAJI CHAQUE ANNEE:$'
+      section_label: Historique des postes
+      pattern: 'En 2023, Bolaji etait Head of Data chez Gozem \(octobre 2022 - mars 2025\)\.'
+- id: requested_AI_implementation_progress_missing
+  description: Preserve the retrieved count and its implementation-stage status when the question asks about the prioritized initiatives. Advancing into implementation does not establish completed delivery or a measured return.
+  sources: [90_website_canon_llms_full.txt]
+  section_pattern: '(?i)^AI strategy & investment portfolio$'
+  support_pattern: 'advancing 6 high-priority initiatives into implementation'
+  query_pattern: '(?is)(?=.*(?:AI strategy|strategie IA|priorit|vendor|fournisseur))(?=.*(?:six|6|implementation|progress))'
+  answer_pattern: '(?is)(?=.*(?:six|6))(?=.*(?:into implementation|implementation|en cours de mise en oeuvre))'
+  restore_quote:
+    language: en
+    label: Implementation progress
+    pattern: 'Result: Turned fragmented AI experimentation[^\n]*advancing 6 high-priority initiatives into implementation\.'
+- id: migration_earlier_role_missing
+  description: If a personal production-pipeline answer uses the cloud migration, bind that migration locally to its explicitly documented earlier role. A later Director umbrella, unrelated role mention or appended correct quotation cannot establish the role governing the original migration claim. Retain warehouse design and pipeline facts without inferring operation of every service.
+  sources: [01_career_overview.txt, 03_previous_role_gozem_gda.txt, 90_website_canon_llms_full.txt]
+  support_pattern: '(?i)Global Data Analyst'
+  query_pattern: '(?is)(?=.*production)(?=.*(?:personally|personal|hands.on))(?=.*(?:pipeline|data engineering))'
+  claim_pattern: '(?i)cloud migration|migrat\w*[^.!?\n]{0,100}(?:10\+?\s*TB|over\s+10\s*TB|10\s*TB\s+plus)|50\+? scheduled ETL'
+  governing_role_pattern: '(?i)Global Data Analyst|Data Director|Head of Data'
+  topic_intro_pattern: '(?i)\s*(?:Regarding|As for)\s+(?:the\s+)?(?:Google\s+)?cloud migration'
+  role_prefix_pattern: '(?i)(?:as(?: a| the)?|during(?: his| the)?(?: earlier| former| previous)?|in his(?: earlier| former| previous)?|en tant que|pendant(?: son)?)\s+$'
+  role_heading_pattern: '(?i)^\s*(?:Global Data Analyst|Data Director|Head of Data)(?:\s+at Gozem|\s+role|\s*\([^)]*\))*\s*:?\s*$'
+  restore_quote:
+    language: en
+    label: Earlier role evidence
+    pattern: '(?s)(?:PREVIOUS ROLE: )?Global Data Analyst[^\n]*\n[^\n]*cloud migration[^\n]*?50\+ scheduled ETL pipelines\.'
+  answer_pattern: '(?i)Global Data Analyst'
+- id: initial_team_growth_stage_missing
+  description: Preserve the initial team reaching its documented size separately from the later expansion; do not omit that requested stage or infer a zero baseline.
+  sources: [19_owner_confirmed_scope.txt, 11_leadership_style.txt]
+  support_pattern: 'initial team grew to 4'
+  query_pattern: '(?i)(?:growth|croissance|developp).{0,180}(?:countries|pays)|(?:team|equipe).{0,100}\b(?:dates|limites|boundaries)\b'
+  answer_pattern: '(?i)(?:initial|premiere|d.abord|Global Data Analyst).{0,100}(?:to|a|jusqu.a|attein\w*)\s+(?:4|quatre)|(?:to|a|jusqu.a|attein\w*)\s+(?:4|quatre).{0,100}(?:initial|premiere|Global Data Analyst)'
+  restore_quotes:
+    en:
+      language: en
+      section_pattern: '^GOZEM TEAM GROWTH AND ROLE PERIODS$'
+      label: Confirmed team stages
+      pattern: 'Bolaji was the first data hire in 2019\. The initial team grew to 4 during the Global Data Analyst era \(November 2019 - September 2022\)\.'
+    fr:
+      language: fr
+      section_pattern: '^FRENCH SUMMARY OF CONFIRMED TEAM STAGES$'
+      label: Étapes confirmées de l'équipe
+      section_label: Chronologie confirmée de l'équipe
+      pattern: 'Bolaji a été la première embauche data en 2019\. L\x27équipe initiale a atteint 4 personnes pendant le mandat Global Data Analyst \(novembre 2019 - septembre 2022\)\.'
+- id: requested_streaming_workload_average_missing
+  description: Include the retrieved average event count for the separate streaming workload when the request asks about measurements across the systems. Its population is distinct from an individual CDC pipeline, throughput ceiling or latency guarantee.
+  scope_id: streaming_workload_volume
+  sources: [90_website_canon_llms_full.txt]
+  query_pattern: '(?i)throughput|event volume|latency|availability|debit|volume|latence|disponibilite'
+  answer_pattern: '(?is)(?=.*(?:average|averaged|moyenn\w*))(?=.*45\s*(?:million|m\b))(?=.*(?:separate|distinct|separe\w*).{0,55}(?:streaming|workload|flux)|.*(?:streaming|workload|flux).{0,55}(?:separate|distinct|separe\w*))'
+  restore_quote:
+    language: en
+    label: Separate workload measurement
+    pattern: 'A separate streaming workload averaged 45 million telemetry and operational events per day;[^.]+\.'
 - id: team_growth_first_hire
   description: Preserve the retrieved first-hire year and initial team growth to a size without inferring a zero baseline.
   sources: [19_owner_confirmed_scope.txt]
   support_pattern: 'first data hire in 2019'
-  query_pattern: '(?i)(?:growth|croissance|developp).{0,180}(?:countries|pays)|(?:team|equipe).{0,100}(?:dates|limites|boundaries)'
-  answer_pattern: '(?i)(?:first|premier).{0,60}2019'
+  query_pattern: '(?i)(?:growth|croissance|developp).{0,180}(?:countries|pays)|(?:team|equipe).{0,100}\b(?:dates|limites|boundaries)\b'
+  answer_pattern: '(?i)(?:first data hire|first.{0,15}data (?:recruit|employee)|premier data hire|premier\w*.{0,25}(?:embauch\w*|recru\w*|collaborat\w*|employ\w*|data hire).{0,15}(?:data|donnees)).{0,50}2019|2019.{0,50}(?:first data hire|premier\w*.{0,25}(?:embauch\w*|recru\w*|collaborat\w*|employ\w*|data hire).{0,15}(?:data|donnees))'
+  restore_quotes:
+    en:
+      language: en
+      section_pattern: '^GOZEM TEAM GROWTH AND ROLE PERIODS$'
+      label: Confirmed team stages
+      pattern: 'Bolaji was the first data hire in 2019\. The initial team grew to 4 during the Global Data Analyst era \(November 2019 - September 2022\)\.'
+    fr:
+      language: fr
+      section_pattern: '^FRENCH SUMMARY OF CONFIRMED TEAM STAGES$'
+      label: Étapes confirmées de l'équipe
+      section_label: Chronologie confirmée de l'équipe
+      pattern: 'Bolaji a été la première embauche data en 2019\. L\x27équipe initiale a atteint 4 personnes pendant le mandat Global Data Analyst \(novembre 2019 - septembre 2022\)\.'
 - id: team_growth_own_period
   description: Preserve the retrieved later growth endpoints and their Head of Data period instead of attaching the full growth to the latest role.
   sources: [19_owner_confirmed_scope.txt]
   support_pattern: 'grew from 4 to 14\+ during his Head of Data period \(October 2022 - March 2025\)'
-  query_pattern: '(?i)(?:growth|croissance|developp).{0,180}(?:countries|pays)|(?:team|equipe).{0,100}(?:dates|limites|boundaries)'
+  query_pattern: '(?i)(?:growth|croissance|developp).{0,180}(?:countries|pays)|(?:team|equipe).{0,100}\b(?:dates|limites|boundaries)\b'
   answer_pattern: '(?i)(?:4|quatre).{0,45}(?:14|quatorze).{0,150}2022.{0,60}2025|2022.{0,60}2025.{0,150}(?:4|quatre).{0,45}(?:14|quatorze)'
 - id: operating_markets_and_headquarters
   description: Retain the documented operating-market count and headquarters-only distinction. Headquarters does not establish an employee work location or another operating market.
   sources: [19_owner_confirmed_scope.txt]
-  support_pattern: 'Singapore was company headquarters only'
-  query_pattern: '(?i)(?:growth|croissance|developp).{0,180}(?:countries|pays)|(?:team|equipe).{0,100}(?:dates|limites|boundaries)'
+  support_pattern: 'Singapore was company headquarters only|Singapour était uniquement le siège social de l\x27entreprise'
+  query_pattern: '(?i)(?:growth|croissance|developp).{0,180}(?:countries|pays)|(?:team|equipe).{0,100}\b(?:dates|limites|boundaries)\b'
   answer_pattern: '(?is)(?=.*(?:five|cinq|5).{0,45}(?:African|africain|operating|operationnel))(?=.*(?:Singapore|Singapour).{0,65}(?:headquarters|siege))'
+  restore_quotes:
+    en:
+      language: en
+      section_pattern: '^GEOGRAPHIC SCOPE$'
+      label: Confirmed geographic scope
+      pattern: 'The five African operating markets were Togo, Benin, Cameroon, Gabon, and Congo\. Singapore was company headquarters only for this claim, not an additional African operating market or a team-member work location\.'
+    fr:
+      language: fr
+      section_pattern: '^FRENCH SUMMARY OF CONFIRMED TEAM STAGES$'
+      label: Périmètre géographique confirmé
+      section_label: Chronologie confirmée de l'équipe
+      pattern: 'L\x27équipe soutenait cinq marchés opérationnels africains : Togo, Bénin, Cameroun, Gabon et Congo\. Singapour était uniquement le siège social de l\x27entreprise, et non un marché opérationnel supplémentaire ni un lieu de travail des membres de l\x27équipe\.'
 - scope_id: recommendation_order_share
   query_pattern: (?i)(?=.*(?:12|metric|figure|mesure|chiffre))(?=.*(?:recommend|recommand))
   id: recommendation_delivered_order_denominator_missing
@@ -466,3 +902,101 @@ required_details:
       scope_match: (?i)Head of Data.*2022.*2025
       scope_label: mandat Head of Data, octobre 2022 - mars 2025
       pattern: L\x27adoption de Metabase a atteint plus de 12 utilisateurs managers actifs[^\n]*centrale\.
+
+request_scopes:
+- id: requested_personal_production_scope
+  description: The question requests personal production design or operation. An unqualified experience list inherits that setting. For every mentioned tool, provide direct actor/tool/setting proof, an explicitly labeled inventory or project-stack fact, or a locally scoped statement that personal production operation remains unverified. Project leadership does not establish operation of every service.
+  query_pattern: '(?is)(?=.*\bproduction\b)(?=.*\b(?:personally|personal|personnellement|personnel\w*)\b)'
+  subject_pattern: '(?i)\b(?:AWS EC2|AWS S3|EC2|S3|Pub/Sub|Dataflow|Apache NiFi|NiFi|Spark|Lakeflow)\b'
+  record_limit_subjects: [Spark Structured Streaming, Apache Spark Structured Streaming]
+  record_limit_modifiers: ['\bpersonal production experience\b', '\bproduction experience\b', '\bCDC event counts\b', '\bend-to-end latency\b', '\bavailability\b', '\bon-call responsibility for\b']
+  subject_aliases:
+    ec2: aws ec2
+    s3: aws s3
+    nifi: apache nifi
+  personal_support_pattern: |-
+    (?ix)\b(?:Bolaji|he|il)\s+(?:(?:has|had|a|personally|directly|personnellement|directement)\s+){0,3}
+    (?:
+      (?:uses?|used|operates?|operated|builds?|built|designs?|designed(?:\s+and\s+operated)?|deploys?|deployed|set\s+up|provisioned|configured|utilise|exploite|construit|concu|deploye)\s+(?:an?\s+)?
+      (?P<tools_before>(?:AWS\s+)?(?:EC2|S3|Pub/Sub|Dataflow|Spark|Apache\s+NiFi|NiFi|Lakeflow)(?:\s*(?:,|and|et|with|avec)\s*(?:AWS\s+)?(?:EC2|S3|Pub/Sub|Dataflow|Spark|Apache\s+NiFi|NiFi|Lakeflow))*)
+      (?:\s+(?:buckets?|pipelines?|systems?|applications?|components?)(?:\s+(?:of|for|within)\s+[^.;\n]{1,80}?)?)?\s+(?:in|en)\s+production
+    |
+      (?:has|had)\s+(?:personal\s+)?production\s+experience\s+with\s+
+      (?P<tools_after>(?:AWS\s+)?(?:EC2|S3|Pub/Sub|Dataflow|Spark|Apache\s+NiFi|NiFi|Lakeflow)(?:\s*(?:,|and|et)\s*(?:AWS\s+)?(?:EC2|S3|Pub/Sub|Dataflow|Spark|Apache\s+NiFi|NiFi|Lakeflow))*)
+    |
+      (?:uses?|used|operates?|operated|builds?|built|designs?|designed|deploys?|deployed)\s+(?:a\s+|an\s+)?production\s+
+      (?P<tools_front>(?:[\w/+-]+\s+){0,10}?(?:pipelines?|stacks?|systems?|services?|platforms?))
+    )
+  support_subject_groups: [tools_before, tools_after, tools_front]
+  project_support_pattern: '(?is)Gozem Data Hub.{0,900}?(?:published case documents|documented stack (?:includes|contains))\s+(?P<tools>[^.\n]+)'
+  project_tools_pattern: '(?im)^Tools:\s*(?P<tools>[^\n]+)'
+  project_stack_sources: [90_website_canon_llms_full.txt, 13_gozem_internal_projects.txt, 10_apps_and_projects.txt]
+  project_names:
+    data_hub: '(?i)\b(?:Gozem\s+)?Data Hub\b'
+    gozem: '(?i)\bGozem\b'
+    rintio: '(?i)\bRintio\b'
+    mongo_cdc: '(?i)\bMongoDB\s+CDC\b|\bCDC\s+pipeline\b'
+  project_item_separator_pattern: '(?i)(?:,\s*(?:(?:and|et)\s+)?|\s+(?:and|et)\s+)(?:an?\s+)?(?=(?:AWS\s+)?(?:EC2|S3|Pub/Sub|Dataflow|Spark|Apache\s+NiFi|NiFi|Lakeflow)\b)'
+  project_predicate_separator_pattern: '(?i)\s+and\s+(?=(?:(?:he|Bolaji)\s+)?personally\s+(?:designed|operated|used|deployed)\b)'
+  shared_location_prefix_pattern: '(?i)^\s*(?:at|for|within|chez|dans)\s+[^,;.!?\n]{1,80},\s*'
+  unknown_project_pattern: '(?i)(?:employer|project)[^.!?;\n]{0,85}(?:not\s+(?:specified|documented)|unknown)'
+  project_key: data_hub
+  project_reference_pattern: '(?i)^(?:its\b|this (?:project|platform)\b|the (?:documented|published) stack\b)'
+  project_anchor_pattern: '(?i)\b(?:Gozem\s+)?Data Hub\b'
+  project_answer_pattern: '(?i)(?:documented|published).{0,30}(?:stack|case|part of)|architected and led|stack.{0,15}(?:includes|documents|contains)|Data Hub.{0,70}(?:used|uses|utilized|utilised|utilise)'
+  implementation_support_pattern: '(?i)(?:built|implemented|construit|implemente).{0,70}(?:MongoDB|CDC).{0,180}(?:Pub/Sub|Dataflow)'
+  qualification_pattern: '(?is)(?=.*(?:personal\w*|personnel\w*))(?=.*production)'
+  personal_assertion_pattern: '(?i)\b(?:he|Bolaji|il)\s+(?:personally\s+|directly\s+)?(?:used|uses|operated|operates|designed|deployed)\b[^.;\n]{0,110}\b(?:and|then|et)\s+(?:used|uses|operated|operates|designed|deployed)\s+(?:AWS\s+)?(?:EC2|S3|Pub/Sub|Dataflow|Spark|NiFi|Lakeflow)\b|\b(?:personally|personnellement)\b.{0,90}\b(?:EC2|S3|Pub/Sub|Dataflow|Spark|NiFi|Lakeflow)\b|\b(?:he|Bolaji|il)\s+(?:(?:has|had|a|directly|personally)\s+){0,3}(?:operated|operates|operating|deployed|deploys|designed|designs|used|uses)\s+(?:AWS\s+)?(?:EC2|S3|Pub/Sub|Dataflow|Spark|Apache\s+NiFi|NiFi|Lakeflow)\b|\b(?:EC2|S3|Pub/Sub|Dataflow|Spark|NiFi|Lakeflow)\b.{0,30}(?:was|were|is)\s+personally\s+(?:operated|designed|used|deployed)|\bproduction\s+(?:experience|(?:Apache\s+)?(?:EC2|S3|Pub/Sub|Dataflow|Spark|NiFi|Lakeflow))\b'
+  inventory_label_pattern: '(?i)^\s*(?:listed tools|tool inventory|inventory|documented tool list|outils listes)|\b(?:inventory|tool list|catalogue)\b.{0,30}(?:lists|includes|contains)|(?:appear\w*|listed)\s+in.{0,20}(?:inventory|tool list)'
+  exclude_support_pattern: '(?i)\b(?:taught|teaches|teaching|supervised|delivered|designed)\b[^.;\n]{0,60}\b(?:training|bootcamp|module|lab|prototype|formation|atelier)\b|\b(?:for|during|in|en|pour)\s+(?:a\s+|an\s+)?(?:training|bootcamp|lab|prototype|formation|atelier)\b'
+  operation_pattern: '(?i)\b(?:personally|operated|operating|operates|use|uses|used|using|designed|designing|designs|deployed|deploys|builds|built|exploite|utilise|concu)\b'
+
+experience_confirmations:
+- id: confirmed_non_use_requires_answer
+  description: Explicit owner-confirmed absence must be stated when the requested tool is covered by that retrieved confirmation. Do not retain an outdated unknown or infer inability. Without an explicit confirmation, retain a documentation limit.
+  source: 20_owner_confirmed_production_scope.txt
+  negative_pattern: '(?i)Bolaji has no (?P<subject>[A-Za-z][A-Za-z /-]{0,45}?) experience at all'
+
+editorial_constraints:
+- id: superseded_growth_interval_echo
+  description: Give the confirmed growth stages directly without echoing the superseded interval, even to deny it. State the remaining headcount documentation limit without repeating that interval.
+  sources: [19_owner_confirmed_scope.txt]
+  support_pattern: 'initial team grew to 4|L\x27équipe initiale a atteint 4'
+  query_pattern: '(?i)(?:growth|croissance|developp).{0,180}(?:countries|pays)|(?:team|equipe).{0,100}\b(?:dates|limites|boundaries)\b'
+  answer_pattern: '(?i)(?:de |from )(?:zero|0).{0,12}(?:14|quatorze)'
+
+role_project_relations:
+- id: cdc_role_attribution_requires_direct_evidence
+  description: Retain only role associations directly supported by the same project's actor and responsibility record. Dataflow use in the earlier cloud migration and a nearby role title do not date CDC delivery. A confirmed work-role interval locates the work within that role; it does not establish exact project start or completion dates, continuous operation throughout that interval, or dates for another service.
+  project_pattern: '(?i)\bMongoDB\s+(?:CDC|change\s+data\s+capture)\b|\bCDC\s+pipeline\b'
+  role_pattern: '(?i)Global Data Analyst|Head of Data|Data Director|Director of Data'
+  role_aliases:
+    director of data: data director
+  role_prefix_pattern: '(?i)(?:as(?: a| the)?|during(?: his| the)?(?: earlier| former| previous)?|(?:when|while)\s+(?:he|Bolaji)\s+was|in\s+his(?:\s+(?:earlier|former|previous))?|en tant que|pendant(?: son| le)?(?: mandat de)?)\s+$'
+  role_heading_pattern: '(?i)(?P<role>Global Data Analyst|Head of Data|Data Director|Director of Data)(?:\s+at Gozem|\s+role|\s*\([^)]*\))*'
+  scope_reset_pattern: '(?i)^\s*(?:Separately|For a separate project|For another project|Distinctement|Named production implementation\s*\()'
+  source_quote_reset_pattern: '(?i)^\s*Named production implementation\s*\('
+  scope_limit_subject_pattern: '(?i)\b(?:role|period|date|mandate|poste|periode)\w*\b'
+  evidence_limit_prefix_pattern: '(?i)(?:does not establish|not documented|not established|ne precise pas|unknown|unconfirmed|unverified)[^.!?;\n]{0,80}\b(?:that|whether|if|que|si)\b'
+  evidence_limit_suffix_pattern: '(?i)^\s*whether\b[^.!?;\n]+\b(?:is|remains)\s+(?:unknown|unconfirmed|unverified|undocumented)\b'
+  denied_project_prefix_pattern: '(?i)\b(?:never|did not|has not)\s+(?:(?:personally|directly)\s+)?(?:design(?:ed)?|operat(?:e|ed)|built|build|implement(?:ed)?)\s+(?:the\s+)?$'
+  after_project_role_pattern: '(?i)\s*(?:pipeline\s+)?(?:at\s+Gozem\s+)?(?:as(?: a| the)?|during(?: his| the)?(?: role as)?)\s+'
+  unrelated_project_prefix_pattern: '(?i)\b(?:independently of|separate from|unrelated to|not for)\s+(?:the\s+)?$'
+  support_relation_pattern: '(?i)\b(?:Bolaji|he|il)\s+(?:(?:has|had|a|personally|directly|personnellement)\s+){0,3}(?:designed|operated|built|implemented|concu|exploite|construit|implemente)(?:\s+and\s+(?:designed|operated|built|implemented))?\s+(?:the\s+)?(?:MongoDB\s+(?:CDC|change\s+data\s+capture)(?:\s+pipeline)?|CDC\s+pipeline|(?:Google\s+Cloud\s+)?Pub/Sub\s+and\s+(?:Google\s+Cloud\s+)?Dataflow(?:\s+in\s+production)?\s+for\s+(?:the\s+)?MongoDB\s+(?:CDC|change\s+data\s+capture)(?:\s+pipeline)?)\b'
+  support_exclude_pattern: '(?i)\b(?:if|hypothetical|fictional|would|could|never|not|unverified|unknown|undocumented)\b'
+
+relationship_constraints:
+- id: cdc_migration_metrics_require_separate_scope
+  description: The 10+ TB migration within a single quarter belongs to the earlier Global Data Analyst cloud infrastructure migration, not the MongoDB CDC pipeline. Keep CDC responsibility and migration measurements in separately attributed claims.
+  binding_mode: local_cooccurrence
+  qualifier_prefix_pattern: '(?i)\b(?:no evidence|no documentation|does not establish|not documented|unverified)\s+(?:that\s+|of\s+|for\s+)?(?:(?:the|a|an|MongoDB|CDC|pipeline|system|workload)\s+){0,7}$'
+  subject_pattern: '(?i)MongoDB\s+CDC|\bCDC\s+(?:pipeline|system|workload)'
+  metric_pattern: '(?i)\bmigrat\w*[^.!?;\n]{0,90}(?:(?:over\s+)?10\+?\s*TB|10\s*TB\s+plus|(?:a|one|single)\s+quarter)|\b(?:over\s+)?10\+?\s*TB[^.!?;\n]{0,50}(?:migrat|quarter)'
+- id: initial_cloud_choice_not_finops_cause
+  description: The initial cloud-first platform choice and migration belong to the earlier Global Data Analyst role. The later Head of Data FinOps cost reduction is a separate recorded initiative. Do not attribute that reduction to the initial choice or a nearby reference to that decision; retain both facts separately with their own role and initiative.
+  cause_pattern: '(?i)cloud.first|initial.{0,30}(?:cloud|GCP|platform)|(?:cloud|GCP) migration'
+  separate_pattern: '(?i)\b(?:separately|later|FinOps|Dataform|incremental|partitioning|clustering)\b'
+  reference_pattern: '(?i)\b(?:this|that|the) (?:decision|choice|approach)|\bit\b'
+  causal_pattern: '(?i)\b(?:resulted in|contributed to|led to|caused|reduced|cut|achieved|drove|yielded|yielding)\b'
+  metric_pattern: '42[.,]57\s*%'
+  negation_pattern: '(?i)\b(?:not|never|no|pas|non)\b'

@@ -29,6 +29,7 @@ Usage:
 
 import argparse
 import concurrent.futures
+import contextvars
 import json
 import os
 import statistics
@@ -47,6 +48,8 @@ REPORT_DIR = PROJECT_ROOT / "local" / "eval_reports"
 # Judge model is PINNED: change it only deliberately, never implicitly, or
 # score drift between runs becomes indistinguishable from quality drift.
 JUDGE_MODEL = os.environ.get("EVAL_JUDGE_MODEL", "gemini-2.5-pro")
+JUDGE_PROTOCOL_VERSION = "bounded-format-recovery-1"
+_JUDGE_DIAGNOSTICS = contextvars.ContextVar("judge_diagnostics", default=None)
 
 # Approximate prices (USD per 1M tokens) for the cost estimate. Tokens are
 # estimated at 4 chars/token; treat the resulting figure as an order of
@@ -125,6 +128,35 @@ _LOCAL_DENIAL = _re_mod.compile(
 _DENIAL_WINDOW = 25
 
 
+def _confirmed_experience_limit(answer, target):
+    """Evaluator-only recognition of a complete, named confirmation gap."""
+    prefix = r"(?:Similarly,\s+)?(?:he|Bolaji)\s+has\s+no confirmed personal production experience with\s+"
+    normalized = " ".join(_accent_fold(answer).split())
+    for sentence in normalized.split("."):
+        sentence = " ".join(sentence.split())
+        # Reject a conditional before clause extraction can detach its premise.
+        if not _re_mod.match(prefix, sentence, _re_mod.I) or _re_mod.search(
+            r"\b(?:if|unless|whether|when|would|could|might|assuming|suppose|provided|hypothetical|example)\b",
+            sentence,
+            _re_mod.I,
+        ):
+            continue
+        # Match the complete sentence. Only the recorded negative project-proof
+        # continuation is allowed; a new positive predicate cannot be detached.
+        match = _re_mod.fullmatch(
+            prefix
+            + r"(?P<subject>[a-z][a-z0-9 /+#_'()-]{0,120}?)"
+            + r"(?:,\s+and no named project proves its personal deployment)?",
+            sentence,
+            _re_mod.I,
+        )
+        if match and _re_mod.fullmatch(
+            _accent_fold(target), match.group("subject").strip(), _re_mod.I
+        ):
+            return True
+    return False
+
+
 def check_facts(answer, row, actions=None, result=None):
     """Deterministic checks. Returns (passed, failures).
 
@@ -135,6 +167,17 @@ def check_facts(answer, row, actions=None, result=None):
     passes only when the response ships quick-reply action chips.
     """
     low = _accent_fold(answer.lower())
+
+    # Normalize grammatical gender only for an affirmative strict comparator.
+    # A negated or inclusive comparison must not satisfy a strict-bound fact.
+    def strict_comparator(match):
+        prefix = _re_mod.split(r"[.!?;\n]", low[: match.start()])[-1][-70:]
+        suffix = _re_mod.split(r"[.!?;\n]", low[match.end() :])[0][:100]
+        denied = _LOCAL_DENIAL.search(prefix)
+        inclusive = _re_mod.search(r"\b(?:ou|or)\s+(?:egal\w*|equal\w*)", suffix)
+        return "nonaffirmative_comparator" if denied or inclusive else "superieur a"
+
+    low = _re_mod.sub(r"\bsuperieur(?:e)?(?:s)?\s+a\b", strict_comparator, low)
     failures = []
     for pattern in row.get("must_match", []):
         if not _re_mod.search(pattern, answer, _re_mod.IGNORECASE | _re_mod.DOTALL):
@@ -153,7 +196,50 @@ def check_facts(answer, row, actions=None, result=None):
         from app.services.evidence_policy import documentation_limits
 
         for target in documentation_limits(answer, row["must_mark_unknown"]):
+            if (
+                result is not None
+                and result.get("grounding_checked") is True
+                and result.get("evidence")
+                and _confirmed_experience_limit(answer, target)
+            ):
+                continue
             failures.append(f"missing explicit documentation limit: {target}")
+    documents = []
+    if (
+        row.get("check_source_scope") or row.get("must_resolve_experience")
+    ) and result is not None:
+        from langchain_core.documents import Document
+
+        from app.services.evidence_policy import constraint_failures
+
+        for item in result.get("evidence", []) or []:
+            metadata = dict(item.get("metadata", {}))
+            for key in ("source", "chunk_id", "evidence_type", "metric_scope"):
+                if key in item:
+                    metadata[key] = item[key]
+            metadata["section_header"] = item.get(
+                "section", metadata.get("section_header", "")
+            )
+            documents.append(
+                Document(
+                    page_content=item.get(
+                        "content_preview", item.get("page_content", "")
+                    ),
+                    metadata=metadata,
+                )
+            )
+        if row.get("check_source_scope"):
+            for violation in constraint_failures(answer, documents, row["question"]):
+                failures.append("source-scope constraint: " + violation)
+    if row.get("must_resolve_experience"):
+        from app.services.evidence_policy import experience_resolution_failures
+
+        for subject in experience_resolution_failures(
+            answer, documents, row["must_resolve_experience"]
+        ):
+            failures.append(
+                "missing evidence-conditioned experience resolution: " + subject
+            )
     for clause in row.get("must_contain", []):
         clause_f = _accent_fold(clause.lower())
         if not any(alt.strip() in low for alt in clause_f.split("|")):
@@ -196,9 +282,16 @@ class InProcessTarget:
         session_id = f"eval-{uuid.uuid4().hex[:12]}"
         chat_history = [tuple(pair) for pair in (history or [])]
         result = self.service.process_query(
-            question, chat_history, session_id, lang, {}
+            question,
+            chat_history,
+            session_id,
+            lang,
+            {"no_trace": True, "no_notifications": True},
         )
         return result
+
+
+EVAL_HTTP_HEADERS = {"X-Ibola-No-Trace": "1", "X-Ibola-No-Notifications": "1"}
 
 
 class HTTPTarget:
@@ -220,6 +313,7 @@ class HTTPTarget:
     def _post(self, question, session_id, lang):
         resp = self.client.post(
             f"{self.base_url}/ask-agentic",
+            headers=EVAL_HTTP_HEADERS,
             json={
                 "user_input": question,
                 "session_id": session_id,
@@ -251,6 +345,14 @@ class Judge:
         )
 
     def score(self, question, gold, answer, context):
+        diagnostics = {
+            "protocol": JUDGE_PROTOCOL_VERSION,
+            "attempts": [],
+            "retry_reasons": [],
+            "decoding_source": None,
+            "status": "error",
+        }
+        _JUDGE_DIAGNOSTICS.set(diagnostics)
         prompt = (
             JUDGE_RUBRIC.replace("{question}", question)
             .replace("{gold}", gold)
@@ -258,6 +360,8 @@ class Judge:
             .replace("{context}", context or "(no context provided)")
         )
         for attempt in range(2):
+            record = {"attempt": attempt + 1}
+            diagnostics["attempts"].append(record)
             try:
                 response = self.client.models.generate_content(
                     model=self.model,
@@ -267,17 +371,81 @@ class Judge:
                         "response_mime_type": "application/json",
                     },
                 )
-                break
             except Exception as exc:
                 code = getattr(exc, "code", getattr(exc, "status_code", None))
+                record["provider_error"] = str(code)
                 if str(code) not in {"429", "503"} or attempt:
                     raise
+                diagnostics["retry_reasons"].append(f"provider_{code}")
                 time.sleep(0.5)
-        data = json.loads(response.text)
-        return {
+                continue
+            # Provider denials are terminal, including when a payload exists.
+            _check_judge_denial(response)
+            try:
+                data, source = _decode_judge_object(response)
+            except (TypeError, ValueError) as exc:
+                record["format_error"] = type(exc).__name__
+                if attempt:
+                    raise ValueError(
+                        "Judge returned no JSON object after two calls"
+                    ) from exc
+                diagnostics["retry_reasons"].append("invalid_json_object")
+                continue
+            diagnostics["decoding_source"] = source
+            break
+        # A decoded object is a completed judgment. Keep the original scoring
+        # semantics and never recover based on its scores or conversion errors.
+        scores = {
             k: max(0, min(10, int(data.get(k, 0))))
             for k in ("relevance", "accuracy", "helpfulness", "faithfulness")
         } | {"rationale": str(data.get("rationale", ""))[:300]}
+        diagnostics["status"] = "success"
+        return scores
+
+
+def _judge_field(value, name, default=None):
+    return (
+        value.get(name, default)
+        if isinstance(value, dict)
+        else getattr(value, name, default)
+    )
+
+
+def _judge_enum(value):
+    value = getattr(value, "value", value)
+    return value.upper().rsplit(".", 1)[-1] if isinstance(value, str) else None
+
+
+def _check_judge_denial(response):
+    feedback = _judge_field(response, "prompt_feedback")
+    block = _judge_enum(_judge_field(feedback, "block_reason"))
+    if block and block not in {"BLOCK_REASON_UNSPECIFIED", "UNSPECIFIED", "NONE"}:
+        raise ValueError(f"Judge provider blocked the prompt: {block}")
+    candidates = _judge_field(response, "candidates", [])
+    for candidate in candidates if isinstance(candidates, (list, tuple)) else []:
+        reason = _judge_enum(_judge_field(candidate, "finish_reason"))
+        if reason and reason not in {"STOP", "MAX_TOKENS"}:
+            raise ValueError(f"Judge provider terminated the response: {reason}")
+        ratings = _judge_field(candidate, "safety_ratings", [])
+        if isinstance(ratings, (list, tuple)) and any(
+            _judge_field(rating, "blocked") is True for rating in ratings
+        ):
+            raise ValueError("Judge provider blocked the response")
+
+
+def _decode_judge_object(response):
+    parsed = _judge_field(response, "parsed")
+    if isinstance(parsed, dict):
+        try:
+            json.dumps(parsed, allow_nan=False)
+        except (TypeError, ValueError):
+            pass
+        else:
+            return parsed, "parsed"
+    data = json.loads(_judge_field(response, "text"))
+    if not isinstance(data, dict):
+        raise ValueError("Judge JSON root is not an object")
+    return data, "text"
 
 
 def _extract_workflow_error(result):
@@ -311,6 +479,7 @@ def _extract_workflow_warning(result):
 
 
 def run_one(target, judge, row):
+    _JUDGE_DIAGNOSTICS.set(None)
     start = time.time()
     try:
         result = target.ask(
@@ -365,6 +534,7 @@ def run_one(target, judge, row):
         "error": error,
         "warning": warning,
         "judge_error": judge_error,
+        "judge_diagnostics": _JUDGE_DIAGNOSTICS.get(),
         "chars_in": len(row["question"]) + len(context),
         "chars_out": len(answer),
     }
@@ -387,6 +557,7 @@ def measure_first_token(base_url, questions, lang="en"):
                 with client.stream(
                     "POST",
                     f"{base_url}/ask-agentic",
+                    headers=EVAL_HTTP_HEADERS,
                     json={
                         "user_input": question,
                         "session_id": f"ft-{uuid.uuid4().hex[:8]}",
@@ -532,7 +703,14 @@ def main():
 
     report = {
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
-        "answer_model": os.environ.get("LLM_MODEL_NAME", "gemini-2.5-flash (default)"),
+        "answer_model": next(
+            (
+                (r.get("provenance") or {}).get("model")
+                for r in results
+                if (r.get("provenance") or {}).get("model")
+            ),
+            os.environ.get("LLM_MODEL_NAME", "unknown"),
+        ),
         "judge_model": None if args.no_judge else args.judge_model,
         "target": args.base_url or "in-process",
         "tags": args.tags,

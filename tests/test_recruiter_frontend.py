@@ -20,3 +20,15 @@ def test_answer_delivery_sources_and_concurrent_submit():
         check=False,
     )
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_contextual_handoff_native_links_dismissal_and_repeat_suppression():
+    import subprocess
+
+    result = subprocess.run(
+        ["node", "tests/fixtures/contextual_handoff.cjs"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr

@@ -10,7 +10,7 @@ from __future__ import annotations
 import os
 from functools import lru_cache
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -25,7 +25,14 @@ class LLMSettings(BaseSettings):
 
     model_config = SettingsConfigDict(env_prefix="LLM_")
 
-    model_name: str = "gemini-2.5-flash"
+    model_name: str = "gemini-3.5-flash-lite"
+    default_thinking_level: Literal["minimal", "low", "medium", "high"] = "low"
+    # None selects minimal for the current Flash-Lite family only. Other
+    # models retain their default level unless explicitly configured.
+    routing_thinking_level: Optional[Literal["minimal", "low", "medium", "high"]] = None
+    generation_thinking_budget: int = 256
+    verifier_model_name: str = "gemini-3.5-flash-lite"
+    verifier_thinking_level: Literal["minimal", "low", "medium", "high"] = "low"
     guardrail_temperature: float = 0.0
     grading_temperature: float = 0.0
     rewrite_temperature: float = 0.3
@@ -35,6 +42,34 @@ class LLMSettings(BaseSettings):
     # Claim-level grounding verifier after generate (fail closed on
     # unsupported profile claims). One extra temperature-0 call per turn.
     grounding_verifier_enabled: bool = True
+
+    def thinking_parameters(self, generation=False):
+        if self.model_name.startswith("gemini-2.5"):
+            return {
+                "thinking_budget": self.generation_thinking_budget if generation else 0
+            }
+        return {"thinking_level": self.default_thinking_level}
+
+    def verifier_parameters(self):
+        if self.verifier_model_name.startswith("gemini-2.5-"):
+            return {"model": self.verifier_model_name, "thinking_budget": 0}
+        return {
+            "model": self.verifier_model_name,
+            "thinking_level": self.verifier_thinking_level,
+        }
+
+    def routing_parameters(self):
+        """Keep lightweight routing separate from generation and verification."""
+        if self.model_name.startswith("gemini-2.5"):
+            return {"thinking_budget": 0}
+        level = self.routing_thinking_level
+        if level is None:
+            level = (
+                "minimal"
+                if self.model_name.startswith("gemini-3.5-flash-lite")
+                else self.default_thinking_level
+            )
+        return {"thinking_level": level}
 
 
 class SearchSettings(BaseSettings):
@@ -64,6 +99,13 @@ class SearchSettings(BaseSettings):
     reranker_model: str = "BAAI/bge-reranker-v2-m3"
 
 
+class HandoffSettings(BaseSettings):
+    """Optional first-hand context invitation, local validation first."""
+
+    model_config = SettingsConfigDict(env_prefix="HANDOFF_")
+    enabled: bool = False
+
+
 class CacheSettings(BaseSettings):
     """Cache configuration."""
 
@@ -85,7 +127,7 @@ class TracingSettings(BaseSettings):
 
     model_config = SettingsConfigDict(env_prefix="LANGFUSE_", populate_by_name=True)
 
-    enabled: bool = False
+    enabled: Optional[bool] = None
     public_key: Optional[str] = None
     secret_key: Optional[str] = None
     host: str = Field(
@@ -95,8 +137,10 @@ class TracingSettings(BaseSettings):
 
     @property
     def is_active(self) -> bool:
-        """Trace when explicitly enabled OR when both keys are configured."""
-        return bool(self.enabled or (self.public_key and self.secret_key))
+        """Explicit enable/disable wins; only an unset flag auto-detects keys."""
+        if self.enabled is not None:
+            return self.enabled
+        return bool(self.public_key and self.secret_key)
 
 
 class AppSettings(BaseSettings):
@@ -163,6 +207,7 @@ class AppSettings(BaseSettings):
     llm: LLMSettings = Field(default_factory=LLMSettings)
     search: SearchSettings = Field(default_factory=SearchSettings)
     cache: CacheSettings = Field(default_factory=CacheSettings)
+    handoff: HandoffSettings = Field(default_factory=HandoffSettings)
     tracing: TracingSettings = Field(default_factory=TracingSettings)
 
     @field_validator("gemini_api_key")

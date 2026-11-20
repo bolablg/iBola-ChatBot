@@ -9,10 +9,12 @@ from __future__ import annotations
 
 import logging
 import random
+import threading
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
 import config
+from app.graph.prompts import NOTIFICATION_SUPPRESSED_ANSWERS
 from app.graph.state import AgentCategory, GraphState, ReasoningStep
 from app.graph.workflow import create_rag_workflow
 from app.services.google_chat_alert import google_chat_alert
@@ -27,6 +29,7 @@ from app.services.interaction_intent import (
 from app.services.source_map import build_answer_sources
 
 logger = logging.getLogger("ibola.graph")
+_LEAD_LOCK_CREATION = threading.Lock()
 
 
 def _prompt_versions() -> Dict[str, str]:
@@ -86,6 +89,7 @@ class AgenticRAGService:
         """
         if chat_history is None:
             chat_history = []
+        no_notifications = (request_info or {}).get("no_notifications") is True
 
         # Ensure session tracking
         if session_id not in self.session_data:
@@ -110,9 +114,12 @@ class AgenticRAGService:
             return self._identity_response(session_id, user_language)
 
         # --- Lead capture flow (multi-turn state machine) ---
-        if "lead_capture" in session:
+        pending_capture = session.get("lead_capture")
+        if pending_capture is not None:
             if cancellation(user_input):
-                session.pop("lead_capture", None)
+                with self._lead_capture_lock(session_id):
+                    if session.get("lead_capture") is pending_capture:
+                        session.pop("lead_capture", None)
                 return self._lead_response(
                     (
                         "Aucun message n'a été envoyé."
@@ -123,10 +130,18 @@ class AgenticRAGService:
                     agent_type="contact_cancelled",
                 )
             if is_evidence_request(user_input):
-                session.pop("lead_capture", None)
+                with self._lead_capture_lock(session_id):
+                    if session.get("lead_capture") is pending_capture:
+                        session.pop("lead_capture", None)
             else:
                 return self._handle_lead_capture(
-                    user_input, session, session_id, chat_history
+                    user_input,
+                    session,
+                    session_id,
+                    chat_history,
+                    no_notifications=no_notifications,
+                    user_language=user_language,
+                    expected_capture=pending_capture,
                 )
 
         # Detect "send a message to Bolaji" intent
@@ -136,7 +151,8 @@ class AgenticRAGService:
             and self._detect_message_intent(user_input)
             and message_action(user_input)
         ):
-            session["lead_capture"] = {"step": "name"}
+            with self._lead_capture_lock(session_id):
+                session.setdefault("lead_capture", {"step": "name"})
             return self._lead_response(
                 "I'd be happy to pass along your message to Bolaji. "
                 "What's your name?",
@@ -222,21 +238,22 @@ class AgenticRAGService:
         if agent_type == "redirect":
             session["redirect_count"] = redirect_count
             # Alert on high redirect counts
-            if redirect_count >= 3:
+            if redirect_count >= 3 and not no_notifications:
                 google_chat_alert.send_redirect_limit_alert(
                     session_id, chat_history, redirect_count
                 )
             # Log redirect to Sheets
-            self._log_redirect(
-                user_input,
-                chat_history,
-                session_id,
-                redirect_count,
-                agent_type,
-                final_state.get("confidence", 0.0),
-                final_state,
-                request_info,
-            )
+            if not no_notifications:
+                self._log_redirect(
+                    user_input,
+                    chat_history,
+                    session_id,
+                    redirect_count,
+                    agent_type,
+                    final_state.get("confidence", 0.0),
+                    final_state,
+                    request_info,
+                )
         else:
             session["redirect_count"] = 0
 
@@ -279,7 +296,7 @@ class AgenticRAGService:
         )
         from app.services.provenance import runtime_provenance
 
-        return {
+        response = {
             "answer": final_state.get("answer", ""),
             "actions": final_state.get("actions", []),
             "agent_type": agent_type,
@@ -291,6 +308,7 @@ class AgenticRAGService:
             "response_time": round(elapsed, 3),
             "evidence": evidence,
             "grounding_checked": final_state.get("grounding_checked", False),
+            "verification_method": final_state.get("verification_method"),
             # PART 8.2: normalized portfolio receipts for the "Answer sources"
             # rail. Deduplicated by section, linkable to bolablg.com.
             "answer_sources": build_answer_sources(evidence),
@@ -300,6 +318,20 @@ class AgenticRAGService:
             "trace_id": trace_id,
             "provenance": runtime_provenance(),
         }
+        from app.graph.nodes import _detect_reply_language
+        from app.services.contextual_handoff import contextual_handoff
+        from app.settings import get_settings
+
+        offer = contextual_handoff(
+            response,
+            user_input,
+            chat_history,
+            _detect_reply_language(user_input, user_language),
+            enabled=get_settings().handoff.enabled,
+        )
+        if offer:
+            response["actions"] = [offer]
+        return response
 
     @staticmethod
     def _record_trace(
@@ -318,6 +350,8 @@ class AgenticRAGService:
         -> answer, plus latency and grounding outcome. Returns the trace_id
         so the response and user feedback can link back to this turn.
         """
+        if (request_info or {}).get("no_trace") is True:
+            return None
         try:
             from app.services.provenance import runtime_provenance
             from app.services.tracing import get_tracer, hash_visitor
@@ -353,6 +387,7 @@ class AgenticRAGService:
                     "provenance": runtime_provenance(),
                     "context_order": [e["source"] for e in evidence],
                     "grounding_checked": final_state.get("grounding_checked", False),
+                    "verification_method": final_state.get("verification_method"),
                     "unsupported_claims": final_state.get("unsupported_claims", []),
                     "latency_s": round(elapsed, 3),
                     "prompt_versions": _prompt_versions(),
@@ -389,6 +424,11 @@ class AgenticRAGService:
                     "scope_context": meta.get("scope_context", ""),
                     "evidence_type": meta.get("evidence_type", "curated"),
                     "metric_scope": meta.get("metric_scope", {}),
+                    **(
+                        {"conversation_coverage": meta["conversation_coverage"]}
+                        if "conversation_coverage" in meta
+                        else {}
+                    ),
                     # Context documents are already bounded by generation's budget.
                     "content_preview": getattr(doc, "page_content", ""),
                 }
@@ -993,52 +1033,68 @@ class AgenticRAGService:
         ]
         return any(s in lower for s in signals)
 
+    def _lead_capture_lock(self, session_id):
+        """Serialize state transitions; delivery uses an owned payload outside it."""
+        with _LEAD_LOCK_CREATION:
+            locks = self.__dict__.setdefault("_lead_capture_locks", {})
+            return locks.setdefault(session_id, threading.Lock())
+
     def _handle_lead_capture(
         self,
         user_input: str,
         session: Dict[str, Any],
         session_id: str,
         chat_history: List[Tuple[str, str]],
+        *,
+        no_notifications: bool = False,
+        user_language: str = "en",
+        expected_capture: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """State machine for lead collection: name → contact → message → send."""
-        capture = session["lead_capture"]
-        step = capture.get("step", "name")
+        language = "fr" if user_language.startswith("fr") else "en"
+        with self._lead_capture_lock(session_id):
+            capture = session.get("lead_capture")
+            if capture is None or (
+                expected_capture is not None and capture is not expected_capture
+            ):
+                return self._lead_response(
+                    NOTIFICATION_SUPPRESSED_ANSWERS[language], session_id
+                )
+            step = capture.get("step", "name")
+            if step == "name":
+                capture["name"] = user_input.strip()
+                capture["step"] = "contact"
+                return self._lead_response(
+                    f"Thanks, {capture['name']}! "
+                    "What's the best way for Bolaji to reach you? "
+                    "(email, phone, or LinkedIn)",
+                    session_id,
+                )
+            if step == "contact":
+                capture["contact"] = user_input.strip()
+                capture["step"] = "message"
+                return self._lead_response(
+                    "Got it. What would you like Bolaji to know?", session_id
+                )
+            session.pop("lead_capture", None)
+            if step != "message":
+                return self._lead_response(
+                    "Something went wrong. Please try again.", session_id
+                )
+            if no_notifications:
+                return self._lead_response(
+                    NOTIFICATION_SUPPRESSED_ANSWERS[language], session_id
+                )
+            # Claim before I/O and never mutate a shared capture. Another
+            # completion cannot overwrite or resend this request's message.
+            payload = {**capture, "message": user_input.strip()}
 
-        if step == "name":
-            capture["name"] = user_input.strip()
-            capture["step"] = "contact"
-            return self._lead_response(
-                f"Thanks, {capture['name']}! "
-                "What's the best way for Bolaji to reach you? "
-                "(email, phone, or LinkedIn)",
-                session_id,
-            )
-
-        if step == "contact":
-            capture["contact"] = user_input.strip()
-            capture["step"] = "message"
-            return self._lead_response(
-                "Got it. What would you like Bolaji to know?",
-                session_id,
-            )
-
-        if step == "message":
-            capture["message"] = user_input.strip()
-            # Send to webhook
-            self._send_lead_to_webhook(capture, session_id, chat_history)
-            # Clean up
-            del session["lead_capture"]
-            return self._lead_response(
-                f"Your message has been sent to Bolaji. "
-                f"He'll get back to you at {capture['contact']}. "
-                "Is there anything else I can help with?",
-                session_id,
-            )
-
-        # Fallback: shouldn't happen
-        del session["lead_capture"]
+        self._send_lead_to_webhook(payload, session_id, chat_history)
         return self._lead_response(
-            "Something went wrong. Please try again.", session_id
+            f"Your message has been sent to Bolaji. "
+            f"He'll get back to you at {payload['contact']}. "
+            "Is there anything else I can help with?",
+            session_id,
         )
 
     def _send_lead_to_webhook(

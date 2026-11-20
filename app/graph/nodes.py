@@ -25,6 +25,7 @@ from app.graph.prompts import (
     GENERATE_SYSTEM_PROMPTS,
     GUARDRAIL_PROMPT,
     INSUFFICIENT_EVIDENCE_ANSWERS,
+    LANGUAGE_RETRY_INSTRUCTION,
     OUT_OF_SCOPE_PROMPT,
     REPAIR_GROUNDING_PROMPT,
     REWRITE_PROMPT,
@@ -159,15 +160,36 @@ class _SyncGeminiLLM:
         api_key: str,
         temperature: float,
         max_output_tokens: int,
-        thinking_budget: int = 0,
+        thinking_budget: int | None = None,
+        thinking_level: str | None = None,
     ):
         from google import genai
 
+        if thinking_level is not None and thinking_budget is not None:
+            raise ValueError("Specify a thinking level or budget, not both")
+        if model.startswith("gemini-3."):
+            if thinking_budget is not None:
+                raise ValueError("Use a thinking level for this model")
+            thinking_level = thinking_level or "low"
         self._model = model
         self._temperature = temperature
         self._max_output_tokens = max_output_tokens
-        self._thinking_budget = thinking_budget
+        self._thinking_budget = 0 if thinking_budget is None else thinking_budget
+        self._thinking_level = thinking_level
         self._client = genai.Client(api_key=api_key)
+
+    def _thinking_config(self):
+        level = getattr(self, "_thinking_level", None)
+        return (
+            {"thinking_level": level}
+            if level is not None
+            else {"thinking_budget": self._thinking_budget}
+        )
+
+    def _sampling_config(self):
+        if self._model.startswith("gemini-3.5-flash-lite"):
+            return {}
+        return {"temperature": self._temperature}
 
     def invoke(self, messages, **kwargs):
         """Accept LangChain message list, return an object with .content."""
@@ -188,9 +210,9 @@ class _SyncGeminiLLM:
                 model=self._model,
                 contents=prompt,
                 config={
-                    "temperature": self._temperature,
+                    **self._sampling_config(),
                     "max_output_tokens": self._max_output_tokens,
-                    "thinking_config": {"thinking_budget": self._thinking_budget},
+                    "thinking_config": self._thinking_config(),
                 },
             ),
             "text generation",
@@ -232,14 +254,17 @@ class _StructuredOutput:
                     config=genai.types.GenerateContentConfig(
                         response_mime_type="application/json",
                         response_schema=self._schema,
-                        temperature=self._llm._temperature,
+                        **self._llm._sampling_config(),
                         max_output_tokens=(
-                            max(self._llm._max_output_tokens, 1500)
-                            if self._schema is GroundingVerdict
-                            else self._llm._max_output_tokens
+                            max(
+                                self._llm._max_output_tokens,
+                                {GeneratedAnswer: 2048, GroundingVerdict: 4096}.get(
+                                    self._schema, 0
+                                ),
+                            )
                         ),
                         thinking_config=genai.types.ThinkingConfig(
-                            thinking_budget=self._llm._thinking_budget
+                            **self._llm._thinking_config()
                         ),
                     ),
                 ),
@@ -281,9 +306,31 @@ class _StructuredOutput:
                 )
 
 
-def _get_llm(temperature: float = 0.0, thinking_budget: int = 0):
+def _get_llm(
+    temperature: float = 0.0,
+    thinking_budget: int | None = None,
+    model: str | None = None,
+    thinking_level: str | None = None,
+):
     """Return a sync Gemini LLM (no async event-loop issues)."""
-    key = f"llm-{temperature}-think{thinking_budget}"
+    from app.settings import get_settings
+
+    settings = get_settings()
+    if thinking_level is not None and thinking_budget is not None:
+        raise ValueError("Specify a thinking level or budget, not both")
+    selected_model = model or settings.llm.model_name
+    modern = not selected_model.startswith("gemini-2.5")
+    if modern and thinking_budget is not None:
+        raise ValueError("Use a thinking level for this model")
+    if thinking_level is None and thinking_budget is None:
+        if modern:
+            thinking_level = settings.llm.default_thinking_level
+        else:
+            thinking_budget = 0
+    effective_temperature = (
+        None if selected_model.startswith("gemini-3.5-flash-lite") else temperature
+    )
+    key = f"llm-{selected_model}-{effective_temperature}-think{thinking_budget}-{thinking_level}"
     if key not in _llms:
         with _lock:
             if key not in _llms:
@@ -291,11 +338,12 @@ def _get_llm(temperature: float = 0.0, thinking_budget: int = 0):
 
                 settings = get_settings()
                 _llms[key] = _SyncGeminiLLM(
-                    model=settings.llm.model_name,
+                    model=selected_model,
                     api_key=config.GEMINI_API_KEY,
                     temperature=temperature,
                     max_output_tokens=_LLM_MAX_OUTPUT_TOKENS,
                     thinking_budget=thinking_budget,
+                    thinking_level=thinking_level,
                 )
     return _llms[key]
 
@@ -322,7 +370,9 @@ def guardrail_node(state: dict) -> dict:
     chat_history = state.get("chat_history", [])
 
     try:
-        llm = _get_llm(temperature=0.0)
+        from app.settings import get_settings
+
+        llm = _get_llm(temperature=0.0, **get_settings().llm.routing_parameters())
         structured_llm = llm.with_structured_output(GuardrailScoring)
         result: GuardrailScoring = structured_llm.invoke(
             GUARDRAIL_PROMPT.format_messages(
@@ -741,7 +791,9 @@ def retrieve_node(state: dict) -> dict:
         docs = _prioritize_career_year(original, query, docs)
         from app.services.evidence_policy import prepare_evidence, supplement_facets
 
-        docs = supplement_facets(search, original or query, docs)
+        docs = supplement_facets(
+            search, "\n".join(filter(None, (original, query))), docs
+        )
         docs = prepare_evidence(docs, original or query)
 
         return {
@@ -830,7 +882,9 @@ def grade_documents_node(state: dict) -> dict:
     )
 
     try:
-        llm = _get_llm(temperature=0.0)
+        from app.settings import get_settings
+
+        llm = _get_llm(temperature=0.0, **get_settings().llm.routing_parameters())
         structured_llm = llm.with_structured_output(BatchGradeResult)
         result: BatchGradeResult = structured_llm.invoke(
             BATCH_GRADE_PROMPT.format_messages(query=query, docs=doc_summaries)
@@ -840,6 +894,11 @@ def grade_documents_node(state: dict) -> dict:
         valid_indices = {
             idx for idx in result.relevant_indices if 0 <= idx < len(documents)
         }
+        from app.services.evidence_policy import retained_facet_indices
+
+        valid_indices |= retained_facet_indices(
+            documents, "\n".join(filter(None, (state.get("original_query"), query)))
+        )
         graded = [doc for index, doc in enumerate(documents) if index in valid_indices]
 
     except Exception:
@@ -897,7 +956,6 @@ def rewrite_query_node(state: dict) -> dict:
 # NODE: generate
 # ===================================================================
 
-_GENERATE_THINKING_BUDGET = 256
 
 # Phrases that leak RAG/context internals to the user. Stripped post-generation.
 _LEAK_PHRASES = [
@@ -922,7 +980,7 @@ _LEAK_PHRASES = [
         r"The record does not \1",
     ),
     # AFFIRMATIVE context mentions ("the context does mention", "the context
-    # mentions/shows/indicates") — the negated forms above missed these (s07)
+    # mentions/shows/indicates"), the negated forms above missed these (s07)
     (
         r"\b(?:the\s+)?context\s+(?:does\s+)?(?:mention|mentions|show|shows|"
         r"indicate|indicates|state|states|note|notes)\b",
@@ -943,7 +1001,7 @@ _LEAK_PHRASES = [
     (r"\bthe documents?\s+(?:provided|indicate|show|mention|contain)\b", ""),
     (r"\bfrom (?:the\s+)?(?:knowledge base|data I have|my knowledge)\b", ""),
     (r"\b(?:the\s+)?(?:retrieved|fetched)\s+(?:documents?|content|data)\b", ""),
-    # "there is no mention/information" — deflection phrasing
+    # "there is no mention/information", deflection phrasing
     (
         r"\bthere\s+(?:(?:is|are)\s+no|isn't|aren't)\s+(?:specific\s+)?(?:mention|information|details?|data)\s+(?:of|about|regarding|on)\b",
         "The record does not specify",
@@ -1137,7 +1195,7 @@ def _translate_answer(answer: str, reply_language: str) -> str:
     return response.content.strip() or answer
 
 
-def _select_context_docs(graded_docs: List[Document]) -> List[Document]:
+def _select_context_docs(graded_docs: List[Document], query="") -> List[Document]:
     """Pick the generation context: budgeted and near-duplicate-free."""
     try:
         from app.settings import get_settings
@@ -1153,10 +1211,17 @@ def _select_context_docs(graded_docs: List[Document]) -> List[Document]:
             return 0.0
         return len(ta & tb) / min(len(ta), len(tb))
 
-    selected: List[Document] = []
+    from app.services.evidence_policy import retained_facet_indices
+
+    protected = retained_facet_indices(graded_docs, query)
+    selected: List[Document] = [
+        doc for i, doc in enumerate(graded_docs) if i in protected
+    ][: min(3, budget)]
     for doc in graded_docs:
         if len(selected) >= budget:
             break
+        if doc in selected:
+            continue
         if any(
             _overlap(doc.page_content, kept.page_content) > overlap_cap
             for kept in selected
@@ -1183,6 +1248,7 @@ def _evidence_context(documents: List[Document]) -> str:
                     "evidence_type",
                     "canonical_url",
                     "metric_scope",
+                    "conversation_coverage",
                 )
             },
             ensure_ascii=False,
@@ -1208,9 +1274,20 @@ def generate_node(state: dict) -> dict:
     # Build context from graded documents: settings-driven budget with a
     # near-duplicate filter (five tight chunks beat fifty loose ones; dupes
     # waste tokens and invite hallucinated merges).
-    from app.services.evidence_policy import prepare_evidence
+    from app.services.evidence_policy import (
+        prepare_evidence,
+        request_scope,
+        supplement_facets,
+    )
 
-    context_docs = _select_context_docs(prepare_evidence(graded_docs, query))
+    scope = request_scope(state)
+    try:
+        graded_docs = supplement_facets(
+            _get_hybrid_search(), scope, graded_docs, protected_only=True
+        )
+    except Exception as exc:
+        logger.warning("Generation facet lookup unavailable: %s", exc)
+    context_docs = _select_context_docs(prepare_evidence(graded_docs, scope), scope)
     if not context_docs:
         steps.append(
             ReasoningStep(node="generate", action="insufficient_evidence", detail="")
@@ -1249,7 +1326,13 @@ def generate_node(state: dict) -> dict:
     today = __import__("datetime").date.today().isoformat()
 
     def _call_generate(extra_instruction: str = "") -> GeneratedAnswer:
-        llm = _get_llm(temperature=0.7, thinking_budget=_GENERATE_THINKING_BUDGET)
+        from app.settings import get_settings
+
+        generation_settings = get_settings().llm
+        llm = _get_llm(
+            temperature=generation_settings.generation_temperature,
+            **generation_settings.thinking_parameters(generation=True),
+        )
         structured_llm = llm.with_structured_output(GeneratedAnswer)
         return structured_llm.invoke(
             GENERATE_PROMPT.format_messages(
@@ -1258,12 +1341,27 @@ def generate_node(state: dict) -> dict:
                 today=today,
                 context=context,
                 chat_history=history_str or "(none)",
-                query=query,
+                query=_verification_scope(state),
             )
         )
 
+    from app.services.service_inventory import inventory_followup
+
+    followup = inventory_followup(state, context_docs, reply_language)
+    if followup is not None:
+        steps.append(
+            ReasoningStep(
+                node="generate",
+                action="inventory_coverage",
+                detail="retrieved inventory minus prior listed labels",
+            )
+        )
     try:
-        result = _call_generate()
+        result = (
+            GeneratedAnswer(answer=followup, confidence=0.9)
+            if followup is not None
+            else _call_generate()
+        )
         answer = _sanitize_answer(result.answer)
         confidence = result.confidence
 
@@ -1280,8 +1378,7 @@ def generate_node(state: dict) -> dict:
             )
             try:
                 retry = _call_generate(
-                    f"\n\nCRITICAL: your previous draft was in the wrong "
-                    f"language. Write the ENTIRE answer in {reply_language}."
+                    LANGUAGE_RETRY_INSTRUCTION.format(reply_language=reply_language)
                 )
                 retried = _sanitize_answer(retry.answer)
                 if _validate_answer_language(retried, reply_language, user_language):
@@ -1345,9 +1442,25 @@ def _insufficient_answer(state: dict) -> str:
     )
 
 
+def _verification_scope(state):
+    """Follow-up scope may come from condensation; facts still require evidence."""
+    return "\n".join(
+        dict.fromkeys(
+            filter(
+                None,
+                (
+                    state.get("original_query"),
+                    state.get("query"),
+                ),
+            )
+        )
+    )
+
+
 def verify_grounding_node(state: dict) -> dict:
     """Validate the exact delivered text, including deterministic restorations."""
     from app.graph.answer_completeness import (
+        normalize_metric_omission_attribution,
         preserve_primary_language,
         preserve_requested_degrees,
     )
@@ -1360,17 +1473,61 @@ def verify_grounding_node(state: dict) -> dict:
         preserve_requested_evidence,
     )
 
-    query = state.get("original_query") or state.get("query", "")
+    query = _verification_scope(state)
     docs = prepare_evidence(state.get("context_documents", []) or [], query)
-    language = _detect_reply_language(query, state.get("user_language", "en"))
+    from app.services.service_inventory import inventory_followup
+
+    language = _detect_reply_language(
+        state.get("original_query") or state.get("query", ""),
+        state.get("user_language", "en"),
+    )
+    # Recompute once from this request after discarding incoming metadata.
+    followup = inventory_followup(state, docs, language)
     draft = state.get("answer", "")
     draft, primary_added = preserve_primary_language(draft, docs, query, language)
     draft, degree_added = preserve_requested_degrees(draft, docs, query, language)
     draft, numeric_facts = preserve_percentage_qualifiers(draft, docs, language)
     draft, project_names = preserve_project_identity(draft, docs, query, language)
     draft, restored_details = preserve_requested_evidence(draft, docs, query, language)
+    draft = normalize_metric_omission_attribution(draft, docs, language)
+    coverage = next(
+        (
+            doc.metadata["conversation_coverage"]
+            for doc in docs
+            if doc.metadata.get("conversation_coverage")
+        ),
+        {},
+    )
+    # This exact registered observation contains no profile claim. Its proof is
+    # the ordered difference of current retrieved labels and prior listed labels.
+    # Every additional-service or modified answer still uses the LLM verifier.
+    if (
+        followup is not None
+        and draft == followup
+        and coverage.get("relevant_inventory_labels")
+        and coverage.get("remaining_labels") == []
+        and coverage.get("all_relevant_labels_previously_listed") is True
+    ):
+        return {
+            "answer": draft,
+            "context_documents": docs,
+            "grounding_checked": True,
+            "verification_method": "retrieved_inventory_conversation_coverage",
+            "unsupported_claims": [],
+            "reasoning_steps": list(state.get("reasoning_steps", []))
+            + [
+                ReasoningStep(
+                    node="verify_grounding",
+                    action="verified_conversation_coverage",
+                    detail="exact registered observation; current retrieved labels already listed",
+                )
+            ],
+        }
     verification_state = {**state, "answer": draft, "context_documents": docs}
     result = _verify_grounding_llm_node(verification_state)
+    result["verification_method"] = (
+        "llm_claim_grounding" if result.get("grounding_checked") else "unverified"
+    )
     result["context_documents"] = docs
     if result.get("grounding_checked"):
         final_answer = result.get("answer", draft)
@@ -1452,6 +1609,7 @@ def _verify_grounding_llm_node(state: dict) -> dict:
     agent_type = state.get("agent_type", "professional")
     context_docs = state.get("context_documents", []) or []
     question = state.get("original_query") or state.get("query", "")
+    scope_query = _verification_scope(state)
     steps = list(state.get("reasoning_steps", []))
 
     try:
@@ -1491,13 +1649,19 @@ def _verify_grounding_llm_node(state: dict) -> dict:
         preserve_requested_evidence,
     )
 
-    violations = constraint_failures(answer, context_docs, question)
+    violations = constraint_failures(answer, context_docs, scope_query)
     try:
-        llm = _get_llm(temperature=0.0)
+        from app.settings import get_settings
+
+        verification_settings = get_settings().llm
+        llm = _get_llm(
+            temperature=0.0,
+            **verification_settings.verifier_parameters(),
+        )
         structured_llm = llm.with_structured_output(GroundingVerdict)
         verdict: GroundingVerdict = structured_llm.invoke(
             VERIFY_GROUNDING_PROMPT.format_messages(
-                question=question or "(unknown)",
+                question=scope_query or "(unknown)",
                 context=context,
                 answer=answer,
                 constraint_failures=describe_constraints(violations),
@@ -1548,33 +1712,39 @@ def _verify_grounding_llm_node(state: dict) -> dict:
     corrected, _ = preserve_project_identity(
         corrected,
         context_docs,
-        question,
+        scope_query,
         _detect_reply_language(question, state.get("user_language", "en")),
     )
     corrected, _ = preserve_requested_evidence(
         corrected,
         context_docs,
-        question,
+        scope_query,
         _detect_reply_language(question, state.get("user_language", "en")),
     )
-    repair_failures = constraint_failures(corrected, context_docs, question)
+    repair_failures = constraint_failures(corrected, context_docs, scope_query)
+    repair_attempted = False
     # One recovery for an empty/incomplete first correction. The exact candidate
     # still needs both deterministic checks and independent verification below.
     if not corrected or repair_failures:
+        repair_attempted = True
         try:
-            repair = llm.with_structured_output(GeneratedAnswer).invoke(
-                REPAIR_GROUNDING_PROMPT.format_messages(
-                    question=question or "(unknown)",
-                    context=context,
-                    answer=corrected or answer,
-                    language=_detect_reply_language(
-                        question, state.get("user_language", "en")
-                    ),
-                    constraint_failures=describe_constraints(
-                        list(dict.fromkeys(violations + repair_failures))
+            repair = (
+                _get_llm(temperature=0.0)
+                .with_structured_output(GeneratedAnswer)
+                .invoke(
+                    REPAIR_GROUNDING_PROMPT.format_messages(
+                        question=scope_query or "(unknown)",
+                        context=context,
+                        answer=corrected or answer,
+                        language=_detect_reply_language(
+                            question, state.get("user_language", "en")
+                        ),
+                        constraint_failures=describe_constraints(
+                            list(dict.fromkeys(violations + repair_failures))
+                        )
+                        + "; "
+                        + "; ".join(verdict.unsupported_claims),
                     )
-                    + "; "
-                    + "; ".join(verdict.unsupported_claims),
                 )
             )
             corrected = _sanitize_answer(repair.answer.strip())
@@ -1586,13 +1756,13 @@ def _verify_grounding_llm_node(state: dict) -> dict:
             corrected, _ = preserve_project_identity(
                 corrected,
                 context_docs,
-                question,
+                scope_query,
                 _detect_reply_language(question, state.get("user_language", "en")),
             )
             corrected, _ = preserve_requested_evidence(
                 corrected,
                 context_docs,
-                question,
+                scope_query,
                 _detect_reply_language(question, state.get("user_language", "en")),
             )
             steps.append(
@@ -1606,11 +1776,19 @@ def _verify_grounding_llm_node(state: dict) -> dict:
             corrected = ""
             logger.warning("Bounded grounding repair unavailable")
     # A correction is another draft, not proof. Recheck changed text once.
-    if corrected and not constraint_failures(corrected, context_docs, question):
+    from app.graph.answer_completeness import normalize_metric_omission_attribution
+
+    corrected = normalize_metric_omission_attribution(
+        corrected,
+        context_docs,
+        _detect_reply_language(question, state.get("user_language", "en")),
+    )
+    final_failures = constraint_failures(corrected, context_docs, scope_query)
+    if corrected and not final_failures:
         try:
             recheck = structured_llm.invoke(
                 VERIFY_GROUNDING_PROMPT.format_messages(
-                    question=question or "(unknown)",
+                    question=scope_query or "(unknown)",
                     context=context,
                     answer=corrected,
                     constraint_failures="none",
@@ -1624,13 +1802,80 @@ def _verify_grounding_llm_node(state: dict) -> dict:
                     "unsupported_claims": verdict.unsupported_claims + violations,
                     "reasoning_steps": steps,
                 }
+            final_failures = list(recheck.unsupported_claims)
+            # A second verifier correction is still only a draft. Use a spare
+            # SDK call only when no separate repair was attempted. Retries have
+            # already consumed the same counter, so this cannot add a fourth call.
+            if (
+                not repair_attempted
+                and (_grounding_provider_calls.get() or 0) > 0
+                and recheck.corrected_answer.strip()
+            ):
+                candidate = _sanitize_answer(recheck.corrected_answer.strip())
+                candidate, _ = preserve_percentage_qualifiers(
+                    candidate,
+                    context_docs,
+                    _detect_reply_language(question, state.get("user_language", "en")),
+                )
+                candidate, _ = preserve_project_identity(
+                    candidate,
+                    context_docs,
+                    scope_query,
+                    _detect_reply_language(question, state.get("user_language", "en")),
+                )
+                candidate, _ = preserve_requested_evidence(
+                    candidate,
+                    context_docs,
+                    scope_query,
+                    _detect_reply_language(question, state.get("user_language", "en")),
+                )
+                candidate = normalize_metric_omission_attribution(
+                    candidate,
+                    context_docs,
+                    _detect_reply_language(question, state.get("user_language", "en")),
+                )
+                final_failures = constraint_failures(
+                    candidate, context_docs, scope_query
+                )
+                if (
+                    candidate
+                    and " ".join(candidate.split()) != " ".join(corrected.split())
+                    and " ".join(candidate.split()) != " ".join(answer.split())
+                    and not final_failures
+                ):
+                    approval = structured_llm.invoke(
+                        VERIFY_GROUNDING_PROMPT.format_messages(
+                            question=scope_query or "(unknown)",
+                            context=context,
+                            answer=candidate,
+                            constraint_failures="none",
+                        )
+                    )
+                    final_failures = list(approval.unsupported_claims)
+                    if approval.is_grounded and approval.addresses_question:
+                        steps.append(
+                            ReasoningStep(
+                                node="verify_grounding",
+                                action="correction_reverified",
+                                detail="independent approval within the shared SDK budget",
+                            )
+                        )
+                        return {
+                            "answer": candidate,
+                            "confidence": min(state.get("confidence", 0.5), 0.5),
+                            "grounding_checked": True,
+                            "unsupported_claims": verdict.unsupported_claims
+                            + violations,
+                            "reasoning_steps": steps,
+                        }
         except Exception:
             logger.warning("Corrected answer verification unavailable")
     steps.append(
         ReasoningStep(
             node="verify_grounding",
             action="withheld",
-            detail="correction did not pass bounded final verification",
+            detail="correction did not pass bounded final verification: "
+            + "; ".join(final_failures)[:400],
         )
     )
     return {

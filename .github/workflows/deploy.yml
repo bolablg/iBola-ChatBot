@@ -426,6 +426,8 @@ jobs:
             curl -s -o /dev/null -m 90 "$PROD_URL/health" || true
             curl -s -o /dev/null -m 90 -X POST "$PROD_URL/ask-agentic" \
               -H 'Content-Type: application/json' \
+          -H 'X-Ibola-No-Trace: 1' \
+          -H 'X-Ibola-No-Notifications: 1' \
               -d '{"user_input":"What is Bolaji latest role?","session_id":"weekly-warmup","user_language":"en"}' || true
           done
           python scripts/run_eval.py --tags smoke --base-url "$PROD_URL" --concurrency 4
@@ -494,12 +496,19 @@ jobs:
 
       - name: Deploy canary revision (no traffic)
         env:
+          HANDOFF_ENABLED: ${{ vars.HANDOFF_ENABLED || 'true' }}
           GCP_PROJECT: ${{ secrets.GCP_PROJECT }}
           GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
           DATA_PATH: ${{ secrets.DATA_PATH }}
           DB_PATH: ${{ secrets.DB_PATH }}
           REDIRECT_LOG_SHEET_ID: ${{ secrets.REDIRECT_LOG_SHEET_ID }}
         run: |
+          # Home production opts in. Set the repository variable to false for a
+          # persistent disable; a runtime-only disable is replaced on redeploy.
+          HANDOFF_ARGS=""
+          if [ "${{ github.repository }}" = "bolablg/iBola-ChatBot" ]; then
+            HANDOFF_ARGS="--set-env-vars HANDOFF_ENABLED=${HANDOFF_ENABLED}"
+          fi
           # Langfuse is wired entirely from Secret Manager (like the Gemini /
           # GChat secrets): no keys as plain env vars. Only enabled when all
           # three SM secrets exist, so forks / unprovisioned envs still deploy
@@ -531,6 +540,7 @@ jobs:
             --set-env-vars "DATA_PATH=${DATA_PATH}" \
             --set-env-vars "DB_PATH=${DB_PATH}" \
             --set-env-vars "REDIRECT_LOG_SHEET_ID=${REDIRECT_LOG_SHEET_ID}" \
+            $HANDOFF_ARGS \
             $LANGFUSE_ARGS
 
       - name: Smoke-eval the canary before cutover
@@ -554,6 +564,8 @@ jobs:
             curl -s -o /dev/null -m 90 "$CANARY_URL/health" || true
             curl -s -o /dev/null -m 90 -X POST "$CANARY_URL/ask-agentic" \
               -H 'Content-Type: application/json' \
+          -H 'X-Ibola-No-Trace: 1' \
+          -H 'X-Ibola-No-Notifications: 1' \
               -d '{"user_input":"What is Bolaji latest role?","session_id":"warmup","user_language":"en"}' || true
           done
           python scripts/run_eval.py --tags smoke --base-url "$CANARY_URL" --concurrency 4

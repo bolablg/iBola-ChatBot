@@ -1,0 +1,143 @@
+{
+  "id": "recruiter-hda-04-t5",
+  "category": "canonical",
+  "lang": "en",
+  "tags": [
+    "recruiter_regression"
+  ],
+  "question": "For the countries in his Gozem work, what actual management responsibilities and language capabilities are documented? I need to understand how he coordinated delivery and transferred knowledge across locations, without assuming that working across countries proves fluency or line-management authority.",
+  "answer": "Bolaji directed multidisciplinary data teams across five African operating markets (Togo, Benin, Cameroon, Congo, and Gabon). His management responsibilities included designing organization operating models, recruiting and building distributed teams, coordinating end-to-end onboarding, and driving enterprise data platform strategy. For language capabilities, Bolaji has native proficiency in French and full professional proficiency in English. Documented spoken languages (SPOKEN LANGUAGES:): \"French (native) and English (full professional proficiency).\"",
+  "agent_type": "professional",
+  "evidence_count": 5,
+  "evidence": [
+    {
+      "source": "00_identity.txt",
+      "chunk_id": "00_identity.txt::1",
+      "section": "SPOKEN LANGUAGES:",
+      "retrieval_rank": 1,
+      "retrieval_score": 17.0,
+      "parent_context": "BOLAJI BALOGOUN - IDENTITY & CONTACT",
+      "scope_context": "",
+      "evidence_type": "curated",
+      "metric_scope": {},
+      "content_preview": "Source: 00_identity.txt | Title: BOLAJI BALOGOUN - IDENTITY & CONTACT | Section: SPOKEN LANGUAGES: | Parent context: BOLAJI BALOGOUN - IDENTITY & CONTACT\n\n- French: Native proficiency.\n- English: Full professional proficiency.\n\nWhat languages does Bolaji speak: French (native) and English (full professional proficiency).\nQuelles langues parle Bolaji: le francais (langue maternelle) et l'anglais (competence professionnelle complete)."
+    },
+    {
+      "source": "11_leadership_style.txt",
+      "chunk_id": "11_leadership_style.txt::2",
+      "section": "MANAGEMENT EXPERIENCE:",
+      "retrieval_rank": 1,
+      "retrieval_score": 0.016393,
+      "parent_context": "BOLAJI BALOGOUN - LEADERSHIP STYLE & MANAGEMENT PHILOSOPHY",
+      "scope_context": "",
+      "evidence_type": "curated",
+      "metric_scope": {},
+      "content_preview": "Source: 11_leadership_style.txt | Title: BOLAJI BALOGOUN - LEADERSHIP STYLE & MANAGEMENT PHILOSOPHY | Section: MANAGEMENT EXPERIENCE: | Parent context: BOLAJI BALOGOUN - LEADERSHIP STYLE & MANAGEMENT PHILOSOPHY\n\nAt Gozem, Bolaji was the first data hire in 2019. The initial team grew to 4, then expanded from 4 to 14+ professionals during the Head of Data period (October 2022 - March 2025). The organization supported five African operating markets (Togo, Benin, Cameroon, Congo, Gabon) and spanned eight analytics domains. Singapore was company headquarters only. He coordinated end-to-end onboarding for 12 hires from 50+ evaluated candidates with 30/60/90-day ramp milestones. The hiring rubrics, interview loops, and onboarding programs he designed are still in use across the function.\n\nHis management approach included:\n- Recruiting and building distributed teams across multiple countries and cultures.\n- Introducing effective processes, mentorship programs, and continuous learning initiatives.\n- Leveraging LLM tools to boost team productivity and project delivery speed, including bringing Claude into leadership workflows and product engineering.\n- Wearing multiple hats when needed: data architect, data engineer, analytics engineer, and data governance specialist.\n- Pushing capability outward as much as upward: a self-service no-code exploration platform halved the routine query load on the central team by putting 12+ managers directly in the data."
+    },
+    {
+      "source": "90_website_canon_llms_full.txt",
+      "chunk_id": "90_website_canon_llms_full.txt::12",
+      "section": "Data Director · GOZEM · Apr 2025 - Jul 2026",
+      "retrieval_rank": 3,
+      "retrieval_score": 0.016129,
+      "parent_context": "Bolaji BALOGOUN · Biography",
+      "scope_context": "Data Director · GOZEM · Apr 2025 - Jul 2026",
+      "evidence_type": "published",
+      "metric_scope": {},
+      "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN · Data Engineer · Data Architect (full content) | Section: Data Director · GOZEM · Apr 2025 - Jul 2026 | Parent context: Bolaji BALOGOUN · Biography\n\nLed multidisciplinary data teams including data engineering, analytics, data science, and machine learning across operations in five African countries. Directed enterprise data platform strategy, internal data products development, governance, and cloud FinOps, while co-leading the company’s global AI strategy and implementation.\n\nMandate: 14+ data professionals · Togo · Benin · Cameroon · Gabon · Congo · Gozem Data Hub\n- Gozem Data Hub adopted by 700+ people (employees, field agents, and partners)\n- 30+ production automation tools shipped across the group\n- 250+ pipelines under monitoring"
+    },
+    {
+      "source": "13_gozem_internal_projects.txt",
+      "chunk_id": "13_gozem_internal_projects.txt::0",
+      "section": "BOLAJI BALOGOUN - INTERNAL PROJECTS LED AT GOZEM (2019 - 2026, tenure ended July 2026)",
+      "retrieval_rank": 5,
+      "retrieval_score": 0.015873,
+      "parent_context": "",
+      "scope_context": "BOLAJI BALOGOUN - INTERNAL PROJECTS LED AT GOZEM (2019 - 2026, tenure ended July 2026)",
+      "evidence_type": "curated",
+      "metric_scope": {},
+      "content_preview": "Source: 13_gozem_internal_projects.txt | Title: BOLAJI BALOGOUN - INTERNAL PROJECTS LED AT GOZEM (2019 - 2026, tenure ended July 2026) | Section: BOLAJI BALOGOUN - INTERNAL PROJECTS LED AT GOZEM (2019 - 2026, tenure ended July 2026)\n\nThese are major projects Bolaji designed, led, or oversaw at Gozem, grouped by role era. Each demonstrates specific technical, leadership, and product capabilities. His Gozem tenure ended in July 2026."
+    },
+    {
+      "source": "02_last_role_gozem_data_director.txt",
+      "chunk_id": "02_last_role_gozem_data_director.txt::2",
+      "section": "WHAT GOZEM DOES:",
+      "retrieval_rank": 7,
+      "retrieval_score": 0.015625,
+      "parent_context": "BOLAJI BALOGOUN - LAST ROLE: DATA DIRECTOR AT GOZEM (ENDED JULY 2026)",
+      "scope_context": "BOLAJI BALOGOUN - LAST ROLE: DATA DIRECTOR AT GOZEM (ENDED JULY 2026)",
+      "evidence_type": "curated",
+      "metric_scope": {},
+      "content_preview": "Source: 02_last_role_gozem_data_director.txt | Title: BOLAJI BALOGOUN - LAST ROLE: DATA DIRECTOR AT GOZEM (ENDED JULY 2026) | Section: WHAT GOZEM DOES: | Parent context: BOLAJI BALOGOUN - LAST ROLE: DATA DIRECTOR AT GOZEM (ENDED JULY 2026)\n\nGozem is a super app serving millions of users across ride-hailing, e-commerce, delivery, and financial services in French-speaking Africa. As Data Director, Bolaji owned all data and analytics for the group and co-led its AI strategy."
+    }
+  ],
+  "grounding_checked": true,
+  "provenance": {
+    "code_revision": "b7f3b36c84163383",
+    "deployment_revision": null,
+    "corpus_revision": "3fae0c27dfb14d76",
+    "kb_revision": "3fae0c27dfb14d76",
+    "policy_revision": "0628dfe861660d70",
+    "index_sync_pending": false,
+    "chunker_version": "3",
+    "model": "gemini-3.5-flash-lite",
+    "thinking_config": {
+      "thinking_level": "low"
+    },
+    "generation_thinking_config": {
+      "thinking_level": "low"
+    },
+    "generation_temperature": null,
+    "verifier_model": "gemini-3.5-flash-lite",
+    "verifier_thinking_level": "low",
+    "verifier_thinking_budget": null,
+    "prompt_versions": {
+      "inventory_followup": "1.1",
+      "guardrail": "2.1",
+      "condense": "1.1",
+      "batch_grade": "2.3",
+      "rewrite": "2.1",
+      "generate_professional": "3.14",
+      "generate_education": "3.6",
+      "generate_learning": "3.6",
+      "verify_grounding": "2.15",
+      "repair_grounding": "1.2",
+      "upper_bound_clarification": "1.0",
+      "skills_completeness_clarification": "1.0",
+      "insufficient_evidence": "1.1",
+      "disputed_evidence": "1.0",
+      "project_identity": "1.0",
+      "evidence_detail": "1.1",
+      "documentation_limit": "1.0",
+      "personal_production_limit": "1.1",
+      "degree_clarification": "1.0",
+      "language_retry": "1.0",
+      "structured_output_recovery": "1.0",
+      "out_of_scope": "2.0",
+      "translate": "1.0"
+    }
+  },
+  "evidence_sources": [
+    "00_identity.txt",
+    "11_leadership_style.txt",
+    "90_website_canon_llms_full.txt",
+    "13_gozem_internal_projects.txt",
+    "02_last_role_gozem_data_director.txt"
+  ],
+  "unsupported_claims": [],
+  "latency_s": 11.71,
+  "fact_pass": true,
+  "fact_failures": [],
+  "scores": {
+    "relevance": 9,
+    "accuracy": 10,
+    "helpfulness": 8,
+    "faithfulness": 4,
+    "rationale": "The answer is relevant and accurate, but its faithfulness is capped because it makes a claim about 'designing organization operating models' which is not explicitly supported by the provided context."
+  },
+  "error": null,
+  "warning": null,
+  "judge_error": null,
+  "chars_in": 4095,
+  "chars_out": 558
+}

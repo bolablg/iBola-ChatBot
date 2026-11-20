@@ -1,0 +1,74 @@
+{
+  "id": "recruiter-hda-03-t4",
+  "question": "Describe a documented budget or investment decision he owned: amount or range, planning horizon, approval authority, options rejected and outcome. Is there evidence of multi-year department budget ownership, beyond reducing a cloud bill?",
+  "answer": "As Head of Data at Gozem, Bolaji made a documented investment decision by choosing a cloud-first approach (GCP) for data infrastructure to minimize maintenance overhead, rejecting an open-source stack option. This decision resulted in the deployment of a fully functional cloud-based analytics infrastructure within a single quarter and contributed to a 42.57% reduction in Google Cloud costs in one quarter. The available information does not specify the amount or range of this investment, his approval authority, or evidence of multi-year department budget ownership beyond the cloud bill reduction.",
+  "evidence": [
+    {
+      "source": "90_website_canon_llms_full.txt",
+      "chunk_id": "90_website_canon_llms_full.txt::8",
+      "section": "FinOps and analytical serving",
+      "retrieval_rank": 1,
+      "retrieval_score": 0.016393,
+      "parent_context": "Bolaji BALOGOUN · Biography",
+      "scope_context": "",
+      "evidence_type": "published",
+      "metric_scope": {},
+      "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN · Data Engineer · Data Architect (full content) | Section: FinOps and analytical serving | Parent context: Bolaji BALOGOUN · Biography\n\nAs Head of Data, Bolaji led Dataform adoption, dependency-aware orchestration, incremental modeling, partitioning and clustering optimization, and BigQuery workload monitoring. Recorded Google Cloud costs fell by 42.57% in one quarter while data freshness and reliability requirements were maintained. In the separate [Advanced Dataform framework project](https://www.bolablg.com/projects/dataform-modeling-lab/), one documented model definition went from about 150 lines to 20 lines of configuration."
+    },
+    {
+      "source": "19_owner_confirmed_scope.txt",
+      "chunk_id": "19_owner_confirmed_scope.txt::2",
+      "section": "GOZEM TEAM GROWTH AND ROLE PERIODS",
+      "retrieval_rank": 2,
+      "retrieval_score": 0.016393,
+      "parent_context": "BOLAJI BALOGOUN - OWNER-CONFIRMED CLAIM SCOPE",
+      "scope_context": "",
+      "evidence_type": "candidate_confirmed",
+      "metric_scope": {},
+      "content_preview": "Source: 19_owner_confirmed_scope.txt | Title: BOLAJI BALOGOUN - OWNER-CONFIRMED CLAIM SCOPE | Section: GOZEM TEAM GROWTH AND ROLE PERIODS | Parent context: BOLAJI BALOGOUN - OWNER-CONFIRMED CLAIM SCOPE\n\nBolaji was the first data hire in 2019. The initial team grew to 4 during the Global Data Analyst era (November 2019 - September 2022). The organization then grew from 4 to 14+ during his Head of Data period (October 2022 - March 2025). His later Data Director period was April 2025 - July 2026. The full team build must not be dated entirely to that later mandate. This confirmation does not establish direct-report counts, manager layers, department budget authority, or the precise dates of all 12 hires."
+    },
+    {
+      "source": "17_highlights_pitch.txt",
+      "chunk_id": "17_highlights_pitch.txt::1",
+      "section": "THE ONE-LINE PITCH:",
+      "retrieval_rank": 3,
+      "retrieval_score": 0.016129,
+      "parent_context": "BOLAJI BALOGOUN - HIGHLIGHTS & IMPACT PITCH",
+      "scope_context": "",
+      "evidence_type": "summary",
+      "metric_scope": {},
+      "content_preview": "Source: 17_highlights_pitch.txt | Title: BOLAJI BALOGOUN - HIGHLIGHTS & IMPACT PITCH | Section: THE ONE-LINE PITCH: | Parent context: BOLAJI BALOGOUN - HIGHLIGHTS & IMPACT PITCH\n\nBolaji is a data and AI executive who builds the platform, the products, and the team, then proves it with numbers: a data function grown from 4 to 14+ during the Head of Data period (October 2022 - March 2025), a Data Hub serving 700+ people, a 42.57% cloud cost cut in a single quarter, and 30+ production AI tools shipped."
+    },
+    {
+      "source": "11_leadership_style.txt",
+      "chunk_id": "11_leadership_style.txt::0",
+      "section": "THREE OPERATING PRINCIPLES:",
+      "retrieval_rank": 4,
+      "retrieval_score": 0.016129,
+      "parent_context": "BOLAJI BALOGOUN - LEADERSHIP STYLE & MANAGEMENT PHILOSOPHY",
+      "scope_context": "",
+      "evidence_type": "curated",
+      "metric_scope": {},
+      "content_preview": "Source: 11_leadership_style.txt | Title: BOLAJI BALOGOUN - LEADERSHIP STYLE & MANAGEMENT PHILOSOPHY | Section: THREE OPERATING PRINCIPLES: | Parent context: BOLAJI BALOGOUN - LEADERSHIP STYLE & MANAGEMENT PHILOSOPHY\n\nWhat are Bolaji's leadership principles: metrics before dashboards; architecture is the budget; adoption is the deliverable. These are three operating principles. His separate leadership philosophy is to lead with care.\nQuels sont les principes de leadership de Bolaji : les metriques avant les tableaux de bord ; l'architecture est le budget ; l'adoption est le livrable. Ces trois principes de fonctionnement sont distincts de sa philosophie de management : diriger avec bienveillance.\n\nThree principles run through all of Bolaji's work:\n1. Metrics before dashboards: he builds operational systems that act on metrics and patterns (automations, alerts, workflows) rather than reports that describe them.\n2. Architecture is the budget: cost discipline is designed into data models and pipelines, not bolted on afterwards. His 42.57% Google Cloud cost reduction in a single quarter came from data-model redesign, not procurement.\n3. Adoption is the deliverable: a platform, strategy, or model only counts when the finance manager, the ops lead, and the executive are using it without the data team in the room."
+    },
+    {
+      "source": "11_leadership_style.txt",
+      "chunk_id": "11_leadership_style.txt::6",
+      "section": "TECHNICAL LEADERSHIP UNDER PRESSURE:",
+      "retrieval_rank": 5,
+      "retrieval_score": 0.015873,
+      "parent_context": "BOLAJI BALOGOUN - LEADERSHIP STYLE & MANAGEMENT PHILOSOPHY",
+      "scope_context": "",
+      "evidence_type": "curated",
+      "metric_scope": {},
+      "content_preview": "Source: 11_leadership_style.txt | Title: BOLAJI BALOGOUN - LEADERSHIP STYLE & MANAGEMENT PHILOSOPHY | Section: TECHNICAL LEADERSHIP UNDER PRESSURE: | Parent context: BOLAJI BALOGOUN - LEADERSHIP STYLE & MANAGEMENT PHILOSOPHY\n\nWhen Gozem needed scalable data infrastructure and had no dedicated data engineer, Bolaji stepped up. He:\n1. Evaluated options between building an open-source stack and a cloud-first approach.\n2. Chose a cloud-first approach (GCP) to minimize maintenance overhead.\n3. Self-taught BigQuery, Cloud Storage, and related tools.\n4. Deployed a fully functional cloud-based analytics infrastructure within a single quarter, migrating 10+ TB without operational interruption.\n5. Simultaneously served as data analyst, cloud data engineer, analytics engineer, and data governance specialist.\n\nThis willingness to learn and deliver under pressure is a defining trait of Bolaji's leadership style."
+    }
+  ],
+  "scores": {
+    "relevance": 10,
+    "accuracy": 3,
+    "helpfulness": 8,
+    "faithfulness": 4,
+    "rationale": "The answer is relevant and helpful but loses points for accuracy and faithfulness by incorrectly linking the initial cloud platform decision to a later, separate cost-reduction achievement."
+  }
+}

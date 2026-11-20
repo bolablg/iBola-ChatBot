@@ -246,6 +246,7 @@ class WorkflowState(TypedDict, total=False):
     context_documents: List[Document]
     # Claim-level grounding verification (verify_grounding node)
     grounding_checked: bool
+    verification_method: str
     unsupported_claims: List[str]
 
     # Control flow

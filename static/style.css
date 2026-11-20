@@ -1421,3 +1421,32 @@ html.minimal .dark-mode .typing-dots {
     padding-bottom: calc(20px + env(safe-area-inset-bottom));
   }
 }
+
+/* Quiet first-hand follow-up, within its answer rather than a floating prompt. */
+.contextual-handoff {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  max-inline-size: 100%;
+}
+.handoff-heading { display: block; font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.handoff-description { margin: 4px 0 7px; font-size: 13px; line-height: 1.5; color: var(--text-secondary); }
+.handoff-links { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 18px; }
+.handoff-link, .handoff-dismiss {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  text-decoration: none;
+  cursor: pointer;
+}
+.handoff-link { color: var(--text-primary); font-weight: 600; }
+.handoff-dismiss { color: var(--text-secondary); margin-left: auto; }
+.handoff-link:hover, .handoff-dismiss:hover { text-decoration: underline; text-underline-offset: 4px; }
+.handoff-link:focus-visible, .handoff-dismiss:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 2px; }
+@media (max-width: 380px) { .handoff-links { column-gap: 12px; } .handoff-dismiss { margin-left: 0; } }
