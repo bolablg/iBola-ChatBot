@@ -1,4 +1,4 @@
-version: 11
+version: 12
 source_types:
   21_production_service_inventory.txt: candidate_confirmed
   20_owner_confirmed_production_scope.txt: candidate_confirmed
@@ -20,6 +20,14 @@ assertion_rules:
   answer_pattern: (?i)(?:manager.of.managers|management of managers)|(?i:management de managers|manager de
     managers)
   support_pattern: (?i)(?:directly managed|supervised|led)\s+(?:\w+\s+){0,3}(?:managers|team leads)\b
+- id: quantified_manager_layers_require_direct_evidence
+  description: Vacancy staffing requirements do not establish Bolaji's manager layers. An assertion about managers within his organization needs direct retrieved support for the same count and relationship. Manager users or stakeholders are a separate population.
+  answer_pattern: '(?i)(?:(?:team|organization|organisation|equipe|staff)[^.!?;\n]{0,120}?(?:including|included|includes|compris|dont|avec)|(?:Bolaji|he|il)\s+(?:directly\s+)?(?:managed|supervised|led|encadrait|dirigeait))\s+(?P<count>\d+|one|two|three|un|deux|trois)\s+(?:managers|team leads|responsables)\b'
+  support_pattern: '(?i)(?:(?:Bolaji|he|il)\s+(?:directly\s+)?(?:managed|supervised|led|encadrait|dirigeait)|(?:his|Bolaji.s)\s+(?:team|organization|organisation|equipe)[^.!?;\n]{0,80}(?:included|includes|comprised|comprenait))\s+(?P<count>\d+|one|two|three|un|deux|trois)\s+(?:managers|team leads|responsables)\b'
+  exclude_support_pattern: '(?i)training|users|utilisateurs|adoption|stakeholders|vacancy|requires|fictional|hypothetical'
+  binding_groups: [count]
+  clause_support: true
+  local_negation: true
 - id: budget_authority_requires_direct_evidence
   answer_pattern: (?i)(?:budget (?:authority|ownership|approval)|(?:department|operating|multi.year) budget|approval
     authority)|(?i:(?:autorite|responsabilite|approbation) (?:du |de )?budget|budget (?:departemental|pluriannuel|de
@@ -128,6 +136,20 @@ metric_constraints:
   - (?i)(?:six|6)\s+(?:AI\s+)?use cases\s+(?:were|are|have been)\s+(?:implemented|completed|deployed)
   - '(?i)(?:completed|deployed|delivered)\s+(?:all\s+)?(?:six|6)\s+(?:(?:AI|strategic|high.priority)\s+)?(?:use cases|initiatives|implementations)'
 facets:
+- id: requested_manager_layer_boundary
+  query_pattern: '(?i)manager.of.managers|(?:two|2|deux|\d+)\s+managers|manager(?:ial)? layers?|direct.report'
+  terms: direct-report counts manager layers
+  sources: [19_owner_confirmed_scope.txt]
+  section_pattern: '^GOZEM TEAM GROWTH AND ROLE PERIODS$'
+  support_pattern: 'does not establish direct-report counts, manager layers'
+  retain_for_query: true
+- id: requested_french_head_role_interval
+  query_pattern: '(?is)(?=.*head of data)(?=.*(?:encore|actuel|toujours))'
+  terms: Head Data octobre mars
+  sources: [91_role_timeline.txt]
+  section_pattern: '^QUEL ETAIT LE POSTE DE BOLAJI CHAQUE ANNEE:$'
+  support_pattern: 'Head of Data chez Gozem \(octobre 2022 - mars 2025\)'
+  retain_for_query: true
 - id: leadership_operating_principles
   query_pattern: '(?is)\A(?![^\n]*\b(?:one|single|seul)\b)(?=.*(?:leadership|management))(?=.*(?:principles|principes))'
   terms: metrics architecture budget adoption principles
@@ -438,6 +460,18 @@ metric_scopes:
     not_established: not an individual MongoDB CDC pipeline count, throughput ceiling, sub-second latency or
       availability guarantee
 required_limits:
+- id: requested_manager_layer_scope_unestablished
+  description: Give documented team-building experience separately from the unestablished manager layers or direct-report count requested by a vacancy. Do not import the vacancy's staffing into Bolaji's history.
+  sources: [19_owner_confirmed_scope.txt, 11_leadership_style.txt]
+  query_pattern: '(?i)manager.of.managers|(?:two|2|deux|\d+)\s+managers|manager(?:ial)? layers?|direct.report'
+  target_pattern: 'manager.layers?|manager.of.managers|direct.report|management layers|niveaux de management|rapports directs'
+  direct_support_pattern: '(?i)(?:Bolaji|he|il)\s+(?:directly\s+)?(?:managed|supervised|led)\s+(?P<count>\d+|one|two|three|un|deux|trois)\s+(?:managers|team leads)\b'
+  query_binding_pattern: '(?i)(?P<count>\d+|one|two|three|un|deux|trois)\s+(?:managers|team leads)\b'
+  direct_support_bindings: [count]
+  direct_support_exclude_pattern: '(?i)training|users|utilisateurs|adoption|stakeholders|vacancy|requires|fictional|hypothetical'
+  restore_limit:
+    en: manager layers and direct-report counts
+    fr: les niveaux de management et le nombre de rapports directs
 - id: self_service_measurement_period_unknown
   scope_id: self_service_adoption
   query_pattern: (?i)(?:measurement (?:period|interval|window)|time period|over what period|periode (?:connue|de
@@ -516,7 +550,7 @@ required_details:
   description: Bind the confirmed EC2 production responsibility to Gozem Data Hub locally. This establishes no S3 employer or project.
   sources: [20_owner_confirmed_production_scope.txt]
   support_pattern: 'For the Gozem Data Hub, Bolaji personally designed and operated AWS EC2 in production'
-  query_pattern: '(?is)(?=.*AWS)(?=.*(?:personal|personnel))(?=.*(?:services|technologies|EC2))'
+  query_pattern: '(?is)\A(?=[^\n]*AWS)(?=[^\n]*(?:personal|personnel))(?=[^\n]*(?:services|technologies|EC2))'
   answer_pattern: '(?i)(?:For the Gozem Data Hub, Bolaji personally designed and operated AWS EC2 in production|(?:Bolaji|he)\s+(?:has\s+)?personally\s+(?:designed\s+and\s+operated|operated\s+and\s+designed)\s+(?:AWS\s+)?EC2\s+in production\s+for\s+(?:the\s+)?Gozem Data Hub)'
   restore_quote:
     language: en
@@ -578,10 +612,17 @@ required_details:
   support_pattern: 'Head of Data at Gozem: October 2022 - March 2025'
   query_pattern: '(?is)(?=.*head of data)(?=.*(?:current|still|encore|actuel))'
   answer_pattern: '(?i)Head of Data[^.!?\n]{0,100}(?:March 2025|mars 2025)'
-  restore_quote:
-    language: en
-    label: Head of Data role interval
-    pattern: 'Head of Data at Gozem: October 2022 - March 2025 \(Oct 2022 - Mar 2025\)'
+  restore_quotes:
+    en:
+      language: en
+      label: Head of Data role interval
+      pattern: 'Head of Data at Gozem: October 2022 - March 2025 \(Oct 2022 - Mar 2025\)'
+    fr:
+      language: fr
+      label: Période historique du poste
+      section_pattern: '^QUEL ETAIT LE POSTE DE BOLAJI CHAQUE ANNEE:$'
+      section_label: Historique des postes
+      pattern: 'En 2023, Bolaji etait Head of Data chez Gozem \(octobre 2022 - mars 2025\)\.'
 - id: requested_AI_implementation_progress_missing
   description: Preserve the retrieved count and its implementation-stage status when the question asks about the prioritized initiatives. Advancing into implementation does not establish completed delivery or a measured return.
   sources: [90_website_canon_llms_full.txt]
@@ -595,11 +636,13 @@ required_details:
     pattern: 'Result: Turned fragmented AI experimentation[^\n]*advancing 6 high-priority initiatives into implementation\.'
 - id: migration_earlier_role_missing
   description: If a personal production-pipeline answer uses the cloud migration, bind that migration locally to its explicitly documented earlier role. A later Director umbrella, unrelated role mention or appended correct quotation cannot establish the role governing the original migration claim. Retain warehouse design and pipeline facts without inferring operation of every service.
-  sources: [01_career_overview.txt, 90_website_canon_llms_full.txt]
-  support_pattern: 'Global Data Analyst'
+  sources: [01_career_overview.txt, 03_previous_role_gozem_gda.txt, 90_website_canon_llms_full.txt]
+  support_pattern: '(?i)Global Data Analyst'
   query_pattern: '(?is)(?=.*production)(?=.*(?:personally|personal|hands.on))(?=.*(?:pipeline|data engineering))'
-  claim_pattern: '(?i)cloud migration|migrat\w*[^.!?\n]{0,100}10\+?\s*TB|50\+? scheduled ETL'
+  claim_pattern: '(?i)cloud migration|migrat\w*[^.!?\n]{0,100}(?:10\+?\s*TB|over\s+10\s*TB|10\s*TB\s+plus)|50\+? scheduled ETL'
   governing_role_pattern: '(?i)Global Data Analyst|Data Director|Head of Data'
+  role_prefix_pattern: '(?i)(?:as(?: a| the)?|during(?: his| the)?|en tant que|pendant(?: son)?)\s+$'
+  role_heading_pattern: '(?i)^\s*(?:Global Data Analyst|Data Director|Head of Data)(?:\s+at Gozem|\s+role|\s*\([^)]*\))*\s*:?\s*$'
   restore_quote:
     language: en
     label: Earlier role evidence
@@ -793,6 +836,12 @@ experience_confirmations:
   negative_pattern: '(?i)Bolaji has no (?P<subject>[A-Za-z][A-Za-z /-]{0,45}?) experience at all'
 
 relationship_constraints:
+- id: cdc_migration_metrics_require_separate_scope
+  description: The 10+ TB migration within a single quarter belongs to the earlier Global Data Analyst cloud infrastructure migration, not the MongoDB CDC pipeline. Keep CDC responsibility and migration measurements in separately attributed claims.
+  binding_mode: local_cooccurrence
+  qualifier_prefix_pattern: '(?i)\b(?:no evidence|no documentation|does not establish|not documented|unverified)\s+(?:that\s+|of\s+|for\s+)?(?:(?:the|a|an|MongoDB|CDC|pipeline|system|workload)\s+){0,7}$'
+  subject_pattern: '(?i)MongoDB\s+CDC|\bCDC\s+(?:pipeline|system|workload)'
+  metric_pattern: '(?i)\bmigrat\w*[^.!?;\n]{0,90}(?:(?:over\s+)?10\+?\s*TB|10\s*TB\s+plus|(?:a|one|single)\s+quarter)|\b(?:over\s+)?10\+?\s*TB[^.!?;\n]{0,50}(?:migrat|quarter)'
 - id: initial_cloud_choice_not_finops_cause
   description: The initial cloud-first platform choice and migration belong to the earlier Global Data Analyst role. The later Head of Data FinOps cost reduction is a separate recorded initiative. Do not attribute that reduction to the initial choice or a nearby reference to that decision; retain both facts separately with their own role and initiative.
   cause_pattern: '(?i)cloud.first|initial.{0,30}(?:cloud|GCP|platform)|(?:cloud|GCP) migration'

@@ -555,3 +555,15 @@ def test_real_browser_inventory_header_does_not_repeat_a_complete_list(docs):
     )
     assert coverage["all_relevant_labels_previously_listed"]
     assert not coverage["remaining_labels"]
+
+
+def test_real_api_operational_data_services_header_is_also_covered(docs):
+    prior = "Bolaji personally designed and operated a comprehensive production service inventory spanning GCP and AWS. His core operational and data services include BigQuery, Apache Airflow, Dataform, Google Cloud Storage, Pub/Sub, Dataflow, Cloud Run, Cloud Functions, Vertex AI, AWS EC2, and AWS S3, alongside delivery tools like Artifact Registry, Cloud Logging, and Cloud Build."
+    assert (
+        inventory_followup(
+            {"original_query": FOLLOWUP, "chat_history": [(QUESTION, prior)]},
+            docs,
+            "en",
+        )
+        == "The confirmed production-service inventory is already covered above."
+    )

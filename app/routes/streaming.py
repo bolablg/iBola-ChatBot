@@ -261,6 +261,7 @@ async def _stream_agentic(
             # the streaming client can render the same rail.
             "evidence": result.get("evidence", []),
             "grounding_checked": result.get("grounding_checked", False),
+            "verification_method": result.get("verification_method"),
             "unsupported_claims": result.get("unsupported_claims", []),
             "answer_sources": result.get("answer_sources", []),
             "provenance": result.get("provenance", {}),

@@ -291,6 +291,7 @@ class AgenticRAGService:
             "response_time": round(elapsed, 3),
             "evidence": evidence,
             "grounding_checked": final_state.get("grounding_checked", False),
+            "verification_method": final_state.get("verification_method"),
             # PART 8.2: normalized portfolio receipts for the "Answer sources"
             # rail. Deduplicated by section, linkable to bolablg.com.
             "answer_sources": build_answer_sources(evidence),
@@ -367,6 +368,7 @@ class AgenticRAGService:
                     "provenance": runtime_provenance(),
                     "context_order": [e["source"] for e in evidence],
                     "grounding_checked": final_state.get("grounding_checked", False),
+                    "verification_method": final_state.get("verification_method"),
                     "unsupported_claims": final_state.get("unsupported_claims", []),
                     "latency_s": round(elapsed, 3),
                     "prompt_versions": _prompt_versions(),

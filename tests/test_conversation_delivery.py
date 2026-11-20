@@ -166,3 +166,44 @@ def test_contextual_handoff_survives_json_sse_and_cache(
         cached = test_client.post(path, json=payload).json()
         assert cached["actions"] == [action] and cached["cached"]
         assert conversation_service.process_query.call_count == 1
+
+
+@pytest.mark.parametrize(
+    "path,stream", [("/chat", False), ("/ask-agentic", False), ("/ask-agentic", True)]
+)
+def test_verification_method_survives_json_sse_and_cache(
+    test_client, conversation_service, path, stream
+):
+    method = "retrieved_inventory_conversation_coverage"
+    conversation_service.process_query.return_value = {
+        "answer": "The inventory is already covered.",
+        "grounding_checked": True,
+        "verification_method": method,
+    }
+    payload = {
+        "user_input": "What other services?",
+        "session_id": "coverage-delivery",
+        "stream": stream,
+    }
+    response = test_client.post(path, json=payload)
+    assert response.status_code == 200
+    if stream:
+        events = [
+            json.loads(line.removeprefix("data: "))
+            for line in response.text.splitlines()
+            if line.startswith("data: ")
+        ]
+        assert (
+            next(e for e in events if e.get("status") == "done")["verification_method"]
+            == method
+        )
+    else:
+        assert response.json()["verification_method"] == method
+        from app.routes import streaming
+
+        streaming.cache_service.get_cached_response.return_value = (
+            streaming.cache_service.set_cached_response.call_args.args[3]
+        )
+        assert (
+            test_client.post(path, json=payload).json()["verification_method"] == method
+        )

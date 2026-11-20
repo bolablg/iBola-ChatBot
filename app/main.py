@@ -641,6 +641,7 @@ async def chat(payload: ChatInput, request: Request):
             ),  # Add the missing field
             "evidence": result.get("evidence", []),
             "grounding_checked": result.get("grounding_checked", False),
+            "verification_method": result.get("verification_method"),
             "answer_sources": result.get("answer_sources", []),
             "provenance": result.get("provenance", {}),
             "trace_id": result.get("trace_id"),

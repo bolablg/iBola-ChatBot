@@ -1470,12 +1470,12 @@ def verify_grounding_node(state: dict) -> dict:
     docs = prepare_evidence(state.get("context_documents", []) or [], query)
     from app.services.service_inventory import inventory_followup
 
-    # Recompute observations from this request after discarding incoming metadata.
-    inventory_followup(state, docs, state.get("user_language", "en"))
     language = _detect_reply_language(
         state.get("original_query") or state.get("query", ""),
         state.get("user_language", "en"),
     )
+    # Recompute once from this request after discarding incoming metadata.
+    followup = inventory_followup(state, docs, language)
     draft = state.get("answer", "")
     draft, primary_added = preserve_primary_language(draft, docs, query, language)
     draft, degree_added = preserve_requested_degrees(draft, docs, query, language)
@@ -1483,8 +1483,44 @@ def verify_grounding_node(state: dict) -> dict:
     draft, project_names = preserve_project_identity(draft, docs, query, language)
     draft, restored_details = preserve_requested_evidence(draft, docs, query, language)
     draft = normalize_metric_omission_attribution(draft, docs, language)
+    coverage = next(
+        (
+            doc.metadata["conversation_coverage"]
+            for doc in docs
+            if doc.metadata.get("conversation_coverage")
+        ),
+        {},
+    )
+    # This exact registered observation contains no profile claim. Its proof is
+    # the ordered difference of current retrieved labels and prior listed labels.
+    # Every additional-service or modified answer still uses the LLM verifier.
+    if (
+        followup is not None
+        and draft == followup
+        and coverage.get("relevant_inventory_labels")
+        and coverage.get("remaining_labels") == []
+        and coverage.get("all_relevant_labels_previously_listed") is True
+    ):
+        return {
+            "answer": draft,
+            "context_documents": docs,
+            "grounding_checked": True,
+            "verification_method": "retrieved_inventory_conversation_coverage",
+            "unsupported_claims": [],
+            "reasoning_steps": list(state.get("reasoning_steps", []))
+            + [
+                ReasoningStep(
+                    node="verify_grounding",
+                    action="verified_conversation_coverage",
+                    detail="exact registered observation; current retrieved labels already listed",
+                )
+            ],
+        }
     verification_state = {**state, "answer": draft, "context_documents": docs}
     result = _verify_grounding_llm_node(verification_state)
+    result["verification_method"] = (
+        "llm_claim_grounding" if result.get("grounding_checked") else "unverified"
+    )
     result["context_documents"] = docs
     if result.get("grounding_checked"):
         final_answer = result.get("answer", draft)

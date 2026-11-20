@@ -356,12 +356,11 @@ def preserve_requested_evidence(
             meta = doc.metadata
             if Path(meta.get("source", "")).name not in rule.get("sources", []):
                 continue
-            if rule.get("section_pattern") and not re.search(
-                rule["section_pattern"], meta.get("section_header", "")
-            ):
-                continue
-            if restoration.get("section_pattern") and not re.search(
-                restoration["section_pattern"], meta.get("section_header", "")
+            section_pattern = restoration.get(
+                "section_pattern", rule.get("section_pattern")
+            )
+            if section_pattern and not re.search(
+                section_pattern, meta.get("section_header", "")
             ):
                 continue
             if meta.get("evidence_type") not in {
@@ -436,6 +435,8 @@ def describe_constraints(ids):
             "required_details",
             "request_scopes",
             "experience_confirmations",
+            "relationship_constraints",
+            "relationship_constraints",
         )
         for rule in policy.get(group, [])
     }
@@ -493,6 +494,27 @@ def _binding(value):
     return numbers.get(folded, folded)
 
 
+def _direct_support_matches(rule, clause, query):
+    if re.search(rule.get("direct_support_exclude_pattern", r"(?!)"), clause):
+        return False
+    matches = list(re.finditer(rule["direct_support_pattern"], clause))
+    if not matches:
+        return False
+    if not rule.get("query_binding_pattern"):
+        return True
+    requested = list(re.finditer(rule["query_binding_pattern"], query))
+    return all(
+        any(
+            all(
+                _binding(m.group(key)) == _binding(q.group(key))
+                for key in rule["direct_support_bindings"]
+            )
+            for m in matches
+        )
+        for q in requested
+    )
+
+
 def constraint_failures(
     answer: str, documents: List[Document], query: str = ""
 ) -> List[str]:
@@ -509,6 +531,22 @@ def constraint_failures(
     ]
     failures.extend(_request_scope_failures(answer, documents, query))
     for rule in policy.get("relationship_constraints", []):
+        if rule.get("binding_mode") == "local_cooccurrence":
+            for clause in _claim_clauses(answer):
+                if not re.search(rule["subject_pattern"], clause):
+                    continue
+                metrics = list(re.finditer(rule["metric_pattern"], clause))
+                if any(
+                    not _denied_assertion(clause, match)
+                    and not re.search(
+                        rule.get("qualifier_prefix_pattern", r"(?!)"),
+                        clause[: match.start()],
+                    )
+                    for match in metrics
+                ):
+                    failures.append(rule["id"])
+                    break
+            continue
         pending = 0
         for clause in re.split(
             r"(?<!\d)[.!?](?!\d)|[;\n]|\b(?:but|mais|while|whereas)\b",
@@ -670,7 +708,7 @@ def constraint_failures(
             d.metadata.get("evidence_type")
             not in {"interpretation", "summary", "pending_confirmation"}
             and any(
-                re.search(rule["direct_support_pattern"], clause)
+                _direct_support_matches(rule, clause, query)
                 and not _UNCERTAIN.search(clause)
                 and not re.search(
                     r"(?i)\b(?:never|not|no|ne|pas|aucun|\w+n't)\b", clause
@@ -707,23 +745,40 @@ def constraint_failures(
                     if not sentence.strip():
                         continue
                     roles = list(re.finditer(rule["governing_role_pattern"], sentence))
-                    for claim in re.finditer(rule["claim_pattern"], sentence):
-                        prefix_roles = list(
-                            re.finditer(
-                                rule["governing_role_pattern"],
-                                sentence[: claim.start()],
-                            )
+                    valid_roles = [
+                        r
+                        for r in roles
+                        if not rule.get("role_prefix_pattern")
+                        or re.search(rule["role_prefix_pattern"], sentence[: r.start()])
+                        or re.fullmatch(
+                            rule.get("role_heading_pattern", r"(?!)"),
+                            sentence.split(":", 1)[0],
                         )
+                    ]
+                    for claim in re.finditer(rule["claim_pattern"], sentence):
+                        prefix_roles = [
+                            r for r in valid_roles if r.start() < claim.start()
+                        ]
                         governing = (
                             prefix_roles[-1].group() if prefix_roles else active_role
                         )
+                        raw_prefix_roles = [
+                            r for r in roles if r.start() < claim.start()
+                        ]
+                        if raw_prefix_roles and (
+                            not prefix_roles
+                            or raw_prefix_roles[-1].start() > prefix_roles[-1].start()
+                        ):
+                            governing = ""
                         if not re.fullmatch(rule["answer_pattern"], governing):
                             invalid = True
                         active_role = governing
-                    if roles:
+                    if valid_roles:
                         # Carry an explicitly named role through adjacent
                         # sentences, until another role changes the subject.
-                        active_role = roles[-1].group()
+                        active_role = valid_roles[-1].group()
+                    elif roles or not re.search(rule["claim_pattern"], sentence):
+                        active_role = ""
                 if invalid:
                     failures.append(rule["id"])
                 continue
