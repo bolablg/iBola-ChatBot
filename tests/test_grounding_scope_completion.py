@@ -229,3 +229,87 @@ def test_unconfirmed_pronoun_and_other_tool_never_borrow_kafka_non_use():
         [Document(page_content="Tools: Kafka.")],
         c["question"],
     )
+
+
+PHRASING = {
+    c["id"]: c
+    for c in json.loads(
+        Path("tests/fixtures/scoped_phrasing_failures.json").read_text()
+    )["cases"]
+}
+
+
+@pytest.mark.parametrize("cid", list(PHRASING))
+def test_captured_scope_phrasing_retains_exact_final_independent_verification(
+    monkeypatch, cid
+):
+    c = PHRASING[cid]
+    responses = [response(c, 4)]
+    if cid == "recruiter-hda-01-t1":
+        assert not constraint_failures(response(c, 5)["answer"], docs(c), c["question"])
+        responses += [response(c, 5), {"is_grounded": True}]
+    generate = sdk(monkeypatch, responses)
+    result = nodes.verify_grounding_node(state(c))
+    assert result["grounding_checked"]
+    assert generate.call_count == (3 if cid == "recruiter-hda-01-t1" else 1)
+    assert result["answer"] in str(generate.call_args.kwargs["contents"])
+    assert check_facts(
+        result["answer"], c["golden_assertions"], result={**c, **result}
+    )[0]
+
+
+@pytest.mark.parametrize(
+    "quantifier", ["multiple", "several", "two", "3", "two different", "12 separate"]
+)
+def test_coordinated_function_scope_does_not_authorize_explicit_multiplicity(
+    quantifier,
+):
+    c = PHRASING["recruiter-hda-01-t1"]
+    answer = f"He designed {quantifier} operating models, role charters, and competency frameworks for the data function."
+    assert "operating_model_data_function_scope_missing" in constraint_failures(
+        answer, docs(c), c["question"]
+    )
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        "He designed operating models, role charters, and competency frameworks.",
+        "He designed operating models, role charters, and competency frameworks for the whole company.",
+        "He designed enterprise-wide operating models, role charters, and competency frameworks for the data function.",
+        "He designed operating models. Separately, he designed the operating model for the data function.",
+        "He designed operating models, role charters, and company-wide competency frameworks for the data function.",
+    ],
+)
+def test_coordinated_scope_cannot_cleanse_unscoped_or_enterprise_claim(answer):
+    c = PHRASING["recruiter-hda-01-t1"]
+    assert "operating_model_data_function_scope_missing" in constraint_failures(
+        answer, docs(c), c["question"]
+    )
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        "Bolaji has an explicit confirmed absence of experience with Kafka and has never used it.",
+        "Regarding Kafka architecture delivery, he has a confirmed absence of experience with Kafka and has never used it.",
+    ],
+)
+def test_confirmed_modifier_phrasing_still_requires_the_named_source_predicate(answer):
+    c = PHRASING["recruiter-sda-05-t2"]
+    assert "non_use_requires_explicit_negative_evidence" not in constraint_failures(
+        answer, docs(c), c["question"]
+    )
+    absent = [
+        Document(
+            page_content="Bolaji has no Kafka experience at all.",
+            metadata={"source": "20_owner_confirmed_production_scope.txt"},
+        )
+    ]
+    assert "non_use_requires_explicit_negative_evidence" in constraint_failures(
+        answer, absent, c["question"]
+    )
+    bad = answer.replace("with Kafka", "with Kafka and Spark")
+    assert "non_use_requires_explicit_negative_evidence" in constraint_failures(
+        bad, docs(c), c["question"]
+    )

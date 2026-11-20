@@ -353,7 +353,7 @@ def _normalize_non_use_reference(answer, documents):
         absence = (
             rf"(?:no\s+{tool}\s+experience(?:\s+at\s+all)?|"
             rf"no\s+experience\s+(?:with|in)\s+{tool}|"
-            rf"(?:an?\s+)?(?:(?:explicit|owner[ -]confirmed)\s+){{0,2}}"
+            rf"(?:an?\s+)?(?:(?:explicit|confirmed|owner[ -]confirmed)\s+){{0,2}}"
             rf"absence\s+of\s+experience\s+(?:with|in)\s+{tool})"
         )
         pattern = re.compile(

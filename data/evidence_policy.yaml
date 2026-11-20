@@ -1,4 +1,4 @@
-version: 21
+version: 22
 source_types:
   21_production_service_inventory.txt: candidate_confirmed
   20_owner_confirmed_production_scope.txt: candidate_confirmed
@@ -586,8 +586,8 @@ required_details:
   support_pattern: 'designed the operating model for the data function across Analytics, Data Engineering, and Data Science'
   query_pattern: '(?s).*'
   claim_subject_pattern: '(?i)\b(?:Bolaji|he|his|il|son|ses)\b'
-  claim_pattern: '(?i)(?:(?:for|within)\s+the\s+data function,?\s+(?:\w+\s+){0,12}?)?(?:(?:company.wide|enterprise.wide|organization.wide|organization|whole.company)\s+)?\boperating models?\b(?:\s+(?:for|of)\s+the\s+data function)?'
-  answer_pattern: '(?is)\A(?!.*(?:company.wide|enterprise.wide|organization.wide|whole company))(?=.*(?:operating model\s+(?:for|of)\s+the\s+data function|(?:for|within)\s+the\s+data function[^.!?;\n]{0,100}operating model\b))'
+  claim_pattern: '(?i)(?:(?:for|within)\s+the\s+data function,?\s+(?:\w+\s+){0,12}?)?(?:(?:company.wide|enterprise.wide|organization.wide|organization|whole.company)\s+)?(?:(?:multiple|several|many|numerous|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|\d+)(?:\s+(?:distinct|different|separate))?\s+)?\boperating models?\b(?:,[ \t]*role charters,[ \t]*and[ \t]+competency frameworks)?(?:\s+(?:for|of)\s+the\s+data function)?'
+  answer_pattern: '(?is)\A(?!.*(?:company.wide|enterprise.wide|organization.wide|whole company))(?!.*\b(?:multiple|several|many|numerous|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|\d+)(?:\s+(?:distinct|different|separate))?\s+operating models\b)(?=.*(?:operating models?(?:,[ \t]*role charters,[ \t]*and[ \t]+competency frameworks)?\s+(?:for|of)\s+the\s+data function|(?:for|within)\s+the\s+data function[^.!?;\n]{0,100}operating models?\b))'
   restore_quote:
     language: en
     label: Data-function responsibility
