@@ -429,6 +429,7 @@ def test_verifier_json_budget_is_separate_from_answer_budget():
         _thinking_budget=0,
     )
     llm._thinking_config.return_value = {"thinking_budget": 0}
+    llm._sampling_config.return_value = {"temperature": 0.0}
     for schema, parsed, expected in [
         (GroundingVerdict, GroundingVerdict(is_grounded=True), 4096),
         (

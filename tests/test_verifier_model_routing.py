@@ -55,7 +55,7 @@ def test_actual_sdk_routes_verify_repair_and_final_verification(
     assert len(calls) == 3
     assert [c["model"] for c in calls] == [
         "gemini-3.5-flash-lite",
-        "gemini-2.5-flash",
+        "gemini-3.5-flash-lite",
         "gemini-3.5-flash-lite",
     ]
     for call in (calls[0], calls[2]):
@@ -63,8 +63,11 @@ def test_actual_sdk_routes_verify_repair_and_final_verification(
         assert conf.max_output_tokens == 4096
         assert str(conf.thinking_config.thinking_level).lower().endswith("low")
         assert conf.thinking_config.thinking_budget is None
-    assert calls[1]["config"].thinking_config.thinking_budget == 0
-    assert calls[1]["config"].thinking_config.thinking_level is None
+    assert calls[1]["config"].thinking_config.thinking_budget is None
+    assert (
+        str(calls[1]["config"].thinking_config.thinking_level).lower().endswith("low")
+    )
+    assert all(call["config"].temperature is None for call in calls)
     assert good in calls[2]["contents"]
     assert result["grounding_checked"] is (final_grounded and final_on_topic)
     if result["grounding_checked"]:
@@ -76,7 +79,7 @@ def test_actual_sdk_routes_verify_repair_and_final_verification(
 def test_model_cache_and_rollback_keep_effective_thinking_config_separate(monkeypatch):
     monkeypatch.setattr("google.genai.Client", Mock())
     monkeypatch.setattr(nodes, "_llms", {})
-    default = nodes._get_llm(temperature=0)
+    default = nodes._get_llm(temperature=0, model="gemini-2.5-flash")
     verifier = nodes._get_llm(
         temperature=0, model="gemini-3.5-flash-lite", thinking_level="low"
     )
@@ -164,3 +167,65 @@ def test_reference_history_cannot_expand_the_current_answer_scope():
     }
     assert "dbt" not in nodes._verification_scope(state)
     assert "public article" in nodes._verification_scope(state)
+
+
+@pytest.mark.parametrize("model", ["gemini-3.5-flash-lite", "gemini-2.5-flash"])
+def test_all_graph_factory_payloads_use_compatible_effective_config(monkeypatch, model):
+    from app.graph.state import GeneratedAnswer
+    from app.settings import get_settings
+
+    settings = get_settings().model_copy(update={"llm": LLMSettings(model_name=model)})
+    monkeypatch.setattr("app.settings.get_settings", lambda: settings)
+    monkeypatch.setattr(nodes, "_llms", {})
+    calls = []
+
+    def generate_content(**kwargs):
+        calls.append(kwargs)
+        return SimpleNamespace(
+            text="Supported reply.",
+            parsed=GeneratedAnswer(answer="Supported reply.", confidence=1.0),
+        )
+
+    client = SimpleNamespace(models=SimpleNamespace(generate_content=generate_content))
+    monkeypatch.setattr("google.genai.Client", lambda **kwargs: client)
+    ordinary = nodes._get_llm(temperature=0.3)
+    ordinary.invoke(["A routing or rewrite input."])
+    generator = nodes._get_llm(
+        temperature=0.7, **settings.llm.thinking_parameters(generation=True)
+    )
+    generator.with_structured_output(GeneratedAnswer).invoke(["A generation input."])
+    assert all(c["model"] == model for c in calls)
+    if model == "gemini-3.5-flash-lite":
+        assert calls[0]["config"]["thinking_config"] == {"thinking_level": "low"}
+        assert "temperature" not in calls[0]["config"]
+        assert calls[1]["config"].temperature is None
+        assert calls[1]["config"].thinking_config.thinking_budget is None
+        assert (
+            str(calls[1]["config"].thinking_config.thinking_level)
+            .lower()
+            .endswith("low")
+        )
+        assert nodes._get_llm(temperature=0.9) is nodes._get_llm(temperature=0.0)
+        with pytest.raises(ValueError, match="thinking level"):
+            nodes._get_llm(thinking_budget=0)
+    else:
+        assert calls[0]["config"]["thinking_config"] == {"thinking_budget": 0}
+        assert calls[0]["config"]["temperature"] == 0.3
+        assert calls[1]["config"].thinking_config.thinking_budget == 256
+        assert calls[1]["config"].thinking_config.thinking_level is None
+        assert calls[1]["config"].temperature == 0.7
+        assert nodes._get_llm(temperature=0.9) is not nodes._get_llm(temperature=0.0)
+
+
+def test_modern_constructor_rejects_legacy_budgets_before_any_sdk_call(monkeypatch):
+    client = Mock()
+    monkeypatch.setattr("google.genai.Client", client)
+    with pytest.raises(ValueError, match="thinking level"):
+        nodes._SyncGeminiLLM(
+            model="gemini-3.5-flash-lite",
+            api_key="test",
+            temperature=0,
+            max_output_tokens=750,
+            thinking_budget=0,
+        )
+    client.assert_not_called()

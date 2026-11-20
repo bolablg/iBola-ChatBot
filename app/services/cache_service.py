@@ -92,6 +92,7 @@ class CacheService:
             json.dumps(
                 {
                     "prompts": PROMPT_VERSIONS,
+                    "llm_settings": settings.llm.model_dump(),
                     "model": settings.llm.model_name,
                     "temperature": settings.llm.generation_temperature,
                     "search": settings.search.model_dump(),

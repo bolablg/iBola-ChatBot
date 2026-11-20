@@ -25,7 +25,9 @@ class LLMSettings(BaseSettings):
 
     model_config = SettingsConfigDict(env_prefix="LLM_")
 
-    model_name: str = "gemini-2.5-flash"
+    model_name: str = "gemini-3.5-flash-lite"
+    default_thinking_level: Literal["minimal", "low", "medium", "high"] = "low"
+    generation_thinking_budget: int = 256
     verifier_model_name: str = "gemini-3.5-flash-lite"
     verifier_thinking_level: Literal["minimal", "low", "medium", "high"] = "low"
     guardrail_temperature: float = 0.0
@@ -37,6 +39,13 @@ class LLMSettings(BaseSettings):
     # Claim-level grounding verifier after generate (fail closed on
     # unsupported profile claims). One extra temperature-0 call per turn.
     grounding_verifier_enabled: bool = True
+
+    def thinking_parameters(self, generation=False):
+        if self.model_name.startswith("gemini-2.5"):
+            return {
+                "thinking_budget": self.generation_thinking_budget if generation else 0
+            }
+        return {"thinking_level": self.default_thinking_level}
 
     def verifier_parameters(self):
         if self.verifier_model_name.startswith("gemini-2.5-"):

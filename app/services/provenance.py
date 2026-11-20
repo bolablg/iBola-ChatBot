@@ -64,6 +64,15 @@ def runtime_provenance():
         "index_sync_pending": indexed != current or indexed_chunker != CHUNKER_VERSION,
         "chunker_version": CHUNKER_VERSION,
         "model": get_settings().llm.model_name,
+        "thinking_config": get_settings().llm.thinking_parameters(),
+        "generation_thinking_config": get_settings().llm.thinking_parameters(
+            generation=True
+        ),
+        "generation_temperature": (
+            None
+            if get_settings().llm.model_name.startswith("gemini-3.5-flash-lite")
+            else get_settings().llm.generation_temperature
+        ),
         "verifier_model": get_settings().llm.verifier_model_name,
         "verifier_thinking_level": get_settings()
         .llm.verifier_parameters()

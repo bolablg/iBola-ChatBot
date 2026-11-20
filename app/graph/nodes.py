@@ -167,6 +167,10 @@ class _SyncGeminiLLM:
 
         if thinking_level is not None and thinking_budget is not None:
             raise ValueError("Specify a thinking level or budget, not both")
+        if model.startswith("gemini-3."):
+            if thinking_budget is not None:
+                raise ValueError("Use a thinking level for this model")
+            thinking_level = thinking_level or "low"
         self._model = model
         self._temperature = temperature
         self._max_output_tokens = max_output_tokens
@@ -181,6 +185,11 @@ class _SyncGeminiLLM:
             if level is not None
             else {"thinking_budget": self._thinking_budget}
         )
+
+    def _sampling_config(self):
+        if self._model.startswith("gemini-3.5-flash-lite"):
+            return {}
+        return {"temperature": self._temperature}
 
     def invoke(self, messages, **kwargs):
         """Accept LangChain message list, return an object with .content."""
@@ -201,7 +210,7 @@ class _SyncGeminiLLM:
                 model=self._model,
                 contents=prompt,
                 config={
-                    "temperature": self._temperature,
+                    **self._sampling_config(),
                     "max_output_tokens": self._max_output_tokens,
                     "thinking_config": self._thinking_config(),
                 },
@@ -245,7 +254,7 @@ class _StructuredOutput:
                     config=genai.types.GenerateContentConfig(
                         response_mime_type="application/json",
                         response_schema=self._schema,
-                        temperature=self._llm._temperature,
+                        **self._llm._sampling_config(),
                         max_output_tokens=(
                             max(self._llm._max_output_tokens, 4096)
                             if self._schema is GroundingVerdict
@@ -307,7 +316,18 @@ def _get_llm(
     if thinking_level is not None and thinking_budget is not None:
         raise ValueError("Specify a thinking level or budget, not both")
     selected_model = model or settings.llm.model_name
-    key = f"llm-{selected_model}-{temperature}-think{thinking_budget}-{thinking_level}"
+    modern = not selected_model.startswith("gemini-2.5")
+    if modern and thinking_budget is not None:
+        raise ValueError("Use a thinking level for this model")
+    if thinking_level is None and thinking_budget is None:
+        if modern:
+            thinking_level = settings.llm.default_thinking_level
+        else:
+            thinking_budget = 0
+    effective_temperature = (
+        None if selected_model.startswith("gemini-3.5-flash-lite") else temperature
+    )
+    key = f"llm-{selected_model}-{effective_temperature}-think{thinking_budget}-{thinking_level}"
     if key not in _llms:
         with _lock:
             if key not in _llms:
@@ -929,7 +949,6 @@ def rewrite_query_node(state: dict) -> dict:
 # NODE: generate
 # ===================================================================
 
-_GENERATE_THINKING_BUDGET = 256
 
 # Phrases that leak RAG/context internals to the user. Stripped post-generation.
 _LEAK_PHRASES = [
@@ -1299,7 +1318,13 @@ def generate_node(state: dict) -> dict:
     today = __import__("datetime").date.today().isoformat()
 
     def _call_generate(extra_instruction: str = "") -> GeneratedAnswer:
-        llm = _get_llm(temperature=0.7, thinking_budget=_GENERATE_THINKING_BUDGET)
+        from app.settings import get_settings
+
+        generation_settings = get_settings().llm
+        llm = _get_llm(
+            temperature=generation_settings.generation_temperature,
+            **generation_settings.thinking_parameters(generation=True),
+        )
         structured_llm = llm.with_structured_output(GeneratedAnswer)
         return structured_llm.invoke(
             GENERATE_PROMPT.format_messages(

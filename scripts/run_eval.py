@@ -568,7 +568,14 @@ def main():
 
     report = {
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
-        "answer_model": os.environ.get("LLM_MODEL_NAME", "gemini-2.5-flash (default)"),
+        "answer_model": next(
+            (
+                (r.get("provenance") or {}).get("model")
+                for r in results
+                if (r.get("provenance") or {}).get("model")
+            ),
+            os.environ.get("LLM_MODEL_NAME", "unknown"),
+        ),
         "judge_model": None if args.no_judge else args.judge_model,
         "target": args.base_url or "in-process",
         "tags": args.tags,

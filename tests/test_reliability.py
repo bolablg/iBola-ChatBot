@@ -57,6 +57,7 @@ def test_structured_output_recovers_from_truncated_json():
         _max_output_tokens=750,
         _thinking_budget=0,
         _thinking_config=lambda: {"thinking_budget": 0},
+        _sampling_config=lambda: {"temperature": 0.0},
     )
 
     prompts = []
@@ -103,6 +104,7 @@ def test_structured_output_recovers_grounding_verdict():
         _max_output_tokens=750,
         _thinking_budget=0,
         _thinking_config=lambda: {"thinking_budget": 0},
+        _sampling_config=lambda: {"temperature": 0.0},
     )
 
     result = _StructuredOutput(llm, GroundingVerdict).invoke(["Return JSON"])
@@ -130,6 +132,7 @@ def test_structured_output_prefers_sdk_parsed_model():
         _max_output_tokens=750,
         _thinking_budget=0,
         _thinking_config=lambda: {"thinking_budget": 0},
+        _sampling_config=lambda: {"temperature": 0.0},
     )
 
     result = _StructuredOutput(llm, GeneratedAnswer).invoke(["Return JSON"])
