@@ -65,6 +65,7 @@ def runtime_provenance():
         "chunker_version": CHUNKER_VERSION,
         "model": get_settings().llm.model_name,
         "thinking_config": get_settings().llm.thinking_parameters(),
+        "routing_thinking_config": get_settings().llm.routing_parameters(),
         "generation_thinking_config": get_settings().llm.thinking_parameters(
             generation=True
         ),

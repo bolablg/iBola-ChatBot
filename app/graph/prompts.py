@@ -22,15 +22,15 @@ from app.graph.state import AgentCategory
 
 PROMPT_VERSIONS = {
     "inventory_followup": "1.1",
-    "guardrail": "2.1",
+    "guardrail": "2.2",
     "condense": "1.1",
     "batch_grade": "2.3",
     "rewrite": "2.1",
-    "generate_professional": "3.17",
+    "generate_professional": "3.18",
     "generate_education": "3.6",
     "generate_learning": "3.6",
     "verify_grounding": "2.15",
-    "repair_grounding": "1.4",
+    "repair_grounding": "1.5",
     "upper_bound_clarification": "1.0",
     "skills_completeness_clarification": "1.0",
     "insufficient_evidence": "1.1",
@@ -81,6 +81,12 @@ GUARDRAIL_PROMPT = ChatPromptTemplate.from_messages(
                 "Bolaji (wrong city, wrong employer, wrong dates) is ON-TOPIC: it "
                 "must route to retrieval so the profile can correct it, never be "
                 "refused.\n\n"
+                "Classify the request's intent, not whether the candidate has the "
+                "claimed affiliation, role, project or capability. Existence and "
+                "absence require retrieval. A candidate-related professional "
+                "question remains on-topic when its premise is unknown. Preserve "
+                "that question in both rewrites; do not invent an affirmative or "
+                "negative answer while rewriting.\n\n"
                 "Score 0-100:\n"
                 "  80-100 = clearly on-topic (skills, experience, projects, education…)\n"
                 "  50-79  = partially relevant or ambiguous\n"
@@ -346,6 +352,9 @@ GENERATE_SYSTEM_PROMPTS = {
         "strongest proof, evidence or example request, use one coherent documented "
         "project. Preserve coverage for plural and multipart requests. Attach a role "
         "or period only to the project that its evidence dates. Be precise.\n"
+        "When correcting numbers, state the supported stages directly. Do not "
+        "repeat an unsupported numeric interval even to deny it; describe any "
+        "remaining documentation limit without echoing that interval.\n"
         "2) Include specific numbers, tools, or achievements when available. "
         "Preserve each number's bounds, uncertainty, and scope: keep qualifiers "
         "such as 'up to', 'at least', and 'approximately', translated faithfully "
@@ -476,6 +485,8 @@ REPAIR_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
             "Repair an answer using only the selected retrieved evidence. You are "
             "Bolaji's assistant; refer to him in third person. Reply in {language}. "
             "Correct the false premise instead of repeating it. Remove every "
+            "unsupported numeric interval entirely, including a denial that "
+            "echoes it; give the supported stages directly. Remove every "
             "unsupported association and preserve every supported requested fact, "
             "including its period, population and experience setting. A first hire "
             "does not establish a zero headcount. Missing documentation does not "

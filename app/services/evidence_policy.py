@@ -191,8 +191,23 @@ def _claim_clauses(text: str):
     return result
 
 
-def _record_limit_subject(clause):
+def _record_limit_subject(clause, known_subjects=(), subject_pattern=None):
     """A complete nominal evidence limit, never a neighboring action claim."""
+    existential = re.fullmatch(
+        r"(?i)\s*(?:(?:additionally|moreover)\s*,\s*)?there\s+(?:is|are)\s+"
+        r"no\s+documented\s+(?:personal\s+)?production\s+experience\s+or\s+"
+        r"(?:a\s+)?named\s+project\s+proving\s+(?:the\s+)?deployment\s+of\s+"
+        r"(?P<subject>[a-z][a-z0-9 /+#_'()-]{0,100})\s*",
+        _fold(clause),
+    )
+    if existential:
+        subject = existential.group("subject").strip()
+        known = {_fold(label).strip().casefold() for label in known_subjects}
+        if subject.casefold() in known or (
+            subject_pattern and re.fullmatch(subject_pattern, subject)
+        ):
+            return subject
+        return None
     match = re.fullmatch(
         r"(?i)\s*(?P<subject>[a-z][a-z0-9 /+#_'()-]{0,140}?)\s+"
         r"(?:(?:is|are|remains?)\s+(?:unsupported\s+by\s+"
@@ -274,7 +289,7 @@ def documentation_limits(answer: str, targets: List[str]) -> List[str]:
             for clause in clauses
         )
         and not any(
-            (subject := _record_limit_subject(clause))
+            (subject := _record_limit_subject(clause, targets))
             and re.search(_fold(target), subject, re.I)
             for clause in clauses
         )
@@ -493,6 +508,7 @@ def describe_constraints(ids):
             "experience_confirmations",
             "role_project_relations",
             "relationship_constraints",
+            "editorial_constraints",
         )
         for rule in policy.get(group, [])
     }
@@ -703,6 +719,16 @@ def constraint_failures(
         not in {"interpretation", "summary", "pending_confirmation"}
     ]
     failures.extend(_request_scope_failures(answer, documents, query))
+    for rule in policy.get("editorial_constraints", []):
+        applicable = re.search(rule["query_pattern"], _fold(query)) and any(
+            Path(doc.metadata.get("source", "")).name in rule["sources"]
+            and doc.metadata.get("evidence_type")
+            in {None, "curated", "published", "candidate_confirmed"}
+            and re.search(rule["support_pattern"], doc.page_content)
+            for doc in documents
+        )
+        if applicable and re.search(rule["answer_pattern"], answer):
+            failures.append(rule["id"])
     for relation in policy.get("role_project_relations", []):
         claimed = _project_role_claims(answer, relation)
         if not claimed:
@@ -1216,7 +1242,9 @@ def _request_scope_failures(answer, documents, query):
             }
             if not subjects:
                 continue
-            record_limit = _record_limit_subject(clause)
+            record_limit = _record_limit_subject(
+                clause, rule.get("record_limit_subjects", ()), rule["subject_pattern"]
+            )
             if record_limit and all(
                 re.search(r"\b" + re.escape(subject) + r"\b", record_limit, re.I)
                 for subject in subjects

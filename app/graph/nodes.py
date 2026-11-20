@@ -370,7 +370,9 @@ def guardrail_node(state: dict) -> dict:
     chat_history = state.get("chat_history", [])
 
     try:
-        llm = _get_llm(temperature=0.0)
+        from app.settings import get_settings
+
+        llm = _get_llm(temperature=0.0, **get_settings().llm.routing_parameters())
         structured_llm = llm.with_structured_output(GuardrailScoring)
         result: GuardrailScoring = structured_llm.invoke(
             GUARDRAIL_PROMPT.format_messages(
@@ -880,7 +882,9 @@ def grade_documents_node(state: dict) -> dict:
     )
 
     try:
-        llm = _get_llm(temperature=0.0)
+        from app.settings import get_settings
+
+        llm = _get_llm(temperature=0.0, **get_settings().llm.routing_parameters())
         structured_llm = llm.with_structured_output(BatchGradeResult)
         result: BatchGradeResult = structured_llm.invoke(
             BATCH_GRADE_PROMPT.format_messages(query=query, docs=doc_summaries)

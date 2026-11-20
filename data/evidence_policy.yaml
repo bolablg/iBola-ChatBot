@@ -1,4 +1,4 @@
-version: 17
+version: 18
 source_types:
   21_production_service_inventory.txt: candidate_confirmed
   20_owner_confirmed_production_scope.txt: candidate_confirmed
@@ -153,6 +153,13 @@ metric_constraints:
   - (?i)(?:six|6)\s+(?:AI\s+)?use cases\s+(?:were|are|have been)\s+(?:implemented|completed|deployed)
   - '(?i)(?:completed|deployed|delivered)\s+(?:all\s+)?(?:six|6)\s+(?:(?:AI|strategic|high.priority)\s+)?(?:use cases|initiatives|implementations)'
 facets:
+- id: platform_definition_adoption_scope
+  query_pattern: '(?i)(?:what(?: is|\x27s)|define|describe|qu.est.ce\s+que|c.est quoi|presente|decris)\s+(?:(?:the|le|la)\s+)?(?:Gozem\s+)?Data\s+Hub\b'
+  terms: Gozem Data Hub central platform adoption people operational analytics governance
+  sources: [10_apps_and_projects.txt]
+  section_pattern: '(?i)^GOZEM DATA HUB'
+  support_pattern: 'served over 700 people'
+  retain_for_query: true
 - id: actual_management_responsibilities
   query_pattern: '(?is)(?=.*(?:Bolaji|Gozem|\bhis\b|\bhe\b|\bses\b|\bson\b))(?=.*(?:management|leadership|coordina\w*|delivery|connaiss\w*|knowledge))(?=.*(?:responsibilit\w*|coordina\w*|transfer\w*|knowledge|connaiss\w*|countries|locations|pays|sites))'
   terms: operating model data function role charters workforce planning coordination
@@ -546,6 +553,15 @@ required_identity:
   query_pattern: (?i)\b(?:aws|ec2)\b
   answer_pattern: (?i)(?:EC2|700|operational.{0,15}platform|governed.{0,20}platform)
 required_details:
+- id: platform_definition_adoption_scope_missing
+  description: A platform definition should include the retrieved adoption bound and the mixed population it describes. Preserve the documented scope and period; do not turn the bound into an exact number, employee-only count, or current active-user metric.
+  sources: [10_apps_and_projects.txt, 13_gozem_internal_projects.txt]
+  section_pattern: '(?i)^GOZEM DATA HUB'
+  support_pattern: 'over 700 people'
+  query_pattern: '(?i)(?:what(?: is|\x27s)|define|describe|qu.est.ce\s+que|c.est quoi|presente|decris)\s+(?:(?:the|le|la)\s+)?(?:Gozem\s+)?Data\s+Hub\b'
+  answer_pattern: '(?i)(?:700\s*\+|(?:over|more than|plus de)\s+700)\s+(?:(?:internal and external|internes et externes)\s+)?(?:people|stakeholders|personnes|parties prenantes|utilisateurs)'
+  answer_clause_pattern: '(?i)(?:700\s*\+|(?:over|more than|plus de)\s+700)\s+(?:(?:internal and external|internes et externes)\s+)?(?:people|stakeholders|personnes|parties prenantes|utilisateurs)'
+  answer_clause_exclude_pattern: '(?i)\b(?:active|actif\w*)\b|\b(?:all(?: of whom)?|only|exclusively)\s+(?:(?:are|were)\s+)?(?:(?:company|internal)\s+)?(?:employees|staff|partners|field agents)\b|\b(?:employees|staff|partners|field agents)\s+only\b|\buniquement\s+(?:des\s+)?(?:employe\w*|partenaires|agents)\b'
 - id: operating_model_data_function_scope_missing
   description: The retrieved record documents one operating model for the data function. Every affirmative operating-model claim must preserve that scope, rather than imply company-wide organizational models. An appended scoped quotation cannot repair an earlier broader assertion.
   sources: [90_website_canon_llms_full.txt]
@@ -874,6 +890,7 @@ request_scopes:
   description: The question requests personal production design or operation. An unqualified experience list inherits that setting. For every mentioned tool, provide direct actor/tool/setting proof, an explicitly labeled inventory or project-stack fact, or a locally scoped statement that personal production operation remains unverified. Project leadership does not establish operation of every service.
   query_pattern: '(?is)(?=.*\bproduction\b)(?=.*\b(?:personally|personal|personnellement|personnel\w*)\b)'
   subject_pattern: '(?i)\b(?:AWS EC2|AWS S3|EC2|S3|Pub/Sub|Dataflow|Apache NiFi|NiFi|Spark|Lakeflow)\b'
+  record_limit_subjects: [Spark Structured Streaming, Apache Spark Structured Streaming]
   subject_aliases:
     ec2: aws ec2
     s3: aws s3
@@ -920,6 +937,14 @@ experience_confirmations:
   description: Explicit owner-confirmed absence must be stated when the requested tool is covered by that retrieved confirmation. Do not retain an outdated unknown or infer inability. Without an explicit confirmation, retain a documentation limit.
   source: 20_owner_confirmed_production_scope.txt
   negative_pattern: '(?i)Bolaji has no (?P<subject>[A-Za-z][A-Za-z /-]{0,45}?) experience at all'
+
+editorial_constraints:
+- id: superseded_growth_interval_echo
+  description: Give the confirmed growth stages directly without echoing the superseded interval, even to deny it. State the remaining headcount documentation limit without repeating that interval.
+  sources: [19_owner_confirmed_scope.txt]
+  support_pattern: 'initial team grew to 4|L\x27équipe initiale a atteint 4'
+  query_pattern: '(?i)(?:growth|croissance|developp).{0,180}(?:countries|pays)|(?:team|equipe).{0,100}\b(?:dates|limites|boundaries)\b'
+  answer_pattern: '(?i)(?:de |from )(?:zero|0).{0,12}(?:14|quatorze)'
 
 role_project_relations:
 - id: cdc_role_attribution_requires_direct_evidence

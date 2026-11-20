@@ -27,6 +27,9 @@ class LLMSettings(BaseSettings):
 
     model_name: str = "gemini-3.5-flash-lite"
     default_thinking_level: Literal["minimal", "low", "medium", "high"] = "low"
+    # None selects minimal for the current Flash-Lite family only. Other
+    # models retain their default level unless explicitly configured.
+    routing_thinking_level: Optional[Literal["minimal", "low", "medium", "high"]] = None
     generation_thinking_budget: int = 256
     verifier_model_name: str = "gemini-3.5-flash-lite"
     verifier_thinking_level: Literal["minimal", "low", "medium", "high"] = "low"
@@ -54,6 +57,19 @@ class LLMSettings(BaseSettings):
             "model": self.verifier_model_name,
             "thinking_level": self.verifier_thinking_level,
         }
+
+    def routing_parameters(self):
+        """Keep lightweight routing separate from generation and verification."""
+        if self.model_name.startswith("gemini-2.5"):
+            return {"thinking_budget": 0}
+        level = self.routing_thinking_level
+        if level is None:
+            level = (
+                "minimal"
+                if self.model_name.startswith("gemini-3.5-flash-lite")
+                else self.default_thinking_level
+            )
+        return {"thinking_level": level}
 
 
 class SearchSettings(BaseSettings):
