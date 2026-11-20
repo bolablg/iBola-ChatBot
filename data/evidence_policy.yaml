@@ -1,4 +1,4 @@
-version: 18
+version: 19
 source_types:
   21_production_service_inventory.txt: candidate_confirmed
   20_owner_confirmed_production_scope.txt: candidate_confirmed
@@ -553,6 +553,23 @@ required_identity:
   query_pattern: (?i)\b(?:aws|ec2)\b
   answer_pattern: (?i)(?:EC2|700|operational.{0,15}platform|governed.{0,20}platform)
 required_details:
+- id: requested_dataform_public_reference_missing
+  description: An inspectable public framework reference needs the complete URL in its retrieved project record. A title or bare domain is insufficient; do not guess a repository, scheme or path.
+  sources: [90_website_canon_llms_full.txt]
+  section_pattern: '^Advanced Dataform framework · 2025$'
+  support_pattern: 'Project page: https://www\.bolablg\.com/projects/dataform-modeling-lab/(?=$|[\s)\]"»]|[.,;](?=$|[\s)\]"»]))'
+  query_pattern: '(?is)(?=.*Dataform)(?=.*(?:public|article|repository|\brepo\b|inspect|link|lien|documentation))'
+  answer_pattern: '(?i)https://www\.bolablg\.com/projects/dataform-modeling-lab/(?=$|[\s)\]"»]|[.,;](?=$|[\s)\]"»]))'
+  restore_quotes:
+    en:
+      language: en
+      label: Public project reference
+      pattern: 'https://www\.bolablg\.com/projects/dataform-modeling-lab/(?=$|[\s)\]"»]|[.,;](?=$|[\s)\]"»]))'
+    fr:
+      language: fr
+      label: Référence publique du projet
+      section_label: Documentation du projet
+      pattern: 'https://www\.bolablg\.com/projects/dataform-modeling-lab/(?=$|[\s)\]"»]|[.,;](?=$|[\s)\]"»]))'
 - id: platform_definition_adoption_scope_missing
   description: A platform definition should include the retrieved adoption bound and the mixed population it describes. Preserve the documented scope and period; do not turn the bound into an exact number, employee-only count, or current active-user metric.
   sources: [10_apps_and_projects.txt, 13_gozem_internal_projects.txt]
@@ -726,7 +743,7 @@ required_details:
   query_pattern: '(?is)(?=.*production)(?=.*(?:personally|personal|hands.on))(?=.*(?:pipeline|data engineering))'
   claim_pattern: '(?i)cloud migration|migrat\w*[^.!?\n]{0,100}(?:10\+?\s*TB|over\s+10\s*TB|10\s*TB\s+plus)|50\+? scheduled ETL'
   governing_role_pattern: '(?i)Global Data Analyst|Data Director|Head of Data'
-  role_prefix_pattern: '(?i)(?:as(?: a| the)?|during(?: his| the)?|en tant que|pendant(?: son)?)\s+$'
+  role_prefix_pattern: '(?i)(?:as(?: a| the)?|during(?: his| the)?(?: earlier| former| previous)?|in his(?: earlier| former| previous)?|en tant que|pendant(?: son)?)\s+$'
   role_heading_pattern: '(?i)^\s*(?:Global Data Analyst|Data Director|Head of Data)(?:\s+at Gozem|\s+role|\s*\([^)]*\))*\s*:?\s*$'
   restore_quote:
     language: en
@@ -953,7 +970,7 @@ role_project_relations:
   role_pattern: '(?i)Global Data Analyst|Head of Data|Data Director|Director of Data'
   role_aliases:
     director of data: data director
-  role_prefix_pattern: '(?i)(?:as(?: a| the)?|during(?: his| the)?|(?:when|while)\s+(?:he|Bolaji)\s+was|in\s+his(?:\s+earlier)?|en tant que|pendant(?: son| le)?(?: mandat de)?)\s+$'
+  role_prefix_pattern: '(?i)(?:as(?: a| the)?|during(?: his| the)?(?: earlier| former| previous)?|(?:when|while)\s+(?:he|Bolaji)\s+was|in\s+his(?:\s+(?:earlier|former|previous))?|en tant que|pendant(?: son| le)?(?: mandat de)?)\s+$'
   role_heading_pattern: '(?i)(?P<role>Global Data Analyst|Head of Data|Data Director|Director of Data)(?:\s+at Gozem|\s+role|\s*\([^)]*\))*'
   scope_reset_pattern: '(?i)^\s*(?:Separately|For a separate project|For another project|Distinctement|Named production implementation\s*\()'
   source_quote_reset_pattern: '(?i)^\s*Named production implementation\s*\('

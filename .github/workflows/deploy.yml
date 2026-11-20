@@ -426,6 +426,8 @@ jobs:
             curl -s -o /dev/null -m 90 "$PROD_URL/health" || true
             curl -s -o /dev/null -m 90 -X POST "$PROD_URL/ask-agentic" \
               -H 'Content-Type: application/json' \
+          -H 'X-Ibola-No-Trace: 1' \
+          -H 'X-Ibola-No-Notifications: 1' \
               -d '{"user_input":"What is Bolaji latest role?","session_id":"weekly-warmup","user_language":"en"}' || true
           done
           python scripts/run_eval.py --tags smoke --base-url "$PROD_URL" --concurrency 4
@@ -562,6 +564,8 @@ jobs:
             curl -s -o /dev/null -m 90 "$CANARY_URL/health" || true
             curl -s -o /dev/null -m 90 -X POST "$CANARY_URL/ask-agentic" \
               -H 'Content-Type: application/json' \
+          -H 'X-Ibola-No-Trace: 1' \
+          -H 'X-Ibola-No-Notifications: 1' \
               -d '{"user_input":"What is Bolaji latest role?","session_id":"warmup","user_language":"en"}' || true
           done
           python scripts/run_eval.py --tags smoke --base-url "$CANARY_URL" --concurrency 4

@@ -90,7 +90,14 @@ def test_existential_subjects_are_literal_and_finite_suffix_cannot_hide_from_bot
     assert _record_limit_subject(nominal, ["Spark.*"]) is None
     bad = nominal + " and he runs it in production"
     assert documentation_limits(bad, ["Spark Structured Streaming"])
-    assert constraint_failures(bad, docs(SPARK), SPARK["question"] + " In production?")
+    assert any(
+        failure.startswith("requested_personal_production_scope:")
+        for failure in constraint_failures(
+            bad,
+            docs(SPARK),
+            "Has Bolaji personally operated Spark Structured Streaming in production?",
+        )
+    )
 
 
 def test_valid_gap_cannot_hide_adjacent_affirmative_production_claim():
@@ -98,8 +105,13 @@ def test_valid_gap_cannot_hide_adjacent_affirmative_production_claim():
         SPARK["answer"]
         + " Bolaji personally operated Spark Structured Streaming in production."
     )
-    assert constraint_failures(
-        answer, docs(SPARK), SPARK["question"] + " In production?"
+    assert any(
+        failure.startswith("requested_personal_production_scope:")
+        for failure in constraint_failures(
+            answer,
+            docs(SPARK),
+            "Has Bolaji personally operated Spark Structured Streaming in production?",
+        )
     )
 
 

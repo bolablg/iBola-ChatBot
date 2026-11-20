@@ -195,8 +195,9 @@ def _record_limit_subject(clause, known_subjects=(), subject_pattern=None):
     """A complete nominal evidence limit, never a neighboring action claim."""
     existential = re.fullmatch(
         r"(?i)\s*(?:(?:additionally|moreover)\s*,\s*)?there\s+(?:is|are)\s+"
-        r"no\s+documented\s+(?:personal\s+)?production\s+experience\s+or\s+"
-        r"(?:a\s+)?named\s+project\s+proving\s+(?:the\s+)?deployment\s+of\s+"
+        r"no\s+documented\s+(?:(?:personal\s+)?production\s+experience\s+or\s+"
+        r"(?:a\s+)?named\s+project\s+proving\s+(?:the\s+)?deployment|"
+        r"(?:named\s+)?project\s+proving\s+(?:personal\s+)?(?:production\s+)?deployment)\s+of\s+"
         r"(?P<subject>[a-z][a-z0-9 /+#_'()-]{0,100})\s*",
         _fold(clause),
     )

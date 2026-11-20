@@ -26,11 +26,11 @@ PROMPT_VERSIONS = {
     "condense": "1.1",
     "batch_grade": "2.3",
     "rewrite": "2.1",
-    "generate_professional": "3.18",
+    "generate_professional": "3.19",
     "generate_education": "3.6",
     "generate_learning": "3.6",
     "verify_grounding": "2.15",
-    "repair_grounding": "1.5",
+    "repair_grounding": "1.6",
     "upper_bound_clarification": "1.0",
     "skills_completeness_clarification": "1.0",
     "insufficient_evidence": "1.1",
@@ -355,6 +355,9 @@ GENERATE_SYSTEM_PROMPTS = {
         "When correcting numbers, state the supported stages directly. Do not "
         "repeat an unsupported numeric interval even to deny it; describe any "
         "remaining documentation limit without echoing that interval.\n"
+        "For a requested public article, repository or reference, provide a "
+        "complete URL from retrieved evidence. A title or bare domain alone "
+        "does not satisfy a request to inspect the work. Never guess a link.\n"
         "2) Include specific numbers, tools, or achievements when available. "
         "Preserve each number's bounds, uncertainty, and scope: keep qualifiers "
         "such as 'up to', 'at least', and 'approximately', translated faithfully "
@@ -509,6 +512,8 @@ REPAIR_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
             "authority or input details are unknown. Unknown authority, investment "
             "amounts or planning horizons do not make a documented technical "
             "outcome unknown and do not establish ownership of a budget decision. "
+            "For a requested public reference, retain the complete retrieved URL; "
+            "do not substitute a title or bare domain or guess a new link. "
             + _TOOL_STATUS_RULE
             + "The result will be independently verified before delivery.",
         ),
