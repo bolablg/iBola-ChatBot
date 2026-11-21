@@ -175,6 +175,12 @@ def _confirmed_experience_limit(answer, target):
                 from app.services.evidence_policy import policy_data
 
                 scope = other.group("documented_scope") or other.group("active_scope")
+                if other.group("active_scope") and not _re_mod.fullmatch(
+                    r"[A-Z][\w'/-]*(?:\s+[A-Z][\w'/-]*){0,4}"
+                    r"(?:\s+for\s+processing\s+[a-z-]+(?:\s+[a-z-]+){0,8})?",
+                    scope,
+                ):
+                    continue
                 if _re_mod.search(
                     r"\b(?:then|after|before|to|where|which|because|since|as|that|it|he|she|they|Bolaji|is|was|are|were|has|have|had|"
                     r"use[sd]?|using|deployed|deploying|operated|operating|designed|designing|"

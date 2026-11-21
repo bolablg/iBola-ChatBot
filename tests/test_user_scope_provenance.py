@@ -18,6 +18,7 @@ from app.graph.state import GeneratedAnswer, GroundingVerdict
 from app.services.evidence_policy import (
     constraint_failures,
     prepare_evidence,
+    preserve_requested_evidence,
     request_scope,
     user_answer_scope,
 )
@@ -189,6 +190,9 @@ def test_captured_correct_same_actor_other_tool_contrast_passes_only_with_eviden
         "although he used Apache Spark at Rintio where it processes Kafka events",
         "although he used Apache Spark at Rintio because Kafka handles the pipeline",
         "although he used Apache Spark at Rintio where Kafka became the streaming platform",
+        "although he used Apache Spark at Rintio whose platform powers streaming",
+        "although he used Apache Spark at Rintio whenever workloads need processing",
+        "although he used Apache Spark at Rintio platforms support streaming",
     ],
 )
 def test_contrast_cannot_hide_same_tool_pronoun_hypothetical_or_extra_predicate(
@@ -307,3 +311,81 @@ def test_passive_claim_and_unknown_employer_do_not_prove_operation(answer):
     assert "requested_personal_production_scope:aws s3" in constraint_failures(
         answer, inventory, "And AWS S3?"
     )
+
+
+def test_explicit_production_claim_does_not_change_unrelated_tool_mention_scope():
+    answer = (
+        "Bolaji personally operated AWS S3 in production. Bolaji used EC2 at Gozem."
+    )
+    evidence = [Document(page_content=answer)]
+    assert not constraint_failures(answer, evidence, "Tell me about his tools.")
+
+
+def test_complete_rhetorical_question_does_not_inherit_prior_employer():
+    question = "Is it true that Bolaji personally operated AWS S3 in production?"
+    state = {
+        "original_query": question,
+        "chat_history": [("Which services did he use at Gozem?", "Old answer")],
+    }
+    assert user_answer_scope(state) == question
+    assert "requested_personal_production_scope:aws s3" not in constraint_failures(
+        "Bolaji personally operated AWS S3 in production.",
+        docs(AWS),
+        user_answer_scope(state),
+    )
+
+
+@pytest.mark.parametrize("terminator", ["!", "?"])
+def test_ec2_independent_sentence_boundary_and_explicit_heading_survive(terminator):
+    cdc = "During his Head of Data role at Gozem, Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline"
+    ec2 = "Bolaji personally designed and operated AWS EC2 in production for the Gozem Data Hub."
+    failure = "ec2_role_attribution_requires_direct_evidence"
+    assert failure not in constraint_failures(
+        cdc + terminator + " " + ec2, docs(EC2), EC2["question"]
+    )
+    for separator in (" ", "\n\n"):
+        assert failure in constraint_failures(
+            "Head of Data:\n" + "He led the team" + terminator + separator + ec2,
+            docs(EC2),
+            EC2["question"],
+        )
+
+
+def test_public_reference_topic_comes_from_current_query_or_answer_never_rewrite():
+    evidence = [
+        Document(
+            page_content="Project page: https://www.bolablg.com/projects/dataform-modeling-lab/",
+            metadata={
+                "source": "90_website_canon_llms_full.txt",
+                "section_header": "Advanced Dataform framework · 2025",
+            },
+        )
+    ]
+    rule = "requested_dataform_public_reference_missing"
+    for question, answer, expected in (
+        ("Where is the public Dataform article?", "He published a framework.", True),
+        (
+            "Where is the public article for this framework?",
+            "He published a Dataform framework.",
+            True,
+        ),
+        (
+            "Where is the public article for this framework?",
+            "He published a framework.",
+            False,
+        ),
+        (
+            "Where is the public dbt article?",
+            "He published a Dataform framework.",
+            False,
+        ),
+    ):
+        scope = user_answer_scope(
+            {
+                "original_query": question,
+                "query": "Where is the public Dataform article?",
+            }
+        )
+        restored, added = preserve_requested_evidence(answer, evidence, scope, "en")
+        assert (rule in added) == expected
+        assert ("https://" in restored) == expected

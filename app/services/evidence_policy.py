@@ -1504,7 +1504,7 @@ def _request_scope_failures(answer, documents, query):
     failures = []
     for rule in policy_data().get("request_scopes", []):
         requested = bool(re.search(rule["query_pattern"], _fold(query)))
-        explicit_claim = False
+        explicit_subjects = set()
         for clause in _claim_clauses(_fold(answer)):
             claim = re.search(rule["personal_support_pattern"], clause)
             if not claim and re.search(r"(?i)\bproduction\b", clause):
@@ -1518,9 +1518,8 @@ def _request_scope_failures(answer, documents, query):
                     clause,
                 )
             ):
-                explicit_claim = True
-                break
-        if not requested and not explicit_claim:
+                explicit_subjects.update(re.findall(rule["subject_pattern"], clause))
+        if not requested and not explicit_subjects:
             continue
         aliases = rule.get("subject_aliases", {})
 
@@ -1656,6 +1655,8 @@ def _request_scope_failures(answer, documents, query):
             subjects = {
                 canonical(s) for s in re.findall(rule["subject_pattern"], clause)
             }
+            if not requested:
+                subjects &= {canonical(subject) for subject in explicit_subjects}
             if not subjects:
                 continue
             record_limit = _record_limit_subject(
@@ -1732,9 +1733,12 @@ def user_answer_scope(state):
     """A search rewrite is a retrieval hint, never user-supplied claim scope."""
     original = state.get("original_query") or state.get("query", "")
     parts = [original]
+    reference_text = re.sub(
+        r"(?i)^\s*(?:is it true that|est[- ]il vrai que)\s+", "", original
+    )
     referential = re.search(
         r"(?i)\b(?:those|these|that|this|it|them|other|others|ces|ceux|celles|cela|ca|autres)\b",
-        original,
+        reference_text,
     )
     short_followup = len(original.split()) <= 12 and re.match(
         r"(?i)^\s*(?:what else|anything else|tell me more|more details|please (?:continue|expand|elaborate)|can you (?:expand|elaborate)|and|et|plus de details)\b",
