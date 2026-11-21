@@ -1,4 +1,4 @@
-version: 24
+version: 25
 source_types:
   21_production_service_inventory.txt: candidate_confirmed
   20_owner_confirmed_production_scope.txt: candidate_confirmed
@@ -8,6 +8,12 @@ source_types:
   17_highlights_pitch.txt: summary
   19_owner_confirmed_scope.txt: candidate_confirmed
 assertion_rules:
+- id: latency_threshold_wording_requires_source
+  description: Do not introduce a numerical latency threshold, even in a denial or source-attribution claim, unless the retrieved source text actually discusses that threshold. State an unknown latency without inventing a bound.
+  answer_pattern: '(?i)\b(?P<threshold>sub[ -]?second)\b'
+  support_pattern: '(?i)\b(?P<threshold>sub[ -]?second)\b'
+  binding_groups: [threshold]
+  literal_mention: true
 - id: onsite_availability_requires_same_actor_evidence
   description: Working hours and employment type do not establish physical location. Preserve remote, full-time and consulting as their own categories. Do not translate them into affirmative availability for on-site work, présentiel or en mode present without retrieved availability for the same actor and location arrangement.
   answer_pattern: '(?i)\b(?:available|open|willing|disponible|ouvert|prete?|pret)\w*[^.;\n]{0,120}(?:on.site|in.person|presentiel|en mode present)\b|\b(?:on.site|in.person|presentiel|en mode present)[^.;\n]{0,80}\b(?:available|disponible)\b'
@@ -172,6 +178,20 @@ metric_constraints:
   - (?i)(?:six|6)\s+(?:AI\s+)?use cases\s+(?:were|are|have been)\s+(?:implemented|completed|deployed)
   - '(?i)(?:completed|deployed|delivered)\s+(?:all\s+)?(?:six|6)\s+(?:(?:AI|strategic|high.priority)\s+)?(?:use cases|initiatives|implementations)'
 facets:
+- id: detailed_ibola_side_project
+  query_pattern: '(?is)(?:(?=.*(?:side projects?|personal projects?|projets? personnels?|portfolio apps?))(?=.*(?:what|which|list|quels|quelles))|(?=.*\biBola\b)(?=.*(?:architecture|project|chatbot|implementation)))'
+  terms: iBola production-grade agentic RAG portfolio assistant LangGraph
+  sources: [10_apps_and_projects.txt]
+  section_pattern: '^iBOLA - AI-POWERED PORTFOLIO CHATBOT$'
+  support_pattern: 'production-grade agentic RAG.*professional portfolio assistant'
+  retain_for_query: true
+- id: enterprise_governance_user_outcomes
+  query_pattern: '(?is)(?=.*(?:metrics?|KPI|semantic|definitions?))(?=.*(?:governance|conflicting|reporting needs|safeguards|users?|people|outcomes?))'
+  terms: enterprise metrics governance single source truth Claude MCP IAM natural language
+  sources: [90_website_canon_llms_full.txt]
+  section_pattern: '^Enterprise metrics governance & AI-ready semantic layer$'
+  support_pattern: '(?s)enterprise metrics governance framework.*MCP-enabled BigQuery integration in Claude'
+  retain_for_query: true
 - id: confirmed_fraud_metric_attribution
   query_pattern: '(?i)fraud|fraude|Gozem Money|\b150\s+(?:incidents?|cas)\b|\b25\s*(?:M|million\w*)\s*(?:XOF|CFA|FCFA)\b|\bEDA\b'
   terms: Gozem Money fraud micro-batch rules EDA incidents discovery ML contribution
@@ -554,8 +574,7 @@ metric_scopes:
     id: streaming_workload_volume
     average: 45 million telemetry and operational events per day
     population: separate Gozem streaming workload, distinct from 5 TB batch upserts
-    not_established: not an individual MongoDB CDC pipeline count, throughput ceiling, sub-second latency or
-      availability guarantee
+    not_established: individual MongoDB CDC pipeline event counts; maximum throughput capacity; end-to-end latency; availability guarantees
 required_limits:
 - id: requested_manager_layer_scope_unestablished
   description: Give documented team-building experience separately from the unestablished manager layers or direct-report count requested by a vacancy. Do not import the vacancy's staffing into Bolaji's history.
@@ -619,6 +638,52 @@ required_identity:
   query_pattern: (?i)\b(?:aws|ec2)\b
   answer_pattern: (?i)(?:EC2|700|operational.{0,15}platform|governed.{0,20}platform)
 required_details:
+- id: requested_streaming_production_inventory_missing
+  description: A broad request for personally delivered streaming technologies, including a mixed AWS and streaming list, must preserve the retrieved Pub/Sub and Dataflow implementation. Do not substitute an AWS-only answer or omit the streaming part.
+  sources: [20_owner_confirmed_production_scope.txt]
+  support_pattern: 'At Gozem, Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline'
+  query_pattern: '(?is)\A(?=[^\n]*(?:which|what|list|quels|quelles))(?=[^\n]*(?:streaming technologies|streaming services|technologies de streaming))(?=[^\n]*(?:personal|designed|operated|personnel|concu|exploit))'
+  query_exclude_pattern: '(?is)\A[^\n]*\b(?:other|additional|besides|except|excluding|autres)\b|\A[^\n]*\b(?:only|uniquement)\s+(?:Kafka|Spark|NiFi|Lakeflow|AWS|Pub/Sub|Dataflow)\b'
+  false_unknown_pattern: '(?i)I don.t have enough verified information'
+  false_unknown_exclude_pattern: '(?i)\b(?:if|unless|hypothetical|suppose|incorrect|false|wrong|not true)\b|["«»]'
+  answer_pattern: '(?is)(?=.*Pub/Sub)(?=.*Dataflow)(?=.*MongoDB)(?=.*Gozem)'
+  restore_quote:
+    language: en
+    label: Streaming implementation
+    render: sentence
+    pattern: 'At Gozem, Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline\.'
+- id: enterprise_governance_single_truth_missing
+  description: Keep the enterprise metrics implementation's documented single source of truth distinct from an unestablished country-team negotiation process. A known reporting outcome is not made unknown by missing details about the process.
+  sources: [90_website_canon_llms_full.txt]
+  section_pattern: '^Enterprise metrics governance & AI-ready semantic layer$'
+  support_pattern: 'Established a single source of truth for business metrics across analytics, reporting, and AI-powered workflows'
+  query_pattern: '(?is)(?=.*(?:metrics?|definitions?|reporting))(?=.*(?:governance|quality|access|safeguards))(?=.*(?:people|users?|changed|outcomes?))'
+  query_exclude_pattern: '(?is)\A(?=[^\n]*(?:Data Hub|observability|Head of Data))(?![^\n]*(?:enterprise metrics|MCP|Data Director))'
+  answer_activation_pattern: '(?i)enterprise metrics|MCP(?:.enabled)? BigQuery|standardized metric definitions with BigQuery and Dataform|I don.t have enough verified information'
+  answer_pattern: '(?i)single source of truth|source unique de verite'
+  restore_quote:
+    language: en
+    label: Governance outcome
+    render: sentence
+    pattern: 'Established a single source of truth for business metrics across analytics, reporting, and AI-powered workflows\.'
+- id: enterprise_governance_user_access_outcome_missing
+  description: Preserve the enterprise governance implementation's documented change for selected senior users, natural-language data access under their existing IAM permissions. Do not turn an unknown country-specific negotiation or adoption count into a blanket denial of all user outcomes.
+  sources: [90_website_canon_llms_full.txt]
+  section_pattern: '^Enterprise metrics governance & AI-ready semantic layer$'
+  support_pattern: 'Selected senior users could query enterprise data using natural language within their existing Google Cloud IAM permissions'
+  query_pattern: '(?is)(?=.*(?:metrics?|definitions?|reporting))(?=.*(?:governance|quality|access|safeguards))(?=.*(?:people|users?|changed|outcomes?))'
+  query_exclude_pattern: '(?is)\A(?=[^\n]*(?:Data Hub|observability|Head of Data))(?![^\n]*(?:enterprise metrics|MCP|Data Director))'
+  answer_activation_pattern: '(?i)enterprise metrics|MCP(?:.enabled)? BigQuery|standardized metric definitions with BigQuery and Dataform|I don.t have enough verified information'
+  answer_pattern: '(?is)(?=.*selected)(?=.*senior)(?=.*natural.language)(?=.*existing)(?=.*(?:IAM|permissions))'
+  false_unknown_pattern: '(?i)(?:does not|doesn.t)\s+(?:specify|document|establish)[^.!?;]{0,35}(?:what changed for (?:the )?people|(?:any |the )?user outcomes)|(?:user outcomes|results for users|changes for (?:the )?people using (?:the )?reports)\s+(?:are|were|remain)\s+(?:not documented|unknown|unestablished)|I don.t have enough verified information'
+  false_unknown_scope_pattern: '(?i)^\s*(?:For|On|In|Within)\s+(?:the\s+)?(?P<prefix_scope>[^,]{1,100}),|(?:unknown|unestablished|not documented)\s+(?:for|on|in|within)\s+(?:the\s+)?(?P<suffix_scope>[^.!?;]{1,100})$'
+  false_unknown_same_scope_pattern: '(?i)^(?:(?:enterprise metrics|semantic layer|MCP(?:.enabled)? BigQuery|governance implementation|this implementation|that implementation)\b|(?:people|users?|reports?)(?: using (?:the )?reports?)?$)'
+  false_unknown_exclude_pattern: '(?i)\b(?:if|unless|hypothetical|suppose|incorrect|false|wrong|not true|quantitative|quantified|numerical|numeric|adoption counts?|Data Hub|Metabase|observability|another project|separate project)\b|["«»]'
+  restore_quote:
+    language: en
+    label: User access outcome
+    render: sentence
+    pattern: 'Selected senior users could query enterprise data using natural language within their existing Google Cloud IAM permissions\.'
 - id: requested_dataform_public_reference_missing
   description: An inspectable public framework reference needs the complete URL in its retrieved project record. A title or bare domain is insufficient; do not guess a repository, scheme or path.
   sources: [90_website_canon_llms_full.txt]
@@ -840,6 +905,8 @@ required_details:
   scope_id: streaming_workload_volume
   sources: [90_website_canon_llms_full.txt]
   query_pattern: '(?i)throughput|event volume|latency|availability|debit|volume|latence|disponibilite'
+  false_unknown_pattern: '(?ix)\A(?=[^.!?;]*\b(?:these\s+systems|all\s+(?:the\s+)?systems|these\s+workloads|any\s+(?:of\s+these\s+)?systems)\b)(?=[^.!?;]*\b(?:document(?:ed)?|established|recorded|unknown|unestablished)\b)(?:(?=[^.!?;]*\b(?:no|neither|does\s+not\s+document|doesn.t\s+document)\s+(?:\w+\s+){0,3}?(?:throughput|event\s+volume)\b)|(?=[^.!?;]*\b(?:throughput|event\s+volume)(?:\s+(?:measurements?|metrics?|figures?))?(?:\s+for\s+(?:these\s+systems|all\s+(?:the\s+)?systems|these\s+workloads))?\s+(?:is|are|was|were|remains?)\s+(?:not\s+(?:documented|established|recorded)|unknown|unestablished)\b))'
+  false_unknown_exclude_pattern: '(?i)\b(?:if|unless|hypothetical|suppose|incorrect|false|wrong|not true|peak|maximum|capacity|ceilings?|guarantees?|individual|project.specific|issues?|problems?|bottlenecks?)\b|[\"«»]'
   answer_pattern: '(?is)(?=.*(?:average|averaged|moyenn\w*))(?=.*45\s*(?:million|m\b))(?=.*(?:separate|distinct|separe\w*).{0,55}(?:streaming|workload|flux)|.*(?:streaming|workload|flux).{0,55}(?:separate|distinct|separe\w*))'
   restore_quote:
     language: en
@@ -916,6 +983,9 @@ required_details:
   support_pattern: existing Google Cloud IAM permissions
   query_pattern: (?i)(?=.*(?:metric|governance|KPI))(?=.*(?:access|permission|safeguard))
   id: requested_IAM_access_boundary_missing
+  section_pattern: ^Enterprise metrics governance & AI-ready semantic layer$
+  query_exclude_pattern: '(?is)\A(?=[^\n]*(?:Data Hub|observability|Head of Data))(?![^\n]*(?:enterprise metrics|MCP|Data Director))'
+  answer_activation_pattern: '(?i)enterprise metrics|MCP(?:.enabled)? BigQuery|standardized metric definitions with BigQuery and Dataform|I don.t have enough verified information'
   answer_pattern: (?i)\bIAM\b
   restore_quote:
     language: en
@@ -925,6 +995,9 @@ required_details:
   support_pattern: existing Google Cloud IAM permissions
   query_pattern: (?i)(?=.*(?:metric|governance|KPI))(?=.*(?:access|permission|safeguard))
   id: requested_Claude_integration_missing
+  section_pattern: ^Enterprise metrics governance & AI-ready semantic layer$
+  query_exclude_pattern: '(?is)\A(?=[^\n]*(?:Data Hub|observability|Head of Data))(?![^\n]*(?:enterprise metrics|MCP|Data Director))'
+  answer_activation_pattern: '(?i)enterprise metrics|MCP(?:.enabled)? BigQuery|standardized metric definitions with BigQuery and Dataform|I don.t have enough verified information'
   answer_pattern: (?i)\bClaude\b
   restore_quote:
     language: en
@@ -1039,6 +1112,9 @@ experience_confirmations:
   description: Explicit owner-confirmed absence must be stated when the requested tool is covered by that retrieved confirmation. Do not retain an outdated unknown or infer inability. Without an explicit confirmation, retain a documentation limit.
   source: 20_owner_confirmed_production_scope.txt
   negative_pattern: '(?i)Bolaji has no (?P<subject>[A-Za-z][A-Za-z /-]{0,45}?) experience at all'
+  positive_pattern: '(?ix)\b(?:Bolaji|he|il)\b(?:(?!\b(?:another|colleague)\b)[^.;\n]){0,45}?\b(?P<operation_before>use[sd]?|worked\s+with|ran|managed|maintained|deployed|operated|designed|built|implemented|delivered|utilise|deploye|exploite|concu)\b(?:(?!\b(?:not|never|no|pas|jamais)\b)[^.;\n]){0,70}\b{subject}\b|\b(?:Bolaji|he|il)\s+(?P<experience_before>has|had|a)\s+(?:(?!\b(?:no|not|never|aucune?)\b)[^.;\n]){0,45}?\b(?:{subject}\s+experience|experience\s+(?:with|in|avec|en)\s+{subject})\b|(?=(?:his\s+{subject}\b|{subject}\b[^.;\n]{0,80}\bby\s+(?:Bolaji|him)\b))\b(?:his\s+)?{subject}\s+(?:(?:architecture|pipeline|system|delivery|implementation|production|experience)\s+){0,3}(?:was|is|has\s+been)\s+(?:(?:personally|directly|actually)\s+){0,2}(?P<operation_after>used|deployed|operated|designed|built|documented|confirmed|established)\b'
+  positive_predicate_groups: [operation_before, experience_before, operation_after]
+  positive_exclude_pattern: '(?i)\b(?:if|unless|would|could|hypothetical|fictional|requirement|vacancy)\b|\b(?:by|another)\s+(?:engineer|colleague|person|employee)\b'
 
 editorial_constraints:
 - id: superseded_growth_interval_echo

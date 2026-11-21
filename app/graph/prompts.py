@@ -36,7 +36,8 @@ PROMPT_VERSIONS = {
     "insufficient_evidence": "1.1",
     "disputed_evidence": "1.0",
     "project_identity": "1.0",
-    "evidence_detail": "1.1",
+    "evidence_detail": "1.2",
+    "confirmed_non_use": "1.0",
     "documentation_limit": "1.0",
     "personal_production_limit": "1.1",
     "degree_clarification": "1.0",
@@ -324,8 +325,13 @@ PERSONAL_PRODUCTION_LIMIT_TEMPLATES = {
 }
 
 EVIDENCE_DETAIL_TEMPLATES = {
-    "en": '{label} ({section}{scope}): "{quote}"',
-    "fr": "{label} ({section}{scope}) : « {quote} »",
+    "en": "\n\n{quote}",
+    "fr": "\n\n{quote}",
+}
+
+CONFIRMED_NON_USE_TEMPLATES = {
+    "en": "Bolaji has no experience with {tool}.",
+    "fr": "Bolaji n'a aucune expérience avec {tool}.",
 }
 
 _MULTIPART_RULE = (
@@ -723,6 +729,7 @@ _ALL_PROMPTS = [
     *DEGREE_COMPLETENESS_CLARIFICATION_TEMPLATES.values(),
     *PROJECT_IDENTITY_TEMPLATES.values(),
     *EVIDENCE_DETAIL_TEMPLATES.values(),
+    *CONFIRMED_NON_USE_TEMPLATES.values(),
     *DOCUMENTATION_LIMIT_TEMPLATES.values(),
     *PERSONAL_PRODUCTION_LIMIT_TEMPLATES.values(),
     *INSUFFICIENT_EVIDENCE_ANSWERS.values(),

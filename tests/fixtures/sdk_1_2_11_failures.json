@@ -1,0 +1,294 @@
+{
+  "source_run": 44857788249,
+  "results": [
+    {
+      "id": "proj-001",
+      "category": "canonical",
+      "lang": "en",
+      "tags": [],
+      "question": "What side projects has Bolaji built?",
+      "answer": "I don't have enough verified information to answer that specific question.",
+      "agent_type": "professional",
+      "evidence_count": 4,
+      "evidence": [
+        {
+          "source": "10_apps_and_projects.txt",
+          "chunk_id": "10_apps_and_projects.txt::4",
+          "section": "AUTOMATION: GOOGLE SHEETS + PYTHON",
+          "retrieval_rank": 2,
+          "retrieval_score": 0.031498,
+          "parent_context": "BOLAJI BALOGOUN - APPS & SIDE PROJECTS",
+          "scope_context": "",
+          "evidence_type": "curated",
+          "metric_scope": {},
+          "content_preview": "Source: 10_apps_and_projects.txt | Title: BOLAJI BALOGOUN - APPS & SIDE PROJECTS | Section: AUTOMATION: GOOGLE SHEETS + PYTHON | Parent context: BOLAJI BALOGOUN - APPS & SIDE PROJECTS\n\nWhat: a tool and tutorial to automatically create and share Google Sheets data reports from any server using Python. Designed for teams that need automated daily or weekly reports.\nStack: Python, Google Drive API, MongoDB, cron automation.\nAccompanied by a blog article and GitHub repository."
+        },
+        {
+          "source": "10_apps_and_projects.txt",
+          "chunk_id": "10_apps_and_projects.txt::2",
+          "section": "uDOWNLOADER",
+          "retrieval_rank": 5,
+          "retrieval_score": 0.016129,
+          "parent_context": "BOLAJI BALOGOUN - APPS & SIDE PROJECTS",
+          "scope_context": "",
+          "evidence_type": "curated",
+          "metric_scope": {},
+          "content_preview": "Source: 10_apps_and_projects.txt | Title: BOLAJI BALOGOUN - APPS & SIDE PROJECTS | Section: uDOWNLOADER | Parent context: BOLAJI BALOGOUN - APPS & SIDE PROJECTS\n\nWhat: a tool to download videos and audio from YouTube, Instagram, TikTok, Twitter, and other platforms. Features a modern graphical interface (GUI) and a command-line (CLI) mode for power users.\nStack: Python, Bash, Git.\nDistribution: available on GitHub and PyPI (installable via pip)."
+        },
+        {
+          "source": "10_apps_and_projects.txt",
+          "chunk_id": "10_apps_and_projects.txt::3",
+          "section": "CONVERTISSEUR SALAIRE BENIN (Salary Converter Benin)",
+          "retrieval_rank": 7,
+          "retrieval_score": 0.015625,
+          "parent_context": "BOLAJI BALOGOUN - APPS & SIDE PROJECTS",
+          "scope_context": "",
+          "evidence_type": "curated",
+          "metric_scope": {},
+          "content_preview": "Source: 10_apps_and_projects.txt | Title: BOLAJI BALOGOUN - APPS & SIDE PROJECTS | Section: CONVERTISSEUR SALAIRE BENIN (Salary Converter Benin) | Parent context: BOLAJI BALOGOUN - APPS & SIDE PROJECTS\n\nWhat: a web application to calculate net or gross salary in Benin according to the 2025 finance law. Provides a detailed breakdown of employee and employer contributions, taxes, and net take-home pay.\nStack: Python, Flask, HTML, CSS.\nLive: available for public use."
+        },
+        {
+          "source": "10_apps_and_projects.txt",
+          "chunk_id": "10_apps_and_projects.txt::0",
+          "section": "BOLAJI BALOGOUN - APPS & SIDE PROJECTS",
+          "retrieval_rank": 1,
+          "retrieval_score": 0.031778,
+          "parent_context": "",
+          "scope_context": "",
+          "evidence_type": "curated",
+          "metric_scope": {},
+          "content_preview": "Source: 10_apps_and_projects.txt | Title: BOLAJI BALOGOUN - APPS & SIDE PROJECTS | Section: BOLAJI BALOGOUN - APPS & SIDE PROJECTS\n\nPortfolio URL: app.bolablg.com\nBolaji builds side projects to solve real problems and experiment with new technologies.\n\nQuels projets personnels Bolaji a-t-il construits: le chatbot RAG agentique iBola (chat.bolablg.com), uDownloader pour telecharger videos et audios, le convertisseur de salaire Benin, et un outil d'automatisation de rapports Google Sheets."
+        }
+      ],
+      "grounding_checked": false,
+      "provenance": {
+        "code_revision": "70cd462588100fd7",
+        "deployment_revision": null,
+        "corpus_revision": "175e61503cf7c1c5",
+        "kb_revision": "175e61503cf7c1c5",
+        "policy_revision": "5b517b5d9c8ecf5f",
+        "index_sync_pending": false,
+        "chunker_version": "3",
+        "model": "gemini-3.5-flash-lite",
+        "thinking_config": {
+          "thinking_level": "low"
+        },
+        "routing_thinking_config": {
+          "thinking_level": "minimal"
+        },
+        "generation_thinking_config": {
+          "thinking_level": "low"
+        },
+        "generation_temperature": null,
+        "verifier_model": "gemini-3.5-flash-lite",
+        "verifier_thinking_level": "low",
+        "verifier_thinking_budget": null,
+        "prompt_versions": {
+          "inventory_followup": "1.1",
+          "guardrail": "2.2",
+          "condense": "1.1",
+          "batch_grade": "2.3",
+          "rewrite": "2.1",
+          "generate_professional": "3.21",
+          "generate_education": "3.6",
+          "generate_learning": "3.6",
+          "verify_grounding": "2.16",
+          "repair_grounding": "1.8",
+          "upper_bound_clarification": "1.0",
+          "skills_completeness_clarification": "1.0",
+          "insufficient_evidence": "1.1",
+          "disputed_evidence": "1.0",
+          "project_identity": "1.0",
+          "evidence_detail": "1.1",
+          "documentation_limit": "1.0",
+          "personal_production_limit": "1.1",
+          "degree_clarification": "1.0",
+          "language_retry": "1.0",
+          "structured_output_recovery": "1.0",
+          "out_of_scope": "2.0",
+          "translate": "1.0",
+          "notification_suppressed": "1.0"
+        }
+      },
+      "evidence_sources": [
+        "10_apps_and_projects.txt",
+        "10_apps_and_projects.txt",
+        "10_apps_and_projects.txt",
+        "10_apps_and_projects.txt"
+      ],
+      "unsupported_claims": [
+        "agentic RAG chatbot iBola"
+      ],
+      "prefix_turns": [],
+      "latency_s": 3.908,
+      "latency_protocol": "target_call_elapsed_v1",
+      "conversation_elapsed_s": 3.908,
+      "prefix_replay_elapsed_s": null,
+      "fact_pass": false,
+      "fact_failures": [
+        "missing: ibola|udownloader|salary"
+      ],
+      "scores": {
+        "relevance": 2,
+        "accuracy": 3,
+        "helpfulness": 0,
+        "faithfulness": 0,
+        "rationale": "The bot incorrectly claimed it lacked information and declined to answer, even though the retrieved context explicitly listed and described the requested side projects."
+      },
+      "error": null,
+      "warning": null,
+      "judge_error": null,
+      "judge_diagnostics": {
+        "protocol": "bounded-format-recovery-1",
+        "attempts": [
+          {
+            "attempt": 1
+          }
+        ],
+        "retry_reasons": [],
+        "decoding_source": "text",
+        "status": "success"
+      },
+      "chars_in": 2045,
+      "chars_out": 74
+    },
+    {
+      "id": "recruiter-hda-04-t6",
+      "category": "canonical",
+      "lang": "en",
+      "tags": [
+        "recruiter_regression"
+      ],
+      "question": "Describe one documented case where he reconciled conflicting metric definitions or reporting needs across country teams. What governance, quality checks and access safeguards did he personally establish, and what changed for the people using the reports?",
+      "answer": "The record does not document a specific case where Bolaji reconciled conflicting metric definitions or reporting needs across country teams, though it notes that he co-developed a domain-oriented data governance framework and KPI framework adopted across all five markets. For governance, quality checks, and access safeguards, he built role-based access governance with 3 access tiers (user, service_admin, platform_admin) crossed with 3 team roles (viewer, worker, manager) on the Data Hub, and introduced governed AI access to warehouse data through an MCP-enabled BigQuery integration in Claude enforcing Google Cloud IAM permissions. The record does not specify what changed for the people using the reports.",
+      "agent_type": "professional",
+      "evidence_count": 3,
+      "evidence": [
+        {
+          "source": "13_gozem_internal_projects.txt",
+          "chunk_id": "13_gozem_internal_projects.txt::1",
+          "section": "GOZEM DATA HUB - Central Data & AI Workspace",
+          "retrieval_rank": 1,
+          "retrieval_score": 20.0,
+          "parent_context": "BOLAJI BALOGOUN - INTERNAL PROJECTS LED AT GOZEM (2019 - 2026, tenure ended July 2026) > DATA DIRECTOR ERA (April 2025 - July 2026)",
+          "scope_context": "DATA DIRECTOR ERA (April 2025 - July 2026)",
+          "evidence_type": "curated",
+          "metric_scope": {},
+          "content_preview": "Source: 13_gozem_internal_projects.txt | Title: BOLAJI BALOGOUN - INTERNAL PROJECTS LED AT GOZEM (2019 - 2026, tenure ended July 2026) | Section: GOZEM DATA HUB - Central Data & AI Workspace | Parent context: BOLAJI BALOGOUN - INTERNAL PROJECTS LED AT GOZEM (2019 - 2026, tenure ended July 2026) > DATA DIRECTOR ERA (April 2025 - July 2026)\n\n- Situation: business and operational teams alongside external partners across Gozem's countries lacked a unified workspace for data and AI applications with fast iteration.\n- Action: Bolaji chartered, architected, and led development of the Data Hub web app (data.gozem.co): data exploration environments, data-driven applications, AI-powered tools, operational workflows, and self-service analytics modules. He modeled the micro-services database and platform authentication, and built role-based access governance with 3 access tiers (user, service_admin, platform_admin) crossed with 3 team roles (viewer, worker, manager). He onboarded 2 engineers who shipped 2 additional self-service apps onto the platform.\n- Tools: Python, BigQuery, Google Cloud Storage, Cloud Functions, AWS EC2, Docker, RBAC, Claude Code.\n- Outcome: over 700 people (internal employees, field agents, and external partners) across Benin, Togo, Gabon, Cameroon, and Congo collaborating on one governed platform by the end of his mandate. The Hub is the working proof of his Data Product Engineering thesis, the subject of his 2026 publication."
+        },
+        {
+          "source": "13_gozem_internal_projects.txt",
+          "chunk_id": "13_gozem_internal_projects.txt::15",
+          "section": "DATA GOVERNANCE & KPI FRAMEWORK",
+          "retrieval_rank": 1,
+          "retrieval_score": 0.016393,
+          "parent_context": "BOLAJI BALOGOUN - INTERNAL PROJECTS LED AT GOZEM (2019 - 2026, tenure ended July 2026) > HEAD OF DATA ERA (October 2022 - March 2025)",
+          "scope_context": "HEAD OF DATA ERA (October 2022 - March 2025)",
+          "evidence_type": "curated",
+          "metric_scope": {},
+          "content_preview": "Source: 13_gozem_internal_projects.txt | Title: BOLAJI BALOGOUN - INTERNAL PROJECTS LED AT GOZEM (2019 - 2026, tenure ended July 2026) | Section: DATA GOVERNANCE & KPI FRAMEWORK | Parent context: BOLAJI BALOGOUN - INTERNAL PROJECTS LED AT GOZEM (2019 - 2026, tenure ended July 2026) > HEAD OF DATA ERA (October 2022 - March 2025)\n\n- Action: Bolaji co-developed a domain-oriented data governance framework with the team, delivering a KPI framework with definitions, data source documentation, and table descriptions across the group, and established data catalog practices with a domain-oriented data mesh strategy.\n- Outcome: KPI frameworks and metric dictionaries adopted across all five markets."
+        },
+        {
+          "source": "90_website_canon_llms_full.txt",
+          "chunk_id": "90_website_canon_llms_full.txt::15",
+          "section": "Enterprise metrics governance & AI-ready semantic layer",
+          "retrieval_rank": 6,
+          "retrieval_score": 0.015873,
+          "parent_context": "Bolaji BALOGOUN · Biography > Data Director · GOZEM · Apr 2025 - Jul 2026",
+          "scope_context": "Data Director · GOZEM · Apr 2025 - Jul 2026",
+          "evidence_type": "published",
+          "metric_scope": {},
+          "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN · Data Engineer · Data Architect (full content) | Section: Enterprise metrics governance & AI-ready semantic layer | Parent context: Bolaji BALOGOUN · Biography > Data Director · GOZEM · Apr 2025 - Jul 2026\n\nResult: Established a single source of truth for business metrics across analytics, reporting, and AI-powered workflows.\nProblem: As Gozem expanded its analytics footprint across multiple business domains and countries, the risk of inconsistent metric interpretation increased. KPI definitions, transformation logic, aggregation rules, dimensions, and query implementations were often embedded across dashboards, SQL queries, reports, and undocumented team knowledge.\n\nAt the same time, emerging AI-powered analytics workflows created new requirements. Business users needed trusted natural-language access to data, while AI agents required a reliable understanding of business concepts, metrics, and relationships to generate accurate insights.\n\nThe organization needed a foundation capable of serving both humans and AI systems with a consistent interpretation of business performance.\nSolution: Designed and implemented the foundation of an enterprise metrics governance framework covering KPI definitions, source systems, transformation dependencies, aggregation behavior, available dimensions, lineage, and canonical calculation methods.\n\nCreated a centralized metrics catalog documenting how each KPI is derived, whether from raw operational data or transformed analytical models, including supporting business context, relationships between metrics, valid dimensions, joins, and calculation formulas.\n\nStandardized KPI computation through reusable BigQuery and Dataform assets powering reporting and analytical applications, ensuring consistent metric definitions across dashboards, analyses, and operational workflows.\n\nIntroduced governed AI access to warehouse data through an MCP-enabled BigQuery integration in Claude. Selected senior users could query enterprise data using natural language within their existing Google Cloud IAM permissions.\n\nThis work also laid the foundations for an AI-ready semantic layer capable of supporting future copilots, autonomous agents, self-service analytics experiences, and automated decision-support systems.\nTools: BigQuery · Dataform · MCP · Claude · Python · Looker Studio · Google Cloud IAM"
+        }
+      ],
+      "grounding_checked": true,
+      "provenance": {
+        "code_revision": "70cd462588100fd7",
+        "deployment_revision": null,
+        "corpus_revision": "175e61503cf7c1c5",
+        "kb_revision": "175e61503cf7c1c5",
+        "policy_revision": "5b517b5d9c8ecf5f",
+        "index_sync_pending": false,
+        "chunker_version": "3",
+        "model": "gemini-3.5-flash-lite",
+        "thinking_config": {
+          "thinking_level": "low"
+        },
+        "routing_thinking_config": {
+          "thinking_level": "minimal"
+        },
+        "generation_thinking_config": {
+          "thinking_level": "low"
+        },
+        "generation_temperature": null,
+        "verifier_model": "gemini-3.5-flash-lite",
+        "verifier_thinking_level": "low",
+        "verifier_thinking_budget": null,
+        "prompt_versions": {
+          "inventory_followup": "1.1",
+          "guardrail": "2.2",
+          "condense": "1.1",
+          "batch_grade": "2.3",
+          "rewrite": "2.1",
+          "generate_professional": "3.21",
+          "generate_education": "3.6",
+          "generate_learning": "3.6",
+          "verify_grounding": "2.16",
+          "repair_grounding": "1.8",
+          "upper_bound_clarification": "1.0",
+          "skills_completeness_clarification": "1.0",
+          "insufficient_evidence": "1.1",
+          "disputed_evidence": "1.0",
+          "project_identity": "1.0",
+          "evidence_detail": "1.1",
+          "documentation_limit": "1.0",
+          "personal_production_limit": "1.1",
+          "degree_clarification": "1.0",
+          "language_retry": "1.0",
+          "structured_output_recovery": "1.0",
+          "out_of_scope": "2.0",
+          "translate": "1.0",
+          "notification_suppressed": "1.0"
+        }
+      },
+      "evidence_sources": [
+        "13_gozem_internal_projects.txt",
+        "13_gozem_internal_projects.txt",
+        "90_website_canon_llms_full.txt"
+      ],
+      "unsupported_claims": [
+        "reconciling conflicting metric definitions or reporting needs across country teams"
+      ],
+      "prefix_turns": [],
+      "latency_s": 5.109,
+      "latency_protocol": "target_call_elapsed_v1",
+      "conversation_elapsed_s": 5.109,
+      "prefix_replay_elapsed_s": null,
+      "fact_pass": true,
+      "fact_failures": [],
+      "scores": {
+        "relevance": 9,
+        "accuracy": 3,
+        "helpfulness": 4,
+        "faithfulness": 4,
+        "rationale": "The answer is relevant but makes an inaccurate and unfaithful claim that the user impact is not documented, when the context explicitly describes the outcome as a single source of truth and natural language querying."
+      },
+      "error": null,
+      "warning": null,
+      "judge_error": null,
+      "judge_diagnostics": {
+        "protocol": "bounded-format-recovery-1",
+        "attempts": [
+          {
+            "attempt": 1
+          }
+        ],
+        "retry_reasons": [],
+        "decoding_source": "text",
+        "status": "success"
+      },
+      "chars_in": 4937,
+      "chars_out": 713
+    }
+  ]
+}
