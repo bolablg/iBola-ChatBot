@@ -51,7 +51,7 @@ from app.services.public_facts import public_facts_block
 logger = logging.getLogger("ibola.graph")
 
 
-def _format_history(chat_history: list, turns: int = 3, cap: int = 400) -> str:
+def _format_history(chat_history: list, turns: int = 3, cap: int | None = 400) -> str:
     """Full recent turns, each capped, for condense/guardrail/rewrite prompts.
 
     60-80-char summaries starved these sub-agents of the context they need
@@ -1341,9 +1341,7 @@ def generate_node(state: dict) -> dict:
     history_str = ""
     original = state.get("original_query") or query
     if chat_history and scope != original:
-        history_str = "\n".join(
-            f"Human: {h[0]}\nAssistant: {h[1]}" for h in chat_history[-5:]
-        )
+        history_str = _format_history(chat_history, turns=5, cap=None)
 
     # The reply language is decided ONCE from the question the user typed
     # (original_query survives condensation) and passed explicitly; the
@@ -1376,7 +1374,7 @@ def generate_node(state: dict) -> dict:
                 today=today,
                 context=context,
                 chat_history=history_str or "(none)",
-                query=_verification_scope(state),
+                query=original,
             )
         )
 
@@ -1635,6 +1633,11 @@ def _verify_grounding_llm_node(state: dict) -> dict:
     context_docs = state.get("context_documents", []) or []
     question = state.get("original_query") or state.get("query", "")
     scope_query = _verification_scope(state)
+    conversation_context = (
+        _format_history(state.get("chat_history", []), turns=5, cap=None)
+        if scope_query != question
+        else "(none)"
+    )
     steps = list(state.get("reasoning_steps", []))
 
     try:
@@ -1686,7 +1689,8 @@ def _verify_grounding_llm_node(state: dict) -> dict:
         structured_llm = llm.with_structured_output(GroundingVerdict)
         verdict: GroundingVerdict = structured_llm.invoke(
             VERIFY_GROUNDING_PROMPT.format_messages(
-                question=scope_query or "(unknown)",
+                question=question or "(unknown)",
+                conversation_context=conversation_context,
                 context=context,
                 answer=answer,
                 constraint_failures=describe_constraints(violations),
@@ -1762,7 +1766,8 @@ def _verify_grounding_llm_node(state: dict) -> dict:
                 .with_structured_output(GeneratedAnswer)
                 .invoke(
                     REPAIR_GROUNDING_PROMPT.format_messages(
-                        question=scope_query or "(unknown)",
+                        question=question or "(unknown)",
+                        conversation_context=conversation_context,
                         context=context,
                         answer=corrected or answer,
                         language=_detect_reply_language(
@@ -1811,7 +1816,8 @@ def _verify_grounding_llm_node(state: dict) -> dict:
         try:
             recheck = structured_llm.invoke(
                 VERIFY_GROUNDING_PROMPT.format_messages(
-                    question=scope_query or "(unknown)",
+                    question=question or "(unknown)",
+                    conversation_context=conversation_context,
                     context=context,
                     answer=corrected,
                     constraint_failures="none",
@@ -1863,7 +1869,8 @@ def _verify_grounding_llm_node(state: dict) -> dict:
                 ):
                     approval = structured_llm.invoke(
                         VERIFY_GROUNDING_PROMPT.format_messages(
-                            question=scope_query or "(unknown)",
+                            question=question or "(unknown)",
+                            conversation_context=conversation_context,
                             context=context,
                             answer=candidate,
                             constraint_failures="none",

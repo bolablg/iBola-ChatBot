@@ -591,6 +591,18 @@ def preserve_requested_evidence(
         detail = rule.get("restore_limit", {}).get(lang)
         if len(restored) >= 3 or not detail:
             continue
+        if rule.get("restore_support_pattern") and not any(
+            Path(doc.metadata.get("source", "")).name in rule.get("restore_sources", [])
+            and doc.metadata.get("evidence_type")
+            not in {"interpretation", "summary", "pending_confirmation"}
+            and doc.metadata.get("metric_scope", {}).get("id") == rule.get("scope_id")
+            and re.search(
+                rule["restore_section_pattern"], doc.metadata.get("section_header", "")
+            )
+            and re.search(rule["restore_support_pattern"], _fold(doc.page_content))
+            for doc in documents
+        ):
+            continue
         if rule["id"] in constraint_failures(answer, documents, query):
             answer += " " + DOCUMENTATION_LIMIT_TEMPLATES[lang].format(detail=detail)
             restored.append(rule["id"])

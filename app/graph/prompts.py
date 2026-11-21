@@ -29,8 +29,8 @@ PROMPT_VERSIONS = {
     "generate_professional": "3.21",
     "generate_education": "3.6",
     "generate_learning": "3.6",
-    "verify_grounding": "2.16",
-    "repair_grounding": "1.8",
+    "verify_grounding": "2.17",
+    "repair_grounding": "1.9",
     "upper_bound_clarification": "1.0",
     "skills_completeness_clarification": "1.0",
     "insufficient_evidence": "1.1",
@@ -535,11 +535,13 @@ REPAIR_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
         ),
         (
             "human",
+            "Conversation context (reference resolution only, not profile evidence or a request "
+            "to answer earlier questions):\n{conversation_context}\n\n"
             "Question: {question}\nSelected evidence:\n{context}\n"
             "Rejected draft:\n{answer}\nFailures to repair:\n{constraint_failures}",
         ),
     ]
-)
+).partial(conversation_context="(none)")
 
 VERIFY_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
     [
@@ -647,12 +649,14 @@ VERIFY_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
         ),
         (
             "human",
+            "Conversation context (reference resolution only, not profile evidence or a request "
+            "to answer earlier questions):\n{conversation_context}\n\n"
             "Question asked:\n{question}\n\nContext:\n{context}\n\n"
             "Deterministic evidence constraints violated by this draft:\n"
             "{constraint_failures}\n\nAnswer to verify:\n{answer}",
         ),
     ]
-)
+).partial(conversation_context="(none)")
 
 # Used only after a provider returns malformed structured output. Keeping this
 # instruction in the registry makes the recovery call traceable and prevents
