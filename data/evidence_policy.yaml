@@ -1,4 +1,4 @@
-version: 30
+version: 31
 source_types:
   21_production_service_inventory.txt: candidate_confirmed
   20_owner_confirmed_production_scope.txt: candidate_confirmed
@@ -610,11 +610,23 @@ required_limits:
     fr: les niveaux de management et le nombre de rapports directs
 - id: self_service_measurement_period_unknown
   scope_id: self_service_adoption
+  restore_sources: [13_gozem_internal_projects.txt]
+  restore_section_pattern: '(?i)^SELF-SERVICE NO-CODE DATA EXPLORATION PLATFORM'
+  restore_support_pattern: '(?i)La periode precise de mesure et la methode de comparaison ne sont pas documentees dans ce dossier'
+  restore_limit:
+    en: measurement period
+    fr: la periode de mesure
   query_pattern: (?i)(?:measurement (?:period|interval|window)|time period|over what period|periode (?:connue|de
     mesure)|mesurees sur une periode)
   target_pattern: (?:period|interval|window|periode|fenetre)
 - id: self_service_comparison_method_unknown
   scope_id: self_service_adoption
+  restore_sources: [13_gozem_internal_projects.txt]
+  restore_section_pattern: '(?i)^SELF-SERVICE NO-CODE DATA EXPLORATION PLATFORM'
+  restore_support_pattern: '(?i)La periode precise de mesure et la methode de comparaison ne sont pas documentees dans ce dossier'
+  restore_limit:
+    en: comparison method
+    fr: la methode de comparaison
   query_pattern: (?i)(?:comparison (?:method|methodology)|methode de comparaison|measurement method)
   target_pattern: (?:method|comparison|methode|comparaison|methodologie)
 - id: on_call_willingness_unknown

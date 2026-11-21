@@ -468,5 +468,6 @@ def test_generation_receives_only_needed_conversational_coverage(latest):
     if latest == OBSERVED_QUESTION:
         assert args["query"] == latest and args["chat_history"] == "(none)"
     else:
-        assert prior_user in args["query"]
+        assert args["query"] == latest
+        assert prior_user in args["chat_history"]
         assert prior_answer in args["chat_history"]
