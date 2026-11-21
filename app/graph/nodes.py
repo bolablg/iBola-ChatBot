@@ -1276,7 +1276,6 @@ def _evidence_context(documents: List[Document]) -> str:
                     "parent_context",
                     "scope_context",
                     "evidence_type",
-                    "canonical_url",
                     "metric_scope",
                     "conversation_coverage",
                 )

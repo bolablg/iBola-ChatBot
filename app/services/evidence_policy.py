@@ -205,6 +205,17 @@ def _claim_clauses(text: str, extra_predicates=None):
     return result
 
 
+def _assertion_clauses(text, rule):
+    """Keep optional independent named-system contrasts local to one rule."""
+    return [
+        part
+        for clause in _claim_clauses(text)
+        for part in re.split(
+            rule.get("independent_clause_separator_pattern", r"(?!)"), clause
+        )
+    ]
+
+
 def _record_limit_subject(clause, known_subjects=(), subject_pattern=None):
     """A complete nominal evidence limit, never a neighboring action claim."""
     postposed = re.fullmatch(
@@ -706,6 +717,10 @@ def preserve_requested_evidence(
             Path(doc.metadata.get("source", "")).name in rule.get("restore_sources", [])
             and doc.metadata.get("evidence_type")
             not in {"interpretation", "summary", "pending_confirmation"}
+            and (
+                not rule.get("evidence_types")
+                or doc.metadata.get("evidence_type") in rule["evidence_types"]
+            )
             and doc.metadata.get("metric_scope", {}).get("id") == rule.get("scope_id")
             and re.search(
                 rule["restore_section_pattern"], doc.metadata.get("section_header", "")
@@ -714,7 +729,11 @@ def preserve_requested_evidence(
             for doc in documents
         ):
             continue
-        if rule["id"] in constraint_failures(answer, documents, query):
+        active_limits = constraint_failures(answer, documents, query)
+        if rule["id"] in active_limits:
+            combined = rule.get("restore_with_limit", {})
+            if combined.get("id") in active_limits:
+                detail = combined.get(lang, detail)
             answer += " " + DOCUMENTATION_LIMIT_TEMPLATES[lang].format(detail=detail)
             restored.append(rule["id"])
     before = set(constraint_failures(answer, documents, query))
@@ -978,12 +997,15 @@ def constraint_failures(
     ]
     failures.extend(_request_scope_failures(answer, documents, query))
     for rule in policy.get("editorial_constraints", []):
-        applicable = re.search(rule["query_pattern"], _fold(query)) and any(
-            Path(doc.metadata.get("source", "")).name in rule["sources"]
-            and doc.metadata.get("evidence_type")
-            in {None, "curated", "published", "candidate_confirmed"}
-            and re.search(rule["support_pattern"], doc.page_content)
-            for doc in documents
+        applicable = rule.get("unconditional", False) or (
+            re.search(rule["query_pattern"], _fold(query))
+            and any(
+                Path(doc.metadata.get("source", "")).name in rule["sources"]
+                and doc.metadata.get("evidence_type")
+                in {None, "curated", "published", "candidate_confirmed"}
+                and re.search(rule["support_pattern"], doc.page_content)
+                for doc in documents
+            )
         )
         if applicable and re.search(rule["answer_pattern"], answer):
             failures.append(rule["id"])
@@ -1101,7 +1123,7 @@ def constraint_failures(
             if rule.get("resolve_confirmed_non_use_reference")
             else answer
         )
-        for clause in _claim_clauses(checked_answer):
+        for clause in _assertion_clauses(checked_answer, rule):
             record_subjects = rule.get("record_limit_subjects", ())
             limit = (
                 _record_limit_subject(clause, record_subjects)
@@ -1147,7 +1169,11 @@ def constraint_failures(
                         for line in text.splitlines()
                         if not re.search(rule["exclude_support_line_pattern"], line)
                     )
-                spans = _claim_clauses(text) if rule.get("clause_support") else [text]
+                spans = (
+                    _assertion_clauses(text, rule)
+                    if rule.get("clause_support")
+                    else [text]
+                )
                 if rule.get("support_continuation_pattern"):
                     spans = [span for span in spans if span.strip()]
                 for index, span in enumerate(spans):
@@ -1335,12 +1361,28 @@ def constraint_failures(
             if rule.get("scope_id")
             else bool(sources & set(rule.get("sources", [])))
         )
-        if applicable and rule.get("support_pattern"):
+        if applicable and any(
+            rule.get(key)
+            for key in ("support_pattern", "section_pattern", "evidence_types")
+        ):
             applicable = any(
                 Path(d.metadata.get("source", "")).name in rule.get("sources", [])
                 and d.metadata.get("evidence_type")
                 not in {"interpretation", "summary", "pending_confirmation"}
-                and re.search(rule["support_pattern"], _fold(d.page_content))
+                and (
+                    not rule.get("evidence_types")
+                    or d.metadata.get("evidence_type") in rule["evidence_types"]
+                )
+                and (
+                    not rule.get("section_pattern")
+                    or re.search(
+                        rule["section_pattern"], d.metadata.get("section_header", "")
+                    )
+                )
+                and (
+                    not rule.get("support_pattern")
+                    or re.search(rule["support_pattern"], _fold(d.page_content))
+                )
                 for d in documents
             )
         if rule.get("direct_support_pattern") and any(
