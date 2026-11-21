@@ -1,4 +1,4 @@
-version: 31
+version: 33
 source_types:
   21_production_service_inventory.txt: candidate_confirmed
   20_owner_confirmed_production_scope.txt: candidate_confirmed
@@ -76,6 +76,7 @@ assertion_rules:
     (?:authority|ownership|approval)|(?:department|operating|multi.year) budget|approval authority|(?:autorite|responsabilite|approbation)
     (?:du |de )?budget|budget (?:departemental|pluriannuel|de fonctionnement))\s*:\s*(?:yes|confirmed))
 - id: non_use_requires_explicit_negative_evidence
+  record_limit_subjects: [Spark Structured Streaming, Apache Spark Structured Streaming]
   resolve_confirmed_non_use_reference: true
   answer_pattern: (?i)(?:has (?:not|never) (?:directly )?(?:used|worked with)|never used|no (?:(?:personal|direct) )?production
     experience (?:with|in))\s+[^.;,]+|(?i:(?:n'a (?:jamais|pas) (?:directement )?utilise|aucune experience
@@ -98,6 +99,7 @@ assertion_rules:
   clause_support: true
   local_negation: true
 - id: deficiency_requires_same_tool_evidence
+  record_limit_subjects: [Spark Structured Streaming, Apache Spark Structured Streaming]
   description: Missing documentation is a verification gap, not established absence of experience. Bind qualified absence to the actual tool and setting. Production-only absence does not establish total non-use, and an experience gap does not establish absolute absence.
   resolve_confirmed_non_use_reference: true
   answer_pattern: '(?i)\b(?:(?P<absence_before>(?:has\s+)?no)\s+(?:(?:personal|direct|production|professional|practical|hands[ -]on)\s+){0,3}(?P<tools_before>(?:Power BI|DAX|Tableau|dbt|Kafka|(?:Apache\s+)?Spark Structured Streaming|(?:Apache\s+)?Spark|Snowflake|Redshift|Dagster|Pub/Sub|Dataflow|Lakeflow|Databricks)(?:\s*(?:,|and|or|et|ou)\s*(?:Power BI|DAX|Tableau|dbt|Kafka|(?:Apache\s+)?Spark Structured Streaming|(?:Apache\s+)?Spark|Snowflake|Redshift|Dagster|Pub/Sub|Dataflow|Lakeflow|Databricks))*)\s+(?:(?:personal|direct|production|professional|practical|hands[ -]on)\s+){0,3}experience|(?:(?P<absence_after>lack(?:s|ed| of)?|(?:has\s+)?no)\s+(?:(?:personal|direct|production|professional|practical|hands[ -]on)\s+){0,3}experience|experience gap|lacune d.experience|manque d.experience)(?:\s+(?:(?:with|in|of|for|using|en|avec|sur|de)\s+)?(?P<tools_after>(?:Power BI|DAX|Tableau|dbt|Kafka|(?:Apache\s+)?Spark Structured Streaming|(?:Apache\s+)?Spark|Snowflake|Redshift|Dagster|Pub/Sub|Dataflow|Lakeflow|Databricks)(?:\s*(?:,|and|or|et|ou)\s*(?:Power BI|DAX|Tableau|dbt|Kafka|(?:Apache\s+)?Spark Structured Streaming|(?:Apache\s+)?Spark|Snowflake|Redshift|Dagster|Pub/Sub|Dataflow|Lakeflow|Databricks))*))?|(?P<absence_never>(?:has\s+)?never\s+(?:used|worked with))\s+(?P<tools_never>(?:Power BI|DAX|Tableau|dbt|Kafka|(?:Apache\s+)?Spark Structured Streaming|(?:Apache\s+)?Spark|Snowflake|Redshift|Dagster|Pub/Sub|Dataflow|Lakeflow|Databricks)(?:\s*(?:,|and|or|et|ou)\s*(?:Power BI|DAX|Tableau|dbt|Kafka|(?:Apache\s+)?Spark Structured Streaming|(?:Apache\s+)?Spark|Snowflake|Redshift|Dagster|Pub/Sub|Dataflow|Lakeflow|Databricks))*))\b(?:\s+(?:in|en)\s+production)?'
@@ -189,6 +191,15 @@ metric_constraints:
   - (?i)(?:six|6)\s+(?:AI\s+)?use cases\s+(?:were|are|have been)\s+(?:implemented|completed|deployed)
   - '(?i)(?:completed|deployed|delivered)\s+(?:all\s+)?(?:six|6)\s+(?:(?:AI|strategic|high.priority)\s+)?(?:use cases|initiatives|implementations)'
 facets:
+- id: single_customer_intelligence_implementation
+  query_pattern: '(?is)\A(?=[^\n]*\bcustomer\s+(?:analytics|intelligence)\b)'
+  terms: customer intelligence platform rider driver profiling RFM segmentation cohort lifecycle
+  sources: [90_website_canon_llms_full.txt]
+  section_pattern: '^Customer intelligence & lifecycle analytics$'
+  support_pattern: 'Designed and built a customer intelligence platform combining rider and driver profiling, RFM segmentation, and cohort analysis'
+  retain_for_query: true
+  single_case_query_pattern: '(?i)\b(?:strongest|best|one|single)\b[^.!?\n]{0,60}\b(?:example|case|project|implementation)\b'
+  single_case_exclude_pattern: '(?i)\b(?:multiple|several|examples|cases|projects|compare|comparison|contrast|contrasts|contrasted|contrasting|versus|vs|against|both|earlier|previously|quantified|quantitative|numeric|measured|churn|incentive|agricultural|fraud|Metabase|Data Hub|governance)\b|\b(?:9|nine)\s*(?:%(?!\w)|percent(?:age)?\b)|\b(?:another|other)\s+(?:case|project|example)\b|\b(?:no|not|avoid)\s+(?:one|single)\b|\bdo not\s+(?:limit|restrict|give)\b'
 - id: generic_spark_implementation_comparison
   query_pattern: '(?is)\A(?=[^\n]*\bSpark\b)(?=[^\n]*(?:experience|personal|production|deploy|architecture))'
   terms: Rintio Apache Spark Hadoop ElasticSearch agricultural data architecture
@@ -1095,7 +1106,7 @@ required_details:
 
 request_scopes:
 - id: requested_personal_production_scope
-  description: The question requests personal production design or operation. An unqualified experience list inherits that setting. For every mentioned tool, provide direct actor/tool/setting proof, an explicitly labeled inventory or project-stack fact, or a locally scoped statement that personal production operation remains unverified. Project leadership does not establish operation of every service.
+  description: The question requests personal production design or operation. An unqualified experience list inherits that setting. For every mentioned tool, provide direct actor/tool/setting proof, an explicitly labeled inventory or project-stack fact, or a locally scoped statement that personal production operation remains unverified. Project leadership does not establish operation of every service. If personal production responsibility is established but an employer or project association is not, preserve the responsibility and remove that association or qualify the service's employer or project as unknown. Do not convert an affiliation gap into missing operation experience or let one service inherit another service's employer heading.
   query_pattern: '(?is)(?=.*\bproduction\b)(?=.*\b(?:personally|personal|personnellement|personnel\w*|operational ownership)\b)'
   subject_pattern: '(?i)\b(?:AWS EC2|AWS S3|EC2|S3|Pub/Sub|Dataflow|Apache NiFi|NiFi|Spark|Lakeflow)\b'
   record_limit_subjects: [Spark Structured Streaming, Apache Spark Structured Streaming]

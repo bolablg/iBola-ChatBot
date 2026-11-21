@@ -1,0 +1,130 @@
+{
+  "question": "This is a recruiter simulation, not a real offer. For a senior data engineer who must run Kafka and Spark Structured Streaming in production, what hands-on evidence does Bolaji have with those exact technologies?",
+  "evidence": [
+    {
+      "source": "04_previous_roles_early.txt",
+      "chunk_id": "04_previous_roles_early.txt::1",
+      "section": "DATA SCIENTIST - RINTIO (March 2018 - May 2019, including the March - June apprenticeship)",
+      "retrieval_rank": 1,
+      "retrieval_score": 22.0,
+      "parent_context": "BOLAJI BALOGOUN - EARLY CAREER",
+      "scope_context": "DATA SCIENTIST - RINTIO (March 2018 - May 2019, including the March - June apprenticeship)",
+      "evidence_type": "curated",
+      "metric_scope": {},
+      "content_preview": "Source: 04_previous_roles_early.txt | Title: BOLAJI BALOGOUN - EARLY CAREER | Section: DATA SCIENTIST - RINTIO (March 2018 - May 2019, including the March - June apprenticeship) | Parent context: BOLAJI BALOGOUN - EARLY CAREER\n\nRintio is a technology company focused on precision agriculture. Bolaji developed analytics and data science products for Duniya, Rintio's smart-farming MVP for Beninese farmers, and supported outsourcing clients in their data transformation.\n\nKey achievements:\n- Designed and deployed a big data architecture combining a Hadoop data lake, an Apache Spark cluster, and ElasticSearch, ingesting 100GB+ of agricultural data from multiple sources (scraped market data, spreadsheets, PDFs, images) covering crops, fertilizers, yields, rainfall, and climate.\n- Built end-to-end ingestion and transformation pipelines turning raw agricultural data into ML-ready features for the smart-farming app.\n- Developed statistical crop yield forecast models using regression algorithms, mainly for maize with additional models for beans. Forecasts powered sourcing, cycle, and pricing decisions.\n- Delivered a consolidated leadership BI report in Kibana and Apache Superset covering multiple KPIs and data domains.\n- Delivered an executive data & AI training mission to Societe Generale Maroc's top management: training content and lab use cases tailored to banking applications of data and AI.\n\nTools: Python, Apache Spark, Hadoop, ElasticSearch, scikit-learn, Kibana, Apache Superset, SQL, GitLab."
+    },
+    {
+      "source": "21_production_service_inventory.txt",
+      "chunk_id": "21_production_service_inventory.txt::1",
+      "section": "PRODUCTION SERVICE INVENTORY",
+      "retrieval_rank": 1,
+      "retrieval_score": 38.0,
+      "parent_context": "BOLAJI BALOGOUN - CONFIRMED PRODUCTION SERVICE INVENTORY",
+      "scope_context": "",
+      "evidence_type": "candidate_confirmed",
+      "metric_scope": {},
+      "content_preview": "Source: 21_production_service_inventory.txt | Title: BOLAJI BALOGOUN - CONFIRMED PRODUCTION SERVICE INVENTORY | Section: PRODUCTION SERVICE INVENTORY | Parent context: BOLAJI BALOGOUN - CONFIRMED PRODUCTION SERVICE INVENTORY\n\nFor an unrestricted service list, lead with the documented operational core: BigQuery, Apache Airflow, Dataform and Google Cloud Storage. Follow with relevant streaming, application, AI, compute, delivery and observability services. BigQuery was the central warehouse used daily; Airflow orchestrated workflows and Dataform supplied production modeling and transformations. This presentation order follows the owner's preference for operational centrality and the documented platform roles, not a measured ranking of frequency, spend or business impact. A narrower provider or service question takes precedence.\n\nBolaji personally designed and operated the following documented production services as an architect and engineer:\nService inventory: BigQuery, Apache Airflow, Dataform, Google Cloud Storage, Pub/Sub, Dataflow, Cloud Run, Cloud Functions, Vertex AI, AWS EC2, AWS S3, Artifact Registry, Cloud Logging and Cloud Build.\nGCP services: BigQuery, Dataform, Google Cloud Storage, Pub/Sub, Dataflow, Cloud Run, Cloud Functions, Vertex AI, Artifact Registry, Cloud Logging and Cloud Build.\nAWS services: AWS EC2 and AWS S3.\nApache Airflow is documented orchestration software; this inventory does not infer a managed hosting provider for it.\n- Warehouse and transformation at Gozem: BigQuery and Dataform. Supporting record: 05_skills_and_tools.txt, CLOUD & DATA PLATFORMS and DATA INGESTION & TRANSFORMATION; 90_website_canon_llms_full.txt, Data platform modernization and FinOps transformation. BigQuery operation was also explicitly reaffirmed by the owner.\n- Storage at Gozem: Google Cloud Storage. Supporting record: 03_previous_role_gozem_gda.txt, cloud migration; 05_skills_and_tools.txt, CLOUD & DATA PLATFORMS.\n- Orchestration at Gozem: Apache Airflow. Supporting record: 05_skills_and_tools.txt, DEVOPS & CI/CD; 13_gozem_internal_projects.txt, DATA QUALITY OBSERVABILITY SYSTEM. Airflow operation was explicitly reaffirmed by the owner.\n- Streaming at Gozem: During his Head of Data role at Gozem (October 2022 to March 2025), Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline. The owner confirmed this role attribution on November 20, 2026. This is the role period, not exact project start or completion dates or proof of continuous operation throughout the period. Supporting record: 20_owner_confirmed_production_scope.txt, current clarification; 90_website_canon_llms_full.txt, application-ready data flows.\n- Application and AI services at Gozem: Cloud Run, Cloud Functions and Vertex AI. Supporting record: 05_skills_and_tools.txt, CLOUD & DATA PLATFORMS and AI & LLM ENGINEERING; 18_confirmed_clarifications.txt, HANDS-ON VERTEX AI AND TECHNICAL SUPERVISION; 90_website_canon_llms_full.txt, Tech stack. Cloud Run is also used for the production iBola project. Personal service responsibility does not mean sole implementation of the recommendation model, its API or mobile integration.\n- Delivery and observability at Gozem: Artifact Registry, Cloud Logging and Cloud Build. Supporting record: 05_skills_and_tools.txt, CLOUD & DATA PLATFORMS and DEVOPS & CI/CD, combined with the owner's design-and-operation confirmation.\n- AWS compute: Bolaji personally designed and operated AWS EC2 in production for the Gozem Data Hub. Supporting record: 20_owner_confirmed_production_scope.txt.\n- AWS storage: Bolaji personally designed and operated AWS S3 in production, including bucket setup and ongoing reading and writing as an exchange layer with the product team. The employer or project for that bucket is not specified. Supporting record: 20_owner_confirmed_production_scope.txt.\n\nThe personal responsibility above is owner-confirmed for the services actually used in these documented production contexts. The confirmation does not add Kafka experience, make projects or labs into production use, establish every upstream database's administration, or establish on-call responsibility or a service-level guarantee. Additional database and BI technologies have their own documented contexts in the skills and project records."
+    },
+    {
+      "source": "90_website_canon_llms_full.txt",
+      "chunk_id": "90_website_canon_llms_full.txt::7",
+      "section": "Applied AI, automation, and reliability",
+      "retrieval_rank": 1,
+      "retrieval_score": 20.0,
+      "parent_context": "Bolaji BALOGOUN \u00b7 Biography",
+      "scope_context": "",
+      "evidence_type": "published",
+      "metric_scope": {
+        "id": "invoice_time_savings",
+        "value": "40+ hours",
+        "qualifier": "estimated savings, not established measured time savings",
+        "population": "per country Financing Manager",
+        "measurement_period": "per month",
+        "provenance": "explicit estimated savings in the cited invoice records"
+      },
+      "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN \u00b7 Data Engineer \u00b7 Data Architect (full content) | Section: Applied AI, automation, and reliability | Parent context: Bolaji BALOGOUN \u00b7 Biography\n\nBolaji co-led Gozem\u2019s AI strategy. The group shipped 30+ production automation tools during his Data Director mandate. He prototyped invoice extraction in Vertex AI Studio and built a workflow with validation and human review. Estimated savings were 40+ hours per country Financing Manager each month. The Vodun Days command center gave Operations minute-level visibility into driver supply. On the peak day, ride requests were 48% above the average for the other event days and the rider match rate was 88%.\n\nHe also built application-ready data flows from MongoDB, BigQuery, Google Cloud Storage, and Sheets, plus a near-real-time MongoDB CDC pipeline that published change events through Pub/Sub, processed them in Dataflow, updated BigQuery, and supported real-time visualization in Looker Studio. These systems paired data products with operational services and decision workflows."
+    },
+    {
+      "source": "20_owner_confirmed_production_scope.txt",
+      "chunk_id": "20_owner_confirmed_production_scope.txt::0",
+      "section": "OWNER-CONFIRMED PRODUCTION RESPONSIBILITY",
+      "retrieval_rank": 1,
+      "retrieval_score": 0.032787,
+      "parent_context": "",
+      "scope_context": "",
+      "evidence_type": "candidate_confirmed",
+      "metric_scope": {},
+      "content_preview": "Source: 20_owner_confirmed_production_scope.txt | Title: OWNER-CONFIRMED PRODUCTION RESPONSIBILITY | Section: OWNER-CONFIRMED PRODUCTION RESPONSIBILITY\n\nConfirmation recorded on November 19, 2026. This is the confirmation date, not a date assigned to the underlying work. Evidence classification: candidate_confirmed.\n\nAt Gozem, Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline. The owner subsequently clarified that he is both an architect and engineer and personally designed and operated the production services he used. This supersedes the earlier design-only qualification for these services.\n\nFor the Gozem Data Hub, Bolaji personally designed and operated AWS EC2 in production.\n\nBolaji personally set up an AWS S3 bucket in production. Bolaji personally operates an AWS S3 bucket in production, reading data from it and writing data back. He owns and operates the bucket on an ongoing basis. AWS S3 serves as an exchange layer with the product team and has also been used in projects. This clarification does not identify an employer or project for the S3 bucket and does not establish on-call responsibility.\n\nBolaji has no Kafka experience at all. Bolaji has never used Kafka. This is an explicit owner-confirmed absence of experience, not an inference from an omitted tool. It does not imply inability to learn Kafka or a deficiency in other streaming technologies.\n\nThese clarifications do not add personal Spark Structured Streaming, Apache NiFi or Lakeflow production experience. They do not establish CDC event counts, end-to-end latency or availability. The separately documented streaming-workload average remains a different measurement population.\n\nCDC role and period, owner confirmation received November 20, 2026: During his Head of Data role at Gozem (October 2022 to March 2025), Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline.\n\nThis confirmation locates the CDC work within that role period. It does not establish the project's exact start or completion dates, continuous operation throughout the entire role, on-call coverage, latency or uptime guarantees. It does not assign that role period to AWS EC2, AWS S3 or other services. The earlier Google Cloud migration remains separately attributed to the Global Data Analyst role.\n\nConfirmation provenance: Asked which role and period covered his design and operation of the MongoDB CDC pipeline, the owner answered: \"Head of Data, Oct 2022\u2013Mar 2025\". Evidence classification: candidate_confirmed. The November 20 date records when this role clarification was received, not when the project started or ended."
+    },
+    {
+      "source": "05_skills_and_tools.txt",
+      "chunk_id": "05_skills_and_tools.txt::7",
+      "section": "BIG DATA:",
+      "retrieval_rank": 4,
+      "retrieval_score": 0.015873,
+      "parent_context": "BOLAJI BALOGOUN - SKILLS & TOOLS WITH APPLICATION CONTEXT",
+      "scope_context": "",
+      "evidence_type": "curated",
+      "metric_scope": {},
+      "content_preview": "Source: 05_skills_and_tools.txt | Title: BOLAJI BALOGOUN - SKILLS & TOOLS WITH APPLICATION CONTEXT | Section: BIG DATA: | Parent context: BOLAJI BALOGOUN - SKILLS & TOOLS WITH APPLICATION CONTEXT\n\n- Apache Hadoop (HDFS), Apache Spark (PySpark), Apache Hive, ElasticSearch.\n  Used at: Rintio (data lake and processing for 100GB+ of agricultural data), Big Data Bootcamp."
+    }
+  ],
+  "initial_draft": "Bolaji has no experience with Kafka, as records confirm he has never used it. There is no personal production experience documented for Spark Structured Streaming.",
+  "repair_draft": "Bolaji has explicit owner-confirmed absence of experience with Kafka: records confirm he has never used it. Spark Structured Streaming is a detail that the retrieved evidence does not establish personal production deployment for, though Spark (PySpark) and Hadoop were used at Rintio for data lake and processing of agricultural data.",
+  "verifier_approval": {
+    "is_grounded": true,
+    "addresses_question": true,
+    "unsupported_claims": [],
+    "corrected_answer": ""
+  },
+  "provenance": {
+    "code_revision": "a595cf5ba42e490e",
+    "deployment_revision": null,
+    "corpus_revision": "175e61503cf7c1c5",
+    "kb_revision": "175e61503cf7c1c5",
+    "policy_revision": "cb5a55039a344fcc",
+    "index_sync_pending": false,
+    "chunker_version": "3",
+    "model": "gemini-3.5-flash-lite",
+    "thinking_config": {
+      "thinking_level": "low"
+    },
+    "routing_thinking_config": {
+      "thinking_level": "minimal"
+    },
+    "generation_thinking_config": {
+      "thinking_level": "low"
+    },
+    "generation_temperature": null,
+    "verifier_model": "gemini-3.5-flash-lite",
+    "verifier_thinking_level": "low",
+    "verifier_thinking_budget": null,
+    "prompt_versions": {
+      "inventory_followup": "1.1",
+      "guardrail": "2.2",
+      "condense": "1.1",
+      "batch_grade": "2.3",
+      "rewrite": "2.1",
+      "generate_professional": "3.21",
+      "generate_education": "3.6",
+      "generate_learning": "3.6",
+      "verify_grounding": "2.17",
+      "repair_grounding": "1.9",
+      "upper_bound_clarification": "1.0",
+      "skills_completeness_clarification": "1.0",
+      "insufficient_evidence": "1.1",
+      "disputed_evidence": "1.0",
+      "project_identity": "1.0",
+      "evidence_detail": "1.2",
+      "confirmed_non_use": "1.0",
+      "documentation_limit": "1.0",
+      "personal_production_limit": "1.1",
+      "degree_clarification": "1.0",
+      "language_retry": "1.0",
+      "structured_output_recovery": "1.0",
+      "out_of_scope": "2.0",
+      "translate": "1.0",
+      "notification_suppressed": "1.0"
+    }
+  }
+}
