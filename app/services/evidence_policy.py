@@ -356,6 +356,80 @@ def experience_resolution_failures(answer, documents, subjects):
     return missing
 
 
+def confirmed_use_conflicts(answer, documents):
+    """A confirmed absence cannot coexist with a same-actor positive use claim."""
+    conflicts = set()
+    for rule in policy_data().get("experience_confirmations", []):
+        if not rule.get("positive_pattern"):
+            continue
+        for subject in confirmed_non_use(documents):
+            pattern = rule["positive_pattern"].replace("{subject}", re.escape(subject))
+            check_text = re.sub(
+                r"(?i)\b(did|does|do|has|have|had|is|are|was|were)n't\b",
+                r"\1 not",
+                _fold(answer),
+            )
+            clauses = [
+                part
+                for clause in _claim_clauses(check_text)
+                for part in re.split(r"(?i)\b(?:while|whereas|tandis que)\b", clause)
+            ]
+            for clause in clauses:
+                for match in re.finditer(pattern, clause):
+                    if (
+                        re.search(
+                            r"(?i)\b(?:if|unless|suppose)\s*$", clause[: match.start()]
+                        )
+                        or re.search(
+                            rule.get("positive_exclude_pattern", r"(?!)"), match.group()
+                        )
+                        or (
+                            _UNCERTAIN.search(clause[: match.start()])
+                            and re.search(
+                                r"(?i)\b(?:whether|if|that)\s*$",
+                                clause[: match.start()],
+                            )
+                        )
+                        or _denied_assertion(clause, match)
+                    ):
+                        continue
+                    groups = [
+                        key
+                        for key in rule.get("positive_predicate_groups", [])
+                        if match.groupdict().get(key)
+                    ]
+                    if match.groupdict().get("experience_before") and re.search(
+                        r"(?i)\b(?:absence|lack|lack of|manque|absence de)\s+(?:of\s+)?experience\b",
+                        match.group(),
+                    ):
+                        continue
+                    if groups:
+                        key = groups[0]
+                        predicate = re.compile(re.escape(match.group(key))).search(
+                            clause, match.start(key), match.end(key)
+                        )
+                        if _denied_assertion(clause, predicate):
+                            continue
+                    conflicts.add(subject)
+    return conflicts
+
+
+def _ambiguous_use_mention(answer, subject):
+    """Leave a possible opposing claim to repair instead of adding a denial."""
+    for clause in _claim_clauses(_fold(answer)):
+        if not re.search(r"\b" + re.escape(subject) + r"\b", clause, re.I):
+            continue
+        if _UNCERTAIN.search(clause):
+            continue
+        for match in re.finditer(
+            r"(?i)\b(?:use[sd]?|deployed|operated|designed|built|implemented|experience)\b",
+            clause,
+        ):
+            if not _denied_assertion(clause, match):
+                return True
+    return False
+
+
 def _normalize_non_use_reference(answer, documents):
     """Resolve a local redundant 'it' only after a confirmed named absence.
 
@@ -424,6 +498,7 @@ def preserve_requested_evidence(
 ):
     """Restore at most three missing details as exact, scoped retrieved quotes."""
     from app.graph.prompts import (
+        CONFIRMED_NON_USE_TEMPLATES,
         DOCUMENTATION_LIMIT_TEMPLATES,
         EVIDENCE_DETAIL_TEMPLATES,
         PERSONAL_PRODUCTION_LIMIT_TEMPLATES,
@@ -434,6 +509,19 @@ def preserve_requested_evidence(
     lang = "fr" if language in {"fr", "French"} else "en"
     restored = []
     used = set()
+    conflicts = confirmed_use_conflicts(answer, documents)
+    for subject in sorted(confirmed_non_use(documents)):
+        if len(restored) >= 3:
+            break
+        if (
+            subject in conflicts
+            or _ambiguous_use_mention(answer, subject)
+            or not re.search(r"\b" + re.escape(subject) + r"\b", query, re.I)
+            or not experience_resolution_failures(answer, documents, [subject])
+        ):
+            continue
+        answer += " " + CONFIRMED_NON_USE_TEMPLATES[lang].format(tool=subject)
+        restored.append("confirmed_non_use_requires_answer:" + subject)
     for rule in policy_data().get("required_details", []):
         restoration = rule.get("restore_quotes", {}).get(lang) or rule.get(
             "restore_quote"
@@ -488,7 +576,7 @@ def preserve_requested_evidence(
                 continue
             scope = restoration.get("scope_label", meta.get("scope_context", ""))
             if restoration.get("render") == "sentence":
-                answer += " " + quote[0].upper() + quote[1:]
+                answer += "\n\n" + quote[0].upper() + quote[1:]
             else:
                 answer += " " + EVIDENCE_DETAIL_TEMPLATES[lang].format(
                     label=restoration["label"],
@@ -895,7 +983,9 @@ def constraint_failures(
                     )
                 ]
             if not matches or (
-                not rule.get("local_uncertainty") and uncertain.search(clause)
+                not rule.get("local_uncertainty")
+                and not rule.get("literal_mention")
+                and uncertain.search(clause)
             ):
                 continue
             if rule.get("affirmation_pattern") and not re.search(
@@ -937,7 +1027,10 @@ def constraint_failures(
                             if rule.get("clause_support")
                             else span[max(0, m.start() - 60) : m.end() + 60]
                         )
-                        if uncertain.search(qualifier) or (
+                        if (
+                            uncertain.search(qualifier)
+                            and not rule.get("literal_mention")
+                        ) or (
                             rule.get("local_negation") and _denied_assertion(span, m)
                         ):
                             continue
@@ -1125,6 +1218,10 @@ def constraint_failures(
             if missing:
                 failures.append(rule["id"])
     for rule in policy.get("required_details", []):
+        if rule.get("query_exclude_pattern") and re.search(
+            rule["query_exclude_pattern"], _fold(query)
+        ):
+            continue
         applicable = (
             rule["scope_id"] in scope_ids
             if rule.get("scope_id")
@@ -1146,6 +1243,31 @@ def constraint_failures(
             if rule.get("answer_activation_pattern"):
                 if not _has_detail_activation(answer, rule):
                     continue
+            for clause in _claim_clauses(answer):
+                explicit_scopes = [
+                    value
+                    for match in re.finditer(
+                        rule.get("false_unknown_scope_pattern", r"(?!)"), clause
+                    )
+                    for value in match.groupdict().values()
+                    if value
+                ]
+                if (
+                    rule.get("false_unknown_pattern")
+                    and re.search(rule["false_unknown_pattern"], clause)
+                    and not any(
+                        not re.search(
+                            rule.get("false_unknown_same_scope_pattern", r"(?!)"),
+                            scope,
+                        )
+                        for scope in explicit_scopes
+                    )
+                    and not re.search(
+                        rule.get("false_unknown_exclude_pattern", r"(?!)"), clause
+                    )
+                ):
+                    failures.append(rule["id"] + ":false_withholding")
+                    break
             if rule.get("answer_clause_pattern"):
                 if not any(
                     not re.search(
@@ -1246,6 +1368,10 @@ def constraint_failures(
         for subject in experience_resolution_failures(
             answer, documents, requested_confirmations
         )
+    )
+    failures.extend(
+        "confirmed_non_use_contradicted:" + subject
+        for subject in sorted(confirmed_use_conflicts(answer, documents))
     )
     return failures
 

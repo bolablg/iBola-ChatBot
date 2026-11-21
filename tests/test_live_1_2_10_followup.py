@@ -27,6 +27,7 @@ GOOD_AWS = (
     "He personally set up and operates an AWS S3 bucket in production, reading and writing "
     "data as an exchange layer with the product team. The employer and project for that "
     "bucket are not specified. Bolaji has no Kafka experience at all."
+    " At Gozem, Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline."
 )
 
 

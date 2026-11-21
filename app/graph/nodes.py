@@ -1484,7 +1484,6 @@ def _verification_scope(state):
 def verify_grounding_node(state: dict) -> dict:
     """Validate the exact delivered text, including deterministic restorations."""
     from app.graph.answer_completeness import (
-        normalize_metric_omission_attribution,
         preserve_primary_language,
         preserve_requested_degrees,
     )
@@ -1513,7 +1512,6 @@ def verify_grounding_node(state: dict) -> dict:
     draft, numeric_facts = preserve_percentage_qualifiers(draft, docs, language)
     draft, project_names = preserve_project_identity(draft, docs, query, language)
     draft, restored_details = preserve_requested_evidence(draft, docs, query, language)
-    draft = normalize_metric_omission_attribution(draft, docs, language)
     coverage = next(
         (
             doc.metadata["conversation_coverage"]
@@ -1804,13 +1802,7 @@ def _verify_grounding_llm_node(state: dict) -> dict:
             corrected = ""
             logger.warning("Bounded grounding repair unavailable")
     # A correction is another draft, not proof. Recheck changed text once.
-    from app.graph.answer_completeness import normalize_metric_omission_attribution
 
-    corrected = normalize_metric_omission_attribution(
-        corrected,
-        context_docs,
-        _detect_reply_language(question, state.get("user_language", "en")),
-    )
     final_failures = constraint_failures(corrected, context_docs, scope_query)
     if corrected and not final_failures:
         try:
@@ -1855,11 +1847,6 @@ def _verify_grounding_llm_node(state: dict) -> dict:
                     candidate,
                     context_docs,
                     scope_query,
-                    _detect_reply_language(question, state.get("user_language", "en")),
-                )
-                candidate = normalize_metric_omission_attribution(
-                    candidate,
-                    context_docs,
                     _detect_reply_language(question, state.get("user_language", "en")),
                 )
                 final_failures = constraint_failures(
