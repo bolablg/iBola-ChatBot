@@ -1,4 +1,4 @@
-version: 22
+version: 23
 source_types:
   21_production_service_inventory.txt: candidate_confirmed
   20_owner_confirmed_production_scope.txt: candidate_confirmed
@@ -81,10 +81,29 @@ assertion_rules:
   clause_support: true
   local_negation: true
 - id: deficiency_requires_same_tool_evidence
-  description: Missing documentation is a verification gap, not an established experience gap or incapacity. Remove the inferred deficiency and explicitly keep each requested tool unverified unless the same tool has explicit evidence of non-use or deficiency.
-  answer_pattern: '(?i)\b(?:experience gap|skills? gap|capability gap|lack of (?:experience|proficiency)|lacks? (?:experience|proficiency)|lacune (?:d.experience|de competences?)|manque (?:d.experience|de competences?))\b'
-  support_pattern: '(?i)\b(?:experience gap|skills? gap|capability gap|lack of (?:experience|proficiency)|lacks? (?:experience|proficiency)|lacune (?:d.experience|de competences?)|manque (?:d.experience|de competences?))\b'
-  subject_pattern: '(?i)\b(?:Power BI|DAX|Tableau|dbt|Kafka|Snowflake|Redshift|Dagster|Pub/Sub|Dataflow|Lakeflow|Databricks)\b'
+  description: Missing documentation is a verification gap, not established absence of experience. Bind qualified absence to the actual tool and setting. Production-only absence does not establish total non-use, and an experience gap does not establish absolute absence.
+  resolve_confirmed_non_use_reference: true
+  answer_pattern: '(?i)\b(?:(?P<absence_before>(?:has\s+)?no)\s+(?:(?:personal|direct|production|professional|practical|hands[ -]on)\s+){0,3}(?P<tools_before>(?:Power BI|DAX|Tableau|dbt|Kafka|(?:Apache\s+)?Spark Structured Streaming|(?:Apache\s+)?Spark|Snowflake|Redshift|Dagster|Pub/Sub|Dataflow|Lakeflow|Databricks)(?:\s*(?:,|and|or|et|ou)\s*(?:Power BI|DAX|Tableau|dbt|Kafka|(?:Apache\s+)?Spark Structured Streaming|(?:Apache\s+)?Spark|Snowflake|Redshift|Dagster|Pub/Sub|Dataflow|Lakeflow|Databricks))*)\s+(?:(?:personal|direct|production|professional|practical|hands[ -]on)\s+){0,3}experience|(?:(?P<absence_after>lack(?:s|ed| of)?|(?:has\s+)?no)\s+(?:(?:personal|direct|production|professional|practical|hands[ -]on)\s+){0,3}experience|experience gap|lacune d.experience|manque d.experience)(?:\s+(?:(?:with|in|of|for|using|en|avec|sur|de)\s+)?(?P<tools_after>(?:Power BI|DAX|Tableau|dbt|Kafka|(?:Apache\s+)?Spark Structured Streaming|(?:Apache\s+)?Spark|Snowflake|Redshift|Dagster|Pub/Sub|Dataflow|Lakeflow|Databricks)(?:\s*(?:,|and|or|et|ou)\s*(?:Power BI|DAX|Tableau|dbt|Kafka|(?:Apache\s+)?Spark Structured Streaming|(?:Apache\s+)?Spark|Snowflake|Redshift|Dagster|Pub/Sub|Dataflow|Lakeflow|Databricks))*))?|(?P<absence_never>(?:has\s+)?never\s+(?:used|worked with))\s+(?P<tools_never>(?:Power BI|DAX|Tableau|dbt|Kafka|(?:Apache\s+)?Spark Structured Streaming|(?:Apache\s+)?Spark|Snowflake|Redshift|Dagster|Pub/Sub|Dataflow|Lakeflow|Databricks)(?:\s*(?:,|and|or|et|ou)\s*(?:Power BI|DAX|Tableau|dbt|Kafka|(?:Apache\s+)?Spark Structured Streaming|(?:Apache\s+)?Spark|Snowflake|Redshift|Dagster|Pub/Sub|Dataflow|Lakeflow|Databricks))*))\b(?:\s+(?:in|en)\s+production)?'
+  support_pattern: '(?i)\b(?:(?P<absence_before>(?:has\s+)?no)\s+(?:(?:personal|direct|production|professional|practical|hands[ -]on)\s+){0,3}(?P<tools_before>(?:Power BI|DAX|Tableau|dbt|Kafka|(?:Apache\s+)?Spark Structured Streaming|(?:Apache\s+)?Spark|Snowflake|Redshift|Dagster|Pub/Sub|Dataflow|Lakeflow|Databricks)(?:\s*(?:,|and|or|et|ou)\s*(?:Power BI|DAX|Tableau|dbt|Kafka|(?:Apache\s+)?Spark Structured Streaming|(?:Apache\s+)?Spark|Snowflake|Redshift|Dagster|Pub/Sub|Dataflow|Lakeflow|Databricks))*)\s+(?:(?:personal|direct|production|professional|practical|hands[ -]on)\s+){0,3}experience|(?:(?P<absence_after>lack(?:s|ed| of)?|(?:has\s+)?no)\s+(?:(?:personal|direct|production|professional|practical|hands[ -]on)\s+){0,3}experience|experience gap|lacune d.experience|manque d.experience)\s+(?:(?:with|in|of|for|using|en|avec|sur|de)\s+)?(?P<tools_after>(?:Power BI|DAX|Tableau|dbt|Kafka|(?:Apache\s+)?Spark Structured Streaming|(?:Apache\s+)?Spark|Snowflake|Redshift|Dagster|Pub/Sub|Dataflow|Lakeflow|Databricks)(?:\s*(?:,|and|or|et|ou)\s*(?:Power BI|DAX|Tableau|dbt|Kafka|(?:Apache\s+)?Spark Structured Streaming|(?:Apache\s+)?Spark|Snowflake|Redshift|Dagster|Pub/Sub|Dataflow|Lakeflow|Databricks))*)|(?P<absence_never>(?:has\s+)?never\s+(?:used|worked with))\s+(?P<tools_never>(?:Power BI|DAX|Tableau|dbt|Kafka|(?:Apache\s+)?Spark Structured Streaming|(?:Apache\s+)?Spark|Snowflake|Redshift|Dagster|Pub/Sub|Dataflow|Lakeflow|Databricks)(?:\s*(?:,|and|or|et|ou)\s*(?:Power BI|DAX|Tableau|dbt|Kafka|(?:Apache\s+)?Spark Structured Streaming|(?:Apache\s+)?Spark|Snowflake|Redshift|Dagster|Pub/Sub|Dataflow|Lakeflow|Databricks))*))\b(?:\s+(?:in|en)\s+production)?'
+  subject_pattern: '(?i)\b(?:Power BI|DAX|Tableau|dbt|Kafka|Spark Structured Streaming|Spark|Snowflake|Redshift|Dagster|Pub/Sub|Dataflow|Lakeflow|Databricks)\b'
+  qualifier_pattern: '(?i)\b(?:personal|direct|production|professional|practical|hands[ -]on)\b'
+  exclude_support_pattern: '(?i)\b(?:if|unless|hypothetical|suppose|assuming|would|could|might|you|your)\b'
+  answer_subject_groups: [tools_after, tools_before, tools_never]
+  support_subject_groups: [tools_after, tools_before, tools_never]
+  absolute_predicate_groups: [absence_after, absence_before, absence_never]
+  subjects_from_query: true
+  local_uncertainty: true
+  clause_support: true
+  local_negation: true
+- id: proficiency_deficiency_requires_same_tool_evidence
+  description: Absence of tool use does not establish lack of proficiency or inability. A proficiency or capability gap requires explicit deficiency evidence for that same tool and setting.
+  answer_pattern: '(?i)\b(?:skills? gap|capability gap|lack(?:s|ed| of)?\s+(?:(?:personal|direct|production|professional|practical|hands[ -]on)\s+){0,3}proficiency|lacune de competences?|manque de competences?)(?:\s+(?:(?:with|in|of|for|using|en|avec|sur|de)\s+)?(?P<tools_after>(?:Power BI|DAX|Tableau|dbt|Kafka|(?:Apache\s+)?Spark Structured Streaming|(?:Apache\s+)?Spark|Snowflake|Redshift|Dagster|Pub/Sub|Dataflow|Lakeflow|Databricks)(?:\s*(?:,|and|or|et|ou)\s*(?:Power BI|DAX|Tableau|dbt|Kafka|(?:Apache\s+)?Spark Structured Streaming|(?:Apache\s+)?Spark|Snowflake|Redshift|Dagster|Pub/Sub|Dataflow|Lakeflow|Databricks))*))?\b(?:\s+(?:in|en)\s+production)?'
+  support_pattern: '(?i)\b(?:skills? gap|capability gap|lack(?:s|ed| of)?\s+(?:(?:personal|direct|production|professional|practical|hands[ -]on)\s+){0,3}proficiency|lacune de competences?|manque de competences?)\s+(?:(?:with|in|of|for|using|en|avec|sur|de)\s+)?(?P<tools_after>(?:Power BI|DAX|Tableau|dbt|Kafka|(?:Apache\s+)?Spark Structured Streaming|(?:Apache\s+)?Spark|Snowflake|Redshift|Dagster|Pub/Sub|Dataflow|Lakeflow|Databricks)(?:\s*(?:,|and|or|et|ou)\s*(?:Power BI|DAX|Tableau|dbt|Kafka|(?:Apache\s+)?Spark Structured Streaming|(?:Apache\s+)?Spark|Snowflake|Redshift|Dagster|Pub/Sub|Dataflow|Lakeflow|Databricks))*)\b(?:\s+(?:in|en)\s+production)?'
+  subject_pattern: '(?i)\b(?:Power BI|DAX|Tableau|dbt|Kafka|Spark Structured Streaming|Spark|Snowflake|Redshift|Dagster|Pub/Sub|Dataflow|Lakeflow|Databricks)\b'
+  qualifier_pattern: '(?i)\b(?:personal|direct|production|professional|practical|hands[ -]on)\b'
+  exclude_support_pattern: '(?i)\b(?:if|unless|hypothetical|suppose|assuming|would|could|might|you|your)\b'
+  answer_subject_groups: [tools_after]
+  support_subject_groups: [tools_after]
   subjects_from_query: true
   local_uncertainty: true
   clause_support: true
