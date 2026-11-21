@@ -130,7 +130,12 @@ _DENIAL_WINDOW = 25
 
 def _confirmed_experience_limit(answer, target):
     """Evaluator-only recognition of a complete, named confirmation gap."""
-    prefix = r"(?:Similarly,\s+)?(?:he|Bolaji)\s+has\s+no confirmed personal production experience with\s+"
+    prefix = (
+        r"(?:(?:Similarly,\s+)?(?:he|Bolaji)\s+has\s+"
+        r"no confirmed personal production experience with\s+"
+        r"|There is no documented personal deployment or named project "
+        r"proving production experience with\s+)"
+    )
     normalized = " ".join(_accent_fold(answer).split())
     for sentence in normalized.split("."):
         sentence = " ".join(sentence.split())

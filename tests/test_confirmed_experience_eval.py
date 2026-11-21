@@ -10,6 +10,7 @@ from scripts.run_eval import _confirmed_experience_limit, check_facts
 
 CASE = json.loads(Path("tests/fixtures/confirmed_experience_limit.json").read_text())
 TARGET = "Spark Structured Streaming"
+LIVE_CASE = json.loads(Path("tests/fixtures/live_deployment_limit.json").read_text())
 
 
 def test_actual_grounded_http_answer_satisfies_the_unchanged_unknown_assertion():
@@ -23,12 +24,31 @@ def test_actual_grounded_http_answer_satisfies_the_unchanged_unknown_assertion()
     assert check_facts(result["answer"], CASE["golden_assertions"], result=result)[0]
 
 
+def test_live_documented_deployment_limit_preserves_original_judgment_and_assertions():
+    result = LIVE_CASE["captured_result"]
+    assert LIVE_CASE["golden_assertions"] == CASE["golden_assertions"]
+    assert result["fact_failures"] == [
+        f"missing explicit documentation limit: {TARGET}"
+    ]
+    assert all(
+        result["scores"][name] == 10
+        for name in ("relevance", "accuracy", "helpfulness", "faithfulness")
+    )
+    assert documentation_limits(result["answer"], [TARGET]) == [TARGET]
+    assert _confirmed_experience_limit(result["answer"], TARGET)
+    assert check_facts(result["answer"], LIVE_CASE["golden_assertions"], result=result)[
+        0
+    ]
+
+
 @pytest.mark.parametrize(
     "answer",
     [
         "He has no confirmed personal production experience with Spark Structured Streaming.",
         "He has no confirmed personal production experience with\nSpark Structured Streaming.",
         "Similarly, Bolaji has no confirmed personal production experience with Spark Structured Streaming, and no named project proves its personal deployment.",
+        "There is no documented personal deployment or named project proving production experience with Spark Structured Streaming.",
+        "There is no documented personal deployment or named project proving production experience with\nSpark Structured Streaming.",
     ],
 )
 def test_complete_confirmation_gap_uses_the_full_requested_subject(answer):
@@ -55,6 +75,17 @@ def test_complete_confirmation_gap_uses_the_full_requested_subject(answer):
         "He has no confirmed personal production experience with Spark Structured Streaming which he deployed.",
         "He has no confirmed personal production experience with Spark Structured Streaming and Kafka.",
         "No named project proves his personal Spark Structured Streaming deployment.",
+        "There is no personal deployment or named project proving production experience with Spark Structured Streaming.",
+        "If asked, there is no documented personal deployment or named project proving production experience with Spark Structured Streaming.",
+        "There is no documented personal deployment or named project proving production experience with Spark Structured Streaming if asked.",
+        "There is no documented personal deployment or named project proving production experience with Spark Structured Streaming, provided that the records are complete.",
+        "There is no documented personal deployment or named project proving production experience with Spark Structured Streaming and he deployed it.",
+        "There is no documented personal deployment or named project proving production experience with Spark Structured Streaming\nand he operates it.",
+        "There is no documented personal deployment or named project proving production experience with Spark Structured Streaming?",
+        "For example, there is no documented personal deployment or named project proving production experience with Spark Structured Streaming.",
+        '"There is no documented personal deployment or named project proving production experience with Spark Structured Streaming."',
+        "There is no documented personal deployment or named project proving production experience with Kafka.",
+        "There is no documented personal deployment or named project proving production experience with Spark Structured Streaming and Kafka.",
     ],
 )
 def test_non_use_hypotheticals_unrelated_subjects_and_extra_predicates_fail(answer):
@@ -69,6 +100,7 @@ def test_non_use_hypotheticals_unrelated_subjects_and_extra_predicates_fail(answ
     [
         {"grounding_checked": False},
         {"grounding_checked": None},
+        {"grounding_checked": 1},
         {"evidence": []},
     ],
 )
@@ -77,3 +109,7 @@ def test_missing_evidence_or_grounding_cannot_activate_the_recognizer(overrides)
     assert not check_facts(result["answer"], CASE["golden_assertions"], result=result)[
         0
     ]
+    live_result = {**LIVE_CASE["captured_result"], **overrides}
+    assert not check_facts(
+        live_result["answer"], LIVE_CASE["golden_assertions"], result=live_result
+    )[0]
