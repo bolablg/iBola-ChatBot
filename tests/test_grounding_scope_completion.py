@@ -14,6 +14,7 @@ from app.services.evidence_policy import (
     constraint_failures,
     policy_data,
     prepare_evidence,
+    preserve_requested_evidence,
 )
 from scripts.run_eval import check_facts
 
@@ -246,12 +247,19 @@ def test_captured_scope_phrasing_retains_exact_final_independent_verification(
     c = PHRASING[cid]
     responses = [response(c, 4)]
     if cid == "recruiter-hda-01-t1":
-        assert not constraint_failures(response(c, 5)["answer"], docs(c), c["question"])
+        completed, changes = preserve_requested_evidence(
+            response(c, 5)["answer"], docs(c), c["question"], "en"
+        )
+        assert changes == ["department_budget_authority_unestablished"]
+        assert completed.startswith(response(c, 5)["answer"])
+        assert not constraint_failures(completed, docs(c), c["question"])
         responses += [response(c, 5), {"is_grounded": True}]
     generate = sdk(monkeypatch, responses)
     result = nodes.verify_grounding_node(state(c))
     assert result["grounding_checked"]
     assert generate.call_count == (3 if cid == "recruiter-hda-01-t1" else 1)
+    if cid == "recruiter-hda-01-t1":
+        assert result["answer"] == completed
     assert result["answer"] in str(generate.call_args.kwargs["contents"])
     assert check_facts(
         result["answer"], c["golden_assertions"], result={**c, **result}

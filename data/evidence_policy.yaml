@@ -1,4 +1,4 @@
-version: 38
+version: 39
 source_types:
   21_production_service_inventory.txt: candidate_confirmed
   20_owner_confirmed_production_scope.txt: candidate_confirmed
@@ -1234,6 +1234,10 @@ experience_confirmations:
   positive_exclude_pattern: '(?i)\b(?:if|unless|would|could|hypothetical|fictional|requirement|vacancy)\b|\b(?:by|another)\s+(?:engineer|colleague|person|employee)\b'
 
 editorial_constraints:
+- id: knowledge_snapshot_url_not_public_reference
+  unconditional: true
+  description: Knowledge snapshot URLs are retrieval provenance, not public article, project or repository destinations. Never expose llms.txt or llms-full.txt links in the visitor answer. Retain a documented artifact URL from the source body; if the separate article URL is unavailable, state that record limit without inventing a destination. Preserve API evidence for auditing.
+  answer_pattern: (?i)(?:(?:https?://)?[A-Za-z0-9.-]+(?::[0-9]+)?)?/llms(?:-full)?\.txt(?=$|[?#\s)\]}>"',;:]|[.](?=$|[\s)\]}>"',;:]))
 - id: superseded_growth_interval_echo
   description: Give the confirmed growth stages directly without echoing the superseded interval, even to deny it. State the remaining headcount documentation limit without repeating that interval.
   sources: [19_owner_confirmed_scope.txt]

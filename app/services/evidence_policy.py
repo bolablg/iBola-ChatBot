@@ -997,12 +997,15 @@ def constraint_failures(
     ]
     failures.extend(_request_scope_failures(answer, documents, query))
     for rule in policy.get("editorial_constraints", []):
-        applicable = re.search(rule["query_pattern"], _fold(query)) and any(
-            Path(doc.metadata.get("source", "")).name in rule["sources"]
-            and doc.metadata.get("evidence_type")
-            in {None, "curated", "published", "candidate_confirmed"}
-            and re.search(rule["support_pattern"], doc.page_content)
-            for doc in documents
+        applicable = rule.get("unconditional", False) or (
+            re.search(rule["query_pattern"], _fold(query))
+            and any(
+                Path(doc.metadata.get("source", "")).name in rule["sources"]
+                and doc.metadata.get("evidence_type")
+                in {None, "curated", "published", "candidate_confirmed"}
+                and re.search(rule["support_pattern"], doc.page_content)
+                for doc in documents
+            )
         )
         if applicable and re.search(rule["answer_pattern"], answer):
             failures.append(rule["id"])
