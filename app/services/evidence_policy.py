@@ -370,7 +370,7 @@ def experience_resolution_failures(answer, documents, subjects):
             rf"(?:jamais|pas)\s+utilise\s+{tool}"
         )
         nominal = re.compile(
-            rf"(?i)\b(?:Bolaji|he|il)\s+(?:has|had|a)\s+"
+            r"(?i)\b(?:Bolaji|he|il)\s+(?:has|had|a)\s+"
             + _nominal_absence_pattern(subject)
             + r"\s*$"
         )
@@ -437,7 +437,7 @@ def confirmed_use_conflicts(answer, documents):
                         if match.groupdict().get(key)
                     ]
                     if match.groupdict().get("experience_before") and re.fullmatch(
-                        rf"(?i)(?:Bolaji|he|il)\s+(?:has|had|a)\s+"
+                        r"(?i)(?:Bolaji|he|il)\s+(?:has|had|a)\s+"
                         + _nominal_absence_pattern(subject),
                         match.group(),
                     ):
