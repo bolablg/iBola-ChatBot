@@ -207,6 +207,18 @@ def _claim_clauses(text: str, extra_predicates=None):
 
 def _record_limit_subject(clause, known_subjects=(), subject_pattern=None):
     """A complete nominal evidence limit, never a neighboring action claim."""
+    postposed = re.fullmatch(
+        r"(?i)\s*(?:there\s+is\s+)?no\s+(?:personal\s+)?production\s+experience\s+"
+        r"documented\s+(?:for|with)\s+(?P<subject>[a-z][a-z0-9 /+#_'()-]{0,100})\s*",
+        _fold(clause),
+    )
+    if postposed:
+        subject = postposed.group("subject").strip()
+        if any(
+            re.fullmatch(_fold(label), subject, re.I) for label in known_subjects
+        ) or (subject_pattern and re.fullmatch(subject_pattern, subject)):
+            return subject
+        return None
     existential = re.fullmatch(
         r"(?i)\s*(?:(?:additionally|moreover)\s*,\s*)?there\s+(?:is|are)\s+"
         r"no\s+documented\s+(?:(?:personal\s+)?production\s+experience\s+or\s+"
@@ -449,6 +461,31 @@ def _normalize_non_use_reference(answer, documents):
             rf"(?:(?:he|Bolaji)\s+)?(?:has\s+)?never\s+used\s+(?P<reference>it)\b"
         )
         answer = pattern.sub(lambda match: match.group()[:-2] + subject, answer)
+        confirmed_connector = re.compile(
+            rf"(?i)\s*(?:Bolaji|he)\s+has\s+{absence}(?:,?\s+as\s+|:\s*)"
+            rf"(?:the\s+)?(?:records?|documentation|evidence)\s+confirms?\s+"
+            rf"(?:(?:he|Bolaji)\s+)?(?:has\s+)?never\s+used\s+(?P<reference>it)\s*"
+        )
+
+        def resolve_confirmed_sentence(match):
+            sentence = match.group("sentence")
+            reference = confirmed_connector.fullmatch(sentence)
+            if not reference:
+                return match.group()
+            start, end = reference.span("reference")
+            return (
+                match.group("separator")
+                + sentence[:start]
+                + subject
+                + sentence[end:]
+                + match.group("punctuation")
+            )
+
+        answer = re.sub(
+            r"(?P<separator>^|(?<=[.!?])\s+)(?P<sentence>[^.!?\n]+)(?P<punctuation>[.!?]?)",
+            resolve_confirmed_sentence,
+            answer,
+        )
         reverse = re.compile(
             rf"(?i)\b(?:Bolaji|he)\s+has\s+(?:never|not)\s+used\s+{tool},?\s+and\s+"
             rf"(?:(?:he|Bolaji)\s+)?(?:has\s+no|lacks?)\s+"
@@ -991,6 +1028,16 @@ def constraint_failures(
             else answer
         )
         for clause in _claim_clauses(checked_answer):
+            record_subjects = rule.get("record_limit_subjects", ())
+            limit = (
+                _record_limit_subject(clause, record_subjects)
+                if record_subjects
+                else None
+            )
+            if limit and any(
+                re.fullmatch(_fold(label), limit, re.I) for label in record_subjects
+            ):
+                continue
             if rule.get("negation_pattern") and re.search(
                 rule["negation_pattern"], clause
             ):
