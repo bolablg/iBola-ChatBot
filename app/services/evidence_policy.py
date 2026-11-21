@@ -1506,19 +1506,26 @@ def _request_scope_failures(answer, documents, query):
         requested = bool(re.search(rule["query_pattern"], _fold(query)))
         explicit_subjects = set()
         for clause in _claim_clauses(_fold(answer)):
-            claim = re.search(rule["personal_support_pattern"], clause)
-            if not claim and re.search(r"(?i)\bproduction\b", clause):
-                claim = re.search(rule["personal_assertion_pattern"], clause)
+            claims = list(re.finditer(rule["personal_support_pattern"], clause))
+            if not claims and re.search(r"(?i)\bproduction\b", clause):
+                claims = list(re.finditer(rule["personal_assertion_pattern"], clause))
             uncertainty = _UNCERTAIN.search(clause)
-            if (
-                claim
-                and (not uncertainty or uncertainty.start() > claim.start())
-                and not re.search(
+            for claim in claims:
+                if (
+                    not uncertainty or uncertainty.start() > claim.start()
+                ) and not re.search(
                     r"(?i)\b(?:if|unless|whether|assuming|suppose|hypothetical|could|would|might)\b",
                     clause,
-                )
-            ):
-                explicit_subjects.update(re.findall(rule["subject_pattern"], clause))
+                ):
+                    groups = [
+                        claim.groupdict()[group] or ""
+                        for group in rule["support_subject_groups"]
+                        if group in claim.groupdict()
+                    ]
+                    for bound in groups or [claim.group()]:
+                        explicit_subjects.update(
+                            re.findall(rule["subject_pattern"], bound)
+                        )
         if not requested and not explicit_subjects:
             continue
         aliases = rule.get("subject_aliases", {})

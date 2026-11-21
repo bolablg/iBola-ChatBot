@@ -389,3 +389,21 @@ def test_public_reference_topic_comes_from_current_query_or_answer_never_rewrite
         restored, added = preserve_requested_evidence(answer, evidence, scope, "en")
         assert (rule in added) == expected
         assert ("https://" in restored) == expected
+
+
+def test_production_subject_is_bound_to_predicate_not_adjacent_inventory():
+    evidence = [
+        Document(
+            page_content="Bolaji personally operated AWS S3 in production. Tools: EC2."
+        )
+    ]
+    assert not constraint_failures(
+        "Bolaji personally operated AWS S3 in production alongside EC2.",
+        evidence,
+        "Tell me about his tools.",
+    )
+    assert "requested_personal_production_scope:aws ec2" in constraint_failures(
+        "Bolaji personally operated AWS EC2 in production.",
+        evidence,
+        "Tell me about his tools.",
+    )
