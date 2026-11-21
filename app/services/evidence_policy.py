@@ -876,8 +876,62 @@ def _has_detail_activation(answer, rule):
     return False
 
 
+def _resolve_answer_role_references(text, rule):
+    """Resolve one explicit reference for claim detection, never source proof."""
+    previous = ""
+    resolved = []
+    for block in re.split(r"(\n\s*\n)", text):
+        if re.fullmatch(r"\n\s*\n", block):
+            previous = ""
+            resolved.append(block)
+            continue
+        for sentence in re.split(r"((?<=[.!?])\s+)", block):
+            if not sentence.strip():
+                resolved.append(sentence)
+                continue
+            original = sentence
+            reference = re.match(rule["answer_role_reference_pattern"], sentence)
+            if (
+                previous
+                and reference
+                and re.match(
+                    rule["answer_role_reference_actor_pattern"],
+                    original[reference.end() :],
+                )
+                and not re.search(
+                    rule["answer_role_reference_exclude_pattern"], original
+                )
+                and not re.search(rule.get("other_actor_pattern", r"(?!)"), original)
+            ):
+                sentence = (
+                    "During his " + previous + " role" + sentence[reference.end() :]
+                )
+            resolved.append(sentence)
+            previous = ""
+            if (
+                not re.search(rule["answer_role_actor_pattern"], original)
+                or re.search(rule.get("other_actor_pattern", r"(?!)"), original)
+                or re.search(rule["answer_role_reference_exclude_pattern"], original)
+                or re.search(rule["answer_role_antecedent_exclude_pattern"], original)
+                or re.match(rule["scope_reset_pattern"], original)
+                or _UNCERTAIN.search(original)
+            ):
+                continue
+            roles = [
+                role
+                for clause in _claim_clauses(original)
+                for role in re.finditer(rule["role_pattern"], clause)
+                if re.search(rule["role_prefix_pattern"], clause[: role.start()])
+            ]
+            if roles:
+                previous = roles[-1].group()
+    return "".join(resolved)
+
+
 def _project_role_claims(text, rule, supporting=False):
     """Track explicit role scope for one project independently of other work."""
+    if not supporting and rule.get("answer_role_reference_pattern"):
+        text = _resolve_answer_role_references(_fold(text), rule)
     claims = set()
     active = heading = ""
     boundary = r"\n\s*\n"

@@ -1,4 +1,4 @@
-version: 39
+version: 40
 source_types:
   21_production_service_inventory.txt: candidate_confirmed
   20_owner_confirmed_production_scope.txt: candidate_confirmed
@@ -1267,6 +1267,11 @@ role_project_relations:
   support_exclude_pattern: '(?i)\b(?:if|hypothetical|fictional|would|could|never|not|unverified|unknown|undocumented)\b'
 - <<: *project_role_scope
   id: ec2_role_attribution_requires_direct_evidence
+  answer_role_reference_pattern: "(?i)^\\s*(?:[-*\u2022]\\s*)?(?:(?:during|within|in)\\s+(?:this|that|the same|his)\\s+(?:role|period|mandate|tenure)|at\\s+that\\s+time|(?:pendant|durant)\\s+(?:cette|ce|la meme)\\s+(?:periode|fonction|mandat))\\b"
+  answer_role_actor_pattern: (?i)\b(?:Bolaji|he|his|il|son|ses)\b
+  answer_role_reference_actor_pattern: (?i)^\s*[,,:-]?\s*(?:Bolaji|he|il)\b
+  answer_role_antecedent_exclude_pattern: (?i)\b(?:not|never|no|pas|jamais)\b
+  answer_role_reference_exclude_pattern: "(?i)\\b(?:if|unless|whether|assuming|suppose|would|could|might|hypothetical|fictional|vacancy)\\b|[\"\u201C\u201D\xAB\xBB]"
   description: Confirmed personal EC2 design and operation for Gozem Data Hub does not establish its role or work period. A CDC role confirmation, nearby heading, another service, or another actor cannot date the EC2 responsibility. Require the same clause to link Bolaji, EC2 production responsibility, Data Hub, and the claimed role. Keep confirmed EC2 responsibility separately undated when its role is unknown.
   project_pattern: '(?i)\b(?:AWS\s+)?EC2\b'
   claim_sentence_scope: true

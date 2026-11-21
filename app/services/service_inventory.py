@@ -105,8 +105,18 @@ def inventory_followup(state, documents, language):
                 re.I,
             ):
                 continue
+            if re.search(r"(?i)\b(?:another|colleague|someone else)\b", clause):
+                continue
+            affirmative_clause = re.sub(
+                r"(?i)^\s*(?:Additionally|Also|In addition)\s*,?\s+", "", clause
+            )
+            affirmative_clause = re.sub(
+                r"(?i)^\s*(?:At|For|Within)\s+[^,;.!?\n]{1,80},\s*(?=(?:he|Bolaji)\b)",
+                "",
+                affirmative_clause,
+            )
             matches = set()
-            residue = clause
+            residue = affirmative_clause
             for name in names:
                 alias = re.escape(name)
                 if name.startswith("AWS "):
@@ -114,13 +124,13 @@ def inventory_followup(state, documents, language):
                 elif name.startswith("Apache "):
                     alias = r"(?:Apache\s+)?" + re.escape(name[7:])
                 pattern = r"\b" + alias + r"\b"
-                if re.search(pattern, clause, re.I):
+                if re.search(pattern, affirmative_clause, re.I):
                     matches.add(name)
                     residue = re.sub(pattern, "", residue, flags=re.I)
             affirmative = re.search(
-                r"^\s*(?:[-*•]\s*)?(?:Bolaji|he|his (?:hands-on )?production scope)\s+(?:(?:has|personally|also|designed|and|hands-on)\s+){0,5}(?:designed|operated|uses?|used|managed|built|deployed|covers|includes)\b|"
+                r"^\s*(?:[-*•]\s*)?(?:Bolaji|he|his (?:hands-on )?production scope)\s+(?:(?:has|personally|also|designed|and|hands-on)\s+){0,5}(?:designed|operated|set\s+up|uses?|used|managed|built|deployed|covers|includes)\b|"
                 r"^\s*(?:(?:his|the)\s+)?(?:(?:confirmed|documented|production|core|operational|relevant|data|and|AWS|GCP)\s+)*(?:service inventory|inventory|services)\s*(?::|(?:also\s+)?(?:includes?\b|covers\b|spans\b))",
-                clause,
+                affirmative_clause,
                 re.I,
             )
             plain_list = not re.sub(
