@@ -407,3 +407,66 @@ def test_production_subject_is_bound_to_predicate_not_adjacent_inventory():
         evidence,
         "Tell me about his tools.",
     )
+
+
+OBSERVED_QUESTION = "You cited an 88% rider match rate. Is there evidence that the pipeline caused an improvement, with a baseline or comparison, or is that an observed event metric?"
+
+
+def test_observational_metric_question_does_not_inherit_previous_operational_gaps():
+    history = [
+        (
+            "How did he handle retries, duplicate events and late-arriving GPS records?",
+            "No retry details documented.",
+        )
+    ]
+    state = {
+        "original_query": OBSERVED_QUESTION,
+        "query": "Synthetic rewrite about retry handling",
+        "chat_history": history,
+    }
+    assert user_answer_scope(state) == _verification_scope(state) == OBSERVED_QUESTION
+
+
+@pytest.mark.parametrize(
+    "latest",
+    [
+        OBSERVED_QUESTION,
+        "What other services?",
+        "What about that pipeline?",
+        "What about that framework?",
+    ],
+)
+def test_generation_receives_only_needed_conversational_coverage(latest):
+    prior_user = "Which documented projects and services did he operate?"
+    prior_answer = "Already covered BigQuery and Airflow."
+    state = {
+        "original_query": latest,
+        "query": "Synthetic search hint",
+        "chat_history": [(prior_user, prior_answer)],
+        "graded_documents": [
+            Document(
+                page_content="A retrieved project record.",
+                metadata={"source": "synthetic.txt"},
+            )
+        ],
+        "agent_type": "professional",
+        "user_language": "en",
+    }
+    llm = Mock()
+    llm.with_structured_output.return_value.invoke.return_value = GeneratedAnswer(
+        answer="A source-bound answer."
+    )
+    prompt = Mock(wraps=GENERATE_PROMPT)
+    with (
+        patch("app.graph.nodes._get_hybrid_search", return_value=Mock(documents=[])),
+        patch("app.graph.nodes._get_llm", return_value=llm),
+        patch("app.graph.nodes.GENERATE_PROMPT", prompt),
+    ):
+        generate_node(state)
+    assert prompt.format_messages.call_count == 1
+    args = prompt.format_messages.call_args.kwargs
+    if latest == OBSERVED_QUESTION:
+        assert args["query"] == latest and args["chat_history"] == "(none)"
+    else:
+        assert prior_user in args["query"]
+        assert prior_answer in args["chat_history"]

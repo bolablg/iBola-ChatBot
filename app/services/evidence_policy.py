@@ -1743,6 +1743,13 @@ def user_answer_scope(state):
     reference_text = re.sub(
         r"(?i)^\s*(?:is it true that|est[- ]il vrai que)\s+", "", original
     )
+    # A complementizer or classification does not introduce a prior subject:
+    # "evidence that the pipeline ..." and "is that an observed metric?".
+    reference_text = re.sub(
+        r"(?i)\bthat(?=\s+(?:the|a|an|he|she|they|Bolaji|it|there|you)\b)",
+        "",
+        reference_text,
+    )
     referential = re.search(
         r"(?i)\b(?:those|these|that|this|it|them|other|others|ces|ceux|celles|cela|ca|autres)\b",
         reference_text,

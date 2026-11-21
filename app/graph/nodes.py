@@ -1337,9 +1337,10 @@ def generate_node(state: dict) -> dict:
     else:
         context = "(No relevant context found.)"
 
-    # Format chat history
+    # Include conversational coverage only when the current user request needs it.
     history_str = ""
-    if chat_history:
+    original = state.get("original_query") or query
+    if chat_history and scope != original:
         history_str = "\n".join(
             f"Human: {h[0]}\nAssistant: {h[1]}" for h in chat_history[-5:]
         )
