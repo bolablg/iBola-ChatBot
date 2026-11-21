@@ -26,11 +26,11 @@ PROMPT_VERSIONS = {
     "condense": "1.1",
     "batch_grade": "2.3",
     "rewrite": "2.1",
-    "generate_professional": "3.20",
+    "generate_professional": "3.21",
     "generate_education": "3.6",
     "generate_learning": "3.6",
     "verify_grounding": "2.16",
-    "repair_grounding": "1.7",
+    "repair_grounding": "1.8",
     "upper_bound_clarification": "1.0",
     "skills_completeness_clarification": "1.0",
     "insufficient_evidence": "1.1",
@@ -198,7 +198,9 @@ _TOOL_STATUS_RULE = (
     "separately from missing evidence of personal production deployment or a named "
     "project. Never transfer one tool's status to another. When reporting confirmed "
     "non-use, preserve the exact supporting same-tool statement from the retrieved "
-    "evidence.\n"
+    "evidence. When service project scopes differ, use a separate bullet per "
+    "service. Confirmed production responsibility remains reportable when its "
+    "employer or project is unknown; keep that unknown local to the service.\n"
 )
 
 _LANGUAGE_RULE = (
@@ -510,7 +512,9 @@ REPAIR_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
             "about. Keep each project's employer and responsibilities separate. "
             "Preserve each requested growth stage, hiring status versus actual role title, "
             "and metrics for every requested system. A tool inventory is not "
-            "personal operation; attach every service to its own project evidence. "
+            "personal operation. State documented personal production responsibility "
+            "even when its employer or named project is unknown. Keep that unknown "
+            "local to the service, using a separate bullet when project scopes differ. "
             "For a single strongest-example request, keep one coherent documented "
             "implementation and omit unrequested examples or other-tool caveats. "
             "Attach a role or period only to the project that its evidence dates. "
