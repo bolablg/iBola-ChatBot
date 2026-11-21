@@ -343,6 +343,16 @@ def confirmed_non_use(documents):
     return subjects
 
 
+def _nominal_absence_pattern(subject):
+    """One exact-tool nominal absence grammar shared by experience checks."""
+    tool = re.escape(subject)
+    return (
+        rf"(?:an?\s+)?(?:(?:explicit|confirmed|owner[ -]confirmed)\s+){{0,2}}"
+        rf"(?:absence|lack|manque)\s+(?:of\s+|de\s+)?"
+        rf"(?:{tool}\s+experience|experience\s+(?:with|in|avec|en)\s+{tool})"
+    )
+
+
 def experience_resolution_failures(answer, documents, subjects):
     """Require a confirmed absence when proven, otherwise an evidence limit."""
     confirmed = {s.casefold() for s in confirmed_non_use(documents)}
@@ -357,12 +367,28 @@ def experience_resolution_failures(answer, documents, subjects):
             rf"(?i)(?:no|aucune)\s+(?:(?:prior|professional|production)\s+)?{tool}\s+experience|"
             rf"(?:no\s+|aucune\s+|pas\s+d')experience\s+(?:(?:with|of|avec|en|de)\s+)?{tool}|"
             rf"(?:never|not)\s+(?:used|worked with)\s+{tool}|"
-            rf"(?:jamais|pas)\s+utilise\s+{tool}|"
-            rf"absence of experience\s+(?:with|in)\s+{tool}"
+            rf"(?:jamais|pas)\s+utilise\s+{tool}"
+        )
+        nominal = re.compile(
+            r"(?i)\b(?:Bolaji|he|il)\s+(?:has|had|a)\s+"
+            + _nominal_absence_pattern(subject)
+            + r"\s*$"
         )
         if not any(
-            negative.search(clause) and not _UNCERTAIN.search(clause)
-            for clause in _claim_clauses(_fold(answer))
+            not _UNCERTAIN.search(clause)
+            and (
+                negative.search(clause)
+                or (
+                    nominal.search(clause)
+                    and not re.search(
+                        r"(?i)\b(?:if|unless|whether|assuming|suppose|would|could|might|hypothetical)\b|[\"«»]",
+                        clause,
+                    )
+                )
+            )
+            for clause in _claim_clauses(
+                _fold(_normalize_non_use_reference(answer, documents))
+            )
         ):
             missing.append(subject)
     return missing
@@ -411,11 +437,8 @@ def confirmed_use_conflicts(answer, documents):
                         if match.groupdict().get(key)
                     ]
                     if match.groupdict().get("experience_before") and re.fullmatch(
-                        rf"(?i)(?:Bolaji|he|il)\s+(?:has|had|a)\s+(?:an?\s+)?"
-                        rf"(?:(?:explicit|confirmed|owner[ -]confirmed)\s+){{0,2}}"
-                        rf"(?:absence|lack|manque)\s+(?:of\s+|de\s+)?"
-                        rf"(?:{re.escape(subject)}\s+experience|experience\s+"
-                        rf"(?:with|in|avec|en)\s+{re.escape(subject)})",
+                        r"(?i)(?:Bolaji|he|il)\s+(?:has|had|a)\s+"
+                        + _nominal_absence_pattern(subject),
                         match.group(),
                     ):
                         continue
@@ -457,8 +480,8 @@ def _normalize_non_use_reference(answer, documents):
         absence = (
             rf"(?:no\s+{tool}\s+experience(?:\s+at\s+all)?|"
             rf"no\s+experience\s+(?:with|in)\s+{tool}|"
-            rf"(?:an?\s+)?(?:(?:explicit|confirmed|owner[ -]confirmed)\s+){{0,2}}"
-            rf"absence\s+of\s+experience\s+(?:with|in)\s+{tool})"
+            + _nominal_absence_pattern(subject)
+            + r")"
         )
         pattern = re.compile(
             rf"(?i)\b(?:Bolaji|he)\s+has\s+{absence},?\s+and\s+"
