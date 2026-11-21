@@ -125,6 +125,30 @@ def _is_transient_llm_error(exc: Exception) -> bool:
     )
 
 
+def _verifier_failure_category(exc: Exception) -> str:
+    """Bounded diagnostics, without exposing provider messages or evidence."""
+    from json import JSONDecodeError
+
+    from pydantic import ValidationError
+
+    if (
+        isinstance(exc, RuntimeError)
+        and str(exc) == "Grounding provider call budget exhausted"
+    ):
+        return "call_budget_exhausted"
+    if _is_transient_llm_error(exc):
+        return "provider_unavailable"
+    if isinstance(exc, TimeoutError):
+        return "timeout"
+    if isinstance(exc, ValidationError):
+        return "schema_validation_failed"
+    if isinstance(exc, (TypeError, JSONDecodeError)):
+        return "invalid_structured_output"
+    if isinstance(exc, ValueError):
+        return "invalid_request_or_configuration"
+    return "verifier_unavailable"
+
+
 def _invoke_with_retry(call, operation: str):
     """Invoke a Gemini call with bounded retries for transient failures."""
     for attempt in range(_LLM_MAX_RETRIES + 1):
@@ -1668,12 +1692,16 @@ def _verify_grounding_llm_node(state: dict) -> dict:
             )
         )
     except Exception as exc:
-        logger.warning("Grounding verifier error (answer withheld): %s", exc)
+        logger.warning(
+            "Grounding verifier error (answer withheld): %s",
+            _verifier_failure_category(exc),
+        )
         steps.append(
             ReasoningStep(
                 node="verify_grounding",
                 action="warning",
-                detail="structured verifier unavailable",
+                detail="structured verifier unavailable: "
+                + _verifier_failure_category(exc),
             )
         )
         return {

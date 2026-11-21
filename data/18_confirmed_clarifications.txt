@@ -25,3 +25,11 @@ Bolaji personally used Vertex AI to explore feasibility and prototype possible s
 MENTORING ENGINEERS
 
 Bolaji mentors younger engineers through hands-on technical work. He coached a graduate data-engineering intern with live coding, architecture discussions, independent tasks, and explanatory code review until the intern could operate workflows autonomously after approximately six months. Separately, he used contribution documentation, live debugging, testing, and CI/CD guidance to onboard experienced engineers to the Data Hub; those engineers deployed two microapplications. The intern's mentoring duration and junior status do not apply to the experienced engineers.
+
+---
+
+OWNER-CONFIRMED GOZEM MONEY FRAUD METRIC ATTRIBUTION
+
+Owner clarification received November 20, 2026 (America/Chicago). This records the confirmation date, not the dates of the underlying work. For Gozem Money, the approximately 150 incidents per month and the discovery of fraud worth over 25M XOF came from micro-batch processing, rules, and EDA. ML-based fraud screening did not contribute to either of those results. The monthly period describes the incident rate; the fraud discovery value is not an established monthly total.
+
+The separate ML-based fraud screening and payment automation record reports 7x faster field-agent payment processing. That is a separate project result, not evidence that ML contributed to the two micro-batch fraud-monitoring results or that ML alone caused the payment improvement. EDA is preserved as the owner's term without adding an expansion.

@@ -1,4 +1,4 @@
-version: 23
+version: 24
 source_types:
   21_production_service_inventory.txt: candidate_confirmed
   20_owner_confirmed_production_scope.txt: candidate_confirmed
@@ -172,6 +172,27 @@ metric_constraints:
   - (?i)(?:six|6)\s+(?:AI\s+)?use cases\s+(?:were|are|have been)\s+(?:implemented|completed|deployed)
   - '(?i)(?:completed|deployed|delivered)\s+(?:all\s+)?(?:six|6)\s+(?:(?:AI|strategic|high.priority)\s+)?(?:use cases|initiatives|implementations)'
 facets:
+- id: confirmed_fraud_metric_attribution
+  query_pattern: '(?i)fraud|fraude|Gozem Money|\b150\s+(?:incidents?|cas)\b|\b25\s*(?:M|million\w*)\s*(?:XOF|CFA|FCFA)\b|\bEDA\b'
+  terms: Gozem Money fraud micro-batch rules EDA incidents discovery ML contribution
+  sources: [18_confirmed_clarifications.txt]
+  section_pattern: '^OWNER-CONFIRMED GOZEM MONEY FRAUD METRIC ATTRIBUTION$'
+  support_pattern: 'ML-based fraud screening did not contribute to either of those results'
+  retain_for_query: true
+- id: ebanking_fraud_monitoring_results
+  query_pattern: '(?i)fraud|fraude|Gozem Money|\b150\s+(?:incidents?|cas)\b|\b25\s*(?:M|million\w*)\s*(?:XOF|CFA|FCFA)\b|\bEDA\b'
+  terms: Gozem Money micro-batch rules EDA 150 incidents month 25M XOF
+  sources: [13_gozem_internal_projects.txt]
+  section_pattern: '^EBANKING ANALYTICS & REPORTING INFRASTRUCTURE'
+  support_pattern: 'micro-batch processing pipeline'
+  retain_for_query: true
+- id: separate_ml_payment_result
+  query_pattern: '(?is)(?=.*(?:fraud|fraude|ML|machine.learning))(?=.*(?:attribut|contribut|compar|separ|payment|paiement|7x))'
+  terms: ML-based fraud screening payment automation field-agent payments 7x faster
+  sources: [13_gozem_internal_projects.txt]
+  section_pattern: '^ML-BASED FRAUD SCREENING & PAYMENT AUTOMATION$'
+  support_pattern: 'field-agent payment processing became 7x faster'
+  retain_for_query: true
 - id: platform_definition_adoption_scope
   query_pattern: '(?i)(?:what(?: is|\x27s)|define|describe|qu.est.ce\s+que|c.est quoi|presente|decris)\s+(?:(?:the|le|la)\s+)?(?:Gozem\s+)?Data\s+Hub\b'
   terms: Gozem Data Hub central platform adoption people operational analytics governance
@@ -424,6 +445,32 @@ section_types:
   evidence_type: interpretation
   include_if_query_matches: (?i)\b(?:dbt|power bi|dax|dagster|snowflake|redshift)\b
 metric_scopes:
+- source: 18_confirmed_clarifications.txt
+  section_pattern: '^OWNER-CONFIRMED GOZEM MONEY FRAUD METRIC ATTRIBUTION$'
+  fields:
+    id: gozem_money_fraud_monitoring
+    project: Gozem Money eBanking analytics and reporting infrastructure
+    methods: micro-batches, rules, and EDA
+    incident_rate: approximately 150 incidents per month
+    fraud_discovery_value: over 25M XOF, not an established monthly total
+    excluded_attribution: ML-based fraud screening did not contribute to either result
+    separate_result: the ML-screening and payment automation project reports 7x faster field-agent payment processing
+    provenance: owner confirmation received November 20, 2026, not a project or measurement date
+- source: 13_gozem_internal_projects.txt
+  section_pattern: '^EBANKING ANALYTICS & REPORTING INFRASTRUCTURE'
+  fields:
+    id: gozem_money_fraud_monitoring
+    methods: micro-batches, rules, and EDA
+    incident_rate: approximately 150 incidents per month
+    fraud_discovery_value: over 25M XOF, not an established monthly total
+    excluded_attribution: ML-based fraud screening did not contribute to either result
+- source: 13_gozem_internal_projects.txt
+  section_pattern: '^ML-BASED FRAUD SCREENING & PAYMENT AUTOMATION$'
+  fields:
+    id: separate_ml_payment_automation
+    project: ML-based fraud screening and payment automation
+    result: field-agent payment processing became 7x faster
+    not_established: ML alone caused the improvement; contribution to the 150 incidents/month or over 25M XOF fraud discovery
 - source: 90_website_canon_llms_full.txt
   section_pattern: '(?i)(?:FinOps and analytical serving|Data platform modernization and FinOps transformation)'
   fields:
@@ -922,10 +969,25 @@ required_details:
       scope_label: mandat Head of Data, octobre 2022 - mars 2025
       pattern: L\x27adoption de Metabase a atteint plus de 12 utilisateurs managers actifs[^\n]*centrale\.
 
+- id: requested_observed_event_match_rate_missing
+  description: Retain a specifically requested rider match observation with its event and peak-day measurement context. The record is observational and does not establish causal improvement or a match-rate baseline.
+  sources: [13_gozem_internal_projects.txt]
+  section_pattern: '(?i)^REAL-TIME MARKET MONITORING SYSTEM'
+  support_pattern: 'on the peak day of Vodun Days, ride requests[^\n]+rider match rate was [0-9]+%'
+  query_pattern: '(?is)(?=.*rider)(?=.*match)(?=.*(?:caus|baseline|comparison|observ))'
+  answer_pattern: '(?is)(?=.*88\s*(?:%|percent))(?=.*(?:rider|match))(?=.*Vodun Days)(?=.*peak day)(?=.*(?:observ|not.{0,25}causal|no.{0,25}causal))'
+  restore_quote:
+    language: en
+    label: Observed event metric
+    render: sentence
+    pattern: 'on the peak day of Vodun Days, ride requests[^.\n]+rider match rate was (?P<value>[0-9]+)%\.'
+    value_group: value
+    expected_value: '88'
+
 request_scopes:
 - id: requested_personal_production_scope
   description: The question requests personal production design or operation. An unqualified experience list inherits that setting. For every mentioned tool, provide direct actor/tool/setting proof, an explicitly labeled inventory or project-stack fact, or a locally scoped statement that personal production operation remains unverified. Project leadership does not establish operation of every service.
-  query_pattern: '(?is)(?=.*\bproduction\b)(?=.*\b(?:personally|personal|personnellement|personnel\w*)\b)'
+  query_pattern: '(?is)(?=.*\bproduction\b)(?=.*\b(?:personally|personal|personnellement|personnel\w*|operational ownership)\b)'
   subject_pattern: '(?i)\b(?:AWS EC2|AWS S3|EC2|S3|Pub/Sub|Dataflow|Apache NiFi|NiFi|Spark|Lakeflow)\b'
   record_limit_subjects: [Spark Structured Streaming, Apache Spark Structured Streaming]
   record_limit_modifiers: ['\bpersonal production experience\b', '\bproduction experience\b', '\bCDC event counts\b', '\bend-to-end latency\b', '\bavailability\b', '\bon-call responsibility for\b']
@@ -959,6 +1021,8 @@ request_scopes:
   project_predicate_separator_pattern: '(?i)\s+and\s+(?=(?:(?:he|Bolaji)\s+)?personally\s+(?:designed|operated|used|deployed)\b)'
   shared_location_prefix_pattern: '(?i)^\s*(?:at|for|within|chez|dans)\s+[^,;.!?\n]{1,80},\s*'
   unknown_project_pattern: '(?i)(?:employer|project)[^.!?;\n]{0,85}(?:not\s+(?:specified|documented)|unknown)'
+  unknown_project_qualification_pattern: '(?ix)(?:^|[,:(])\s*(?:(?:the|its|exact|specific|precise)\s+){0,2}(?:employer|project)(?:\s*(?:and|or|/)\s*(?:employer|project))?(?:\s+(?:for|of)\s+(?:(?:this|that|the|its)\s+(?:bucket|service)|(?:AWS\s+)?(?:S3|EC2|Pub/Sub|Dataflow|Spark|NiFi|Lakeflow)))?\s+(?:(?:is|are|remains?)\s+)?(?:not\s+(?:(?:currently|explicitly|yet)\s+)?(?:specified|documented|identified)|unknown|unspecified|undocumented)\s*$'
+  unknown_project_qualification_exclude_pattern: '(?i)\b(?:if|unless|whether|assuming|suppose|hypothetical|could|would|might)\b|\bnot\s+(?:unknown|unspecified|undocumented)\b'
   project_key: data_hub
   project_reference_pattern: '(?i)^(?:its\b|this (?:project|platform)\b|the (?:documented|published) stack\b)'
   project_anchor_pattern: '(?i)\b(?:Gozem\s+)?Data Hub\b'
@@ -1005,6 +1069,17 @@ role_project_relations:
   support_exclude_pattern: '(?i)\b(?:if|hypothetical|fictional|would|could|never|not|unverified|unknown|undocumented)\b'
 
 relationship_constraints:
+- id: fraud_metrics_exclude_ml_attribution
+  description: The approximately 150 incidents per month and over 25M XOF fraud discovery came from micro-batches, rules, and EDA. ML screening did not contribute to either result. Keep the separate 7x field-agent payment result in its own project scope.
+  binding_mode: predicate_attribution
+  subject_pattern: '(?i)\b(?:ML(?:[ -]based)?|machine[ -]learning|apprentissage automatique)\b(?:[ -]+fraud[ -]+screening)?'
+  other_subject_pattern: '(?i)\bmicro[ -]?batch\w*|\brule[ -]based\b|\brules?\b|\bEDA\b|\bregles\b'
+  clause_extra_predicates: '\b(?:reports?|reported|became|becomes|improved|achieved|delivered)\b'
+  predicate_pattern: '(?i)\b(?:surfaces?|surfaced|flags?|flagged|detects?|detected|identif(?:y|ies|ied)|discover(?:s|ed)?|produc(?:e|es|ed)|contribut(?:e|es|ed)|yield(?:s|ed)?|caus(?:e|es|ed)|result(?:s|ed)? in|responsible for|credited with|attribu\w*|contribu\w*|detecte\w*|signale\w*|identifie\w*)\b'
+  metric_pattern: '(?i)\b150\s+(?:incidents?|cases?|cas)\b|\b25\s*(?:M|million\w*)\s*(?:XOF|CFA|FCFA)\b'
+  reference_pattern: '(?i)^\s*(?:(?:it|they|this|that|the|these|those)\s*(?:systems?|models?|pipelines?|screening|approaches?)?\b|(?:did|does|do|has|have|had|was|were|is|are)\b|(?:surface|flag|detect|identify|discover|produce|contribute|yield|cause)\w*\b)'
+  subject_exclude_prefix_pattern: '(?i)(?:unlike|rather than|as opposed to|independent(?:ly)? from|separately from|no evidence (?:that|of))\s*$'
+  clause_separator_pattern: '(?i)\b(?:while|whereas|tandis que|alors que)\b'
 - id: cdc_migration_metrics_require_separate_scope
   description: The 10+ TB migration within a single quarter belongs to the earlier Global Data Analyst cloud infrastructure migration, not the MongoDB CDC pipeline. Keep CDC responsibility and migration measurements in separately attributed claims.
   binding_mode: local_cooccurrence
