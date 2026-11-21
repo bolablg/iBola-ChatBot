@@ -130,7 +130,12 @@ _DENIAL_WINDOW = 25
 
 def _confirmed_experience_limit(answer, target):
     """Evaluator-only recognition of a complete, named confirmation gap."""
-    prefix = r"(?:Similarly,\s+)?(?:he|Bolaji)\s+has\s+no confirmed personal production experience with\s+"
+    prefix = (
+        r"(?:(?:Similarly,\s+)?(?:he|Bolaji)\s+has\s+"
+        r"no confirmed personal production experience with\s+"
+        r"|There is no documented personal deployment or named project "
+        r"proving production experience with\s+)"
+    )
     normalized = " ".join(_accent_fold(answer).split())
     for sentence in normalized.split("."):
         sentence = " ".join(sentence.split())
@@ -645,6 +650,7 @@ def main():
     parser.add_argument("--model", help="override LLM_MODEL_NAME for the sweep")
     parser.add_argument("--judge-model", default=JUDGE_MODEL)
     parser.add_argument("--no-judge", action="store_true", help="fact checks only")
+    parser.add_argument("--report-path", type=Path, help="explicit report destination")
     parser.add_argument(
         "--accept",
         action="store_true",
@@ -703,6 +709,11 @@ def main():
 
     report = {
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "workflow": {
+            "run_id": os.environ.get("GITHUB_RUN_ID"),
+            "run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT"),
+            "sha": os.environ.get("GITHUB_SHA"),
+        },
         "answer_model": next(
             (
                 (r.get("provenance") or {}).get("model")
@@ -719,7 +730,10 @@ def main():
     }
 
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
-    report_path = REPORT_DIR / f"eval_{time.strftime('%Y%m%d_%H%M%S')}.json"
+    report_path = args.report_path or (
+        REPORT_DIR / f"eval_{time.strftime('%Y%m%d_%H%M%S')}.json"
+    )
+    report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text(json.dumps(report, indent=2, ensure_ascii=False))
 
     print("\n=== AGGREGATES ===")

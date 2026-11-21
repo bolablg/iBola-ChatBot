@@ -23,6 +23,7 @@ Usage:
 import argparse
 import json
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -37,6 +38,113 @@ def baseline_path_for(tags):
         suffix = "-".join(sorted(tags))
         return EVAL_DIR / f"accepted_baseline_{suffix}.json"
     return EVAL_DIR / "accepted_baseline.json"
+
+
+@dataclass(frozen=True)
+class GateFailure:
+    """A gate decision with a safe reason code and unchanged CLI explanation."""
+
+    code: str
+    message: str
+    case_id: str | None = None
+
+
+def evaluate_report(report, baseline):
+    """Return the same strict comparisons used by the CLI and notifications."""
+    base_agg = baseline["aggregates"]
+    gate = baseline.get("gate", {})
+    agg = report["aggregates"]
+
+    failures = []
+
+    if agg.get("judge_errors"):
+        failures.append(
+            GateFailure(
+                "judge_errors",
+                f"{agg['judge_errors']} question(s) were not judged successfully",
+            )
+        )
+
+    for row in report.get("results", []):
+        if "recruiter_regression" in row.get("tags", []):
+            if not row.get("fact_pass"):
+                failures.append(
+                    GateFailure(
+                        "recruiter_fact",
+                        f"recruiter regression failed: {row['id']}",
+                        row["id"],
+                    )
+                )
+            for dimension in ("accuracy", "faithfulness"):
+                score = (row.get("scores") or {}).get(dimension)
+                if not isinstance(score, (int, float)) or score < 8:
+                    failures.append(
+                        GateFailure(
+                            f"recruiter_{dimension}",
+                            f"recruiter regression {row['id']} {dimension}: {score}, requires >= 8",
+                            row["id"],
+                        )
+                    )
+
+    if agg.get("errors"):
+        failures.append(
+            GateFailure(
+                "hard_errors",
+                f"{agg['errors']} question(s) hit hard errors; a gate must not "
+                "average over crashes",
+            )
+        )
+
+    fact_min = gate.get("canonical_fact_accuracy_min")
+    fact_now = agg.get("canonical_fact_accuracy")
+    if fact_min is not None and fact_now is not None and fact_now < fact_min:
+        failures.append(
+            GateFailure(
+                "fact_accuracy",
+                f"canonical_fact_accuracy {fact_now} < gate minimum {fact_min}",
+            )
+        )
+
+    max_drop = gate.get("max_aggregate_drop", 2.0)
+    for dim in JUDGED_DIMENSIONS:
+        base_val, now_val = base_agg.get(dim), agg.get(dim)
+        if base_val is not None and now_val is None:
+            failures.append(
+                GateFailure(
+                    "score_missing", f"{dim} is missing although the baseline is judged"
+                )
+            )
+            continue
+        if base_val is None:
+            continue
+        if base_val - now_val > max_drop:
+            failures.append(
+                GateFailure(
+                    "score_drop",
+                    f"{dim} dropped {round(base_val - now_val, 2)} points "
+                    f"({base_val} -> {now_val}), max allowed {max_drop}",
+                )
+            )
+
+    p95_max = gate.get("latency_p95_max_s")
+    p95_now = agg.get("latency_p95_s")
+    if p95_max is not None and p95_now is not None and p95_now > p95_max:
+        failures.append(
+            GateFailure(
+                "latency_p95", f"latency_p95_s {p95_now} > gate maximum {p95_max}"
+            )
+        )
+
+    ft_max = gate.get("first_token_p95_max_s")
+    ft_now = agg.get("first_token_p95_s")
+    if ft_max is not None and ft_now is not None and ft_now > ft_max:
+        failures.append(
+            GateFailure(
+                "first_token_p95", f"first_token_p95_s {ft_now} > gate maximum {ft_max}"
+            )
+        )
+
+    return failures
 
 
 def main():
@@ -70,67 +178,19 @@ def main():
         return 0
 
     baseline = json.loads(baseline_path.read_text())
+    agg = report["aggregates"]
     base_agg = baseline["aggregates"]
     gate = baseline.get("gate", {})
-    agg = report["aggregates"]
-
-    failures = []
-
-    if agg.get("judge_errors"):
-        failures.append(
-            f"{agg['judge_errors']} question(s) were not judged successfully"
-        )
-
-    for row in report.get("results", []):
-        if "recruiter_regression" in row.get("tags", []):
-            if not row.get("fact_pass"):
-                failures.append(f"recruiter regression failed: {row['id']}")
-            for dimension in ("accuracy", "faithfulness"):
-                score = (row.get("scores") or {}).get(dimension)
-                if not isinstance(score, (int, float)) or score < 8:
-                    failures.append(
-                        f"recruiter regression {row['id']} {dimension}: {score}, requires >= 8"
-                    )
-
-    if agg.get("errors"):
-        failures.append(
-            f"{agg['errors']} question(s) hit hard errors; a gate must not "
-            "average over crashes"
-        )
-
     fact_min = gate.get("canonical_fact_accuracy_min")
     fact_now = agg.get("canonical_fact_accuracy")
-    if fact_min is not None and fact_now is not None and fact_now < fact_min:
-        failures.append(f"canonical_fact_accuracy {fact_now} < gate minimum {fact_min}")
-
-    max_drop = gate.get("max_aggregate_drop", 2.0)
-    for dim in JUDGED_DIMENSIONS:
-        base_val, now_val = base_agg.get(dim), agg.get(dim)
-        if base_val is not None and now_val is None:
-            failures.append(f"{dim} is missing although the baseline is judged")
-            continue
-        if base_val is None:
-            continue
-        if base_val - now_val > max_drop:
-            failures.append(
-                f"{dim} dropped {round(base_val - now_val, 2)} points "
-                f"({base_val} -> {now_val}), max allowed {max_drop}"
-            )
-
     p95_max = gate.get("latency_p95_max_s")
     p95_now = agg.get("latency_p95_s")
-    if p95_max is not None and p95_now is not None and p95_now > p95_max:
-        failures.append(f"latency_p95_s {p95_now} > gate maximum {p95_max}")
-
-    ft_max = gate.get("first_token_p95_max_s")
-    ft_now = agg.get("first_token_p95_s")
-    if ft_max is not None and ft_now is not None and ft_now > ft_max:
-        failures.append(f"first_token_p95_s {ft_now} > gate maximum {ft_max}")
+    failures = evaluate_report(report, baseline)
 
     if failures:
         print(f"EVAL GATE FAILED (baseline: {baseline_path.name}):")
         for failure in failures:
-            print(f"  - {failure}")
+            print(f"  - {failure.message}")
         return 1
 
     print(f"Eval gate passed (baseline: {baseline_path.name}).")
