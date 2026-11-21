@@ -142,7 +142,7 @@ def _confirmed_experience_limit(answer, target):
         deployment_limit = _re_mod.fullmatch(
             r"(?:There is )?no documented (?:(?:personal|direct) )?production "
             r"experience (?:deploying|using|with) (?P<subject>[^,.;]+?)"
-            r"(?:,\s+(?:though|whereas|while)\s+(?P<contrast>[^.;]+))?",
+            r"(?:,\s+(?:though|although|whereas|while)\s+(?P<contrast>[^.;]+))?",
             sentence,
             _re_mod.I,
         )
@@ -160,7 +160,9 @@ def _confirmed_experience_limit(answer, target):
             if contrast:
                 other = _re_mod.fullmatch(
                     r"(?P<tool>[a-z][a-z /-]{0,60}?) (?:is|was|has been) documented "
-                    r"(?:for|at|in) [^,;:]+",
+                    r"(?:for|at|in) (?P<documented_scope>[^,;:]+)|"
+                    r"(?:he|Bolaji) (?:used|deployed|operated|implemented) "
+                    r"(?P<active_tool>[a-z][a-z /-]{0,60}?) (?:at|in|for) (?P<active_scope>[^,;:]+)",
                     contrast,
                     _re_mod.I,
                 )
@@ -172,13 +174,27 @@ def _confirmed_experience_limit(answer, target):
                     continue
                 from app.services.evidence_policy import policy_data
 
+                scope = other.group("documented_scope") or other.group("active_scope")
+                if _re_mod.search(
+                    r"\b(?:then|after|before|to|where|which|because|since|as|that|it|he|she|they|Bolaji|is|was|are|were|has|have|had|"
+                    r"use[sd]?|using|deployed|deploying|operated|operating|designed|designing|"
+                    r"built|building|implemented|implementing|managed|managing|ran|runs?)\b",
+                    scope,
+                    _re_mod.I,
+                ):
+                    continue
                 tools = next(
                     rule["subject_pattern"]
                     for rule in policy_data()["assertion_rules"]
                     if rule["id"] == "deficiency_requires_same_tool_evidence"
                 )
+                if _re_mod.search(tools, scope, _re_mod.I):
+                    continue
                 other_tool = _re_mod.sub(
-                    r"^Apache\s+", "", other.group("tool"), flags=_re_mod.I
+                    r"^Apache\s+",
+                    "",
+                    other.group("tool") or other.group("active_tool"),
+                    flags=_re_mod.I,
                 )
                 if not _re_mod.fullmatch(tools, other_tool):
                     continue
