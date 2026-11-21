@@ -26,17 +26,20 @@ PROMPT_VERSIONS = {
     "condense": "1.1",
     "batch_grade": "2.3",
     "rewrite": "2.1",
-    "generate_professional": "3.20",
+    "generate_professional": "3.21",
     "generate_education": "3.6",
     "generate_learning": "3.6",
-    "verify_grounding": "2.16",
-    "repair_grounding": "1.7",
+    "verify_grounding": "2.17",
+    "repair_grounding": "1.9",
     "upper_bound_clarification": "1.0",
     "skills_completeness_clarification": "1.0",
     "insufficient_evidence": "1.1",
     "disputed_evidence": "1.0",
     "project_identity": "1.0",
-    "evidence_detail": "1.1",
+    "evidence_detail": "1.2",
+    "confirmed_non_use": "1.0",
+    "experience_status": "1.0",
+    "record_scope": "1.0",
     "documentation_limit": "1.0",
     "personal_production_limit": "1.1",
     "degree_clarification": "1.0",
@@ -198,7 +201,9 @@ _TOOL_STATUS_RULE = (
     "separately from missing evidence of personal production deployment or a named "
     "project. Never transfer one tool's status to another. When reporting confirmed "
     "non-use, preserve the exact supporting same-tool statement from the retrieved "
-    "evidence.\n"
+    "evidence. When service project scopes differ, use a separate bullet per "
+    "service. Confirmed production responsibility remains reportable when its "
+    "employer or project is unknown; keep that unknown local to the service.\n"
 )
 
 _LANGUAGE_RULE = (
@@ -322,8 +327,23 @@ PERSONAL_PRODUCTION_LIMIT_TEMPLATES = {
 }
 
 EVIDENCE_DETAIL_TEMPLATES = {
-    "en": '{label} ({section}{scope}): "{quote}"',
-    "fr": "{label} ({section}{scope}) : « {quote} »",
+    "en": "\n\n{quote}",
+    "fr": "\n\n{quote}",
+}
+
+CONFIRMED_NON_USE_TEMPLATES = {
+    "en": "Bolaji has no experience with {tool}.",
+    "fr": "Bolaji n'a aucune expérience avec {tool}.",
+}
+
+EXPERIENCE_RECORD_LIMIT_TEMPLATES = {
+    "en": "The retrieved evidence does not establish personal production deployment of {tool} or a named project proving it.",
+    "fr": "Le dossier récupéré ne documente pas de déploiement personnel de {tool} en production ni de projet nommé qui le démontre.",
+}
+
+RECORD_SCOPE_TEMPLATES = {
+    "en": "The retrieved evidence does not establish {detail}.",
+    "fr": "Le dossier récupéré ne documente pas {detail}.",
 }
 
 _MULTIPART_RULE = (
@@ -510,7 +530,9 @@ REPAIR_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
             "about. Keep each project's employer and responsibilities separate. "
             "Preserve each requested growth stage, hiring status versus actual role title, "
             "and metrics for every requested system. A tool inventory is not "
-            "personal operation; attach every service to its own project evidence. "
+            "personal operation. State documented personal production responsibility "
+            "even when its employer or named project is unknown. Keep that unknown "
+            "local to the service, using a separate bullet when project scopes differ. "
             "For a single strongest-example request, keep one coherent documented "
             "implementation and omit unrequested examples or other-tool caveats. "
             "Attach a role or period only to the project that its evidence dates. "
@@ -525,11 +547,13 @@ REPAIR_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
         ),
         (
             "human",
+            "Conversation context (reference resolution only, not profile evidence or a request "
+            "to answer earlier questions):\n{conversation_context}\n\n"
             "Question: {question}\nSelected evidence:\n{context}\n"
             "Rejected draft:\n{answer}\nFailures to repair:\n{constraint_failures}",
         ),
     ]
-)
+).partial(conversation_context="(none)")
 
 VERIFY_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
     [
@@ -637,12 +661,14 @@ VERIFY_GROUNDING_PROMPT = ChatPromptTemplate.from_messages(
         ),
         (
             "human",
+            "Conversation context (reference resolution only, not profile evidence or a request "
+            "to answer earlier questions):\n{conversation_context}\n\n"
             "Question asked:\n{question}\n\nContext:\n{context}\n\n"
             "Deterministic evidence constraints violated by this draft:\n"
             "{constraint_failures}\n\nAnswer to verify:\n{answer}",
         ),
     ]
-)
+).partial(conversation_context="(none)")
 
 # Used only after a provider returns malformed structured output. Keeping this
 # instruction in the registry makes the recovery call traceable and prevents
@@ -719,6 +745,9 @@ _ALL_PROMPTS = [
     *DEGREE_COMPLETENESS_CLARIFICATION_TEMPLATES.values(),
     *PROJECT_IDENTITY_TEMPLATES.values(),
     *EVIDENCE_DETAIL_TEMPLATES.values(),
+    *CONFIRMED_NON_USE_TEMPLATES.values(),
+    *EXPERIENCE_RECORD_LIMIT_TEMPLATES.values(),
+    *RECORD_SCOPE_TEMPLATES.values(),
     *DOCUMENTATION_LIMIT_TEMPLATES.values(),
     *PERSONAL_PRODUCTION_LIMIT_TEMPLATES.values(),
     *INSUFFICIENT_EVIDENCE_ANSWERS.values(),

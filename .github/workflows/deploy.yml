@@ -465,11 +465,11 @@ jobs:
           -H 'X-Ibola-No-Notifications: 1' \
               -d '{"user_input":"What is Bolaji latest role?","session_id":"weekly-warmup","user_language":"en"}' || true
           done
-          python scripts/run_eval.py --tags smoke --base-url "$PROD_URL" --concurrency 4 --report-path local/eval_reports/production-smoke.json
+          python scripts/run_eval.py --tags smoke recruiter_regression --base-url "$PROD_URL" --concurrency 2 --http-min-start-interval 2.5 --report-path local/eval_reports/production-smoke.json
 
       - name: Gate production smoke against accepted baseline
         id: quality_gate
-        run: python scripts/eval_gate.py --report local/eval_reports/production-smoke.json --strict
+        run: python scripts/eval_gate.py --report local/eval_reports/production-smoke.json --strict --baseline eval/accepted_baseline_smoke.json
 
       - name: Upload production smoke eval report
         if: always()
@@ -629,8 +629,8 @@ jobs:
           -H 'X-Ibola-No-Notifications: 1' \
               -d '{"user_input":"What is Bolaji latest role?","session_id":"warmup","user_language":"en"}' || true
           done
-          python scripts/run_eval.py --tags smoke --base-url "$CANARY_URL" --concurrency 4 --report-path local/eval_reports/canary.json
-          python scripts/eval_gate.py --report local/eval_reports/canary.json --strict
+          python scripts/run_eval.py --tags smoke recruiter_regression --base-url "$CANARY_URL" --concurrency 2 --http-min-start-interval 2.5 --report-path local/eval_reports/canary.json
+          python scripts/eval_gate.py --report local/eval_reports/canary.json --strict --baseline eval/accepted_baseline_smoke.json
 
       - name: Upload canary eval report
         if: always()

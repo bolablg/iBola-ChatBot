@@ -145,9 +145,11 @@ _UNCERTAIN = re.compile(
 )
 
 
-def _claim_clauses(text: str):
+def _claim_clauses(text: str, extra_predicates=None):
     # A qualifier can govern several noun phrases. Separate a new assertion
     # only after the left side already contains a predicate or qualifier.
+    if extra_predicates:
+        extra_predicates = extra_predicates.removeprefix("(?i)")
     predicate = re.compile(
         r"\b(?:is|was|are|were|has|have|had|does|did|lacks?|lacked|used|uses|operated|operates|built|builds|designed|designs|deployed|deploys|est|sont|etait)\b",
         re.I,
@@ -157,6 +159,11 @@ def _claim_clauses(text: str):
         r"manages?|managed|lacks?|lacked|demonstrates?|proves?|appears?|appearing|listed|only|used|uses|operated|operates|designed|designs|deployed|deploys|built|builds|est|sont|etait|detient|possede|gere|approuve)\b|"
         r"(?:has|have|had|never|does|did|lacks?|lacked)\b)",
         re.I,
+    )
+    extra_assertion = (
+        re.compile(r"(?:[\w/-]+\s+){1,9}(?:" + extra_predicates + r")\b", re.I)
+        if extra_predicates
+        else None
     )
     result = []
     for sentence in re.split(
@@ -182,8 +189,15 @@ def _claim_clauses(text: str):
             )
             if (
                 not governed_detail
-                and new_assertion.match(right)
-                and (predicate.search(left) or _UNCERTAIN.search(left))
+                and (
+                    new_assertion.match(right)
+                    or (extra_assertion and extra_assertion.match(right))
+                )
+                and (
+                    predicate.search(left)
+                    or _UNCERTAIN.search(left)
+                    or (extra_predicates and re.search(extra_predicates, left, re.I))
+                )
             ):
                 result.append(left)
                 start = separator.end()
@@ -191,8 +205,31 @@ def _claim_clauses(text: str):
     return result
 
 
+def _assertion_clauses(text, rule):
+    """Keep optional independent named-system contrasts local to one rule."""
+    return [
+        part
+        for clause in _claim_clauses(text)
+        for part in re.split(
+            rule.get("independent_clause_separator_pattern", r"(?!)"), clause
+        )
+    ]
+
+
 def _record_limit_subject(clause, known_subjects=(), subject_pattern=None):
     """A complete nominal evidence limit, never a neighboring action claim."""
+    postposed = re.fullmatch(
+        r"(?i)\s*(?:there\s+is\s+)?no\s+(?:personal\s+)?production\s+experience\s+"
+        r"documented\s+(?:for|with)\s+(?P<subject>[a-z][a-z0-9 /+#_'()-]{0,100})\s*",
+        _fold(clause),
+    )
+    if postposed:
+        subject = postposed.group("subject").strip()
+        if any(
+            re.fullmatch(_fold(label), subject, re.I) for label in known_subjects
+        ) or (subject_pattern and re.fullmatch(subject_pattern, subject)):
+            return subject
+        return None
     existential = re.fullmatch(
         r"(?i)\s*(?:(?:additionally|moreover)\s*,\s*)?there\s+(?:is|are)\s+"
         r"no\s+documented\s+(?:(?:personal\s+)?production\s+experience\s+or\s+"
@@ -317,6 +354,16 @@ def confirmed_non_use(documents):
     return subjects
 
 
+def _nominal_absence_pattern(subject):
+    """One exact-tool nominal absence grammar shared by experience checks."""
+    tool = re.escape(subject)
+    return (
+        rf"(?:an?\s+)?(?:(?:explicit|confirmed|owner[ -]confirmed)\s+){{0,2}}"
+        rf"(?:absence|lack|manque)\s+(?:of\s+|de\s+)?"
+        rf"(?:{tool}\s+experience|experience\s+(?:with|in|avec|en)\s+{tool})"
+    )
+
+
 def experience_resolution_failures(answer, documents, subjects):
     """Require a confirmed absence when proven, otherwise an evidence limit."""
     confirmed = {s.casefold() for s in confirmed_non_use(documents)}
@@ -331,15 +378,106 @@ def experience_resolution_failures(answer, documents, subjects):
             rf"(?i)(?:no|aucune)\s+(?:(?:prior|professional|production)\s+)?{tool}\s+experience|"
             rf"(?:no\s+|aucune\s+|pas\s+d')experience\s+(?:(?:with|of|avec|en|de)\s+)?{tool}|"
             rf"(?:never|not)\s+(?:used|worked with)\s+{tool}|"
-            rf"(?:jamais|pas)\s+utilise\s+{tool}|"
-            rf"absence of experience\s+(?:with|in)\s+{tool}"
+            rf"(?:jamais|pas)\s+utilise\s+{tool}"
+        )
+        nominal = re.compile(
+            r"(?i)\b(?:Bolaji|he|il)\s+(?:has|had|a)\s+"
+            + _nominal_absence_pattern(subject)
+            + r"\s*$"
         )
         if not any(
-            negative.search(clause) and not _UNCERTAIN.search(clause)
-            for clause in _claim_clauses(_fold(answer))
+            not _UNCERTAIN.search(clause)
+            and (
+                negative.search(clause)
+                or (
+                    nominal.search(clause)
+                    and not re.search(
+                        r"(?i)\b(?:if|unless|whether|assuming|suppose|would|could|might|hypothetical)\b|[\"«»]",
+                        clause,
+                    )
+                )
+            )
+            for clause in _claim_clauses(
+                _fold(_normalize_non_use_reference(answer, documents))
+            )
         ):
             missing.append(subject)
     return missing
+
+
+def confirmed_use_conflicts(answer, documents):
+    """A confirmed absence cannot coexist with a same-actor positive use claim."""
+    conflicts = set()
+    for rule in policy_data().get("experience_confirmations", []):
+        if not rule.get("positive_pattern"):
+            continue
+        for subject in confirmed_non_use(documents):
+            pattern = rule["positive_pattern"].replace("{subject}", re.escape(subject))
+            check_text = re.sub(
+                r"(?i)\b(did|does|do|has|have|had|is|are|was|were)n't\b",
+                r"\1 not",
+                _fold(answer),
+            )
+            clauses = [
+                part
+                for clause in _claim_clauses(check_text)
+                for part in re.split(r"(?i)\b(?:while|whereas|tandis que)\b", clause)
+            ]
+            for clause in clauses:
+                for match in re.finditer(pattern, clause):
+                    if (
+                        re.search(
+                            r"(?i)\b(?:if|unless|suppose)\s*$", clause[: match.start()]
+                        )
+                        or re.search(
+                            rule.get("positive_exclude_pattern", r"(?!)"), match.group()
+                        )
+                        or (
+                            _UNCERTAIN.search(clause[: match.start()])
+                            and re.search(
+                                r"(?i)\b(?:whether|if|that)\s*$",
+                                clause[: match.start()],
+                            )
+                        )
+                        or _denied_assertion(clause, match)
+                    ):
+                        continue
+                    groups = [
+                        key
+                        for key in rule.get("positive_predicate_groups", [])
+                        if match.groupdict().get(key)
+                    ]
+                    if match.groupdict().get("experience_before") and re.fullmatch(
+                        r"(?i)(?:Bolaji|he|il)\s+(?:has|had|a)\s+"
+                        + _nominal_absence_pattern(subject),
+                        match.group(),
+                    ):
+                        continue
+                    if groups:
+                        key = groups[0]
+                        predicate = re.compile(re.escape(match.group(key))).search(
+                            clause, match.start(key), match.end(key)
+                        )
+                        if _denied_assertion(clause, predicate):
+                            continue
+                    conflicts.add(subject)
+    return conflicts
+
+
+def _ambiguous_use_mention(answer, subject):
+    """Leave a possible opposing claim to repair instead of adding a denial."""
+    for clause in _claim_clauses(_fold(answer)):
+        if not re.search(r"\b" + re.escape(subject) + r"\b", clause, re.I):
+            continue
+        if _UNCERTAIN.search(clause):
+            continue
+        for match in re.finditer(
+            r"(?i)\b(?:use[sd]?|deployed|operated|designed|built|implemented|experience)\b",
+            clause,
+        ):
+            if not _denied_assertion(clause, match):
+                return True
+    return False
 
 
 def _normalize_non_use_reference(answer, documents):
@@ -353,14 +491,40 @@ def _normalize_non_use_reference(answer, documents):
         absence = (
             rf"(?:no\s+{tool}\s+experience(?:\s+at\s+all)?|"
             rf"no\s+experience\s+(?:with|in)\s+{tool}|"
-            rf"(?:an?\s+)?(?:(?:explicit|confirmed|owner[ -]confirmed)\s+){{0,2}}"
-            rf"absence\s+of\s+experience\s+(?:with|in)\s+{tool})"
+            + _nominal_absence_pattern(subject)
+            + r")"
         )
         pattern = re.compile(
             rf"(?i)\b(?:Bolaji|he)\s+has\s+{absence},?\s+and\s+"
             rf"(?:(?:he|Bolaji)\s+)?(?:has\s+)?never\s+used\s+(?P<reference>it)\b"
         )
         answer = pattern.sub(lambda match: match.group()[:-2] + subject, answer)
+        confirmed_connector = re.compile(
+            rf"(?i)\s*(?:Bolaji|he)\s+has\s+{absence}(?:"
+            rf"(?:,?\s+as\s+|:\s*)(?:the\s+)?(?:records?|documentation|evidence)\s+confirms?\s+"
+            rf"(?:(?:he|Bolaji)\s+)?(?:has\s+)?|,?\s+having\s+)"
+            rf"never\s+used\s+(?P<reference>it)\s*"
+        )
+
+        def resolve_confirmed_sentence(match):
+            sentence = match.group("sentence")
+            reference = confirmed_connector.fullmatch(sentence)
+            if not reference:
+                return match.group()
+            start, end = reference.span("reference")
+            return (
+                match.group("separator")
+                + sentence[:start]
+                + subject
+                + sentence[end:]
+                + match.group("punctuation")
+            )
+
+        answer = re.sub(
+            r"(?P<separator>^|(?<=[.!?])\s+)(?P<sentence>[^.!?\n]+)(?P<punctuation>[.!?]?)",
+            resolve_confirmed_sentence,
+            answer,
+        )
         reverse = re.compile(
             rf"(?i)\b(?:Bolaji|he)\s+has\s+(?:never|not)\s+used\s+{tool},?\s+and\s+"
             rf"(?:(?:he|Bolaji)\s+)?(?:has\s+no|lacks?)\s+"
@@ -405,11 +569,56 @@ def preserve_project_identity(
     return answer, names
 
 
+def bound_record_limits(answer: str, language: str):
+    """Narrow complete nominal unknowns to their retrieved-record scope."""
+    from app.graph.prompts import RECORD_SCOPE_TEMPLATES
+
+    lang = "fr" if language in {"fr", "French"} else "en"
+
+    def bound(match):
+        clause = match.group("clause").strip()
+        if re.search(
+            r"(?i)\b(?:retrieved|record|evidence|documentation|document|dossier|recupere|KB)\b",
+            _fold(clause),
+        ):
+            return match.group()
+        nominal = re.fullmatch(
+            r"(?i)(?P<subject>[a-z][a-z0-9 ,/+#_'()\u2019-]{0,450}?)\s+"
+            r"(?:(?:is|are|remains?)\s+(?:unknown|undocumented|unconfirmed|unverified|not documented|not established|not specified|not confirmed)|"
+            r"(?:est|sont|reste|restent)\s+(?:inconnus?|inconnues?|non documente[es]*|non precise[es]*))",
+            _fold(clause),
+        )
+        if not nominal:
+            return match.group()
+        atoms = policy_data().get("record_limit_subject_atoms", [])
+        atom = r"(?:(?:the|a|an|his|les|le|la)\s+)?(?:" + "|".join(atoms) + ")"
+        subject = nominal.group("subject")
+        if not atoms or not re.fullmatch(
+            atom
+            + r"(?:\s*(?:,\s*(?:(?:and|or|et|ou)\s+)?|\s+(?:and|or|et|ou)\s+)"
+            + atom
+            + r")*",
+            subject,
+            re.I,
+        ):
+            return match.group()
+        return match.group("separator") + RECORD_SCOPE_TEMPLATES[lang].format(
+            detail=subject[0].lower() + subject[1:]
+        )
+
+    return re.sub(
+        r"(?P<separator>^|(?<=[.!?])\s+)(?P<clause>[^.!?\n]+)(?P<punctuation>[.!?]?)",
+        bound,
+        answer,
+    )
+
+
 def preserve_requested_evidence(
     answer: str, documents: List[Document], query: str, language: str
 ):
     """Restore at most three missing details as exact, scoped retrieved quotes."""
     from app.graph.prompts import (
+        CONFIRMED_NON_USE_TEMPLATES,
         DOCUMENTATION_LIMIT_TEMPLATES,
         EVIDENCE_DETAIL_TEMPLATES,
         PERSONAL_PRODUCTION_LIMIT_TEMPLATES,
@@ -417,9 +626,24 @@ def preserve_requested_evidence(
 
     if not answer.strip():
         return answer, []
+    if documents:
+        answer = bound_record_limits(answer, language)
     lang = "fr" if language in {"fr", "French"} else "en"
     restored = []
     used = set()
+    conflicts = confirmed_use_conflicts(answer, documents)
+    for subject in sorted(confirmed_non_use(documents)):
+        if len(restored) >= 3:
+            break
+        if (
+            subject in conflicts
+            or _ambiguous_use_mention(answer, subject)
+            or not re.search(r"\b" + re.escape(subject) + r"\b", query, re.I)
+            or not experience_resolution_failures(answer, documents, [subject])
+        ):
+            continue
+        answer += " " + CONFIRMED_NON_USE_TEMPLATES[lang].format(tool=subject)
+        restored.append("confirmed_non_use_requires_answer:" + subject)
     for rule in policy_data().get("required_details", []):
         restoration = rule.get("restore_quotes", {}).get(lang) or rule.get(
             "restore_quote"
@@ -430,6 +654,7 @@ def preserve_requested_evidence(
             continue
         if rule["id"] not in constraint_failures(answer, documents, query):
             continue
+        eligible = []
         for doc in documents:
             meta = doc.metadata
             if Path(meta.get("source", "")).name not in rule.get("sources", []):
@@ -448,7 +673,16 @@ def preserve_requested_evidence(
                 "candidate_confirmed",
             }:
                 continue
-            matches = list(re.finditer(restoration["pattern"], doc.page_content))
+            eligible.append(
+                (doc, list(re.finditer(restoration["pattern"], doc.page_content)))
+            )
+        value_group = restoration.get("value_group")
+        if value_group and {
+            match.group(value_group) for _, matches in eligible for match in matches
+        } != {str(restoration["expected_value"])}:
+            continue
+        for doc, matches in eligible:
+            meta = doc.metadata
             if len(matches) != 1:
                 continue
             quote = matches[0].group().strip()
@@ -463,12 +697,15 @@ def preserve_requested_evidence(
             if not section:
                 continue
             scope = restoration.get("scope_label", meta.get("scope_context", ""))
-            answer += " " + EVIDENCE_DETAIL_TEMPLATES[lang].format(
-                label=restoration["label"],
-                section=section,
-                scope=(", " + scope) if scope else "",
-                quote=quote,
-            )
+            if restoration.get("render") == "sentence":
+                answer += "\n\n" + quote[0].upper() + quote[1:]
+            else:
+                answer += " " + EVIDENCE_DETAIL_TEMPLATES[lang].format(
+                    label=restoration["label"],
+                    section=section,
+                    scope=(", " + scope) if scope else "",
+                    quote=quote,
+                )
             used.add(key)
             restored.append(rule["id"])
             break
@@ -476,7 +713,27 @@ def preserve_requested_evidence(
         detail = rule.get("restore_limit", {}).get(lang)
         if len(restored) >= 3 or not detail:
             continue
-        if rule["id"] in constraint_failures(answer, documents, query):
+        if rule.get("restore_support_pattern") and not any(
+            Path(doc.metadata.get("source", "")).name in rule.get("restore_sources", [])
+            and doc.metadata.get("evidence_type")
+            not in {"interpretation", "summary", "pending_confirmation"}
+            and (
+                not rule.get("evidence_types")
+                or doc.metadata.get("evidence_type") in rule["evidence_types"]
+            )
+            and doc.metadata.get("metric_scope", {}).get("id") == rule.get("scope_id")
+            and re.search(
+                rule["restore_section_pattern"], doc.metadata.get("section_header", "")
+            )
+            and re.search(rule["restore_support_pattern"], _fold(doc.page_content))
+            for doc in documents
+        ):
+            continue
+        active_limits = constraint_failures(answer, documents, query)
+        if rule["id"] in active_limits:
+            combined = rule.get("restore_with_limit", {})
+            if combined.get("id") in active_limits:
+                detail = combined.get(lang, detail)
             answer += " " + DOCUMENTATION_LIMIT_TEMPLATES[lang].format(detail=detail)
             restored.append(rule["id"])
     before = set(constraint_failures(answer, documents, query))
@@ -623,9 +880,19 @@ def _project_role_claims(text, rule, supporting=False):
     """Track explicit role scope for one project independently of other work."""
     claims = set()
     active = heading = ""
-    for paragraph in re.split(r"\n\s*\n", _fold(text)):
+    boundary = r"\n\s*\n"
+    if rule.get("claim_sentence_scope") and not supporting:
+        boundary += r"|(?<=[.!?])\s+"
+    for paragraph in re.split(boundary, _fold(text)):
         active = heading
         for clause in _claim_clauses(paragraph):
+            if re.search(rule.get("other_actor_pattern", r"(?!)"), clause) or re.match(
+                rule.get("conditional_prefix_pattern", r"(?!)"), clause
+            ):
+                active = heading = ""
+                continue
+            if supporting and rule.get("support_same_clause"):
+                active = heading = ""
             plain = clause.strip(" \t#*:-")
             if not plain:
                 continue
@@ -661,7 +928,9 @@ def _project_role_claims(text, rule, supporting=False):
                 continue
             support_relations = (
                 list(re.finditer(rule["support_relation_pattern"], clause))
-                if supporting and not re.search(rule["support_exclude_pattern"], clause)
+                if supporting
+                and not re.search(rule["support_exclude_pattern"], clause)
+                and re.search(rule.get("support_anchor_pattern", r""), clause)
                 else []
             )
             if markers:
@@ -728,12 +997,15 @@ def constraint_failures(
     ]
     failures.extend(_request_scope_failures(answer, documents, query))
     for rule in policy.get("editorial_constraints", []):
-        applicable = re.search(rule["query_pattern"], _fold(query)) and any(
-            Path(doc.metadata.get("source", "")).name in rule["sources"]
-            and doc.metadata.get("evidence_type")
-            in {None, "curated", "published", "candidate_confirmed"}
-            and re.search(rule["support_pattern"], doc.page_content)
-            for doc in documents
+        applicable = rule.get("unconditional", False) or (
+            re.search(rule["query_pattern"], _fold(query))
+            and any(
+                Path(doc.metadata.get("source", "")).name in rule["sources"]
+                and doc.metadata.get("evidence_type")
+                in {None, "curated", "published", "candidate_confirmed"}
+                and re.search(rule["support_pattern"], doc.page_content)
+                for doc in documents
+            )
         )
         if applicable and re.search(rule["answer_pattern"], answer):
             failures.append(rule["id"])
@@ -752,6 +1024,59 @@ def constraint_failures(
         if claimed - supported:
             failures.append(relation["id"])
     for rule in policy.get("relationship_constraints", []):
+        if rule.get("binding_mode") == "predicate_attribution":
+            pending = 0
+            scoped_answer = re.sub(
+                r"(?i)\b(did|does|do|is|are|was|were|has|have|had|could|would|should)n't\b",
+                r"\1 not",
+                answer,
+            )
+            clause_predicates = (
+                rule["predicate_pattern"].removeprefix("(?i)")
+                + "|"
+                + rule.get("clause_extra_predicates", r"(?!)")
+            )
+            clauses = [
+                part
+                for clause in _claim_clauses(scoped_answer, clause_predicates)
+                for part in re.split(rule["clause_separator_pattern"], clause)
+            ]
+            for clause in clauses:
+                if not clause.strip():
+                    continue
+                subjects = [
+                    match
+                    for match in re.finditer(rule["subject_pattern"], clause)
+                    if not _denied_assertion(clause, match)
+                    and not re.search(
+                        rule["subject_exclude_prefix_pattern"], clause[: match.start()]
+                    )
+                ]
+                if subjects:
+                    pending = 2
+                elif re.search(rule["other_subject_pattern"], clause):
+                    pending = 0
+                linked = subjects or (
+                    pending and re.search(rule["reference_pattern"], clause)
+                )
+                predicates = list(re.finditer(rule["predicate_pattern"], clause))
+                affirmative = False
+                denied = False
+                previous_end = 0
+                for match in predicates:
+                    inherited = denied and re.search(
+                        r"(?i)\b(?:and|or|et|ou)\s*$",
+                        clause[previous_end : match.start()],
+                    )
+                    denied = bool(_denied_assertion(clause, match) or inherited)
+                    affirmative |= not denied
+                    previous_end = match.end()
+                if linked and re.search(rule["metric_pattern"], clause) and affirmative:
+                    failures.append(rule["id"])
+                    break
+                if not subjects:
+                    pending = max(0, pending - 1)
+            continue
         if rule.get("binding_mode") == "local_cooccurrence":
             for clause in _claim_clauses(answer):
                 if not re.search(rule["subject_pattern"], clause):
@@ -798,7 +1123,17 @@ def constraint_failures(
             if rule.get("resolve_confirmed_non_use_reference")
             else answer
         )
-        for clause in _claim_clauses(checked_answer):
+        for clause in _assertion_clauses(checked_answer, rule):
+            record_subjects = rule.get("record_limit_subjects", ())
+            limit = (
+                _record_limit_subject(clause, record_subjects)
+                if record_subjects
+                else None
+            )
+            if limit and any(
+                re.fullmatch(_fold(label), limit, re.I) for label in record_subjects
+            ):
+                continue
             if rule.get("negation_pattern") and re.search(
                 rule["negation_pattern"], clause
             ):
@@ -815,7 +1150,9 @@ def constraint_failures(
                     )
                 ]
             if not matches or (
-                not rule.get("local_uncertainty") and uncertain.search(clause)
+                not rule.get("local_uncertainty")
+                and not rule.get("literal_mention")
+                and uncertain.search(clause)
             ):
                 continue
             if rule.get("affirmation_pattern") and not re.search(
@@ -826,7 +1163,17 @@ def constraint_failures(
             support_scopes = {}
             support = []
             for text in evidence:
-                spans = _claim_clauses(text) if rule.get("clause_support") else [text]
+                if rule.get("exclude_support_line_pattern"):
+                    text = "\n".join(
+                        line
+                        for line in text.splitlines()
+                        if not re.search(rule["exclude_support_line_pattern"], line)
+                    )
+                spans = (
+                    _assertion_clauses(text, rule)
+                    if rule.get("clause_support")
+                    else [text]
+                )
                 if rule.get("support_continuation_pattern"):
                     spans = [span for span in spans if span.strip()]
                 for index, span in enumerate(spans):
@@ -857,7 +1204,10 @@ def constraint_failures(
                             if rule.get("clause_support")
                             else span[max(0, m.start() - 60) : m.end() + 60]
                         )
-                        if uncertain.search(qualifier) or (
+                        if (
+                            uncertain.search(qualifier)
+                            and not rule.get("literal_mention")
+                        ) or (
                             rule.get("local_negation") and _denied_assertion(span, m)
                         ):
                             continue
@@ -1011,12 +1361,28 @@ def constraint_failures(
             if rule.get("scope_id")
             else bool(sources & set(rule.get("sources", [])))
         )
-        if applicable and rule.get("support_pattern"):
+        if applicable and any(
+            rule.get(key)
+            for key in ("support_pattern", "section_pattern", "evidence_types")
+        ):
             applicable = any(
                 Path(d.metadata.get("source", "")).name in rule.get("sources", [])
                 and d.metadata.get("evidence_type")
                 not in {"interpretation", "summary", "pending_confirmation"}
-                and re.search(rule["support_pattern"], _fold(d.page_content))
+                and (
+                    not rule.get("evidence_types")
+                    or d.metadata.get("evidence_type") in rule["evidence_types"]
+                )
+                and (
+                    not rule.get("section_pattern")
+                    or re.search(
+                        rule["section_pattern"], d.metadata.get("section_header", "")
+                    )
+                )
+                and (
+                    not rule.get("support_pattern")
+                    or re.search(rule["support_pattern"], _fold(d.page_content))
+                )
                 for d in documents
             )
         if rule.get("direct_support_pattern") and any(
@@ -1045,6 +1411,14 @@ def constraint_failures(
             if missing:
                 failures.append(rule["id"])
     for rule in policy.get("required_details", []):
+        if rule.get("topic_pattern") and not re.search(
+            rule["topic_pattern"], _fold(query + "\n" + answer)
+        ):
+            continue
+        if rule.get("query_exclude_pattern") and re.search(
+            rule["query_exclude_pattern"], _fold(query)
+        ):
+            continue
         applicable = (
             rule["scope_id"] in scope_ids
             if rule.get("scope_id")
@@ -1066,6 +1440,31 @@ def constraint_failures(
             if rule.get("answer_activation_pattern"):
                 if not _has_detail_activation(answer, rule):
                     continue
+            for clause in _claim_clauses(answer):
+                explicit_scopes = [
+                    value
+                    for match in re.finditer(
+                        rule.get("false_unknown_scope_pattern", r"(?!)"), clause
+                    )
+                    for value in match.groupdict().values()
+                    if value
+                ]
+                if (
+                    rule.get("false_unknown_pattern")
+                    and re.search(rule["false_unknown_pattern"], clause)
+                    and not any(
+                        not re.search(
+                            rule.get("false_unknown_same_scope_pattern", r"(?!)"),
+                            scope,
+                        )
+                        for scope in explicit_scopes
+                    )
+                    and not re.search(
+                        rule.get("false_unknown_exclude_pattern", r"(?!)"), clause
+                    )
+                ):
+                    failures.append(rule["id"] + ":false_withholding")
+                    break
             if rule.get("answer_clause_pattern"):
                 if not any(
                     not re.search(
@@ -1119,12 +1518,36 @@ def constraint_failures(
                         prefix_roles = [
                             r for r in valid_roles if r.start() < claim.start()
                         ]
-                        governing = (
-                            prefix_roles[-1].group() if prefix_roles else active_role
-                        )
                         raw_prefix_roles = [
                             r for r in roles if r.start() < claim.start()
                         ]
+                        postfix_roles = [
+                            r
+                            for r in valid_roles
+                            if rule.get("role_postfix_bridge_pattern")
+                            and r.start() >= claim.end()
+                            and re.fullmatch(
+                                rule["role_postfix_bridge_pattern"],
+                                sentence[claim.end() : r.start()],
+                            )
+                            and re.fullmatch(
+                                rule["role_postfix_tail_pattern"], sentence[r.end() :]
+                            )
+                        ]
+                        governing = (
+                            prefix_roles[-1].group() if prefix_roles else active_role
+                        )
+                        if postfix_roles:
+                            if prefix_roles and any(
+                                _binding(r.group())
+                                != _binding(prefix_roles[-1].group())
+                                for r in postfix_roles
+                            ):
+                                invalid = True
+                            if not raw_prefix_roles:
+                                # A local action-group suffix can replace only
+                                # inherited context, never an explicit local role.
+                                governing = postfix_roles[-1].group()
                         if raw_prefix_roles and (
                             not prefix_roles
                             or raw_prefix_roles[-1].start() > prefix_roles[-1].start()
@@ -1166,6 +1589,10 @@ def constraint_failures(
         for subject in experience_resolution_failures(
             answer, documents, requested_confirmations
         )
+    )
+    failures.extend(
+        "confirmed_non_use_contradicted:" + subject
+        for subject in sorted(confirmed_use_conflicts(answer, documents))
     )
     return failures
 
@@ -1257,13 +1684,47 @@ def _request_scope_failures(answer, documents, query):
     """
     failures = []
     for rule in policy_data().get("request_scopes", []):
-        if not re.search(rule["query_pattern"], _fold(query)):
+        requested = bool(re.search(rule["query_pattern"], _fold(query)))
+        explicit_subjects = set()
+        for clause in _claim_clauses(_fold(answer)):
+            claims = list(re.finditer(rule["personal_support_pattern"], clause))
+            if not claims and re.search(r"(?i)\bproduction\b", clause):
+                claims = list(re.finditer(rule["personal_assertion_pattern"], clause))
+            uncertainty = _UNCERTAIN.search(clause)
+            for claim in claims:
+                if (
+                    not uncertainty or uncertainty.start() > claim.start()
+                ) and not re.search(
+                    r"(?i)\b(?:if|unless|whether|assuming|suppose|hypothetical|could|would|might)\b",
+                    clause,
+                ):
+                    groups = [
+                        claim.groupdict()[group] or ""
+                        for group in rule["support_subject_groups"]
+                        if group in claim.groupdict()
+                    ]
+                    for bound in groups or [claim.group()]:
+                        explicit_subjects.update(
+                            re.findall(rule["subject_pattern"], bound)
+                        )
+        if not requested and not explicit_subjects:
             continue
         aliases = rule.get("subject_aliases", {})
 
         def canonical(value):
             return aliases.get(value.casefold(), value.casefold())
 
+        latest = _fold(query.split("\n", 1)[0])
+        comparison_subjects = {
+            canonical(variant["subject"]): variant["qualified_pattern"]
+            for variant in rule.get("technology_comparisons", [])
+            if re.search(variant["qualified_pattern"], latest)
+            and not re.search(
+                variant["generic_pattern"],
+                re.sub(variant["qualified_pattern"], " ", latest),
+            )
+            and not re.search(variant["broad_query_pattern"], latest)
+        }
         personal = []
         implementation = []
         project = set()
@@ -1345,6 +1806,42 @@ def _request_scope_failures(answer, documents, query):
                 qualified.update(
                     canonical(s) for s in re.findall(rule["subject_pattern"], clause)
                 )
+        # A known production operation can have an unspecified employer. Keep
+        # that local qualification separate from uncertainty about operation.
+        # Explicit project assertions below must still have same-project proof.
+        unknown_projects = set()
+        previous_subjects = set()
+        for clause, _ in units:
+            named = {canonical(s) for s in re.findall(rule["subject_pattern"], clause)}
+            nominal_limit = re.search(
+                rule.get(
+                    "unknown_project_qualification_pattern",
+                    rule.get("unknown_project_pattern", r"(?!)"),
+                ),
+                clause,
+            )
+            record_limit = re.fullmatch(
+                rule.get("unknown_project_record_limit_pattern", r"(?!)").replace(
+                    "{tool}", rule["subject_pattern"].removeprefix("(?i)")
+                ),
+                clause,
+            )
+            if (nominal_limit or record_limit) and not re.search(
+                rule.get("unknown_project_qualification_exclude_pattern", r"(?!)"),
+                clause,
+            ):
+                referred = named
+                if not referred and re.search(
+                    r"(?i)\b(?:this|that|the|its)\s+(?:bucket|service)\b", clause
+                ):
+                    referred = previous_subjects
+                if len(referred) == 1 and not projects(clause):
+                    unknown_projects.update(referred)
+            previous_subjects = named
+        # Do not erase a known project merely because a response calls it unknown.
+        unknown_projects.difference_update(
+            tool for tool, supported_projects in personal if supported_projects
+        )
         previous_projects = set()
         for clause, inherited_personal in units:
             explicit_projects = projects(clause)
@@ -1357,6 +1854,14 @@ def _request_scope_failures(answer, documents, query):
             subjects = {
                 canonical(s) for s in re.findall(rule["subject_pattern"], clause)
             }
+            if not requested:
+                subjects &= {canonical(subject) for subject in explicit_subjects}
+            elif not re.search(r"(?i)\bproduction\b", clause):
+                subjects -= {
+                    subject
+                    for subject, qualified in comparison_subjects.items()
+                    if not re.search(qualified, clause)
+                }
             if not subjects:
                 continue
             record_limit = _record_limit_subject(
@@ -1381,7 +1886,9 @@ def _request_scope_failures(answer, documents, query):
             ):
                 continue
             claimed_projects = (
-                explicit_projects or referenced_projects or projects(_fold(query))
+                explicit_projects
+                or referenced_projects
+                or (set() if subjects <= unknown_projects else projects(_fold(query)))
             )
             proven = {
                 tool
@@ -1424,6 +1931,47 @@ def request_scope(state):
     ):
         recent = state.get("chat_history", [])[-1:]
         parts.extend(turn[0] for turn in recent if turn)
+    return "\n".join(dict.fromkeys(filter(None, parts)))
+
+
+def user_answer_scope(state):
+    """A search rewrite is a retrieval hint, never user-supplied claim scope."""
+    original = state.get("original_query") or state.get("query", "")
+    parts = [original]
+    reference_text = re.sub(
+        r"(?i)^\s*(?:is it true that|est[- ]il vrai que)\s+", "", original
+    )
+    # A complementizer or classification does not introduce a prior subject:
+    # "evidence that the pipeline ..." and "is that an observed metric?".
+    reference_text = re.sub(
+        r"(?i)\bthat(?=\s+(?:the|a|an|he|she|they|Bolaji|it|there|you)\b)",
+        "",
+        reference_text,
+    )
+    referential = re.search(
+        r"(?i)\b(?:those|these|that|this|it|them|other|others|ces|ceux|celles|cela|ca|autres)\b",
+        reference_text,
+    )
+    short_followup = len(original.split()) <= 12 and re.match(
+        r"(?i)^\s*(?:what else|anything else|tell me more|more details|please (?:continue|expand|elaborate)|can you (?:expand|elaborate)|and|et|plus de details)\b",
+        original,
+    )
+    reference_only = bool(
+        re.search(r"(?i)\b(?:article|repository|repo|link|URL|lien)\b", original)
+        and re.search(
+            r"(?i)\b(?:public|where|point|find|share|inspect|ou|lien)\b",
+            _fold(original),
+        )
+    )
+    explicit_project = any(
+        re.search(pattern, original)
+        for rule in policy_data().get("request_scopes", [])
+        for pattern in rule.get("project_names", {}).values()
+    )
+    if (referential or short_followup) and not reference_only and not explicit_project:
+        for turn in state.get("chat_history", [])[-1:]:
+            if isinstance(turn, (list, tuple)) and turn and isinstance(turn[0], str):
+                parts.append(turn[0][:1200])
     return "\n".join(dict.fromkeys(filter(None, parts)))
 
 
@@ -1532,6 +2080,36 @@ def retained_facet_indices(documents, query):
         ):
             result.add(i)
     return result
+
+
+def focus_single_case(documents, query, original_query=None):
+    """Keep one validated source section for an explicit single-case request."""
+    latest = _fold(original_query if original_query is not None else query)
+    rules = {r["id"]: r for r in policy_data().get("facets", [])}
+    identities = set()
+    for index in retained_facet_indices(documents, query):
+        doc = documents[index]
+        rule = rules[doc.metadata["required_facet"]]
+        if (
+            rule.get("single_case_query_pattern")
+            and re.search(rule["single_case_query_pattern"], latest)
+            and re.search(rule["query_pattern"], latest)
+            and not re.search(rule.get("single_case_exclude_pattern", r"(?!)"), latest)
+        ):
+            identities.add(
+                (Path(doc.metadata["source"]).name, doc.metadata["section_header"])
+            )
+    if len(identities) != 1:
+        return documents
+    return [
+        doc
+        for doc in documents
+        if (
+            Path(doc.metadata.get("source", "")).name,
+            doc.metadata.get("section_header"),
+        )
+        in identities
+    ]
 
 
 def expand_lexical_query(query: str) -> str:

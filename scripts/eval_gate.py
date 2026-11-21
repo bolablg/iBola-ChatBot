@@ -27,6 +27,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
 EVAL_DIR = PROJECT_ROOT / "eval"
 
 JUDGED_DIMENSIONS = ("relevance", "accuracy", "helpfulness", "faithfulness")
@@ -34,6 +35,8 @@ JUDGED_DIMENSIONS = ("relevance", "accuracy", "helpfulness", "faithfulness")
 
 def baseline_path_for(tags):
     """Per-tag baselines: reports are only comparable to like-for-like runs."""
+    if set(tags or []) == {"smoke", "recruiter_regression"}:
+        return EVAL_DIR / "accepted_baseline_smoke.json"
     if tags:
         suffix = "-".join(sorted(tags))
         return EVAL_DIR / f"accepted_baseline_{suffix}.json"
@@ -49,6 +52,33 @@ class GateFailure:
     case_id: str | None = None
 
 
+def comparison_aggregates(report, smoke_ids=None):
+    if set(report.get("tags") or []) != {"smoke", "recruiter_regression"}:
+        return report["aggregates"]
+    from scripts.run_eval import aggregate
+
+    if smoke_ids is None:
+        golden = [
+            json.loads(line)
+            for line in (EVAL_DIR / "golden.jsonl").read_text().splitlines()
+        ]
+        smoke_ids = {row["id"] for row in golden if "smoke" in row.get("tags", [])}
+    # The historical smoke latency gate measured the whole target call,
+    # including replay and client pacing. Preserve that comparison while the
+    # report separately exposes final-response wire latency for analysis.
+    agg = aggregate(
+        [
+            {**row, "latency_s": row.get("conversation_elapsed_s", row["latency_s"])}
+            for row in report.get("results", [])
+            if row["id"] in smoke_ids
+        ]
+    )
+    for key in ("first_token_p95_s", "first_token_samples_s"):
+        if key in report["aggregates"]:
+            agg[key] = report["aggregates"][key]
+    return agg
+
+
 def evaluate_report(report, baseline):
     """Return the same strict comparisons used by the CLI and notifications."""
     base_agg = baseline["aggregates"]
@@ -56,17 +86,61 @@ def evaluate_report(report, baseline):
     agg = report["aggregates"]
 
     failures = []
+    recruiter_ids = set()
 
-    if agg.get("judge_errors"):
+    if set(report.get("tags") or []) == {"smoke", "recruiter_regression"}:
+        golden = [
+            json.loads(line)
+            for line in (EVAL_DIR / "golden.jsonl").read_text().splitlines()
+        ]
+        expected = {
+            row["id"]
+            for row in golden
+            if set(row.get("tags", [])) & {"smoke", "recruiter_regression"}
+        }
+        recruiter_ids = {
+            row["id"] for row in golden if "recruiter_regression" in row.get("tags", [])
+        }
+        rows = report.get("results", [])
+        if len(rows) != len(expected) or {row["id"] for row in rows} != expected:
+            failures.append(
+                GateFailure(
+                    "case_set_mismatch",
+                    "combined smoke/recruiter report must contain every expected case exactly once",
+                )
+            )
+        # Preserve the original smoke aggregate population. Recruiter cases and
+        # all prefix turns retain the independent per-case requirements below.
+        smoke_ids = {row["id"] for row in golden if "smoke" in row.get("tags", [])}
+        agg = comparison_aggregates(report, smoke_ids)
+
+    if report["aggregates"].get("judge_errors"):
         failures.append(
             GateFailure(
                 "judge_errors",
-                f"{agg['judge_errors']} question(s) were not judged successfully",
+                f"{report['aggregates']['judge_errors']} question(s) were not judged successfully",
             )
         )
 
     for row in report.get("results", []):
-        if "recruiter_regression" in row.get("tags", []):
+        for index, prefix in enumerate(row.get("prefix_turns", []), 1):
+            if (
+                prefix.get("error")
+                or prefix.get("workflow_errors")
+                or (
+                    prefix.get("agent_type")
+                    in {"professional", "education", "learning"}
+                    and prefix.get("grounding_checked") is not True
+                )
+            ):
+                failures.append(
+                    GateFailure(
+                        "prefix_grounding_failed",
+                        f"unverified knowledge answer in {row['id']} prefix turn {index}",
+                        row["id"],
+                    )
+                )
+        if "recruiter_regression" in row.get("tags", []) or row["id"] in recruiter_ids:
             if not row.get("fact_pass"):
                 failures.append(
                     GateFailure(
@@ -86,11 +160,11 @@ def evaluate_report(report, baseline):
                         )
                     )
 
-    if agg.get("errors"):
+    if report["aggregates"].get("errors"):
         failures.append(
             GateFailure(
                 "hard_errors",
-                f"{agg['errors']} question(s) hit hard errors; a gate must not "
+                f"{report['aggregates']['errors']} question(s) hit hard errors; a gate must not "
                 "average over crashes",
             )
         )
@@ -178,7 +252,7 @@ def main():
         return 0
 
     baseline = json.loads(baseline_path.read_text())
-    agg = report["aggregates"]
+    agg = comparison_aggregates(report)
     base_agg = baseline["aggregates"]
     gate = baseline.get("gate", {})
     fact_min = gate.get("canonical_fact_accuracy_min")
@@ -194,6 +268,10 @@ def main():
         return 1
 
     print(f"Eval gate passed (baseline: {baseline_path.name}).")
+    if set(tags or []) == {"smoke", "recruiter_regression"}:
+        print(
+            f"  aggregate population: {agg['n']} smoke cases; recruiter cases checked individually"
+        )
     print(f"  canonical_fact_accuracy: {fact_now} (gate >= {fact_min})")
     for dim in JUDGED_DIMENSIONS:
         print(f"  {dim}: {agg.get(dim)} (baseline {base_agg.get(dim)})")

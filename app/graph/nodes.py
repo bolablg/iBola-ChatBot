@@ -51,7 +51,7 @@ from app.services.public_facts import public_facts_block
 logger = logging.getLogger("ibola.graph")
 
 
-def _format_history(chat_history: list, turns: int = 3, cap: int = 400) -> str:
+def _format_history(chat_history: list, turns: int = 3, cap: int | None = 400) -> str:
     """Full recent turns, each capped, for condense/guardrail/rewrite prompts.
 
     60-80-char summaries starved these sub-agents of the context they need
@@ -104,7 +104,7 @@ def _provider_generate(client, **kwargs):
 def _is_transient_llm_error(exc: Exception) -> bool:
     """Return whether a Gemini failure is safe to retry once."""
     status = str(getattr(exc, "status_code", getattr(exc, "code", ""))).lower()
-    if status in {"429", "503"}:
+    if status in {"429", "500", "502", "503", "504"}:
         return True
 
     message = str(exc).lower()
@@ -112,7 +112,10 @@ def _is_transient_llm_error(exc: Exception) -> bool:
         marker in message
         for marker in (
             "429",
+            "500 internal",
+            "502 bad gateway",
             "503",
+            "504 gateway",
             "resource exhausted",
             "resource_exhausted",
             "rate limit",
@@ -123,6 +126,30 @@ def _is_transient_llm_error(exc: Exception) -> bool:
             "high demand",
         )
     )
+
+
+def _verifier_failure_category(exc: Exception) -> str:
+    """Bounded diagnostics, without exposing provider messages or evidence."""
+    from json import JSONDecodeError
+
+    from pydantic import ValidationError
+
+    if (
+        isinstance(exc, RuntimeError)
+        and str(exc) == "Grounding provider call budget exhausted"
+    ):
+        return "call_budget_exhausted"
+    if _is_transient_llm_error(exc):
+        return "provider_unavailable"
+    if isinstance(exc, TimeoutError):
+        return "timeout"
+    if isinstance(exc, ValidationError):
+        return "schema_validation_failed"
+    if isinstance(exc, (TypeError, JSONDecodeError)):
+        return "invalid_structured_output"
+    if isinstance(exc, ValueError):
+        return "invalid_request_or_configuration"
+    return "verifier_unavailable"
 
 
 def _invoke_with_retry(call, operation: str):
@@ -1195,7 +1222,9 @@ def _translate_answer(answer: str, reply_language: str) -> str:
     return response.content.strip() or answer
 
 
-def _select_context_docs(graded_docs: List[Document], query="") -> List[Document]:
+def _select_context_docs(
+    graded_docs: List[Document], query="", original_query=None
+) -> List[Document]:
     """Pick the generation context: budgeted and near-duplicate-free."""
     try:
         from app.settings import get_settings
@@ -1211,8 +1240,9 @@ def _select_context_docs(graded_docs: List[Document], query="") -> List[Document
             return 0.0
         return len(ta & tb) / min(len(ta), len(tb))
 
-    from app.services.evidence_policy import retained_facet_indices
+    from app.services.evidence_policy import focus_single_case, retained_facet_indices
 
+    graded_docs = focus_single_case(graded_docs, query, original_query)
     protected = retained_facet_indices(graded_docs, query)
     selected: List[Document] = [
         doc for i, doc in enumerate(graded_docs) if i in protected
@@ -1246,7 +1276,6 @@ def _evidence_context(documents: List[Document]) -> str:
                     "parent_context",
                     "scope_context",
                     "evidence_type",
-                    "canonical_url",
                     "metric_scope",
                     "conversation_coverage",
                 )
@@ -1276,18 +1305,22 @@ def generate_node(state: dict) -> dict:
     # waste tokens and invite hallucinated merges).
     from app.services.evidence_policy import (
         prepare_evidence,
-        request_scope,
         supplement_facets,
+        user_answer_scope,
     )
 
-    scope = request_scope(state)
+    scope = user_answer_scope(state)
     try:
         graded_docs = supplement_facets(
             _get_hybrid_search(), scope, graded_docs, protected_only=True
         )
     except Exception as exc:
         logger.warning("Generation facet lookup unavailable: %s", exc)
-    context_docs = _select_context_docs(prepare_evidence(graded_docs, scope), scope)
+    context_docs = _select_context_docs(
+        prepare_evidence(graded_docs, scope),
+        scope,
+        original_query=state.get("original_query") or query,
+    )
     if not context_docs:
         steps.append(
             ReasoningStep(node="generate", action="insufficient_evidence", detail="")
@@ -1303,12 +1336,11 @@ def generate_node(state: dict) -> dict:
     else:
         context = "(No relevant context found.)"
 
-    # Format chat history
+    # Include conversational coverage only when the current user request needs it.
     history_str = ""
-    if chat_history:
-        history_str = "\n".join(
-            f"Human: {h[0]}\nAssistant: {h[1]}" for h in chat_history[-5:]
-        )
+    original = state.get("original_query") or query
+    if chat_history and scope != original:
+        history_str = _format_history(chat_history, turns=5, cap=None)
 
     # The reply language is decided ONCE from the question the user typed
     # (original_query survives condensation) and passed explicitly; the
@@ -1341,13 +1373,23 @@ def generate_node(state: dict) -> dict:
                 today=today,
                 context=context,
                 chat_history=history_str or "(none)",
-                query=_verification_scope(state),
+                query=original,
             )
         )
 
+    from app.services.experience_status import experience_status_answer
     from app.services.service_inventory import inventory_followup
 
     followup = inventory_followup(state, context_docs, reply_language)
+    status_answer = experience_status_answer(state, context_docs, reply_language)
+    if status_answer is not None:
+        steps.append(
+            ReasoningStep(
+                node="generate",
+                action="retrieved_experience_status",
+                detail="explicit non-use and a scoped evidence limit",
+            )
+        )
     if followup is not None:
         steps.append(
             ReasoningStep(
@@ -1358,9 +1400,13 @@ def generate_node(state: dict) -> dict:
         )
     try:
         result = (
-            GeneratedAnswer(answer=followup, confidence=0.9)
-            if followup is not None
-            else _call_generate()
+            GeneratedAnswer(answer=status_answer, confidence=0.9)
+            if status_answer is not None
+            else (
+                GeneratedAnswer(answer=followup, confidence=0.9)
+                if followup is not None
+                else _call_generate()
+            )
         )
         answer = _sanitize_answer(result.answer)
         confidence = result.confidence
@@ -1443,24 +1489,15 @@ def _insufficient_answer(state: dict) -> str:
 
 
 def _verification_scope(state):
-    """Follow-up scope may come from condensation; facts still require evidence."""
-    return "\n".join(
-        dict.fromkeys(
-            filter(
-                None,
-                (
-                    state.get("original_query"),
-                    state.get("query"),
-                ),
-            )
-        )
-    )
+    """Use only current and referential user text for answer constraints."""
+    from app.services.evidence_policy import user_answer_scope
+
+    return user_answer_scope(state)
 
 
 def verify_grounding_node(state: dict) -> dict:
     """Validate the exact delivered text, including deterministic restorations."""
     from app.graph.answer_completeness import (
-        normalize_metric_omission_attribution,
         preserve_primary_language,
         preserve_requested_degrees,
     )
@@ -1489,7 +1526,6 @@ def verify_grounding_node(state: dict) -> dict:
     draft, numeric_facts = preserve_percentage_qualifiers(draft, docs, language)
     draft, project_names = preserve_project_identity(draft, docs, query, language)
     draft, restored_details = preserve_requested_evidence(draft, docs, query, language)
-    draft = normalize_metric_omission_attribution(draft, docs, language)
     coverage = next(
         (
             doc.metadata["conversation_coverage"]
@@ -1610,6 +1646,11 @@ def _verify_grounding_llm_node(state: dict) -> dict:
     context_docs = state.get("context_documents", []) or []
     question = state.get("original_query") or state.get("query", "")
     scope_query = _verification_scope(state)
+    conversation_context = (
+        _format_history(state.get("chat_history", []), turns=5, cap=None)
+        if scope_query != question
+        else "(none)"
+    )
     steps = list(state.get("reasoning_steps", []))
 
     try:
@@ -1661,19 +1702,24 @@ def _verify_grounding_llm_node(state: dict) -> dict:
         structured_llm = llm.with_structured_output(GroundingVerdict)
         verdict: GroundingVerdict = structured_llm.invoke(
             VERIFY_GROUNDING_PROMPT.format_messages(
-                question=scope_query or "(unknown)",
+                question=question or "(unknown)",
+                conversation_context=conversation_context,
                 context=context,
                 answer=answer,
                 constraint_failures=describe_constraints(violations),
             )
         )
     except Exception as exc:
-        logger.warning("Grounding verifier error (answer withheld): %s", exc)
+        logger.warning(
+            "Grounding verifier error (answer withheld): %s",
+            _verifier_failure_category(exc),
+        )
         steps.append(
             ReasoningStep(
                 node="verify_grounding",
                 action="warning",
-                detail="structured verifier unavailable",
+                detail="structured verifier unavailable: "
+                + _verifier_failure_category(exc),
             )
         )
         return {
@@ -1733,7 +1779,8 @@ def _verify_grounding_llm_node(state: dict) -> dict:
                 .with_structured_output(GeneratedAnswer)
                 .invoke(
                     REPAIR_GROUNDING_PROMPT.format_messages(
-                        question=scope_query or "(unknown)",
+                        question=question or "(unknown)",
+                        conversation_context=conversation_context,
                         context=context,
                         answer=corrected or answer,
                         language=_detect_reply_language(
@@ -1776,19 +1823,14 @@ def _verify_grounding_llm_node(state: dict) -> dict:
             corrected = ""
             logger.warning("Bounded grounding repair unavailable")
     # A correction is another draft, not proof. Recheck changed text once.
-    from app.graph.answer_completeness import normalize_metric_omission_attribution
 
-    corrected = normalize_metric_omission_attribution(
-        corrected,
-        context_docs,
-        _detect_reply_language(question, state.get("user_language", "en")),
-    )
     final_failures = constraint_failures(corrected, context_docs, scope_query)
     if corrected and not final_failures:
         try:
             recheck = structured_llm.invoke(
                 VERIFY_GROUNDING_PROMPT.format_messages(
-                    question=scope_query or "(unknown)",
+                    question=question or "(unknown)",
+                    conversation_context=conversation_context,
                     context=context,
                     answer=corrected,
                     constraint_failures="none",
@@ -1829,11 +1871,6 @@ def _verify_grounding_llm_node(state: dict) -> dict:
                     scope_query,
                     _detect_reply_language(question, state.get("user_language", "en")),
                 )
-                candidate = normalize_metric_omission_attribution(
-                    candidate,
-                    context_docs,
-                    _detect_reply_language(question, state.get("user_language", "en")),
-                )
                 final_failures = constraint_failures(
                     candidate, context_docs, scope_query
                 )
@@ -1845,7 +1882,8 @@ def _verify_grounding_llm_node(state: dict) -> dict:
                 ):
                     approval = structured_llm.invoke(
                         VERIFY_GROUNDING_PROMPT.format_messages(
-                            question=scope_query or "(unknown)",
+                            question=question or "(unknown)",
+                            conversation_context=conversation_context,
                             context=context,
                             answer=candidate,
                             constraint_failures="none",
