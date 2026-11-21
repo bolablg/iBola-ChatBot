@@ -1,4 +1,4 @@
-version: 29
+version: 30
 source_types:
   21_production_service_inventory.txt: candidate_confirmed
   20_owner_confirmed_production_scope.txt: candidate_confirmed
@@ -49,6 +49,16 @@ assertion_rules:
   support_pattern: '(?i)(?:(?:Bolaji|he|il)\s+(?:directly\s+)?(?:managed|supervised|led|encadrait|dirigeait)|(?:his|Bolaji.s)\s+(?:team|organization|organisation|equipe)[^.!?;\n]{0,80}(?:included|includes|comprised|comprenait))\s+(?P<count>\d+|one|two|three|un|deux|trois)\s+(?:managers|team leads|responsables)\b'
   exclude_support_pattern: '(?i)training|users|utilisateurs|adoption|stakeholders|vacancy|requires|fictional|hypothetical'
   binding_groups: [count]
+  clause_support: true
+  local_negation: true
+- id: formal_performance_authority_requires_direct_evidence
+  description: HR partnership, hiring, onboarding and performance-management participation do not establish formal authority. An affirmative personal authority claim requires direct same-actor authority evidence in a supporting clause.
+  answer_pattern: '(?i)\b(?:formal\s+)?performance[ -]management\s+(?:authority|accountability|approval rights)\b'
+  affirmation_pattern: '(?i)\b(?:Bolaji|he|his)\b[^.;\n]{0,100}\b(?:has|had|holds?|held|possess(?:es|ed)?|exercised|was granted|includes?|included|encompasses|entailed|is documented|is confirmed)\b|\b(?:authority|accountability|approval rights)\b[^.;\n]{0,40}\b(?:is|was)\s+(?:held|documented|confirmed|established)\b'
+  support_pattern: '(?i)\bBolaji\s+(?:(?:personally|directly)\s+)?(?:has|had|holds?|held|possess(?:es|ed)?|exercised|was granted)\s+(?:(?:formal|direct|sole|final)\s+){0,2}performance[ -]management\s+(?:authority|accountability|approval rights)\b'
+  exclude_support_pattern: '(?i)\b(?:Source|Title|Section|Parent context)\s*:|\b(?:if|unless|hypothetical|suppose|assuming|would|could|might|colleague|vacancy|requires)\b'
+  exclude_support_line_pattern: '(?i)^\s*(?:Source|Title|Section|Parent context)\s*:'
+  negation_pattern: '(?i)^\s*(?:if|unless|suppose|assuming|ask whether)\b'
   clause_support: true
   local_negation: true
 - id: budget_authority_requires_direct_evidence

@@ -1008,6 +1008,12 @@ def constraint_failures(
             support_scopes = {}
             support = []
             for text in evidence:
+                if rule.get("exclude_support_line_pattern"):
+                    text = "\n".join(
+                        line
+                        for line in text.splitlines()
+                        if not re.search(rule["exclude_support_line_pattern"], line)
+                    )
                 spans = _claim_clauses(text) if rule.get("clause_support") else [text]
                 if rule.get("support_continuation_pattern"):
                     spans = [span for span in spans if span.strip()]
