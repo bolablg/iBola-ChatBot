@@ -139,6 +139,50 @@ def _confirmed_experience_limit(answer, target):
     normalized = " ".join(_accent_fold(answer).split())
     for sentence in normalized.split("."):
         sentence = " ".join(sentence.split())
+        deployment_limit = _re_mod.fullmatch(
+            r"(?:There is )?no documented (?:(?:personal|direct) )?production "
+            r"experience (?:deploying|using|with) (?P<subject>[^,.;]+?)"
+            r"(?:,\s+(?:though|whereas|while)\s+(?P<contrast>[^.;]+))?",
+            sentence,
+            _re_mod.I,
+        )
+        if deployment_limit and _re_mod.fullmatch(
+            _accent_fold(target), deployment_limit.group("subject"), _re_mod.I
+        ):
+            contrast = deployment_limit.group("contrast")
+            # The named unknown must occur only in its complete negative clause.
+            # A separate, independently grounded tool record cannot prove it.
+            if (
+                len(list(_re_mod.finditer(_accent_fold(target), normalized, _re_mod.I)))
+                != 1
+            ):
+                continue
+            if contrast:
+                other = _re_mod.fullmatch(
+                    r"(?P<tool>[a-z][a-z /-]{0,60}?) (?:is|was|has been) documented "
+                    r"(?:for|at|in) [^,;:]+",
+                    contrast,
+                    _re_mod.I,
+                )
+                if not other or _re_mod.search(
+                    r"\b(?:and|but|yet|however|if|unless|whether|would|could|might)\b",
+                    contrast,
+                    _re_mod.I,
+                ):
+                    continue
+                from app.services.evidence_policy import policy_data
+
+                tools = next(
+                    rule["subject_pattern"]
+                    for rule in policy_data()["assertion_rules"]
+                    if rule["id"] == "deficiency_requires_same_tool_evidence"
+                )
+                other_tool = _re_mod.sub(
+                    r"^Apache\s+", "", other.group("tool"), flags=_re_mod.I
+                )
+                if not _re_mod.fullmatch(tools, other_tool):
+                    continue
+            return True
         project_limit = _re_mod.fullmatch(
             r"No named project proves personal deployment of (?P<tools>.+)",
             sentence,

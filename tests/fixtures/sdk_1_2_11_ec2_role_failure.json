@@ -1,0 +1,166 @@
+{
+  "source_run": 44862983704,
+  "result": {
+    "id": "recruiter-sda-01-t1",
+    "category": "canonical",
+    "lang": "en",
+    "tags": [
+      "recruiter_regression"
+    ],
+    "question": "This is a recruiter simulation for a fictional Senior Data Architect search at a growing multi-country mobility business. We need someone who has personally shaped a production data platform. Which experience makes Bolaji a credible candidate, and what did he own?",
+    "answer": "Bolaji is a credible candidate as a builder-leader hybrid who personally designs and operates production data systems. During his Head of Data role at Gozem from October 2022 to March 2025, he personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline, and personally designed and operated AWS EC2 for the Gozem Data Hub.",
+    "agent_type": "professional",
+    "evidence_count": 5,
+    "evidence": [
+      {
+        "source": "20_owner_confirmed_production_scope.txt",
+        "chunk_id": "20_owner_confirmed_production_scope.txt::0",
+        "section": "OWNER-CONFIRMED PRODUCTION RESPONSIBILITY",
+        "retrieval_rank": 1,
+        "retrieval_score": 34.0,
+        "parent_context": "",
+        "scope_context": "",
+        "evidence_type": "candidate_confirmed",
+        "metric_scope": {},
+        "content_preview": "Source: 20_owner_confirmed_production_scope.txt | Title: OWNER-CONFIRMED PRODUCTION RESPONSIBILITY | Section: OWNER-CONFIRMED PRODUCTION RESPONSIBILITY\n\nConfirmation recorded on November 19, 2026. This is the confirmation date, not a date assigned to the underlying work. Evidence classification: candidate_confirmed.\n\nAt Gozem, Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline. The owner subsequently clarified that he is both an architect and engineer and personally designed and operated the production services he used. This supersedes the earlier design-only qualification for these services.\n\nFor the Gozem Data Hub, Bolaji personally designed and operated AWS EC2 in production.\n\nBolaji personally set up an AWS S3 bucket in production. Bolaji personally operates an AWS S3 bucket in production, reading data from it and writing data back. He owns and operates the bucket on an ongoing basis. AWS S3 serves as an exchange layer with the product team and has also been used in projects. This clarification does not identify an employer or project for the S3 bucket and does not establish on-call responsibility.\n\nBolaji has no Kafka experience at all. Bolaji has never used Kafka. This is an explicit owner-confirmed absence of experience, not an inference from an omitted tool. It does not imply inability to learn Kafka or a deficiency in other streaming technologies.\n\nThese clarifications do not add personal Spark Structured Streaming, Apache NiFi or Lakeflow production experience. They do not establish CDC event counts, end-to-end latency or availability. The separately documented streaming-workload average remains a different measurement population.\n\nCDC role and period, owner confirmation received November 20, 2026: During his Head of Data role at Gozem (October 2022 to March 2025), Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline.\n\nThis confirmation locates the CDC work within that role period. It does not establish the project's exact start or completion dates, continuous operation throughout the entire role, on-call coverage, latency or uptime guarantees. It does not assign that role period to AWS EC2, AWS S3 or other services. The earlier Google Cloud migration remains separately attributed to the Global Data Analyst role.\n\nConfirmation provenance: Asked which role and period covered his design and operation of the MongoDB CDC pipeline, the owner answered: \"Head of Data, Oct 2022\u2013Mar 2025\". Evidence classification: candidate_confirmed. The November 20 date records when this role clarification was received, not when the project started or ended."
+      },
+      {
+        "source": "00_identity.txt",
+        "chunk_id": "00_identity.txt::4",
+        "section": "WHY BOLAJI - VALUE PROPOSITION:",
+        "retrieval_rank": 2,
+        "retrieval_score": 0.030835,
+        "parent_context": "BOLAJI BALOGOUN - IDENTITY & CONTACT",
+        "scope_context": "",
+        "evidence_type": "curated",
+        "metric_scope": {},
+        "content_preview": "Source: 00_identity.txt | Title: BOLAJI BALOGOUN - IDENTITY & CONTACT | Section: WHY BOLAJI - VALUE PROPOSITION: | Parent context: BOLAJI BALOGOUN - IDENTITY & CONTACT\n\nBolaji is a data and AI executive and an impact-driven builder. He does not just set strategy: he architects and deploys the systems himself while leading the team that scales them. He has built data platforms serving millions of users in markets most engineers never touch.\n\nWhat makes Bolaji different from other senior data and AI candidates:\n\n1. Builder-leader hybrid: at Gozem he led a data organization of 14+ professionals supporting five African operating markets AND still coded, architected, and shipped production systems. Most leaders at this level stop building. Bolaji does both.\n\n2. Self-taught adaptability: he taught himself Google Cloud Platform with zero prior cloud experience and deployed a full production analytics infrastructure within a single quarter because the business needed it, migrating 10+ TB without operational interruption. He learns fast under pressure and delivers.\n\n3. Full-stack data and AI: Bolaji has worked every layer of the data stack, from statistics and econometrics to data engineering, machine learning, AI product delivery, and team leadership. The combination across the entire stack is the differentiator.\n\n4. Real-world African market expertise: he built production systems supporting five African operating markets with real infrastructure constraints, multilingual contexts, and distributed teams, serving millions of real users daily.\n\nWhy interview Bolaji for a senior data or AI role:\nHe combines 10+ years of hands-on technical depth (Python, SQL, GCP, Airflow, LLMs, agentic AI) with proven leadership of a team he grew from 4 to 14+ during the Head of Data period (October 2022 - March 2025). He chartered the Gozem Data Hub serving over 700 people, cut Google Cloud costs by 42.57% in a single quarter, shipped 30+ production AI tools (RAG chatbots, document intelligence, fraud screening, market monitoring), and set governance across 250+ production pipelines. He is equally comfortable writing BigQuery SQL, designing system architecture, mentoring engineers, or presenting to executive leadership."
+      },
+      {
+        "source": "90_website_canon_llms_full.txt",
+        "chunk_id": "90_website_canon_llms_full.txt::4",
+        "section": "Data products at operating scale",
+        "retrieval_rank": 4,
+        "retrieval_score": 0.016393,
+        "parent_context": "Bolaji BALOGOUN \u00b7 Biography",
+        "scope_context": "",
+        "evidence_type": "published",
+        "metric_scope": {},
+        "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN \u00b7 Data Engineer \u00b7 Data Architect (full content) | Section: Data products at operating scale | Parent context: Bolaji BALOGOUN \u00b7 Biography\n\nBolaji architected and led the development of the [Gozem Data Hub](https://www.bolablg.com/experience/gozem-director/#data-hub), a governed operational and analytics platform adopted by 700+ employees, field agents, and partners across five African countries. It provided self-service access to operational applications, analytics, AI tools, and automation. The published case documents React, FastAPI, AWS EC2, BigQuery, MongoDB, Nginx, Docker, Google Cloud Storage, Artifact Registry, and Python.\n\nThe data team monitored more than 250 pipelines. Bolaji established governance, observability, and reliability standards across 300+ workflow orchestration, transformation, and metrics-layer assets."
+      },
+      {
+        "source": "90_website_canon_llms_full.txt",
+        "chunk_id": "90_website_canon_llms_full.txt::21",
+        "section": "Scaling the data organization for multi-country growth",
+        "retrieval_rank": 5,
+        "retrieval_score": 0.016393,
+        "parent_context": "Bolaji BALOGOUN \u00b7 Biography > Head of Data \u00b7 GOZEM \u00b7 Oct 2022 - Mar 2025",
+        "scope_context": "Head of Data \u00b7 GOZEM \u00b7 Oct 2022 - Mar 2025",
+        "evidence_type": "published",
+        "metric_scope": {},
+        "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN \u00b7 Data Engineer \u00b7 Data Architect (full content) | Section: Scaling the data organization for multi-country growth | Parent context: Bolaji BALOGOUN \u00b7 Biography > Head of Data \u00b7 GOZEM \u00b7 Oct 2022 - Mar 2025\n\nResult: Grew the Data organization from 4 to 14+ professionals and matured it into a business-aligned function supporting multi country and business growth.\nProblem: As Gozem transitioned from startup to scale-up, growing analytics demand, platform complexity, operational reporting requirements, and business specialization created the need for a larger and more structured data organization. The team needed to plan for new capabilities, specialize roles, formalize hiring and governance, and coordinate with business stakeholders.\nSolution: Assessed organizational capability gaps and designed the operating model for the data function across Analytics, Data Engineering, and Data Science. Defined role charters, hiring plans, career expectations, competency frameworks, and team structures based on business priorities and anticipated growth.\n\nPartnered with HR on workforce planning, hiring business cases, candidate evaluation frameworks, technical assessments, interviews, hiring decisions, onboarding, and performance management. Used **Breezy HR** to manage recruiting.\n\nCentralized the data team's requests in **Asana** and built dashboards from exported request data. The dashboards tracked request volume, demand sources, work categories, delivery times, team utilization, and capacity trends. Used these measures to inform staffing, prioritization, coaching, and resource allocation.\n\nIntroduced a domain-based partnership with business leaders that clarified data ownership, strengthened governance, and set clear accountability for KPIs. Made the data team part of recurring operational, strategic, and Growth decisions.\nTools: Breezy HR \u00b7 Google Workspace \u00b7 Asana \u00b7 BigQuery \u00b7 Looker Studio"
+      },
+      {
+        "source": "20_owner_confirmed_production_scope.txt",
+        "chunk_id": "20_owner_confirmed_production_scope.txt::2",
+        "section": "HISTORICAL CONFIRMATION RECORD",
+        "retrieval_rank": 7,
+        "retrieval_score": 0.015873,
+        "parent_context": "OWNER-CONFIRMED PRODUCTION RESPONSIBILITY",
+        "scope_context": "",
+        "evidence_type": "candidate_confirmed",
+        "metric_scope": {},
+        "content_preview": "Source: 20_owner_confirmed_production_scope.txt | Title: OWNER-CONFIRMED PRODUCTION RESPONSIBILITY | Section: HISTORICAL CONFIRMATION RECORD | Parent context: OWNER-CONFIRMED PRODUCTION RESPONSIBILITY\n\nThe following earlier answers record the sequence of clarification. The current canonical design-and-operation statement above governs Pub/Sub and Dataflow; the earlier design-only answer does not limit that responsibility.\n\nQuestion: The KB documents a MongoDB CDC pipeline using Pub/Sub and Dataflow, but does not explicitly state your personal production responsibility. Which description is accurate?\nAnswer: I personally designed it in production\n\nQuestion: The Gozem Data Hub case lists AWS EC2 in its stack. What can the KB explicitly confirm about your own EC2 responsibility?\nAnswer: I personally designed and operated EC2 in production\n\nAdditional owner statement: no  kafka experience at all. s3 in production as exchange layer with the product team, and in projects\nAdditional owner statement: i set up bucket in s3 in production\nAdditional owner statement: i own it on long run as i read data from it adn write back as well"
+      }
+    ],
+    "grounding_checked": true,
+    "provenance": {
+      "code_revision": "b397d7d64e8cf7da",
+      "deployment_revision": null,
+      "corpus_revision": "175e61503cf7c1c5",
+      "kb_revision": "175e61503cf7c1c5",
+      "policy_revision": "e3b287a103c90b57",
+      "index_sync_pending": false,
+      "chunker_version": "3",
+      "model": "gemini-3.5-flash-lite",
+      "thinking_config": {
+        "thinking_level": "low"
+      },
+      "routing_thinking_config": {
+        "thinking_level": "minimal"
+      },
+      "generation_thinking_config": {
+        "thinking_level": "low"
+      },
+      "generation_temperature": null,
+      "verifier_model": "gemini-3.5-flash-lite",
+      "verifier_thinking_level": "low",
+      "verifier_thinking_budget": null,
+      "prompt_versions": {
+        "inventory_followup": "1.1",
+        "guardrail": "2.2",
+        "condense": "1.1",
+        "batch_grade": "2.3",
+        "rewrite": "2.1",
+        "generate_professional": "3.21",
+        "generate_education": "3.6",
+        "generate_learning": "3.6",
+        "verify_grounding": "2.16",
+        "repair_grounding": "1.8",
+        "upper_bound_clarification": "1.0",
+        "skills_completeness_clarification": "1.0",
+        "insufficient_evidence": "1.1",
+        "disputed_evidence": "1.0",
+        "project_identity": "1.0",
+        "evidence_detail": "1.2",
+        "confirmed_non_use": "1.0",
+        "documentation_limit": "1.0",
+        "personal_production_limit": "1.1",
+        "degree_clarification": "1.0",
+        "language_retry": "1.0",
+        "structured_output_recovery": "1.0",
+        "out_of_scope": "2.0",
+        "translate": "1.0",
+        "notification_suppressed": "1.0"
+      }
+    },
+    "evidence_sources": [
+      "20_owner_confirmed_production_scope.txt",
+      "00_identity.txt",
+      "90_website_canon_llms_full.txt",
+      "90_website_canon_llms_full.txt",
+      "20_owner_confirmed_production_scope.txt"
+    ],
+    "unsupported_claims": [],
+    "prefix_turns": [],
+    "latency_s": 4.62,
+    "latency_protocol": "target_call_elapsed_v1",
+    "conversation_elapsed_s": 4.62,
+    "prefix_replay_elapsed_s": null,
+    "fact_pass": true,
+    "fact_failures": [],
+    "scores": {
+      "relevance": 10,
+      "accuracy": 3,
+      "helpfulness": 8,
+      "faithfulness": 4,
+      "rationale": "The answer is relevant and helpful but makes an unsupported inference by incorrectly assigning the AWS EC2 work to the Head of Data role period, which the context explicitly states is not established."
+    },
+    "error": null,
+    "warning": null,
+    "judge_error": null,
+    "judge_diagnostics": {
+      "protocol": "bounded-format-recovery-1",
+      "attempts": [
+        {
+          "attempt": 1
+        }
+      ],
+      "retry_reasons": [],
+      "decoding_source": "text",
+      "status": "success"
+    },
+    "chars_in": 9393,
+    "chars_out": 359
+  }
+}

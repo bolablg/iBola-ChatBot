@@ -217,7 +217,8 @@ def test_local_unknowns_and_rejected_denials_do_not_erase_workload_averages(limi
 def test_unsupported_latency_threshold_is_rejected_even_in_a_negative_claim():
     docs = evidence(WORKLOAD)
     assert "latency_threshold_wording_requires_source" in constraint_failures(
-        "Sub-second latency is not established.", docs
+        "The documentation explicitly notes that sub-second latency is not established.",
+        docs,
     )
     actual = [Document(page_content="Sub-second latency is not documented.")]
     assert "latency_threshold_wording_requires_source" not in constraint_failures(

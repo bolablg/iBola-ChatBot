@@ -741,6 +741,13 @@ def _project_role_claims(text, rule, supporting=False):
     for paragraph in re.split(r"\n\s*\n", _fold(text)):
         active = heading
         for clause in _claim_clauses(paragraph):
+            if re.search(rule.get("other_actor_pattern", r"(?!)"), clause) or re.match(
+                rule.get("conditional_prefix_pattern", r"(?!)"), clause
+            ):
+                active = heading = ""
+                continue
+            if supporting and rule.get("support_same_clause"):
+                active = heading = ""
             plain = clause.strip(" \t#*:-")
             if not plain:
                 continue
@@ -776,7 +783,9 @@ def _project_role_claims(text, rule, supporting=False):
                 continue
             support_relations = (
                 list(re.finditer(rule["support_relation_pattern"], clause))
-                if supporting and not re.search(rule["support_exclude_pattern"], clause)
+                if supporting
+                and not re.search(rule["support_exclude_pattern"], clause)
+                and re.search(rule.get("support_anchor_pattern", r""), clause)
                 else []
             )
             if markers:
