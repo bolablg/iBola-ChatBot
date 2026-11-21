@@ -1,4 +1,4 @@
-version: 33
+version: 36
 source_types:
   21_production_service_inventory.txt: candidate_confirmed
   20_owner_confirmed_production_scope.txt: candidate_confirmed
@@ -49,6 +49,17 @@ assertion_rules:
   support_pattern: '(?i)(?:(?:Bolaji|he|il)\s+(?:directly\s+)?(?:managed|supervised|led|encadrait|dirigeait)|(?:his|Bolaji.s)\s+(?:team|organization|organisation|equipe)[^.!?;\n]{0,80}(?:included|includes|comprised|comprenait))\s+(?P<count>\d+|one|two|three|un|deux|trois)\s+(?:managers|team leads|responsables)\b'
   exclude_support_pattern: '(?i)training|users|utilisateurs|adoption|stakeholders|vacancy|requires|fictional|hypothetical'
   binding_groups: [count]
+  clause_support: true
+  local_negation: true
+- id: performance_framework_domain_requires_direct_evidence
+  description: A driver or rider performance framework does not establish a team or employee performance-management framework. HR partnership and competency frameworks are not direct design proof of a performance framework. Bind design and domain to the named actor in one source clause.
+  answer_pattern: '(?i)\b(?P<domain>team|employee|staff|manager)\s+performance(?:[ -]management)?\s+frameworks?\b'
+  affirmation_pattern: '(?i)\b(?:designed|defined|created|built|developed|established|implemented)\b'
+  support_pattern: '(?i)\bBolaji\s+(?:(?:personally|directly)\s+)?(?:designed|defined|created|built|developed|established|implemented)\s+(?:(?:a|an|the|his)\s+)?(?P<domain>team|employee|staff|manager|driver|rider)\s+performance(?:[ -]management)?\s+frameworks?\b'
+  exclude_support_pattern: '(?i)\b(?:if|unless|would|could|hypothetical|colleague)\b'
+  exclude_support_line_pattern: '(?i)^\s*(?:Source|Title|Section|Parent context)\s*:'
+  binding_groups: [domain]
+  negation_pattern: '(?i)^\s*(?:if|unless|suppose|assuming|ask whether)\b'
   clause_support: true
   local_negation: true
 - id: formal_performance_authority_requires_direct_evidence
@@ -1115,6 +1126,11 @@ request_scopes:
     ec2: aws ec2
     s3: aws s3
     nifi: apache nifi
+  technology_comparisons:
+  - subject: Spark
+    qualified_pattern: '(?i)\b(?:Apache\s+)?Spark\s+Structured\s+Streaming\b'
+    generic_pattern: '(?i)\b(?:Apache\s+)?Spark\b'
+    broad_query_pattern: '(?i)\b(?:other|additional|all|which|what|autres|supplementaires|toutes|tous|quels|quelles)\b[^.!?\n]{0,70}\b(?:technologies|frameworks|tools|services|engines|systems|outils|moteurs|systemes)\b|\b(?:technologies|frameworks|tools|services|engines|systems|outils|moteurs|systemes)\b[^.!?\n]{0,40}\b(?:other|additional|all|autres|supplementaires|additionnels?|additionnelles?)\b'
   personal_support_pattern: |-
     (?ix)\b(?:Bolaji|he|il)\s+(?:(?:has|had|a|personally|directly|personnellement|directement)\s+){0,3}
     (?:
@@ -1142,7 +1158,7 @@ request_scopes:
   shared_location_prefix_pattern: '(?i)^\s*(?:at|for|within|chez|dans)\s+[^,;.!?\n]{1,80},\s*'
   unknown_project_pattern: '(?i)(?:employer|project)[^.!?;\n]{0,85}(?:not\s+(?:specified|documented)|unknown)'
   unknown_project_record_limit_pattern: '(?i)^\s*(?:This\s+(?:clarification|confirmation)|The\s+(?:record|evidence))\s+does\s+not\s+(?:identify|specify|establish)\s+(?:(?:an?|any|the)\s+)?(?:employer|project)(?:\s+(?:and|or)\s+(?:employer|project))?\s+for\s+(?:(?:the|this|that|its)\s+)?{tool}(?:\s+(?:bucket|service))?\s*$'
-  unknown_project_qualification_pattern: '(?ix)(?:^|[,:(])\s*(?:(?:the|its|exact|specific|precise)\s+){0,2}(?:employer|project)(?:\s*(?:and|or|/)\s*(?:employer|project))?(?:\s+(?:for|of)\s+(?:(?:this|that|the|its)\s+(?:bucket|service)|(?:AWS\s+)?(?:S3|EC2|Pub/Sub|Dataflow|Spark|NiFi|Lakeflow)))?\s+(?:(?:is|are|remains?)\s+)?(?:not\s+(?:(?:currently|explicitly|yet)\s+)?(?:specified|documented|identified)|unknown|unspecified|undocumented)\s*$'
+  unknown_project_qualification_pattern: '(?ix)(?:^|[,:(])\s*(?:with\s+)?(?:(?:the|its|exact|specific|precise)\s+){0,2}(?:employer|project)(?:\s*(?:and|or|/)\s*(?:employer|project))?(?:\s+(?:for|of)\s+(?:(?:this|that|the|its)\s+(?:(?:AWS\s+)?(?:S3|EC2|Pub/Sub|Dataflow|Spark|NiFi|Lakeflow)\s+)?(?:bucket|service)|(?:AWS\s+)?(?:S3|EC2|Pub/Sub|Dataflow|Spark|NiFi|Lakeflow)))?\s+(?:(?:is|are|remains?|remaining)\s+)?(?:not\s+(?:(?:currently|explicitly|yet)\s+)?(?:specified|documented|identified)|unknown|unspecified|undocumented)\s*$'
   unknown_project_qualification_exclude_pattern: '(?i)\b(?:if|unless|whether|assuming|suppose|hypothetical|could|would|might)\b|\bnot\s+(?:unknown|unspecified|undocumented)\b'
   project_key: data_hub
   project_reference_pattern: '(?i)^(?:its\b|this (?:project|platform)\b|the (?:documented|published) stack\b)'
@@ -1154,6 +1170,35 @@ request_scopes:
   inventory_label_pattern: '(?i)^\s*(?:listed tools|tool inventory|inventory|documented tool list|outils listes)|\b(?:inventory|tool list|catalogue)\b.{0,30}(?:lists|includes|contains)|(?:appear\w*|listed)\s+in.{0,20}(?:inventory|tool list)'
   exclude_support_pattern: '(?i)\b(?:taught|teaches|teaching|supervised|delivered|designed)\b[^.;\n]{0,60}\b(?:training|bootcamp|module|lab|prototype|formation|atelier)\b|\b(?:for|during|in|en|pour)\s+(?:a\s+|an\s+)?(?:training|bootcamp|lab|prototype|formation|atelier)\b'
   operation_pattern: '(?i)\b(?:personally|operated|operating|operates|use|uses|used|using|designed|designing|designs|deployed|deploys|builds|built|exploite|utilise|concu)\b'
+
+record_limit_subject_atoms:
+- '(?:direct[ -]reports?(?:\s+counts?)?|manager(?:ial)?\s+layers?|(?:total\s+|team\s+)?headcount)'
+- '(?:formal\s+)?performance[ -]management\s+authority'
+- 'budget(?:\s+(?:amounts?|approval|authority|ownership))?'
+- 'approval\s+(?:authority|rights|mandates?)'
+- 'rejected\s+(?:options?|vendors?|alternatives?)'
+- 'measured\s+(?:returns?|ROI|outcomes?)'
+- 'build\s+(?:versus|vs)\s+vendor\s+(?:comparisons?|options?|decisions?)'
+- 'executive\s+(?:disagreement\s+)?(?:resolutions?|disagreements?|conflicts?)'
+- '(?:measurement\s+(?:periods?|intervals?|windows?)|comparison\s+(?:methods?|methodologies))'
+- '(?:montants?\s+du\s+budget|niveaux\s+de\s+management|nombre\s+de\s+rapports\s+directs|periode\s+de\s+mesure|methode\s+de\s+comparaison)'
+
+experience_status_answers:
+- id: closed_streaming_experience_status
+  confirmed_subject: Kafka
+  limit_subject: Spark Structured Streaming
+  intent_pattern: '(?i)\b(?:experience|experiences|hands[ -]on|evidence|used|uses|utilise|utilisee|deploy\w*|deploi\w*|exploite\w*|operated|operates)\b'
+  exclude_query_pattern: '(?i)\b(?:other|additional|similar|alternatives?|instead|closest|compare|comparison|contrast|versus|vs|else|more|latency|throughput|availability|on.call|team|headcount|countries|budget|salary|notice|certifications?|timeline|years?|when|how|why|explain|wording|phrase|options?|best.practice|autres|supplementaires|comparer|comparaison|latence|debit|budget|salaire|preavis|quand|comment|pourquoi)\b|\b(?:do not|don.t|avoid)\s+(?:mention|discuss)\b'
+  other_subject_pattern: '(?i)\b(?:Spark|AWS|S3|EC2|BigQuery|Airflow|Dataform|Python|SQL|Power BI|DAX|Tableau|Snowflake|Redshift|Pub/Sub|Dataflow|NiFi|Lakeflow|Databricks|Flink|Pulsar|Rust|Go|Hadoop)\b'
+  reference_tail_patterns:
+  - '(?i)(?:what|which)\s+(?:hands[ -]on\s+)?evidence\s+(?:does|did)\s+(?:Bolaji|he)\s+have\s+(?:with|for)\s+(?:those|these)\s+(?:exact\s+)?technologies'
+  - '(?i)(?:what|which)\s+(?:(?:named|documented)\s+)?projects?\s+(?:proves?|shows?|supports?|confirms?|documents?|demonstrates?)\s+(?:it|this|that|(?:his\s+)?(?:(?:personal|production)\s+)*(?:experience|deployment|use))'
+  - '(?i)(?:quel|quels)\s+projets?(?:\s+(?:nommes?|documentes?))?\s+(?:le|cela)\s+(?:prouve|prouvent|confirme|confirment|demontre|demontrent)'
+  - '(?i)(?:in production|en production|not|pas|non)'
+  limit_source: 20_owner_confirmed_production_scope.txt
+  limit_section_pattern: '^OWNER-CONFIRMED PRODUCTION RESPONSIBILITY$'
+  limit_support_pattern: '(?i)These clarifications do not add personal Spark Structured Streaming, Apache NiFi or Lakeflow production experience'
+  limit_positive_pattern: '(?is)(?=.*\b(?:Bolaji|he|his|il|son|ses|sa)\b)(?=.*\bSpark Structured Streaming\b)(?=.*\bproduction\b)'
 
 experience_confirmations:
 - id: confirmed_non_use_requires_answer

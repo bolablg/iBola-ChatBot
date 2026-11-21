@@ -410,8 +410,12 @@ def confirmed_use_conflicts(answer, documents):
                         for key in rule.get("positive_predicate_groups", [])
                         if match.groupdict().get(key)
                     ]
-                    if match.groupdict().get("experience_before") and re.search(
-                        r"(?i)\b(?:absence|lack|lack of|manque|absence de)\s+(?:of\s+)?experience\b",
+                    if match.groupdict().get("experience_before") and re.fullmatch(
+                        rf"(?i)(?:Bolaji|he|il)\s+(?:has|had|a)\s+(?:an?\s+)?"
+                        rf"(?:(?:explicit|confirmed|owner[ -]confirmed)\s+){{0,2}}"
+                        rf"(?:absence|lack|manque)\s+(?:of\s+|de\s+)?"
+                        rf"(?:{re.escape(subject)}\s+experience|experience\s+"
+                        rf"(?:with|in|avec|en)\s+{re.escape(subject)})",
                         match.group(),
                     ):
                         continue
@@ -462,9 +466,10 @@ def _normalize_non_use_reference(answer, documents):
         )
         answer = pattern.sub(lambda match: match.group()[:-2] + subject, answer)
         confirmed_connector = re.compile(
-            rf"(?i)\s*(?:Bolaji|he)\s+has\s+{absence}(?:,?\s+as\s+|:\s*)"
-            rf"(?:the\s+)?(?:records?|documentation|evidence)\s+confirms?\s+"
-            rf"(?:(?:he|Bolaji)\s+)?(?:has\s+)?never\s+used\s+(?P<reference>it)\s*"
+            rf"(?i)\s*(?:Bolaji|he)\s+has\s+{absence}(?:"
+            rf"(?:,?\s+as\s+|:\s*)(?:the\s+)?(?:records?|documentation|evidence)\s+confirms?\s+"
+            rf"(?:(?:he|Bolaji)\s+)?(?:has\s+)?|,?\s+having\s+)"
+            rf"never\s+used\s+(?P<reference>it)\s*"
         )
 
         def resolve_confirmed_sentence(match):
@@ -530,6 +535,50 @@ def preserve_project_identity(
     return answer, names
 
 
+def bound_record_limits(answer: str, language: str):
+    """Narrow complete nominal unknowns to their retrieved-record scope."""
+    from app.graph.prompts import RECORD_SCOPE_TEMPLATES
+
+    lang = "fr" if language in {"fr", "French"} else "en"
+
+    def bound(match):
+        clause = match.group("clause").strip()
+        if re.search(
+            r"(?i)\b(?:retrieved|record|evidence|documentation|document|dossier|recupere|KB)\b",
+            _fold(clause),
+        ):
+            return match.group()
+        nominal = re.fullmatch(
+            r"(?i)(?P<subject>[a-z][a-z0-9 ,/+#_'()\u2019-]{0,450}?)\s+"
+            r"(?:(?:is|are|remains?)\s+(?:unknown|undocumented|unconfirmed|unverified|not documented|not established|not specified|not confirmed)|"
+            r"(?:est|sont|reste|restent)\s+(?:inconnus?|inconnues?|non documente[es]*|non precise[es]*))",
+            _fold(clause),
+        )
+        if not nominal:
+            return match.group()
+        atoms = policy_data().get("record_limit_subject_atoms", [])
+        atom = r"(?:(?:the|a|an|his|les|le|la)\s+)?(?:" + "|".join(atoms) + ")"
+        subject = nominal.group("subject")
+        if not atoms or not re.fullmatch(
+            atom
+            + r"(?:\s*(?:,\s*(?:(?:and|or|et|ou)\s+)?|\s+(?:and|or|et|ou)\s+)"
+            + atom
+            + r")*",
+            subject,
+            re.I,
+        ):
+            return match.group()
+        return match.group("separator") + RECORD_SCOPE_TEMPLATES[lang].format(
+            detail=subject[0].lower() + subject[1:]
+        )
+
+    return re.sub(
+        r"(?P<separator>^|(?<=[.!?])\s+)(?P<clause>[^.!?\n]+)(?P<punctuation>[.!?]?)",
+        bound,
+        answer,
+    )
+
+
 def preserve_requested_evidence(
     answer: str, documents: List[Document], query: str, language: str
 ):
@@ -543,6 +592,8 @@ def preserve_requested_evidence(
 
     if not answer.strip():
         return answer, []
+    if documents:
+        answer = bound_record_limits(answer, language)
     lang = "fr" if language in {"fr", "French"} else "en"
     restored = []
     used = set()
@@ -1598,6 +1649,17 @@ def _request_scope_failures(answer, documents, query):
         def canonical(value):
             return aliases.get(value.casefold(), value.casefold())
 
+        latest = _fold(query.split("\n", 1)[0])
+        comparison_subjects = {
+            canonical(variant["subject"]): variant["qualified_pattern"]
+            for variant in rule.get("technology_comparisons", [])
+            if re.search(variant["qualified_pattern"], latest)
+            and not re.search(
+                variant["generic_pattern"],
+                re.sub(variant["qualified_pattern"], " ", latest),
+            )
+            and not re.search(variant["broad_query_pattern"], latest)
+        }
         personal = []
         implementation = []
         project = set()
@@ -1729,6 +1791,12 @@ def _request_scope_failures(answer, documents, query):
             }
             if not requested:
                 subjects &= {canonical(subject) for subject in explicit_subjects}
+            elif not re.search(r"(?i)\bproduction\b", clause):
+                subjects -= {
+                    subject
+                    for subject, qualified in comparison_subjects.items()
+                    if not re.search(qualified, clause)
+                }
             if not subjects:
                 continue
             record_limit = _record_limit_subject(
