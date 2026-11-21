@@ -462,9 +462,10 @@ def _normalize_non_use_reference(answer, documents):
         )
         answer = pattern.sub(lambda match: match.group()[:-2] + subject, answer)
         confirmed_connector = re.compile(
-            rf"(?i)\s*(?:Bolaji|he)\s+has\s+{absence}(?:,?\s+as\s+|:\s*)"
-            rf"(?:the\s+)?(?:records?|documentation|evidence)\s+confirms?\s+"
-            rf"(?:(?:he|Bolaji)\s+)?(?:has\s+)?never\s+used\s+(?P<reference>it)\s*"
+            rf"(?i)\s*(?:Bolaji|he)\s+has\s+{absence}(?:"
+            rf"(?:,?\s+as\s+|:\s*)(?:the\s+)?(?:records?|documentation|evidence)\s+confirms?\s+"
+            rf"(?:(?:he|Bolaji)\s+)?(?:has\s+)?|,?\s+having\s+)"
+            rf"never\s+used\s+(?P<reference>it)\s*"
         )
 
         def resolve_confirmed_sentence(match):
@@ -1598,6 +1599,17 @@ def _request_scope_failures(answer, documents, query):
         def canonical(value):
             return aliases.get(value.casefold(), value.casefold())
 
+        latest = _fold(query.split("\n", 1)[0])
+        comparison_subjects = {
+            canonical(variant["subject"])
+            for variant in rule.get("technology_comparisons", [])
+            if re.search(variant["qualified_pattern"], latest)
+            and not re.search(
+                variant["generic_pattern"],
+                re.sub(variant["qualified_pattern"], " ", latest),
+            )
+            and not re.search(variant["broad_query_pattern"], latest)
+        }
         personal = []
         implementation = []
         project = set()
@@ -1729,6 +1741,8 @@ def _request_scope_failures(answer, documents, query):
             }
             if not requested:
                 subjects &= {canonical(subject) for subject in explicit_subjects}
+            elif not re.search(r"(?i)\bproduction\b", clause):
+                subjects -= comparison_subjects
             if not subjects:
                 continue
             record_limit = _record_limit_subject(

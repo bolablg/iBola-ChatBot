@@ -1,4 +1,4 @@
-version: 33
+version: 34
 source_types:
   21_production_service_inventory.txt: candidate_confirmed
   20_owner_confirmed_production_scope.txt: candidate_confirmed
@@ -1115,6 +1115,11 @@ request_scopes:
     ec2: aws ec2
     s3: aws s3
     nifi: apache nifi
+  technology_comparisons:
+  - subject: Spark
+    qualified_pattern: '(?i)\b(?:Apache\s+)?Spark\s+Structured\s+Streaming\b'
+    generic_pattern: '(?i)\b(?:Apache\s+)?Spark\b'
+    broad_query_pattern: '(?i)\b(?:other|additional|all|which|what|autres|supplementaires|toutes|tous|quels|quelles)\b[^.!?\n]{0,70}\b(?:technologies|frameworks|tools|services|engines|systems|outils|moteurs|systemes)\b|\b(?:technologies|frameworks|tools|services|engines|systems|outils|moteurs|systemes)\b[^.!?\n]{0,40}\b(?:other|additional|all|autres|supplementaires|additionnels?|additionnelles?)\b'
   personal_support_pattern: |-
     (?ix)\b(?:Bolaji|he|il)\s+(?:(?:has|had|a|personally|directly|personnellement|directement)\s+){0,3}
     (?:
