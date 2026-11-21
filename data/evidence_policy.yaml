@@ -1,4 +1,4 @@
-version: 35
+version: 36
 source_types:
   21_production_service_inventory.txt: candidate_confirmed
   20_owner_confirmed_production_scope.txt: candidate_confirmed
@@ -1158,7 +1158,7 @@ request_scopes:
   shared_location_prefix_pattern: '(?i)^\s*(?:at|for|within|chez|dans)\s+[^,;.!?\n]{1,80},\s*'
   unknown_project_pattern: '(?i)(?:employer|project)[^.!?;\n]{0,85}(?:not\s+(?:specified|documented)|unknown)'
   unknown_project_record_limit_pattern: '(?i)^\s*(?:This\s+(?:clarification|confirmation)|The\s+(?:record|evidence))\s+does\s+not\s+(?:identify|specify|establish)\s+(?:(?:an?|any|the)\s+)?(?:employer|project)(?:\s+(?:and|or)\s+(?:employer|project))?\s+for\s+(?:(?:the|this|that|its)\s+)?{tool}(?:\s+(?:bucket|service))?\s*$'
-  unknown_project_qualification_pattern: '(?ix)(?:^|[,:(])\s*(?:(?:the|its|exact|specific|precise)\s+){0,2}(?:employer|project)(?:\s*(?:and|or|/)\s*(?:employer|project))?(?:\s+(?:for|of)\s+(?:(?:this|that|the|its)\s+(?:bucket|service)|(?:AWS\s+)?(?:S3|EC2|Pub/Sub|Dataflow|Spark|NiFi|Lakeflow)))?\s+(?:(?:is|are|remains?)\s+)?(?:not\s+(?:(?:currently|explicitly|yet)\s+)?(?:specified|documented|identified)|unknown|unspecified|undocumented)\s*$'
+  unknown_project_qualification_pattern: '(?ix)(?:^|[,:(])\s*(?:with\s+)?(?:(?:the|its|exact|specific|precise)\s+){0,2}(?:employer|project)(?:\s*(?:and|or|/)\s*(?:employer|project))?(?:\s+(?:for|of)\s+(?:(?:this|that|the|its)\s+(?:(?:AWS\s+)?(?:S3|EC2|Pub/Sub|Dataflow|Spark|NiFi|Lakeflow)\s+)?(?:bucket|service)|(?:AWS\s+)?(?:S3|EC2|Pub/Sub|Dataflow|Spark|NiFi|Lakeflow)))?\s+(?:(?:is|are|remains?|remaining)\s+)?(?:not\s+(?:(?:currently|explicitly|yet)\s+)?(?:specified|documented|identified)|unknown|unspecified|undocumented)\s*$'
   unknown_project_qualification_exclude_pattern: '(?i)\b(?:if|unless|whether|assuming|suppose|hypothetical|could|would|might)\b|\bnot\s+(?:unknown|unspecified|undocumented)\b'
   project_key: data_hub
   project_reference_pattern: '(?i)^(?:its\b|this (?:project|platform)\b|the (?:documented|published) stack\b)'

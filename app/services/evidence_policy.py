@@ -410,8 +410,12 @@ def confirmed_use_conflicts(answer, documents):
                         for key in rule.get("positive_predicate_groups", [])
                         if match.groupdict().get(key)
                     ]
-                    if match.groupdict().get("experience_before") and re.search(
-                        r"(?i)\b(?:absence|lack|lack of|manque|absence de)\s+(?:of\s+)?experience\b",
+                    if match.groupdict().get("experience_before") and re.fullmatch(
+                        rf"(?i)(?:Bolaji|he|il)\s+(?:has|had|a)\s+(?:an?\s+)?"
+                        rf"(?:(?:explicit|confirmed|owner[ -]confirmed)\s+){{0,2}}"
+                        rf"(?:absence|lack|manque)\s+(?:of\s+|de\s+)?"
+                        rf"(?:{re.escape(subject)}\s+experience|experience\s+"
+                        rf"(?:with|in|avec|en)\s+{re.escape(subject)})",
                         match.group(),
                     ):
                         continue
