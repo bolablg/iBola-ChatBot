@@ -38,6 +38,8 @@ PROMPT_VERSIONS = {
     "project_identity": "1.0",
     "evidence_detail": "1.2",
     "confirmed_non_use": "1.0",
+    "experience_status": "1.0",
+    "record_scope": "1.0",
     "documentation_limit": "1.0",
     "personal_production_limit": "1.1",
     "degree_clarification": "1.0",
@@ -332,6 +334,16 @@ EVIDENCE_DETAIL_TEMPLATES = {
 CONFIRMED_NON_USE_TEMPLATES = {
     "en": "Bolaji has no experience with {tool}.",
     "fr": "Bolaji n'a aucune expérience avec {tool}.",
+}
+
+EXPERIENCE_RECORD_LIMIT_TEMPLATES = {
+    "en": "The retrieved evidence does not establish personal production deployment of {tool} or a named project proving it.",
+    "fr": "Le dossier récupéré ne documente pas de déploiement personnel de {tool} en production ni de projet nommé qui le démontre.",
+}
+
+RECORD_SCOPE_TEMPLATES = {
+    "en": "The retrieved evidence does not establish {detail}.",
+    "fr": "Le dossier récupéré ne documente pas {detail}.",
 }
 
 _MULTIPART_RULE = (
@@ -734,6 +746,8 @@ _ALL_PROMPTS = [
     *PROJECT_IDENTITY_TEMPLATES.values(),
     *EVIDENCE_DETAIL_TEMPLATES.values(),
     *CONFIRMED_NON_USE_TEMPLATES.values(),
+    *EXPERIENCE_RECORD_LIMIT_TEMPLATES.values(),
+    *RECORD_SCOPE_TEMPLATES.values(),
     *DOCUMENTATION_LIMIT_TEMPLATES.values(),
     *PERSONAL_PRODUCTION_LIMIT_TEMPLATES.values(),
     *INSUFFICIENT_EVIDENCE_ANSWERS.values(),

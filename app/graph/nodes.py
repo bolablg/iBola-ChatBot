@@ -1378,9 +1378,19 @@ def generate_node(state: dict) -> dict:
             )
         )
 
+    from app.services.experience_status import experience_status_answer
     from app.services.service_inventory import inventory_followup
 
     followup = inventory_followup(state, context_docs, reply_language)
+    status_answer = experience_status_answer(state, context_docs, reply_language)
+    if status_answer is not None:
+        steps.append(
+            ReasoningStep(
+                node="generate",
+                action="retrieved_experience_status",
+                detail="explicit non-use and a scoped evidence limit",
+            )
+        )
     if followup is not None:
         steps.append(
             ReasoningStep(
@@ -1391,9 +1401,13 @@ def generate_node(state: dict) -> dict:
         )
     try:
         result = (
-            GeneratedAnswer(answer=followup, confidence=0.9)
-            if followup is not None
-            else _call_generate()
+            GeneratedAnswer(answer=status_answer, confidence=0.9)
+            if status_answer is not None
+            else (
+                GeneratedAnswer(answer=followup, confidence=0.9)
+                if followup is not None
+                else _call_generate()
+            )
         )
         answer = _sanitize_answer(result.answer)
         confidence = result.confidence

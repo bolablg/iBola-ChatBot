@@ -9,7 +9,11 @@ from langchain_core.documents import Document
 
 from app.graph.nodes import verify_grounding_node
 from app.graph.state import GroundingVerdict
-from app.services.evidence_policy import constraint_failures, prepare_evidence
+from app.services.evidence_policy import (
+    bound_record_limits,
+    constraint_failures,
+    prepare_evidence,
+)
 
 CASE = json.loads(
     (Path(__file__).parent / "fixtures/local_1_2_11_formal_authority.json").read_text()
@@ -107,10 +111,13 @@ def test_positive_verdict_cannot_bypass_guard_and_corrected_answer_is_independen
     assert bool(result["grounding_checked"]) == accept_corrected
     assert invoke.call_count <= 3
     if accept_corrected:
-        assert result["answer"] == corrected and invoke.call_count == 2
+        assert (
+            result["answer"] == bound_record_limits(corrected, "en")
+            and invoke.call_count == 2
+        )
         assert (
             invoke.call_args.args[0][-1].content.rsplit("Answer to verify:\n", 1)[1]
-            == corrected
+            == result["answer"]
         )
 
 
