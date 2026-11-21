@@ -104,7 +104,7 @@ def _provider_generate(client, **kwargs):
 def _is_transient_llm_error(exc: Exception) -> bool:
     """Return whether a Gemini failure is safe to retry once."""
     status = str(getattr(exc, "status_code", getattr(exc, "code", ""))).lower()
-    if status in {"429", "503"}:
+    if status in {"429", "500", "502", "503", "504"}:
         return True
 
     message = str(exc).lower()
@@ -112,7 +112,10 @@ def _is_transient_llm_error(exc: Exception) -> bool:
         marker in message
         for marker in (
             "429",
+            "500 internal",
+            "502 bad gateway",
             "503",
+            "504 gateway",
             "resource exhausted",
             "resource_exhausted",
             "rate limit",
@@ -1219,7 +1222,9 @@ def _translate_answer(answer: str, reply_language: str) -> str:
     return response.content.strip() or answer
 
 
-def _select_context_docs(graded_docs: List[Document], query="") -> List[Document]:
+def _select_context_docs(
+    graded_docs: List[Document], query="", original_query=None
+) -> List[Document]:
     """Pick the generation context: budgeted and near-duplicate-free."""
     try:
         from app.settings import get_settings
@@ -1235,8 +1240,9 @@ def _select_context_docs(graded_docs: List[Document], query="") -> List[Document
             return 0.0
         return len(ta & tb) / min(len(ta), len(tb))
 
-    from app.services.evidence_policy import retained_facet_indices
+    from app.services.evidence_policy import focus_single_case, retained_facet_indices
 
+    graded_docs = focus_single_case(graded_docs, query, original_query)
     protected = retained_facet_indices(graded_docs, query)
     selected: List[Document] = [
         doc for i, doc in enumerate(graded_docs) if i in protected
@@ -1311,7 +1317,11 @@ def generate_node(state: dict) -> dict:
         )
     except Exception as exc:
         logger.warning("Generation facet lookup unavailable: %s", exc)
-    context_docs = _select_context_docs(prepare_evidence(graded_docs, scope), scope)
+    context_docs = _select_context_docs(
+        prepare_evidence(graded_docs, scope),
+        scope,
+        original_query=state.get("original_query") or query,
+    )
     if not context_docs:
         steps.append(
             ReasoningStep(node="generate", action="insufficient_evidence", detail="")

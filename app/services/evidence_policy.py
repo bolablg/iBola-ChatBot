@@ -1591,13 +1591,20 @@ def _request_scope_failures(answer, documents, query):
         previous_subjects = set()
         for clause, _ in units:
             named = {canonical(s) for s in re.findall(rule["subject_pattern"], clause)}
-            if re.search(
+            nominal_limit = re.search(
                 rule.get(
                     "unknown_project_qualification_pattern",
                     rule.get("unknown_project_pattern", r"(?!)"),
                 ),
                 clause,
-            ) and not re.search(
+            )
+            record_limit = re.fullmatch(
+                rule.get("unknown_project_record_limit_pattern", r"(?!)").replace(
+                    "{tool}", rule["subject_pattern"].removeprefix("(?i)")
+                ),
+                clause,
+            )
+            if (nominal_limit or record_limit) and not re.search(
                 rule.get("unknown_project_qualification_exclude_pattern", r"(?!)"),
                 clause,
             ):
@@ -1802,6 +1809,36 @@ def retained_facet_indices(documents, query):
         ):
             result.add(i)
     return result
+
+
+def focus_single_case(documents, query, original_query=None):
+    """Keep one validated source section for an explicit single-case request."""
+    latest = _fold(original_query if original_query is not None else query)
+    rules = {r["id"]: r for r in policy_data().get("facets", [])}
+    identities = set()
+    for index in retained_facet_indices(documents, query):
+        doc = documents[index]
+        rule = rules[doc.metadata["required_facet"]]
+        if (
+            rule.get("single_case_query_pattern")
+            and re.search(rule["single_case_query_pattern"], latest)
+            and re.search(rule["query_pattern"], latest)
+            and not re.search(rule.get("single_case_exclude_pattern", r"(?!)"), latest)
+        ):
+            identities.add(
+                (Path(doc.metadata["source"]).name, doc.metadata["section_header"])
+            )
+    if len(identities) != 1:
+        return documents
+    return [
+        doc
+        for doc in documents
+        if (
+            Path(doc.metadata.get("source", "")).name,
+            doc.metadata.get("section_header"),
+        )
+        in identities
+    ]
 
 
 def expand_lexical_query(query: str) -> str:

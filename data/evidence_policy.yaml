@@ -1,4 +1,4 @@
-version: 27
+version: 28
 source_types:
   21_production_service_inventory.txt: candidate_confirmed
   20_owner_confirmed_production_scope.txt: candidate_confirmed
@@ -200,6 +200,8 @@ facets:
   section_pattern: '^Enterprise metrics governance & AI-ready semantic layer$'
   support_pattern: '(?s)enterprise metrics governance framework.*MCP-enabled BigQuery integration in Claude'
   retain_for_query: true
+  single_case_query_pattern: '(?i)^\s*(?:please\s+)?(?:(?:can|could|would)\s+you\s+)?(?:describe|give(?:\s+me)?|show(?:\s+me)?|provide|outline|present|explain|tell\s+me\s+about|what\s+is|which\s+is)\s+(?:one|a\s+single|single)\s+(?:documented\s+)?case\b|^\s*(?:decris|decrivez|donne|donnez|presente|presentez)\s+(?:moi\s+)?un\s+(?:seul\s+)?cas(?:\s+documente)?\b'
+  single_case_exclude_pattern: '(?i)\b(?:multiple|several|cases|examples|projects|projets|exemples|compare|comparison|plusieurs|comparer|comparaison|Data Hub|observability|Head of Data)\b|\b(?:no|not|avoid)\s+(?:one|single)\b|\b(?:do not|don.t)\s+(?:give|limit|restrict)\b|\b(?:deux|trois|autres|un autre)\s+cas\b|\b(?:another|other)\s+(?:case|project|example)\b'
 - id: confirmed_fraud_metric_attribution
   query_pattern: '(?i)fraud|fraude|Gozem Money|\b150\s+(?:incidents?|cas)\b|\b25\s*(?:M|million\w*)\s*(?:XOF|CFA|FCFA)\b|\bEDA\b'
   terms: Gozem Money fraud micro-batch rules EDA incidents discovery ML contribution
@@ -1104,6 +1106,7 @@ request_scopes:
   project_predicate_separator_pattern: '(?i)\s+and\s+(?=(?:(?:he|Bolaji)\s+)?personally\s+(?:designed|operated|used|deployed)\b)'
   shared_location_prefix_pattern: '(?i)^\s*(?:at|for|within|chez|dans)\s+[^,;.!?\n]{1,80},\s*'
   unknown_project_pattern: '(?i)(?:employer|project)[^.!?;\n]{0,85}(?:not\s+(?:specified|documented)|unknown)'
+  unknown_project_record_limit_pattern: '(?i)^\s*(?:This\s+(?:clarification|confirmation)|The\s+(?:record|evidence))\s+does\s+not\s+(?:identify|specify|establish)\s+(?:(?:an?|any|the)\s+)?(?:employer|project)(?:\s+(?:and|or)\s+(?:employer|project))?\s+for\s+(?:(?:the|this|that|its)\s+)?{tool}(?:\s+(?:bucket|service))?\s*$'
   unknown_project_qualification_pattern: '(?ix)(?:^|[,:(])\s*(?:(?:the|its|exact|specific|precise)\s+){0,2}(?:employer|project)(?:\s*(?:and|or|/)\s*(?:employer|project))?(?:\s+(?:for|of)\s+(?:(?:this|that|the|its)\s+(?:bucket|service)|(?:AWS\s+)?(?:S3|EC2|Pub/Sub|Dataflow|Spark|NiFi|Lakeflow)))?\s+(?:(?:is|are|remains?)\s+)?(?:not\s+(?:(?:currently|explicitly|yet)\s+)?(?:specified|documented|identified)|unknown|unspecified|undocumented)\s*$'
   unknown_project_qualification_exclude_pattern: '(?i)\b(?:if|unless|whether|assuming|suppose|hypothetical|could|would|might)\b|\bnot\s+(?:unknown|unspecified|undocumented)\b'
   project_key: data_hub
