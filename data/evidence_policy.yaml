@@ -1,4 +1,4 @@
-version: 26
+version: 28
 source_types:
   21_production_service_inventory.txt: candidate_confirmed
   20_owner_confirmed_production_scope.txt: candidate_confirmed
@@ -200,6 +200,8 @@ facets:
   section_pattern: '^Enterprise metrics governance & AI-ready semantic layer$'
   support_pattern: '(?s)enterprise metrics governance framework.*MCP-enabled BigQuery integration in Claude'
   retain_for_query: true
+  single_case_query_pattern: '(?i)^\s*(?:please\s+)?(?:(?:can|could|would)\s+you\s+)?(?:describe|give(?:\s+me)?|show(?:\s+me)?|provide|outline|present|explain|tell\s+me\s+about|what\s+is|which\s+is)\s+(?:one|a\s+single|single)\s+(?:documented\s+)?case\b|^\s*(?:decris|decrivez|donne|donnez|presente|presentez)\s+(?:moi\s+)?un\s+(?:seul\s+)?cas(?:\s+documente)?\b'
+  single_case_exclude_pattern: '(?i)\b(?:multiple|several|cases|examples|projects|projets|exemples|compare|comparison|plusieurs|comparer|comparaison|Data Hub|observability|Head of Data)\b|\b(?:no|not|avoid)\s+(?:one|single)\b|\b(?:do not|don.t)\s+(?:give|limit|restrict)\b|\b(?:deux|trois|autres|un autre)\s+cas\b|\b(?:another|other)\s+(?:case|project|example)\b'
 - id: confirmed_fraud_metric_attribution
   query_pattern: '(?i)fraud|fraude|Gozem Money|\b150\s+(?:incidents?|cas)\b|\b25\s*(?:M|million\w*)\s*(?:XOF|CFA|FCFA)\b|\bEDA\b'
   terms: Gozem Money fraud micro-batch rules EDA incidents discovery ML contribution
@@ -880,11 +882,13 @@ required_details:
   sources: [01_career_overview.txt, 03_previous_role_gozem_gda.txt, 90_website_canon_llms_full.txt]
   support_pattern: '(?i)Global Data Analyst'
   query_pattern: '(?is)(?=.*production)(?=.*(?:personally|personal|hands.on))(?=.*(?:pipeline|data engineering))'
-  claim_pattern: '(?i)cloud migration|migrat\w*[^.!?\n]{0,100}(?:10\+?\s*TB|over\s+10\s*TB|10\s*TB\s+plus)|50\+? scheduled ETL'
+  claim_pattern: '(?i)cloud migration|migrat\w*[^.!?\n]{0,100}?(?:10\+?\s*TB|over\s+10\s*TB|10\s*TB\s+plus)|50\+? scheduled ETL'
   governing_role_pattern: '(?i)Global Data Analyst|Data Director|Head of Data'
   topic_intro_pattern: '(?i)\s*(?:Regarding|As for)\s+(?:the\s+)?(?:Google\s+)?cloud migration'
   role_prefix_pattern: '(?i)(?:as(?: a| the)?|during(?: his| the)?(?: earlier| former| previous)?|in his(?: earlier| former| previous)?|en tant que|pendant(?: son)?)\s+$'
   role_heading_pattern: '(?i)^\s*(?:Global Data Analyst|Data Director|Head of Data)(?:\s+at Gozem|\s+role|\s*\([^)]*\))*\s*:?\s*$'
+  role_postfix_bridge_pattern: '(?ix)\s*(?:pipelines)?(?:\s+(?:within|in)\s+(?:a|one|single|\d+)(?:\s+(?:single|calendar|fiscal))?\s+(?:quarter|month|year|week)s?)?(?:\s+without\s+(?:operational\s+)?interruption)?(?:\s+while\s+(?:establishing|designing|building|operating)\s+(?:(?:a|the)\s+)?(?:\d+\+?\s+)?(?:scheduled\s+)?(?:ETL|data)\s+pipelines)?\s+(?:as(?:\s+(?:a|the))?|during\s+his(?:\s+role\s+as)?|en\s+tant\s+que)\s+'
+  role_postfix_tail_pattern: '(?i)\s*(?:role)?(?:\s+at\s+Gozem)?\s*'
   restore_quote:
     language: en
     label: Earlier role evidence
@@ -1102,6 +1106,7 @@ request_scopes:
   project_predicate_separator_pattern: '(?i)\s+and\s+(?=(?:(?:he|Bolaji)\s+)?personally\s+(?:designed|operated|used|deployed)\b)'
   shared_location_prefix_pattern: '(?i)^\s*(?:at|for|within|chez|dans)\s+[^,;.!?\n]{1,80},\s*'
   unknown_project_pattern: '(?i)(?:employer|project)[^.!?;\n]{0,85}(?:not\s+(?:specified|documented)|unknown)'
+  unknown_project_record_limit_pattern: '(?i)^\s*(?:This\s+(?:clarification|confirmation)|The\s+(?:record|evidence))\s+does\s+not\s+(?:identify|specify|establish)\s+(?:(?:an?|any|the)\s+)?(?:employer|project)(?:\s+(?:and|or)\s+(?:employer|project))?\s+for\s+(?:(?:the|this|that|its)\s+)?{tool}(?:\s+(?:bucket|service))?\s*$'
   unknown_project_qualification_pattern: '(?ix)(?:^|[,:(])\s*(?:(?:the|its|exact|specific|precise)\s+){0,2}(?:employer|project)(?:\s*(?:and|or|/)\s*(?:employer|project))?(?:\s+(?:for|of)\s+(?:(?:this|that|the|its)\s+(?:bucket|service)|(?:AWS\s+)?(?:S3|EC2|Pub/Sub|Dataflow|Spark|NiFi|Lakeflow)))?\s+(?:(?:is|are|remains?)\s+)?(?:not\s+(?:(?:currently|explicitly|yet)\s+)?(?:specified|documented|identified)|unknown|unspecified|undocumented)\s*$'
   unknown_project_qualification_exclude_pattern: '(?i)\b(?:if|unless|whether|assuming|suppose|hypothetical|could|would|might)\b|\bnot\s+(?:unknown|unspecified|undocumented)\b'
   project_key: data_hub

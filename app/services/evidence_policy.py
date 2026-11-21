@@ -1330,12 +1330,36 @@ def constraint_failures(
                         prefix_roles = [
                             r for r in valid_roles if r.start() < claim.start()
                         ]
-                        governing = (
-                            prefix_roles[-1].group() if prefix_roles else active_role
-                        )
                         raw_prefix_roles = [
                             r for r in roles if r.start() < claim.start()
                         ]
+                        postfix_roles = [
+                            r
+                            for r in valid_roles
+                            if rule.get("role_postfix_bridge_pattern")
+                            and r.start() >= claim.end()
+                            and re.fullmatch(
+                                rule["role_postfix_bridge_pattern"],
+                                sentence[claim.end() : r.start()],
+                            )
+                            and re.fullmatch(
+                                rule["role_postfix_tail_pattern"], sentence[r.end() :]
+                            )
+                        ]
+                        governing = (
+                            prefix_roles[-1].group() if prefix_roles else active_role
+                        )
+                        if postfix_roles:
+                            if prefix_roles and any(
+                                _binding(r.group())
+                                != _binding(prefix_roles[-1].group())
+                                for r in postfix_roles
+                            ):
+                                invalid = True
+                            if not raw_prefix_roles:
+                                # A local action-group suffix can replace only
+                                # inherited context, never an explicit local role.
+                                governing = postfix_roles[-1].group()
                         if raw_prefix_roles and (
                             not prefix_roles
                             or raw_prefix_roles[-1].start() > prefix_roles[-1].start()
@@ -1567,13 +1591,20 @@ def _request_scope_failures(answer, documents, query):
         previous_subjects = set()
         for clause, _ in units:
             named = {canonical(s) for s in re.findall(rule["subject_pattern"], clause)}
-            if re.search(
+            nominal_limit = re.search(
                 rule.get(
                     "unknown_project_qualification_pattern",
                     rule.get("unknown_project_pattern", r"(?!)"),
                 ),
                 clause,
-            ) and not re.search(
+            )
+            record_limit = re.fullmatch(
+                rule.get("unknown_project_record_limit_pattern", r"(?!)").replace(
+                    "{tool}", rule["subject_pattern"].removeprefix("(?i)")
+                ),
+                clause,
+            )
+            if (nominal_limit or record_limit) and not re.search(
                 rule.get("unknown_project_qualification_exclude_pattern", r"(?!)"),
                 clause,
             ):
@@ -1778,6 +1809,36 @@ def retained_facet_indices(documents, query):
         ):
             result.add(i)
     return result
+
+
+def focus_single_case(documents, query, original_query=None):
+    """Keep one validated source section for an explicit single-case request."""
+    latest = _fold(original_query if original_query is not None else query)
+    rules = {r["id"]: r for r in policy_data().get("facets", [])}
+    identities = set()
+    for index in retained_facet_indices(documents, query):
+        doc = documents[index]
+        rule = rules[doc.metadata["required_facet"]]
+        if (
+            rule.get("single_case_query_pattern")
+            and re.search(rule["single_case_query_pattern"], latest)
+            and re.search(rule["query_pattern"], latest)
+            and not re.search(rule.get("single_case_exclude_pattern", r"(?!)"), latest)
+        ):
+            identities.add(
+                (Path(doc.metadata["source"]).name, doc.metadata["section_header"])
+            )
+    if len(identities) != 1:
+        return documents
+    return [
+        doc
+        for doc in documents
+        if (
+            Path(doc.metadata.get("source", "")).name,
+            doc.metadata.get("section_header"),
+        )
+        in identities
+    ]
 
 
 def expand_lexical_query(query: str) -> str:
