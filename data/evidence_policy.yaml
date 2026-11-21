@@ -1,4 +1,4 @@
-version: 25
+version: 26
 source_types:
   21_production_service_inventory.txt: candidate_confirmed
   20_owner_confirmed_production_scope.txt: candidate_confirmed
@@ -9,8 +9,9 @@ source_types:
   19_owner_confirmed_scope.txt: candidate_confirmed
 assertion_rules:
 - id: latency_threshold_wording_requires_source
-  description: Do not introduce a numerical latency threshold, even in a denial or source-attribution claim, unless the retrieved source text actually discusses that threshold. State an unknown latency without inventing a bound.
+  description: Do not claim that a source states a particular latency threshold unless retrieved source text actually discusses that threshold. A user-provided comparison benchmark is not a measured capability or source quotation; mark an unsupported comparison as unknown and verify the exact answer.
   answer_pattern: '(?i)\b(?P<threshold>sub[ -]?second)\b'
+  affirmation_pattern: '(?i)\b(?:source|documentation|record|KB|knowledge base)\s+(?:(?:explicitly|specifically|clearly)\s+)?(?:notes?|states?|says?|mentions?|establishes?)\b[^.!?;\n]{0,120}\bsub[ -]?second\b'
   support_pattern: '(?i)\b(?P<threshold>sub[ -]?second)\b'
   binding_groups: [threshold]
   literal_mention: true
@@ -178,6 +179,13 @@ metric_constraints:
   - (?i)(?:six|6)\s+(?:AI\s+)?use cases\s+(?:were|are|have been)\s+(?:implemented|completed|deployed)
   - '(?i)(?:completed|deployed|delivered)\s+(?:all\s+)?(?:six|6)\s+(?:(?:AI|strategic|high.priority)\s+)?(?:use cases|initiatives|implementations)'
 facets:
+- id: generic_spark_implementation_comparison
+  query_pattern: '(?is)\A(?=[^\n]*\bSpark\b)(?=[^\n]*(?:experience|personal|production|deploy|architecture))'
+  terms: Rintio Apache Spark Hadoop ElasticSearch agricultural data architecture
+  sources: [04_previous_roles_early.txt]
+  section_pattern: '^DATA SCIENTIST - RINTIO'
+  support_pattern: 'Hadoop data lake, an Apache Spark cluster, and ElasticSearch, ingesting 100GB\+ of agricultural data'
+  retain_for_query: true
 - id: detailed_ibola_side_project
   query_pattern: '(?is)(?:(?=.*(?:side projects?|personal projects?|projets? personnels?|portfolio apps?))(?=.*(?:what|which|list|quels|quelles))|(?=.*\biBola\b)(?=.*(?:architecture|project|chatbot|implementation)))'
   terms: iBola production-grade agentic RAG portfolio assistant LangGraph
@@ -1125,7 +1133,8 @@ editorial_constraints:
   answer_pattern: '(?i)(?:de |from )(?:zero|0).{0,12}(?:14|quatorze)'
 
 role_project_relations:
-- id: cdc_role_attribution_requires_direct_evidence
+- &project_role_scope
+  id: cdc_role_attribution_requires_direct_evidence
   description: Retain only role associations directly supported by the same project's actor and responsibility record. Dataflow use in the earlier cloud migration and a nearby role title do not date CDC delivery. A confirmed work-role interval locates the work within that role; it does not establish exact project start or completion dates, continuous operation throughout that interval, or dates for another service.
   project_pattern: '(?i)\bMongoDB\s+(?:CDC|change\s+data\s+capture)\b|\bCDC\s+pipeline\b'
   role_pattern: '(?i)Global Data Analyst|Head of Data|Data Director|Director of Data'
@@ -1143,6 +1152,16 @@ role_project_relations:
   unrelated_project_prefix_pattern: '(?i)\b(?:independently of|separate from|unrelated to|not for)\s+(?:the\s+)?$'
   support_relation_pattern: '(?i)\b(?:Bolaji|he|il)\s+(?:(?:has|had|a|personally|directly|personnellement)\s+){0,3}(?:designed|operated|built|implemented|concu|exploite|construit|implemente)(?:\s+and\s+(?:designed|operated|built|implemented))?\s+(?:the\s+)?(?:MongoDB\s+(?:CDC|change\s+data\s+capture)(?:\s+pipeline)?|CDC\s+pipeline|(?:Google\s+Cloud\s+)?Pub/Sub\s+and\s+(?:Google\s+Cloud\s+)?Dataflow(?:\s+in\s+production)?\s+for\s+(?:the\s+)?MongoDB\s+(?:CDC|change\s+data\s+capture)(?:\s+pipeline)?)\b'
   support_exclude_pattern: '(?i)\b(?:if|hypothetical|fictional|would|could|never|not|unverified|unknown|undocumented)\b'
+- <<: *project_role_scope
+  id: ec2_role_attribution_requires_direct_evidence
+  description: Confirmed personal EC2 design and operation for Gozem Data Hub does not establish its role or work period. A CDC role confirmation, nearby heading, another service, or another actor cannot date the EC2 responsibility. Require the same clause to link Bolaji, EC2 production responsibility, Data Hub, and the claimed role. Keep confirmed EC2 responsibility separately undated when its role is unknown.
+  project_pattern: '(?i)\b(?:AWS\s+)?EC2\b'
+  after_project_role_pattern: '(?i)\s+(?:in\s+production\s+)?(?:for\s+(?:the\s+)?(?:Gozem\s+)?Data Hub\s+)?(?:as(?: a| the)?|during(?: his| the)?(?: role as)?)\s+'
+  support_relation_pattern: '(?i)\b(?:Bolaji|he|il)\s+(?:(?:has|had|a|personally|directly|personnellement)\s+){0,3}(?:designed|operated|built|implemented|concu|exploite)(?:\s+and\s+(?:designed|operated|built|implemented))?\s+(?:AWS\s+)?EC2\s+in\s+production\b'
+  support_anchor_pattern: '(?i)\b(?:Gozem\s+)?Data Hub\b'
+  support_same_clause: true
+  other_actor_pattern: '(?i)\b(?:colleague|another engineer|another person|another employee|son collegue)\b'
+  conditional_prefix_pattern: '(?i)^\s*(?:if|unless|suppose|assuming|hypothetically)\b'
 
 relationship_constraints:
 - id: fraud_metrics_exclude_ml_attribution
