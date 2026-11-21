@@ -332,9 +332,10 @@ class HTTPTarget:
     """
 
     def __init__(self, base_url, min_start_interval=0.0):
-        import httpx
         import math
         import threading
+
+        import httpx
 
         if not math.isfinite(min_start_interval) or min_start_interval < 0:
             raise ValueError("HTTP start interval must be finite and nonnegative")
