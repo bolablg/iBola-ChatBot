@@ -1,4 +1,4 @@
-version: 26
+version: 27
 source_types:
   21_production_service_inventory.txt: candidate_confirmed
   20_owner_confirmed_production_scope.txt: candidate_confirmed
@@ -880,11 +880,13 @@ required_details:
   sources: [01_career_overview.txt, 03_previous_role_gozem_gda.txt, 90_website_canon_llms_full.txt]
   support_pattern: '(?i)Global Data Analyst'
   query_pattern: '(?is)(?=.*production)(?=.*(?:personally|personal|hands.on))(?=.*(?:pipeline|data engineering))'
-  claim_pattern: '(?i)cloud migration|migrat\w*[^.!?\n]{0,100}(?:10\+?\s*TB|over\s+10\s*TB|10\s*TB\s+plus)|50\+? scheduled ETL'
+  claim_pattern: '(?i)cloud migration|migrat\w*[^.!?\n]{0,100}?(?:10\+?\s*TB|over\s+10\s*TB|10\s*TB\s+plus)|50\+? scheduled ETL'
   governing_role_pattern: '(?i)Global Data Analyst|Data Director|Head of Data'
   topic_intro_pattern: '(?i)\s*(?:Regarding|As for)\s+(?:the\s+)?(?:Google\s+)?cloud migration'
   role_prefix_pattern: '(?i)(?:as(?: a| the)?|during(?: his| the)?(?: earlier| former| previous)?|in his(?: earlier| former| previous)?|en tant que|pendant(?: son)?)\s+$'
   role_heading_pattern: '(?i)^\s*(?:Global Data Analyst|Data Director|Head of Data)(?:\s+at Gozem|\s+role|\s*\([^)]*\))*\s*:?\s*$'
+  role_postfix_bridge_pattern: '(?ix)\s*(?:pipelines)?(?:\s+(?:within|in)\s+(?:a|one|single|\d+)(?:\s+(?:single|calendar|fiscal))?\s+(?:quarter|month|year|week)s?)?(?:\s+without\s+(?:operational\s+)?interruption)?(?:\s+while\s+(?:establishing|designing|building|operating)\s+(?:(?:a|the)\s+)?(?:\d+\+?\s+)?(?:scheduled\s+)?(?:ETL|data)\s+pipelines)?\s+(?:as(?:\s+(?:a|the))?|during\s+his(?:\s+role\s+as)?|en\s+tant\s+que)\s+'
+  role_postfix_tail_pattern: '(?i)\s*(?:role)?(?:\s+at\s+Gozem)?\s*'
   restore_quote:
     language: en
     label: Earlier role evidence

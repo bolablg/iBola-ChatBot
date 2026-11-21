@@ -1330,12 +1330,36 @@ def constraint_failures(
                         prefix_roles = [
                             r for r in valid_roles if r.start() < claim.start()
                         ]
-                        governing = (
-                            prefix_roles[-1].group() if prefix_roles else active_role
-                        )
                         raw_prefix_roles = [
                             r for r in roles if r.start() < claim.start()
                         ]
+                        postfix_roles = [
+                            r
+                            for r in valid_roles
+                            if rule.get("role_postfix_bridge_pattern")
+                            and r.start() >= claim.end()
+                            and re.fullmatch(
+                                rule["role_postfix_bridge_pattern"],
+                                sentence[claim.end() : r.start()],
+                            )
+                            and re.fullmatch(
+                                rule["role_postfix_tail_pattern"], sentence[r.end() :]
+                            )
+                        ]
+                        governing = (
+                            prefix_roles[-1].group() if prefix_roles else active_role
+                        )
+                        if postfix_roles:
+                            if prefix_roles and any(
+                                _binding(r.group())
+                                != _binding(prefix_roles[-1].group())
+                                for r in postfix_roles
+                            ):
+                                invalid = True
+                            if not raw_prefix_roles:
+                                # A local action-group suffix can replace only
+                                # inherited context, never an explicit local role.
+                                governing = postfix_roles[-1].group()
                         if raw_prefix_roles and (
                             not prefix_roles
                             or raw_prefix_roles[-1].start() > prefix_roles[-1].start()
