@@ -1306,11 +1306,11 @@ def generate_node(state: dict) -> dict:
     # waste tokens and invite hallucinated merges).
     from app.services.evidence_policy import (
         prepare_evidence,
-        request_scope,
         supplement_facets,
+        user_answer_scope,
     )
 
-    scope = request_scope(state)
+    scope = user_answer_scope(state)
     try:
         graded_docs = supplement_facets(
             _get_hybrid_search(), scope, graded_docs, protected_only=True
@@ -1337,9 +1337,10 @@ def generate_node(state: dict) -> dict:
     else:
         context = "(No relevant context found.)"
 
-    # Format chat history
+    # Include conversational coverage only when the current user request needs it.
     history_str = ""
-    if chat_history:
+    original = state.get("original_query") or query
+    if chat_history and scope != original:
         history_str = "\n".join(
             f"Human: {h[0]}\nAssistant: {h[1]}" for h in chat_history[-5:]
         )
@@ -1477,18 +1478,10 @@ def _insufficient_answer(state: dict) -> str:
 
 
 def _verification_scope(state):
-    """Follow-up scope may come from condensation; facts still require evidence."""
-    return "\n".join(
-        dict.fromkeys(
-            filter(
-                None,
-                (
-                    state.get("original_query"),
-                    state.get("query"),
-                ),
-            )
-        )
-    )
+    """Use only current and referential user text for answer constraints."""
+    from app.services.evidence_policy import user_answer_scope
+
+    return user_answer_scope(state)
 
 
 def verify_grounding_node(state: dict) -> dict:

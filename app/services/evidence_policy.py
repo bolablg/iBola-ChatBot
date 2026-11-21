@@ -738,7 +738,10 @@ def _project_role_claims(text, rule, supporting=False):
     """Track explicit role scope for one project independently of other work."""
     claims = set()
     active = heading = ""
-    for paragraph in re.split(r"\n\s*\n", _fold(text)):
+    boundary = r"\n\s*\n"
+    if rule.get("claim_sentence_scope") and not supporting:
+        boundary += r"|(?<=[.!?])\s+"
+    for paragraph in re.split(boundary, _fold(text)):
         active = heading
         for clause in _claim_clauses(paragraph):
             if re.search(rule.get("other_actor_pattern", r"(?!)"), clause) or re.match(
@@ -1005,6 +1008,12 @@ def constraint_failures(
             support_scopes = {}
             support = []
             for text in evidence:
+                if rule.get("exclude_support_line_pattern"):
+                    text = "\n".join(
+                        line
+                        for line in text.splitlines()
+                        if not re.search(rule["exclude_support_line_pattern"], line)
+                    )
                 spans = _claim_clauses(text) if rule.get("clause_support") else [text]
                 if rule.get("support_continuation_pattern"):
                     spans = [span for span in spans if span.strip()]
@@ -1227,6 +1236,10 @@ def constraint_failures(
             if missing:
                 failures.append(rule["id"])
     for rule in policy.get("required_details", []):
+        if rule.get("topic_pattern") and not re.search(
+            rule["topic_pattern"], _fold(query + "\n" + answer)
+        ):
+            continue
         if rule.get("query_exclude_pattern") and re.search(
             rule["query_exclude_pattern"], _fold(query)
         ):
@@ -1496,7 +1509,30 @@ def _request_scope_failures(answer, documents, query):
     """
     failures = []
     for rule in policy_data().get("request_scopes", []):
-        if not re.search(rule["query_pattern"], _fold(query)):
+        requested = bool(re.search(rule["query_pattern"], _fold(query)))
+        explicit_subjects = set()
+        for clause in _claim_clauses(_fold(answer)):
+            claims = list(re.finditer(rule["personal_support_pattern"], clause))
+            if not claims and re.search(r"(?i)\bproduction\b", clause):
+                claims = list(re.finditer(rule["personal_assertion_pattern"], clause))
+            uncertainty = _UNCERTAIN.search(clause)
+            for claim in claims:
+                if (
+                    not uncertainty or uncertainty.start() > claim.start()
+                ) and not re.search(
+                    r"(?i)\b(?:if|unless|whether|assuming|suppose|hypothetical|could|would|might)\b",
+                    clause,
+                ):
+                    groups = [
+                        claim.groupdict()[group] or ""
+                        for group in rule["support_subject_groups"]
+                        if group in claim.groupdict()
+                    ]
+                    for bound in groups or [claim.group()]:
+                        explicit_subjects.update(
+                            re.findall(rule["subject_pattern"], bound)
+                        )
+        if not requested and not explicit_subjects:
             continue
         aliases = rule.get("subject_aliases", {})
 
@@ -1632,6 +1668,8 @@ def _request_scope_failures(answer, documents, query):
             subjects = {
                 canonical(s) for s in re.findall(rule["subject_pattern"], clause)
             }
+            if not requested:
+                subjects &= {canonical(subject) for subject in explicit_subjects}
             if not subjects:
                 continue
             record_limit = _record_limit_subject(
@@ -1701,6 +1739,47 @@ def request_scope(state):
     ):
         recent = state.get("chat_history", [])[-1:]
         parts.extend(turn[0] for turn in recent if turn)
+    return "\n".join(dict.fromkeys(filter(None, parts)))
+
+
+def user_answer_scope(state):
+    """A search rewrite is a retrieval hint, never user-supplied claim scope."""
+    original = state.get("original_query") or state.get("query", "")
+    parts = [original]
+    reference_text = re.sub(
+        r"(?i)^\s*(?:is it true that|est[- ]il vrai que)\s+", "", original
+    )
+    # A complementizer or classification does not introduce a prior subject:
+    # "evidence that the pipeline ..." and "is that an observed metric?".
+    reference_text = re.sub(
+        r"(?i)\bthat(?=\s+(?:the|a|an|he|she|they|Bolaji|it|there|you)\b)",
+        "",
+        reference_text,
+    )
+    referential = re.search(
+        r"(?i)\b(?:those|these|that|this|it|them|other|others|ces|ceux|celles|cela|ca|autres)\b",
+        reference_text,
+    )
+    short_followup = len(original.split()) <= 12 and re.match(
+        r"(?i)^\s*(?:what else|anything else|tell me more|more details|please (?:continue|expand|elaborate)|can you (?:expand|elaborate)|and|et|plus de details)\b",
+        original,
+    )
+    reference_only = bool(
+        re.search(r"(?i)\b(?:article|repository|repo|link|URL|lien)\b", original)
+        and re.search(
+            r"(?i)\b(?:public|where|point|find|share|inspect|ou|lien)\b",
+            _fold(original),
+        )
+    )
+    explicit_project = any(
+        re.search(pattern, original)
+        for rule in policy_data().get("request_scopes", [])
+        for pattern in rule.get("project_names", {}).values()
+    )
+    if (referential or short_followup) and not reference_only and not explicit_project:
+        for turn in state.get("chat_history", [])[-1:]:
+            if isinstance(turn, (list, tuple)) and turn and isinstance(turn[0], str):
+                parts.append(turn[0][:1200])
     return "\n".join(dict.fromkeys(filter(None, parts)))
 
 
