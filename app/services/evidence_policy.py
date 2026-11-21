@@ -149,13 +149,13 @@ def _claim_clauses(text: str):
     # A qualifier can govern several noun phrases. Separate a new assertion
     # only after the left side already contains a predicate or qualifier.
     predicate = re.compile(
-        r"\b(?:is|was|are|were|has|have|had|does|did|used|uses|operated|operates|built|builds|designed|designs|deployed|deploys|est|sont|etait)\b",
+        r"\b(?:is|was|are|were|has|have|had|does|did|lacks?|lacked|used|uses|operated|operates|built|builds|designed|designs|deployed|deploys|est|sont|etait)\b",
         re.I,
     )
     new_assertion = re.compile(
         r"(?:(?:\w+\s+){1,7}(?:is|was|are|were|has|have|had|held|holds?|owns?|owned|approved|"
-        r"manages?|managed|demonstrates?|proves?|appears?|appearing|listed|only|used|uses|operated|operates|designed|designs|deployed|deploys|built|builds|est|sont|etait|detient|possede|gere|approuve)\b|"
-        r"(?:has|have|had|never|does|did)\b)",
+        r"manages?|managed|lacks?|lacked|demonstrates?|proves?|appears?|appearing|listed|only|used|uses|operated|operates|designed|designs|deployed|deploys|built|builds|est|sont|etait|detient|possede|gere|approuve)\b|"
+        r"(?:has|have|had|never|does|did|lacks?|lacked)\b)",
         re.I,
     )
     result = []
@@ -345,7 +345,7 @@ def experience_resolution_failures(answer, documents, subjects):
 def _normalize_non_use_reference(answer, documents):
     """Resolve a local redundant 'it' only after a confirmed named absence.
 
-    Used solely by the non-use assertion checker. The delivered text and final
+    Used solely by absence/deficiency checks. The delivered text and final
     LLM verification input remain unchanged; source-predicate proof is retained.
     """
     for subject in confirmed_non_use(documents):
@@ -361,6 +361,13 @@ def _normalize_non_use_reference(answer, documents):
             rf"(?:(?:he|Bolaji)\s+)?(?:has\s+)?never\s+used\s+(?P<reference>it)\b"
         )
         answer = pattern.sub(lambda match: match.group()[:-2] + subject, answer)
+        reverse = re.compile(
+            rf"(?i)\b(?:Bolaji|he)\s+has\s+(?:never|not)\s+used\s+{tool},?\s+and\s+"
+            rf"(?:(?:he|Bolaji)\s+)?(?:has\s+no|lacks?)\s+"
+            rf"(?:(?:personal|direct|production|professional|practical|hands[ -]on)\s+){{0,3}}"
+            rf"experience\s+(?:with|in)\s+(?P<reference>it)\b"
+        )
+        answer = reverse.sub(lambda match: match.group()[:-2] + subject, answer)
     return answer
 
 
@@ -531,7 +538,8 @@ def _denied_assertion(clause, match):
     return bool(
         re.search(
             r"(?i)\b(?:not|no|never|pas|aucun|aucune)\s+"
-            r"(?:(?:a|an|un|une|confirmed|established|proven|confirme\w*|etabli\w*)\s+){0,3}$",
+            r"(?:(?:a|an|un|une|confirmed|established|proven|documented|"
+            r"imply|indicate|establish|prove|mean|constitute|confirme\w*|etabli\w*)\s+){0,3}$",
             clause[: match.start()],
         )
         or re.search(
@@ -815,6 +823,7 @@ def constraint_failures(
             ):
                 continue
             support_matches = []
+            support_scopes = {}
             support = []
             for text in evidence:
                 spans = _claim_clauses(text) if rule.get("clause_support") else [text]
@@ -853,6 +862,7 @@ def constraint_failures(
                         ):
                             continue
                         support_matches.append(m)
+                        support_scopes[id(m)] = span
                         support.append(
                             span if rule.get("clause_support") else m.group()
                         )
@@ -878,6 +888,66 @@ def constraint_failures(
                     )
                     for match in matches
                 )
+            elif rule.get("subject_pattern") and rule.get("qualifier_pattern"):
+
+                def bound_subjects(match, key):
+                    objects = " ".join(
+                        match.groupdict().get(group) or "" for group in rule[key]
+                    )
+                    return {
+                        subject.casefold()
+                        for subject in re.findall(rule["subject_pattern"], objects)
+                    }
+
+                def qualifiers(match, scope=None):
+                    return {
+                        value.casefold().replace(" ", "-")
+                        for value in re.findall(
+                            rule["qualifier_pattern"], scope or match.group()
+                        )
+                    }
+
+                def absolute_absence(match):
+                    return any(
+                        match.groupdict().get(group)
+                        for group in rule.get("absolute_predicate_groups", [])
+                    )
+
+                scoped_support = [
+                    (
+                        bound_subjects(m, "support_subject_groups"),
+                        # A qualifier outside the matched predicate still limits
+                        # its proof. Conservatively retain the supporting clause.
+                        qualifiers(m, support_scopes[id(m)]),
+                        absolute_absence(m),
+                    )
+                    for m in support_matches
+                ]
+                proven = True
+                for match in matches:
+                    subjects = bound_subjects(match, "answer_subject_groups")
+                    if (
+                        not subjects
+                        and rule.get("subjects_from_query")
+                        and not re.search(rule["subject_pattern"], clause)
+                    ):
+                        subjects = {
+                            subject.casefold()
+                            for subject in re.findall(rule["subject_pattern"], query)
+                        }
+                    # Absence in one setting cannot establish total absence.
+                    # A documented gap cannot establish an absolute non-use claim.
+                    if not subjects or any(
+                        not any(
+                            subject in supported_subjects
+                            and support_qualifiers <= qualifiers(match)
+                            and (not absolute_absence(match) or support_absolute)
+                            for supported_subjects, support_qualifiers, support_absolute in scoped_support
+                        )
+                        for subject in subjects
+                    ):
+                        proven = False
+                        break
             elif rule.get("subject_pattern"):
                 # Proof subjects come only from the operation's captured objects,
                 # never all tool names elsewhere in the supporting clause.
