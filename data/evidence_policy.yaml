@@ -1,4 +1,4 @@
-version: 37
+version: 38
 source_types:
   21_production_service_inventory.txt: candidate_confirmed
   20_owner_confirmed_production_scope.txt: candidate_confirmed
@@ -165,6 +165,7 @@ assertion_rules:
   clause_support: true
   local_negation: true
 - id: system_visibility_requires_own_evidence
+  independent_clause_separator_pattern: '(?i)\s+\b(?:while|whereas|tandis\s+que|alors\s+que)\b\s+(?=(?:the\s+|le\s+)?(?:Vodun Days\s+command cent(?:er|re)|(?:MongoDB\s+)?CDC\s+(?:pipeline|system))\s+(?:provided|provides|gave|gives|delivered|delivers|offered|offers|supports?|supported|used|uses|has|had|was|is)\b)'
   negation_pattern: '(?i)\b(?:not|pas|et non)\s+(?:(?:the|a|le|un)\s+)?(?:MongoDB\s+)?CDC\b'
   description: Visibility for an event command center must not be attributed to a CDC pipeline. Retain each system's own documented measurement and explicitly mark unestablished pipeline metrics unknown.
   answer_pattern: '(?i)(?:\bCDC\b[^.;\n]{0,220}(?:minute.level|visibility|visibilite)|(?:minute.level|visibility|visibilite)[^.;\n]{0,220}\bCDC\b)'
@@ -619,6 +620,10 @@ metric_scopes:
     not_established: individual MongoDB CDC pipeline event counts; maximum throughput capacity; end-to-end latency; availability guarantees
 required_limits:
 - id: requested_manager_layer_scope_unestablished
+  restore_with_limit:
+    id: department_budget_authority_unestablished
+    en: manager layers, direct-report counts and department budget authority
+    fr: les niveaux de management, le nombre de rapports directs et son autorite sur le budget du departement
   description: Give documented team-building experience separately from the unestablished manager layers or direct-report count requested by a vacancy. Do not import the vacancy's staffing into Bolaji's history.
   sources: [19_owner_confirmed_scope.txt, 11_leadership_style.txt]
   query_pattern: '(?i)manager.of.managers|(?:two|2|deux|\d+)\s+managers|manager(?:ial)? layers?|direct.report|line.management(?: authority)?'
@@ -667,6 +672,25 @@ required_limits:
   restore_limit:
     en: on-call responsibility
     fr: les responsabilités d'astreinte
+- id: department_budget_authority_unestablished
+  description: Keep the retrieved owner-confirmed budget-authority limit alongside relevant leadership evidence when the request asks for a department or transformation budget. Cost savings and hiring business cases do not establish budget ownership.
+  sources:
+  - 19_owner_confirmed_scope.txt
+  section_pattern: ^GOZEM TEAM GROWTH AND ROLE PERIODS$
+  evidence_types:
+  - candidate_confirmed
+  support_pattern: This\ confirmation\ does\ not\ establish\ direct\-report\ counts,\ manager\ layers,\ department\ budget\ authority,\ or\ the\ precise\ dates\ of\ all\ 12\ hires\.
+  restore_sources:
+  - 19_owner_confirmed_scope.txt
+  restore_section_pattern: ^GOZEM TEAM GROWTH AND ROLE PERIODS$
+  restore_support_pattern: This\ confirmation\ does\ not\ establish\ direct\-report\ counts,\ manager\ layers,\ department\ budget\ authority,\ or\ the\ precise\ dates\ of\ all\ 12\ hires\.
+  query_pattern: (?i)\b(?:(?:constrained(?:\s+transformation)?|transformation|department|operating|multi.year)\s+budget|budget\s+(?:authority|ownership|approval)|budget\s+(?:contraint|departemental|de transformation))\b
+  target_pattern: budget|budgetaire
+  direct_support_pattern: (?i)^\s*Bolaji\s+(?:(?:personally|directly)\s+)?(?:(?:owned|approved|held|was accountable for)\s+(?:(?:the|his|a)\s+)?(?:department|operating|transformation)\s+budget(?:\s+authority)?|(?:has|had)\s+(?:(?:the|his|a)\s+)?(?:department|operating|transformation)\s+budget\s+authority)\s*$
+  direct_support_exclude_pattern: (?i)\b(?:if|unless|whether|assuming|suppose|might|would|could|hypothetical|vacancy|fictional|another|colleague)\b
+  restore_limit:
+    en: department budget authority
+    fr: son autorite sur le budget du departement
 - id: clinical_domain_not_established
   description: Preserve documented leadership examples while distinguishing whether retrieved evidence establishes clinical-domain leadership. This boundary concerns the evidence, not an assertion of absent capability or experience.
   direct_support_pattern: '(?i)(?:Bolaji|he|il).{0,40}(?:led|directed|managed|dirige).{0,60}(?:clinical|healthcare|public.health)'
