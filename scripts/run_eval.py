@@ -539,6 +539,7 @@ class HTTPTarget:
                         "error": _extract_workflow_error(response),
                         "warning": _extract_workflow_warning(response),
                         "provenance": response.get("provenance", {}),
+                        "delivery_safety": response.get("delivery_safety", {}),
                         "http_latency_s": response.get("_eval_http_latency_s"),
                     }
                 )
@@ -754,6 +755,7 @@ def run_one(target, judge, row):
         "evidence": evidence,
         "grounding_checked": result.get("grounding_checked", False),
         "provenance": result.get("provenance", {}),
+        "delivery_safety": result.get("delivery_safety", {}),
         "evidence_sources": [e.get("source") for e in evidence[:5]],
         "unsupported_claims": result.get("unsupported_claims", []),
         "prefix_turns": result.get("prefix_turns", []),

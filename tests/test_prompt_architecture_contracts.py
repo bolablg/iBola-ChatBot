@@ -16,6 +16,7 @@ from app.graph.state import (
     AgentCategory,
     GroundingVerdict,
     GuardrailScoring,
+    ReasoningStep,
     RoutingDestination,
 )
 
@@ -263,14 +264,7 @@ def service_with_state(monkeypatch, state):
 
 @pytest.mark.parametrize(
     "field",
-    [
-        "answer",
-        "actions",
-        "unsupported_claims",
-        "reasoning_steps",
-        "workflow_errors",
-        "workflow_warnings",
-    ],
+    ["answer", "actions"],
 )
 def test_delivery_blocks_model_leaks_before_trace_handoff_or_source_building(
     monkeypatch, field
@@ -310,6 +304,174 @@ def test_delivery_blocks_model_leaks_before_trace_handoff_or_source_building(
     )
     assert LEAK not in str(trace.call_args)
     assert LEAK not in json.dumps(result)
+
+
+@pytest.mark.parametrize(
+    "field",
+    ["unsupported_claims", "reasoning_steps", "workflow_errors", "workflow_warnings"],
+)
+def test_diagnostic_echo_is_redacted_without_invalidating_verified_answer(
+    monkeypatch, caplog, field
+):
+    state = {
+        "answer": "A verified answer.",
+        "agent_type": "professional",
+        "grounding_checked": True,
+        "context_documents": [
+            Document(page_content="A source.", metadata={"source": "fixture.txt"})
+        ],
+        "confidence": 0.9,
+        "actions": [],
+        "unsupported_claims": [],
+    }
+    state[field] = (
+        [ReasoningStep(node="guardrail", action="scored", detail=LEAK)]
+        if field == "reasoning_steps"
+        else [LEAK]
+    )
+    service, trace = service_with_state(monkeypatch, state)
+    result = service.process_query(
+        "Explain his work.", [], "diagnostic", "en", {"no_notifications": True}
+    )
+    assert result["answer"] == state["answer"]
+    assert result["grounding_checked"] and result["confidence"] == 0.9
+    assert result["evidence"]
+    assert result["delivery_safety"] == {
+        "blocked_content_fields": [],
+        "redacted_diagnostic_fields": [field],
+        "unverified_withheld": False,
+        "handoff_action_blocked": False,
+    }
+    for diagnostic in ("workflow_errors", "workflow_warnings"):
+        assert result[diagnostic] == (
+            ["[internal diagnostic withheld]"] if field == diagnostic else []
+        )
+    assert LEAK not in str(trace.call_args)
+    assert LEAK not in json.dumps(result)
+    assert LEAK not in caplog.text
+    assert LEAK in str(state[field])  # The original workflow state is unchanged.
+
+
+@pytest.mark.parametrize("action", ["error", "fallback", "warning"])
+def test_redacted_reasoning_retains_error_or_warning_severity(monkeypatch, action):
+    service, trace = service_with_state(
+        monkeypatch,
+        {
+            "answer": "A verified answer.",
+            "agent_type": "professional",
+            "grounding_checked": True,
+            "confidence": 0.9,
+            "context_documents": [Document(page_content="A source.")],
+            "reasoning_steps": [
+                ReasoningStep(node="generate", action=action, detail=LEAK)
+            ],
+        },
+    )
+    result = service.process_query("Explain his work.", [], "severity", "en")
+    field = "workflow_warnings" if action == "warning" else "workflow_errors"
+    assert result[field] == ["generate: [internal diagnostic withheld]"]
+    step = trace.call_args.kwargs["final_state"]["reasoning_steps"][0]
+    assert isinstance(step, ReasoningStep) and step.action == action
+    assert LEAK not in str(trace.call_args)
+
+
+def test_redacting_diagnostics_does_not_rescue_unverified_or_leaking_content(
+    monkeypatch,
+):
+    for grounded, answer in [(False, "Unchecked answer."), (True, LEAK)]:
+        service, _ = service_with_state(
+            monkeypatch,
+            {
+                "answer": answer,
+                "agent_type": "professional",
+                "grounding_checked": grounded,
+                "context_documents": [Document(page_content="A source.")],
+                "reasoning_steps": [
+                    ReasoningStep(node="guardrail", action="scored", detail=LEAK)
+                ],
+            },
+        )
+        result = service.process_query("Explain his work.", [], "mixed", "en")
+        assert result["answer"] == prompts.INSUFFICIENT_EVIDENCE_ANSWERS["en"]
+        assert not result["grounding_checked"] and not result["evidence"]
+
+
+@pytest.mark.parametrize(
+    "action", [["error"], {"error": True}, None, "warning private text"]
+)
+def test_malformed_diagnostic_labels_remain_errors_after_redaction(monkeypatch, action):
+    service, trace = service_with_state(
+        monkeypatch,
+        {
+            "answer": "Verified.",
+            "grounding_checked": True,
+            "context_documents": [Document(page_content="A source.")],
+            "reasoning_steps": [
+                {"node": ["generate"], "action": action, "detail": LEAK}
+            ],
+        },
+    )
+    result = service.process_query("Explain his work.", [], "malformed", "en")
+    assert result["workflow_errors"] == ["unknown: [internal diagnostic withheld]"]
+    assert LEAK not in str(trace.call_args)
+
+
+def test_diagnostic_sanitizer_handles_nested_record_types_and_is_idempotent():
+    from dataclasses import dataclass, field
+
+    from pydantic import BaseModel, computed_field
+
+    from app.services.answer_safety import (
+        redact_diagnostic_echoes,
+        response_contains_prompt_echo,
+    )
+
+    @dataclass(frozen=True)
+    class Diagnostic:
+        action: str = "error"
+        detail: str = field(default=LEAK, init=False)
+
+    class ComputedDiagnostic(BaseModel):
+        action: str = "warning"
+
+        @computed_field
+        @property
+        def detail(self) -> str:
+            return LEAK
+
+    original = {
+        "answer": "Verified.",
+        "reasoning_steps": [
+            ReasoningStep(node="generate", action="fallback", detail=LEAK),
+            Diagnostic(),
+            ComputedDiagnostic(),
+        ],
+        "unsupported_claims": [({LEAK: LEAK, LEAK.lower(): "safe"},)],
+    }
+    assert response_contains_prompt_echo(original)
+    safe, changed = redact_diagnostic_echoes(original)
+    assert changed == ["unsupported_claims", "reasoning_steps"]
+    assert not response_contains_prompt_echo(safe)
+    assert safe["reasoning_steps"][0].action == "fallback"
+    assert safe["reasoning_steps"][1].action == "error"
+    assert safe["reasoning_steps"][2]["action"] == "warning"
+    assert len(safe["unsupported_claims"][0][0]) == 2
+    assert redact_diagnostic_echoes(safe) == (safe, [])
+    assert response_contains_prompt_echo(original)
+
+
+def test_post_boundary_handoff_action_cannot_echo_private_instructions(monkeypatch):
+    monkeypatch.setattr(
+        "app.services.contextual_handoff.contextual_handoff",
+        lambda *a, **k: {"description": LEAK},
+    )
+    service, _ = service_with_state(
+        monkeypatch,
+        {"answer": "Verified.", "grounding_checked": True, "actions": []},
+    )
+    result = service.process_query("Explain his work.", [], "handoff", "en")
+    assert result["answer"] == "Verified." and result["actions"] == []
+    assert result["delivery_safety"]["handoff_action_blocked"] is True
 
 
 def test_generation_provenance_survives_missing_source_arrays(monkeypatch):
@@ -446,3 +608,60 @@ def test_verified_public_limit_can_still_be_cached(monkeypatch):
     )
     assert result["answer"] == answer
     assert result["cache_hit"]
+
+
+@pytest.mark.parametrize(
+    "field",
+    ["unsupported_claims", "reasoning_steps", "workflow_errors", "workflow_warnings"],
+)
+def test_cache_rejects_unsanitized_diagnostics_and_accepts_owned_safe_copy(
+    monkeypatch, field
+):
+    from app.services import cache_service as module
+    from app.services.answer_safety import redact_diagnostic_echoes
+
+    monkeypatch.setattr(module, "CACHE_AVAILABLE", True)
+    cache = module.CacheService()
+    monkeypatch.setattr(cache, "_knowledge_namespace", lambda: "offline-namespace")
+    context = {"session_id": "diagnostic-cache"}
+    raw = {
+        "answer": "Verified.",
+        "grounding_checked": True,
+        "evidence": [{"source": "fixture.txt"}],
+        field: (
+            [ReasoningStep(node="guardrail", action="scored", detail=LEAK)]
+            if field == "reasoning_steps"
+            else [LEAK]
+        ),
+    }
+    asyncio.run(
+        cache.set_cached_response("question", "agentic", "en", raw, context=context)
+    )
+    assert not cache.response_cache
+    key = cache._response_key("question", "agentic", "en", context)
+    cache.response_cache[key] = raw
+    assert (
+        asyncio.run(
+            cache.get_cached_response("question", "agentic", "en", context=context)
+        )
+        is None
+    )
+    assert key not in cache.response_cache
+    safe, _ = redact_diagnostic_echoes(raw)
+    asyncio.run(
+        cache.set_cached_response("question", "agentic", "en", safe, context=context)
+    )
+    hit = asyncio.run(
+        cache.get_cached_response("question", "agentic", "en", context=context)
+    )
+    assert hit["answer"] == "Verified." and hit["cache_hit"]
+    assert LEAK not in str(hit)
+
+
+def test_delivery_policy_version_invalidates_old_response_cache_namespace(monkeypatch):
+    from app.services import answer_safety
+    from app.services.cache_service import CacheService
+
+    current = CacheService._knowledge_namespace()
+    monkeypatch.setattr(answer_safety, "ANSWER_SAFETY_VERSION", "previous-policy")
+    assert CacheService._knowledge_namespace() != current
