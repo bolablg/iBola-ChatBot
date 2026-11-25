@@ -14,6 +14,7 @@ from app.services.evidence_policy import (
     constraint_failures,
     prepare_evidence,
 )
+from tests.prompt_fields import prompt_field
 
 CASE = json.loads(
     (Path(__file__).parent / "fixtures/local_1_2_11_formal_authority.json").read_text()
@@ -116,7 +117,7 @@ def test_positive_verdict_cannot_bypass_guard_and_corrected_answer_is_independen
             and invoke.call_count == 2
         )
         assert (
-            invoke.call_args.args[0][-1].content.rsplit("Answer to verify:\n", 1)[1]
+            prompt_field(invoke.call_args.args[0][-1].content, "draft_answer")
             == result["answer"]
         )
 

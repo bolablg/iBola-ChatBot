@@ -17,6 +17,7 @@ from app.services.evidence_policy import (
     prepare_evidence,
     preserve_requested_evidence,
 )
+from tests.prompt_fields import prompt_field
 
 CAPTURE = json.loads(
     (Path(__file__).parent / "fixtures/local_1_2_11_nominal_absence.json").read_text()
@@ -73,9 +74,10 @@ def test_completed_repair_preserves_absence_wording_and_is_independently_verifie
         assert result["answer"] == expected
         assert REPAIR in result["answer"]
     assert any(
-        message.content.rsplit("Answer to verify:\n", 1)[-1] == expected
+        prompt_field(message.content, "draft_answer") == expected
         for call in llm.with_structured_output.return_value.invoke.call_args_list
         for message in call.args[0]
+        if message.type == "human"
     )
 
 

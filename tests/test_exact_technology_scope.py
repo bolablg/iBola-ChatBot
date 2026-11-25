@@ -15,6 +15,7 @@ from app.services.evidence_policy import (
     prepare_evidence,
     user_answer_scope,
 )
+from tests.prompt_fields import prompt_field
 
 CASE = json.loads(
     (
@@ -66,9 +67,12 @@ def test_exact_captured_comparisons_and_documentation_limits_are_grounded_indepe
     assert result["grounding_checked"] and result.get("answer", answer) == answer
     assert llm.with_structured_output.return_value.invoke.call_count == 1
     assert (
-        llm.with_structured_output.return_value.invoke.call_args.args[0][
-            -1
-        ].content.rsplit("Answer to verify:\n", 1)[1]
+        prompt_field(
+            llm.with_structured_output.return_value.invoke.call_args.args[0][
+                -1
+            ].content,
+            "draft_answer",
+        )
         == answer
     )
 

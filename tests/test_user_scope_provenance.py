@@ -23,6 +23,7 @@ from app.services.evidence_policy import (
     user_answer_scope,
 )
 from scripts.run_eval import _confirmed_experience_limit, check_facts
+from tests.prompt_fields import prompt_field
 
 ROOT = Path(__file__).parent / "fixtures"
 CAPTURE = json.loads((ROOT / "local_1_2_11_user_scope_contrast.json").read_text())
@@ -250,8 +251,7 @@ def test_corrected_independent_ec2_sentences_are_reverified_exactly():
     assert result["grounding_checked"] and result["answer"] == corrected
     assert invoke.call_count == 2
     assert (
-        invoke.call_args.args[0][-1].content.rsplit("Answer to verify:\n", 1)[1]
-        == corrected
+        prompt_field(invoke.call_args.args[0][-1].content, "draft_answer") == corrected
     )
 
 

@@ -20,6 +20,7 @@ from app.services.evidence_policy import (
     supplement_facets,
 )
 from scripts.run_eval import _confirmed_experience_limit, check_facts
+from tests.prompt_fields import prompt_field
 
 CAPTURE = json.loads(
     (
@@ -66,9 +67,10 @@ def test_requested_comparator_can_be_unknown_without_becoming_source_evidence():
         )
     assert result["grounding_checked"]
     assert llm.with_structured_output.return_value.invoke.call_count == 1
-    submitted = llm.with_structured_output.return_value.invoke.call_args.args[0][
-        -1
-    ].content.rsplit("Answer to verify:\n", 1)[1]
+    submitted = prompt_field(
+        llm.with_structured_output.return_value.invoke.call_args.args[0][-1].content,
+        "draft_answer",
+    )
     assert submitted.startswith(answer)
     assert submitted == result["answer"]
 

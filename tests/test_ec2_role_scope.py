@@ -162,7 +162,9 @@ def test_corrected_ec2_scope_is_independently_verified_within_existing_budget(re
         result = verify_grounding_node(state(CASE["answer"]))
     assert result["grounding_checked"] and result["answer"] == GOOD
     assert invoke.call_count == (3 if repair else 2)
-    assert "Answer to verify:\n" + GOOD in invoke.call_args.args[0][-1].content
+    from tests.prompt_fields import prompt_field
+
+    assert prompt_field(invoke.call_args.args[0][-1].content, "draft_answer") == GOOD
 
 
 def test_second_verifier_correction_needs_its_own_approval():

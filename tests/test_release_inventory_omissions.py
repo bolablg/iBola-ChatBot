@@ -17,6 +17,7 @@ from app.services.evidence_policy import (
     preserve_requested_evidence,
 )
 from scripts.run_eval import check_facts, load_golden
+from tests.prompt_fields import prompt_field
 
 CASES = json.loads(
     (Path(__file__).parent / "fixtures/edcb_release_omissions.json").read_text()
@@ -101,7 +102,7 @@ def test_restored_or_normalized_candidate_needs_independent_verification(
         .args[0][-1]
         .content
     )
-    assert submitted.rsplit("Answer to verify:\n", 1)[1] == (
+    assert prompt_field(submitted, "draft_answer") == (
         case["answer"] if case["id"] == "recruiter-sde-03-t4" else expected
     )
     if case["id"] == "recruiter-sde-03-t4":

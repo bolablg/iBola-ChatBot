@@ -68,7 +68,9 @@ def test_actual_sdk_routes_verify_repair_and_final_verification(
         str(calls[1]["config"].thinking_config.thinking_level).lower().endswith("low")
     )
     assert all(call["config"].temperature is None for call in calls)
-    assert good in calls[2]["contents"]
+    assert any(
+        good in part.text for content in calls[2]["contents"] for part in content.parts
+    )
     assert result["grounding_checked"] is (final_grounded and final_on_topic)
     if result["grounding_checked"]:
         assert result["answer"] == good

@@ -17,6 +17,7 @@ from app.services.evidence_policy import (
     documentation_limits,
     prepare_evidence,
 )
+from tests.prompt_fields import prompt_field
 
 CASE = json.loads(
     (
@@ -61,9 +62,12 @@ def test_exact_captured_valid_drafts_pass_without_changing_the_delivered_text(ki
     assert result["grounding_checked"] and result.get("answer", answer) == answer
     assert llm.with_structured_output.return_value.invoke.call_count == 1
     assert (
-        llm.with_structured_output.return_value.invoke.call_args.args[0][
-            -1
-        ].content.rsplit("Answer to verify:\n", 1)[1]
+        prompt_field(
+            llm.with_structured_output.return_value.invoke.call_args.args[0][
+                -1
+            ].content,
+            "draft_answer",
+        )
         == answer
     )
 

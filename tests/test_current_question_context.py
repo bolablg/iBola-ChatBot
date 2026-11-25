@@ -20,6 +20,7 @@ from app.services.evidence_policy import (
     prepare_evidence,
     preserve_requested_evidence,
 )
+from tests.prompt_fields import prompt_field
 
 CAPTURE = json.loads(
     (Path(__file__).parent / "fixtures/local_1_2_11_current_question.json").read_text()
@@ -232,8 +233,11 @@ def test_completed_self_service_answer_is_independently_verified_exactly(accept)
     if accept:
         assert result["answer"].startswith(KNOWN)
         assert (
-            llm.with_structured_output.return_value.invoke.call_args.args[0][
-                -1
-            ].content.rsplit("Answer to verify:\n", 1)[1]
+            prompt_field(
+                llm.with_structured_output.return_value.invoke.call_args.args[0][
+                    -1
+                ].content,
+                "draft_answer",
+            )
             == result["answer"]
         )

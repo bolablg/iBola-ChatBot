@@ -12,6 +12,7 @@ from app.graph.nodes import _evidence_context, verify_grounding_node
 from app.graph.prompts import INSUFFICIENT_EVIDENCE_ANSWERS
 from app.graph.state import GeneratedAnswer, GroundingVerdict
 from app.services.evidence_policy import constraint_failures
+from tests.prompt_fields import prompt_field
 
 CAPTURE = json.loads(
     (Path(__file__).parent / "fixtures/local_1_2_11_kb_url_leak.json").read_text()
@@ -118,7 +119,7 @@ def test_model_approval_cannot_override_guard_and_repair_requires_final_exact_ve
         )
     calls = llm.with_structured_output.return_value.invoke.call_args_list
     assert len(calls) == 3
-    assert calls[-1].args[0][-1].content.rsplit("Answer to verify:\n", 1)[-1] == GOOD
+    assert prompt_field(calls[-1].args[0][-1].content, "draft_answer") == GOOD
     assert result["grounding_checked"] is accepted
     assert result["answer"] == (
         GOOD if accepted else INSUFFICIENT_EVIDENCE_ANSWERS["en"]

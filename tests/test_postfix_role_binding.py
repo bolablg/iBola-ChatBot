@@ -10,6 +10,7 @@ from langchain_core.documents import Document
 from app.graph.nodes import verify_grounding_node
 from app.graph.state import GeneratedAnswer, GroundingVerdict
 from app.services.evidence_policy import constraint_failures, prepare_evidence
+from tests.prompt_fields import prompt_field
 
 CAPTURE = json.loads(
     (
@@ -99,7 +100,7 @@ def test_valid_postfix_correction_still_needs_independent_exact_text_approval():
     assert result["grounding_checked"] and result["answer"].startswith(corrected)
     assert invoke.call_count == 2
     assert (
-        invoke.call_args.args[0][-1].content.rsplit("Answer to verify:\n", 1)[1]
+        prompt_field(invoke.call_args.args[0][-1].content, "draft_answer")
         == result["answer"]
     )
 

@@ -14,6 +14,7 @@ from app.services.evidence_policy import (
     constraint_failures,
     preserve_requested_evidence,
 )
+from tests.prompt_fields import prompt_field
 
 CAPTURE = json.loads(
     (Path(__file__).parent / "fixtures/local_1_2_11_budget_limit.json").read_text()
@@ -79,9 +80,7 @@ def test_exact_completed_answer_requires_independent_verification_within_budget(
     assert result["grounding_checked"] is accepted
     assert llm.with_structured_output.return_value.invoke.call_count == 3
     final_call = llm.with_structured_output.return_value.invoke.call_args_list[-1]
-    assert (
-        final_call.args[0][-1].content.rsplit("Answer to verify:\n", 1)[-1] == expected
-    )
+    assert prompt_field(final_call.args[0][-1].content, "draft_answer") == expected
     if accepted:
         assert result["answer"] == expected
     else:

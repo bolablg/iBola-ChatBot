@@ -14,6 +14,7 @@ from app.services.evidence_policy import (
     constraint_failures,
     policy_data,
 )
+from tests.prompt_fields import prompt_field
 
 CAPTURE = json.loads(
     (Path(__file__).parent / "fixtures/local_1_2_11_system_contrast.json").read_text()
@@ -64,9 +65,10 @@ def test_exact_repair_still_requires_independent_verification(accepted):
     if accepted:
         assert result.get("answer", REPAIR) == REPAIR
     assert any(
-        message.content.rsplit("Answer to verify:\n", 1)[-1] == REPAIR
+        prompt_field(message.content, "draft_answer") == REPAIR
         for call in llm.with_structured_output.return_value.invoke.call_args_list
         for message in call.args[0]
+        if message.type == "human"
     )
 
 

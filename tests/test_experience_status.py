@@ -16,6 +16,7 @@ from app.graph.prompts import (
 from app.graph.state import GroundingVerdict
 from app.services.evidence_policy import constraint_failures, prepare_evidence
 from app.services.experience_status import experience_status_answer
+from tests.prompt_fields import prompt_field
 
 CASE = json.loads(
     (
@@ -198,9 +199,12 @@ def test_compiled_draft_skips_stochastic_generation_but_never_skips_grounding(ac
     assert verifier.with_structured_output.return_value.invoke.call_count >= 1
     if accept:
         assert (
-            verifier.with_structured_output.return_value.invoke.call_args.args[0][
-                -1
-            ].content.rsplit("Answer to verify:\n", 1)[1]
+            prompt_field(
+                verifier.with_structured_output.return_value.invoke.call_args.args[0][
+                    -1
+                ].content,
+                "draft_answer",
+            )
             == generated["answer"]
         )
 

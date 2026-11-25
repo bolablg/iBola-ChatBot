@@ -14,6 +14,7 @@ from app.services.evidence_policy import (
     prepare_evidence,
     supplement_facets,
 )
+from tests.prompt_fields import prompt_field
 
 CASE = json.loads(
     (Path(__file__).parent / "fixtures/sdk_1_2_11_customer_case_merge.json").read_text()
@@ -127,4 +128,4 @@ def test_generation_and_exact_corrected_verification_share_only_the_customer_cas
         -1
     ].content
     assert "SEASONAL DRIVER-RETENTION" not in content and "9%" not in content
-    assert content.rsplit("Answer to verify:\n", 1)[1] == answer
+    assert prompt_field(content, "draft_answer") == answer

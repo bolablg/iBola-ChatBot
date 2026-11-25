@@ -15,6 +15,7 @@ from app.services.evidence_policy import (
     prepare_evidence,
     preserve_requested_evidence,
 )
+from tests.prompt_fields import prompt_field
 
 CASES = json.loads(
     (
@@ -128,8 +129,11 @@ def test_record_scoping_still_requires_verification_of_exact_final_text(accept):
     if accept:
         assert "The retrieved evidence" in result["answer"]
         assert (
-            llm.with_structured_output.return_value.invoke.call_args.args[0][
-                -1
-            ].content.rsplit("Answer to verify:\n", 1)[1]
+            prompt_field(
+                llm.with_structured_output.return_value.invoke.call_args.args[0][
+                    -1
+                ].content,
+                "draft_answer",
+            )
             == result["answer"]
         )
