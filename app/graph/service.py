@@ -233,9 +233,17 @@ class AgenticRAGService:
             DISPUTED_EVIDENCE_ANSWERS,
             INSUFFICIENT_EVIDENCE_ANSWERS,
         )
-        from app.services.answer_safety import response_contains_prompt_echo
+        from app.services.answer_safety import (
+            diagnostic_messages,
+            prompt_echo_fields,
+            redact_diagnostic_echoes,
+        )
 
-        leaked = response_contains_prompt_echo(final_state)
+        final_state, redacted_fields = redact_diagnostic_echoes(final_state)
+        if redacted_fields:
+            logger.warning("Workflow diagnostics redacted: %s", redacted_fields)
+        blocked_fields = prompt_echo_fields(final_state, content_only=True)
+        leaked = bool(blocked_fields)
         safe_fallback = final_state.get("answer") in (
             *INSUFFICIENT_EVIDENCE_ANSWERS.values(),
             *DISPUTED_EVIDENCE_ANSWERS.values(),
@@ -251,8 +259,9 @@ class AgenticRAGService:
         )
         if leaked or unchecked:
             logger.warning(
-                "Workflow output withheld: %s",
+                "Workflow output withheld: %s; fields=%s",
                 "instruction_echo" if leaked else "unverified",
+                blocked_fields,
             )
             final_state = {
                 **final_state,
@@ -325,8 +334,8 @@ class AgenticRAGService:
                 )
 
         evidence = self._build_evidence(final_state)
-        workflow_errors = []
-        workflow_warnings = []
+        workflow_errors = diagnostic_messages(final_state.get("workflow_errors"))
+        workflow_warnings = diagnostic_messages(final_state.get("workflow_warnings"))
         for step in final_state.get("reasoning_steps", []):
             if isinstance(step, dict):
                 action = step.get("action", "")
@@ -372,6 +381,12 @@ class AgenticRAGService:
             "workflow_warnings": workflow_warnings,
             "trace_id": trace_id,
             "provenance": runtime_provenance(),
+            "delivery_safety": {
+                "blocked_content_fields": blocked_fields,
+                "redacted_diagnostic_fields": redacted_fields,
+                "unverified_withheld": bool(unchecked),
+                "handoff_action_blocked": False,
+            },
         }
         from app.graph.nodes import _detect_reply_language
         from app.services.contextual_handoff import contextual_handoff
@@ -385,7 +400,11 @@ class AgenticRAGService:
             enabled=get_settings().handoff.enabled,
         )
         if offer and not (leaked or unchecked):
-            response["actions"] = [offer]
+            if prompt_echo_fields({"actions": [offer]}, content_only=True):
+                response["delivery_safety"]["handoff_action_blocked"] = True
+                logger.warning("Handoff action withheld: instruction_echo")
+            else:
+                response["actions"] = [offer]
         return response
 
     @staticmethod
