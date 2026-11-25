@@ -80,6 +80,9 @@ Bolaji speaks French natively and uses English professionally. He is open to dat
 
 ### Data Director · GOZEM · Apr 2025 - Jul 2026
 
+Functional equivalents (based on responsibilities): Principal Data Architect & Platform Engineer · Director of Data Platform · Director of Data & Analytics
+
+
 Led multidisciplinary data teams including data engineering, analytics, data science, and machine learning across operations in five African countries. Directed enterprise data platform strategy, internal data products development, governance, and cloud FinOps, while co-leading the company’s global AI strategy and implementation.
 
 Mandate: 14+ data professionals · Togo · Benin · Cameroon · Gabon · Congo · Gozem Data Hub
@@ -178,6 +181,9 @@ Tools: React · FastAPI · BigQuery · Python · Google Cloud Storage · Git · 
 
 ### Head of Data · GOZEM · Oct 2022 - Mar 2025
 
+Functional equivalents (based on responsibilities): Staff FinOps & Data Engineer · Data Platform Engineer · Head of Data & Analytics
+
+
 Owned and expanded the data function across Africa, overseeing organizational growth, data governance, analytics, platform modernization, FinOps, financial intelligence, and risk analytics to support the company's transition from startup to scale-up.
 
 #### Data platform modernization and FinOps transformation
@@ -253,6 +259,9 @@ Tools: Vertex AI · BigQuery · Python · Cloud Run · Cloud Functions · Google
 
 ### Global Data Analyst · GOZEM · Nov 2019 - Sep 2022
 
+Functional equivalents (based on responsibilities): Data & Analytics Engineer · Data Engineer · Business Intelligence Engineer
+
+
 First data hire: built Gozem's analytics function from the ground up, leading the GCP/BigQuery migration, automating reporting, detecting fraud patterns, and enabling marketplace intelligence at scale.
 
 #### Building Gozem's modern analytics foundation
@@ -292,6 +301,9 @@ Tools: BigQuery · SQL · Python · Looker Studio · Google Sheets
 
 ### Data Scientist · RINTIO · Mar 2018 - May 2019
 
+Functional equivalents (based on responsibilities): Big Data & Machine Learning Engineer · Data Engineer
+
+
 Completed a four-month hands-on bootcamp in data engineering, machine learning, and big data infrastructure, then designed and built the data platform, analytics architecture, and crop-yield forecasting models behind Duniya, a smart-farming MVP web application for farmers in Benin.
 
 - Completed a four-month Big Data apprenticeship covering data engineering, machine learning, and distributed processing technologies, then applied these skills to build predictive analytics solutions for the agricultural sector.
@@ -306,12 +318,18 @@ The [Rintio Big Data Bootcamp](https://web.facebook.com/bigdatabootcamp) was a f
 
 ### Statistician · INStaD · Sep 2017 - Feb 2018
 
+Functional equivalents (based on responsibilities): Quantitative Analyst & Technical Trainer · Statistical Analyst
+
+
 Delivered hands-on R analytics training to public-sector staff and contributed to the collection of national research-funding data across multiple ministries for Benin's national statistics institute (INStaD).
 
 - Trained approximately 30 public-sector professionals in R programming and data analysis through two hands-on sessions during a one-week seminar.
 - Supported the development of INStaD's national research-funding repository by collecting, validating, and consolidating funding data from four ministerial statistics departments.
 
 ### Statistician · Le PANTAGRUEL · Aug 2013 - Oct 2013
+
+Functional equivalents (based on responsibilities): Customer & Sales Data Analyst · Customer Insights Analyst
+
 
 Led a data-driven customer satisfaction improvement initiative, partnering with Sales leadership to uncover the drivers of customer sentiment and translate customer feedback into measurable business improvements.
 
@@ -346,12 +364,16 @@ Tools: LangGraph · Gemini · Langfuse · Google Cloud Run
 
 ### Data management Consultant · International Trade Centre - ITC (WTO) · 2023
 
+Functional equivalents (based on responsibilities): Data Strategy & Analytics Advisor · Analytics Consultant
+
+
 Strengthen data-management capabilities of 15 early-stage West African startups, designing and delivering a practical framework for data-driven decision-making, operational performance tracking, and growth planning.
 
 - Developed a reusable data-management training toolkit covering market intelligence, marketing performance measurement, a KPI framework, and operational reporting, enabling startups to establish foundational data practices and supporting subsequent program cohorts.
 - Facilitated workshops for founders and leadership teams across 15 ECOWAS startups and provided one-on-one advisory support to five founders, helping translate data-management principles into solutions for their specific business challenges.
 
 ### Founding Vice-President · iSheero · Dec 2021 - Present
+
 
 Co-founded iSHEERO to help grow Benin's AI and data ecosystem through workforce development, ecosystem partnerships, and practical adoption of data-driven technologies across organizations and government institutions.
 
@@ -374,6 +396,7 @@ Co-founded iSHEERO to help grow Benin's AI and data ecosystem through workforce 
   Co-trained directors of information systems (DSIs) across Ministry of Finance departments in data science.
 
 ### Chair of Takwimu LAB · Takwimu LAB · 2019 - 2022
+
 
 
 Co-founded and chaired Takwimu LAB, combining talent development and AI research to advance African language technologies. Led community learning programs while contributing to award-winning NLP datasets, international research publications, and machine translation initiatives supported by AI4D Africa and UNESCO.
