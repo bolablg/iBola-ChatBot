@@ -1,0 +1,126 @@
+{
+  "source_run": 45615863481,
+  "golden_assertions": {
+    "id": "recruiter-adi-02-t5",
+    "category": "canonical",
+    "lang": "en",
+    "tags": [
+      "recruiter_regression"
+    ],
+    "conversation_turn_id": "ADI-02-T5",
+    "question": "Our team mandates Power BI semantic models and DAX, with no ramp-up allowance. Has he actually used those in production, or would that be an experience gap?",
+    "gold": "Power BI semantic-model and DAX production use is not established in the record. This is a validation gap, not a confirmed lack of experience.",
+    "must_contain": [],
+    "must_match": [],
+    "must_not_match": [
+      "has (?:never|not) (?:directly )?used Power BI",
+      "(?i)indicating this would be an experience gap",
+      "(?i)(?:is|would be|constitutes|represents) (?:a |an |a confirmed )?(?:experience|skills?) gap"
+    ],
+    "forbidden_agent_types": [
+      "contact",
+      "opportunity",
+      "message"
+    ],
+    "require_evidence": true,
+    "require_grounded": true,
+    "history": [
+      [
+        "You describe management reporting, but I need finance-grade metric consistency. What evidence shows how he reconciled KPI definitions, data quality and conflicting stakeholder numbers?",
+        "Bolaji designed and implemented an enterprise metrics governance framework, establishing a single source of truth for business metrics. This included creating a centralized metrics catalog documenting KPI derivations, relationships, and calculation formulas, which standardized KPI computation through reusable BigQuery and Dataform assets. His work also resolved long-standing reporting disputes between Finance, Operations, and Product by setting a governance bar across over 250 production pipelines."
+      ],
+      [
+        "The framework across five markets is relevant. What measured adoption or efficiency result came from his self-service analytics work, and what was the denominator and time period?",
+        "Bolaji's self-service analytics work, specifically the Gozem Data Hub, served over 700 people including employees, field agents, and partners across five African countries by the end of his mandate. Two engineers he onboarded subsequently shipped two additional self-service apps onto the platform. I don't have information about information on measured adoption or efficiency results from his self-service analytics work, nor the denominator and time period for such results. It does mention the number of people served by the Gozem Data Hub and the number of additional self-service apps shipped. You may be able to find more information by emailing hello@bolablg.com."
+      ]
+    ],
+    "must_mark_unknown": [
+      "Power BI",
+      "DAX"
+    ]
+  },
+  "captured_result": {
+    "id": "recruiter-adi-02-t5",
+    "question": "Our team mandates Power BI semantic models and DAX, with no ramp-up allowance. Has he actually used those in production, or would that be an experience gap?",
+    "answer": "Bolaji has no documented production use of Power BI semantic models or DAX. His documented business intelligence tools are Looker and Looker Studio, leaving Power BI and DAX as an unsupported direct experience area despite transferable dashboard and modeling concepts.",
+    "evidence": [
+      {
+        "source": "05_skills_and_tools.txt",
+        "chunk_id": "05_skills_and_tools.txt::14",
+        "section": "TOOL CATEGORY COMPARISONS (transferable concepts):",
+        "retrieval_rank": 2,
+        "retrieval_score": 0.031778,
+        "parent_context": "BOLAJI BALOGOUN - SKILLS & TOOLS WITH APPLICATION CONTEXT",
+        "scope_context": "",
+        "evidence_type": "interpretation",
+        "metric_scope": {},
+        "content_preview": "Source: 05_skills_and_tools.txt | Title: BOLAJI BALOGOUN - SKILLS & TOOLS WITH APPLICATION CONTEXT | Section: TOOL CATEGORY COMPARISONS (transferable concepts): | Parent context: BOLAJI BALOGOUN - SKILLS & TOOLS WITH APPLICATION CONTEXT\n\nThese comparisons describe shared concepts. They do not document direct production use, equal proficiency, or feature parity. Actual tools used are identified in the separate \"Used at\" entries above.\n- dbt and Dataform share SQL-based modeling, DAG, testing, documentation, and data-warehouse CI/CD concepts. Bolaji's documented framework implementation was in Dataform at Gozem; this comparison does not establish direct dbt use.\n  Est-ce que Bolaji connait dbt: son experience documentee porte sur Dataform et son framework de templates chez Gozem. Les concepts SQL, DAG et tests sont transferables; l'utilisation directe de dbt n'est pas etablie par cette comparaison.\n- Power BI and Looker Studio share dashboard, modeling, visual-storytelling, sharing, and governance concepts. This comparison does not establish Power BI, DAX, or Tableau production use or proficiency. The documented Gozem tools in the BI record are Looker and Looker Studio.\n- Snowflake/Redshift and BigQuery/ClickHouse share cloud-warehouse, MPP SQL, partitioning, clustering, and cost-tuning concepts. This comparison does not establish direct Snowflake or Redshift use.\n- Airflow and Dagster share workflow-orchestration, scheduling, monitoring, and pipeline-management concepts. This comparison does not establish direct Dagster use."
+      }
+    ],
+    "grounding_checked": true,
+    "fact_pass": false,
+    "fact_failures": [
+      "missing explicit documentation limit: Power BI",
+      "missing explicit documentation limit: DAX"
+    ],
+    "scores": {
+      "relevance": 10,
+      "accuracy": 10,
+      "helpfulness": 10,
+      "faithfulness": 10,
+      "rationale": "The answer correctly and faithfully states that Power BI and DAX use is not documented, while helpfully providing the documented alternatives from the context."
+    },
+    "provenance": {
+      "code_revision": "4aed3b33d5ef3fd7",
+      "deployment_revision": "ibola-chatbot-00076-joj",
+      "corpus_revision": "e0d2235f28a625f1",
+      "kb_revision": "e0d2235f28a625f1",
+      "policy_revision": "19afcd4c31e44876",
+      "index_sync_pending": false,
+      "chunker_version": "3",
+      "model": "gemini-3.5-flash-lite",
+      "thinking_config": {
+        "thinking_level": "low"
+      },
+      "routing_thinking_config": {
+        "thinking_level": "minimal"
+      },
+      "generation_thinking_config": {
+        "thinking_level": "low"
+      },
+      "generation_temperature": null,
+      "verifier_model": "gemini-3.5-flash-lite",
+      "verifier_thinking_level": "low",
+      "verifier_thinking_budget": null,
+      "prompt_versions": {
+        "inventory_followup": "1.1",
+        "guardrail": "2.2",
+        "condense": "1.1",
+        "batch_grade": "2.3",
+        "rewrite": "2.1",
+        "generate_professional": "3.23",
+        "generate_education": "3.8",
+        "generate_learning": "3.8",
+        "verify_grounding": "2.19",
+        "repair_grounding": "1.10",
+        "upper_bound_clarification": "1.0",
+        "skills_completeness_clarification": "1.0",
+        "insufficient_evidence": "1.1",
+        "disputed_evidence": "1.0",
+        "project_identity": "1.0",
+        "evidence_detail": "1.2",
+        "confirmed_non_use": "1.0",
+        "experience_status": "1.0",
+        "record_scope": "1.0",
+        "documentation_limit": "1.0",
+        "personal_production_limit": "1.1",
+        "degree_clarification": "1.0",
+        "language_retry": "1.0",
+        "structured_output_recovery": "1.0",
+        "out_of_scope": "2.0",
+        "translate": "1.0",
+        "notification_suppressed": "1.0"
+      }
+    }
+  }
+}

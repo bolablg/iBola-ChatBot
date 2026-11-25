@@ -113,3 +113,138 @@ def test_missing_evidence_or_grounding_cannot_activate_the_recognizer(overrides)
     assert not check_facts(
         live_result["answer"], LIVE_CASE["golden_assertions"], result=live_result
     )[0]
+
+
+CANARY_CASE = json.loads(
+    Path("tests/fixtures/canary_documented_use_limit.json").read_text()
+)
+
+
+def test_captured_canary_documentation_limit_with_unchanged_golden_assertions():
+    result = CANARY_CASE["captured_result"]
+    golden = next(
+        json.loads(line)
+        for line in Path("eval/golden.jsonl").read_text().splitlines()
+        if json.loads(line)["id"] == result["id"]
+    )
+    assert golden == CANARY_CASE["golden_assertions"]
+    assert result["fact_failures"] == [
+        "missing explicit documentation limit: Power BI",
+        "missing explicit documentation limit: DAX",
+    ]
+    assert check_facts(result["answer"], golden, result=result) == (True, [])
+
+
+@pytest.mark.parametrize(
+    "answer, targets",
+    [
+        (
+            "Bolaji has no documented production use of Power BI semantic models or DAX.",
+            ["Power BI", "DAX"],
+        ),
+        (
+            "He has no documented direct production use of DAX and Power BI semantic-models.",
+            ["DAX", "Power BI"],
+        ),
+        (
+            "HE has no documented personal production use of\nDagster, dbt, or Snowflake.",
+            ["Dagster", "dbt", "Snowflake"],
+        ),
+        (
+            "Bolaji has no documented production use of Spark Structured Streaming.",
+            [TARGET],
+        ),
+    ],
+)
+def test_documented_use_coordinates_preserve_exact_named_target_scope(answer, targets):
+    for target in targets:
+        assert _confirmed_experience_limit(answer, target)
+    assert not _confirmed_experience_limit(answer, "Tableau")
+    assert not _confirmed_experience_limit(answer, "Power")
+    if TARGET in targets:
+        assert not _confirmed_experience_limit(answer, "Spark")
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        "Bolaji has no production use of Power BI or DAX.",
+        "Bolaji has never used Power BI or DAX.",
+        "If asked, Bolaji has no documented production use of Power BI or DAX.",
+        "Bolaji has no documented production use of Power BI or DAX if asked.",
+        "For example, Bolaji has no documented production use of Power BI or DAX.",
+        '"Bolaji has no documented production use of Power BI or DAX."',
+        "“Bolaji has no documented production use of Power BI or DAX.”",
+        "Bolaji has no documented production use of Power BI or DAX?",
+        "Bolaji has no documented production use of Power BI or DAX and he deployed both.",
+        "Bolaji has no documented production use of Power BI or DAX, but he used them.",
+        "Bolaji has no documented production use of Power BI or DAX\nand he operates both.",
+        "Bolaji has no documented production use of Power BI or DAX. He deployed Power BI.",
+        "Bolaji has no documented production use of Power BI or DAX. He used them.",
+        "Bolaji has no documented production use of Power BI or DAX. Power BI, which he used, is documented.",
+        "Bolaji has no documented production use of Power BI or DAX. He has experience with both.",
+        "Bolaji has no documented production use of Power BI or DAX. He has no experience with them.",
+        "Bolaji has no documented production use of Power BI or DAX. He ran both in production.",
+        "Bolaji has no documented production use of Power BI or DAX. He maintains DAX in production.",
+        "Bolaji has no documented production use of Power BI or DAX. He has extensive experience with both.",
+        'The draft reads: "The record is incomplete. Bolaji has no documented production use of Power BI or DAX. Please verify."',
+        "The draft reads: “The record is incomplete. Bolaji has no documented production use of Power BI or DAX. Please verify.”",
+        "The draft reads: 'The record is incomplete. Bolaji has no documented production use of Power BI or DAX. Please verify.'",
+        'The draft reads: "The record is incomplete. Bolaji has no documented production use of Power BI or DAX.',
+        "The draft reads: 'The record is incomplete. Bolaji has no documented production use of Power BI or DAX.",
+        "Bolaji has no documented production use of Power BI or DAX. He used Looker and both in production.",
+        "Bolaji has no documented production use of Power BI semantic modelsor DAX.",
+        "Bolaji has no documented production use of Power BI, or, DAX.",
+        "Bolaji has no documented production use of Power BI or an unknown tool.",
+        "Bolaji has no documented production use of Power BI or DAX functionality.",
+    ],
+)
+def test_documented_use_does_not_credit_non_use_hypotheticals_or_contradictions(answer):
+    assert not all(
+        _confirmed_experience_limit(answer, target) for target in ("Power BI", "DAX")
+    )
+    assert not check_facts(
+        answer,
+        CANARY_CASE["golden_assertions"],
+        result=CANARY_CASE["captured_result"],
+    )[0]
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"grounding_checked": False},
+        {"grounding_checked": None},
+        {"grounding_checked": 1},
+        {"evidence": []},
+        {"evidence": None},
+    ],
+)
+def test_new_documented_use_grammar_requires_real_grounding_and_evidence(overrides):
+    result = {**CANARY_CASE["captured_result"], **overrides}
+    assert not check_facts(
+        result["answer"], CANARY_CASE["golden_assertions"], result=result
+    )[0]
+    assert not check_facts(result["answer"], CANARY_CASE["golden_assertions"])[0]
+
+
+@pytest.mark.parametrize(
+    "continuation",
+    [
+        "He used Looker at Gozem and built dashboards with it.",
+        "He maintains Looker at Gozem and builds dashboards with it.",
+        "If he used them, the record would need updating.",
+        'The draft reads: "He used both in production."',
+    ],
+)
+def test_other_tool_use_hypotheticals_and_quoted_claims_do_not_create_contradictions(
+    continuation,
+):
+    answer = (
+        "Bolaji has no documented production use of Power BI or DAX. " + continuation
+    )
+    assert check_facts(
+        answer,
+        CANARY_CASE["golden_assertions"],
+        result=CANARY_CASE["captured_result"],
+    ) == (True, [])
