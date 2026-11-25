@@ -128,8 +128,99 @@ _LOCAL_DENIAL = _re_mod.compile(
 _DENIAL_WINDOW = 25
 
 
+def _documented_production_use_limit(answer, target):
+    """Recognize a complete record-limit assertion over named tool objects."""
+    from app.services.evidence_policy import policy_data
+
+    tools = next(
+        rule["subject_pattern"]
+        for rule in policy_data()["assertion_rules"]
+        if rule["id"] == "deficiency_requires_same_tool_evidence"
+    )
+    tools = _re_mod.sub(r"^\(\?i\)", "", tools)
+    nominal = rf"(?:{tools})(?: semantic[ -]models?)?\b"
+    use_predicate = (
+        r"(?:use[sd]?|using|deploy(?:ed|s|ing)?|operat(?:e[sd]?|ing)|"
+        r"build(?:s|ing)?|built|implement(?:ed|s|ing)?|design(?:ed|s|ing)?|"
+        r"work(?:ed|s|ing)?|run(?:s|ning)?|ran|maintain(?:ed|s|ing)?|manage(?:d|s)?)"
+    )
+    normalized = " ".join(_accent_fold(answer).split())
+    # Quoted text is not an assertion, including multi-sentence quotations.
+    normalized = _re_mod.sub(
+        r""""[^"]*"|“[^”]*”|‘[^’]*’|(?<!\w)'[^']*'(?!\w)""",
+        " ",
+        normalized,
+    )
+    if _re_mod.search(r"""["“”‘]|(?<!\w)'""", normalized):
+        return False
+    for sentence in normalized.split("."):
+        sentence = sentence.strip()
+        match = _re_mod.fullmatch(
+            r"(?:he|Bolaji) has no documented (?:(?:personal|direct) )?"
+            r"production use of (?P<subjects>"
+            + nominal
+            + rf"(?:(?:\s*,\s*(?:(?:and|or)\s+)?|\s+(?:and|or)\s+){nominal})*)",
+            sentence,
+            _re_mod.I,
+        )
+        if not match:
+            continue
+        subjects = _re_mod.split(
+            r"\s*,\s*(?:(?:and|or)\s+)?|\s+(?:and|or)\s+",
+            match.group("subjects"),
+            flags=_re_mod.I,
+        )
+        subjects = [
+            _re_mod.sub(r" semantic[ -]models?$", "", s, flags=_re_mod.I)
+            for s in subjects
+        ]
+        if not any(
+            _re_mod.fullmatch(_accent_fold(target), s, _re_mod.I) for s in subjects
+        ):
+            continue
+        # Do not let a valid limit license a conflicting use/absence assertion
+        # elsewhere, including one referring back to the tools with a pronoun.
+        for other in normalized.split("."):
+            if other.strip() == sentence:
+                continue
+            other = other.strip()
+            if _re_mod.match(
+                r"(?:if|unless|assuming|suppose|provided|when)\b", other, _re_mod.I
+            ):
+                continue
+            refers_back = _re_mod.search(
+                _accent_fold(target), other, _re_mod.I
+            ) or _re_mod.search(r"\b(?:it|them|these|those|both)\b", other, _re_mod.I)
+            predicate = _re_mod.search(
+                rf"\b{use_predicate}\b|\b(?:proficient|expert)\b|"
+                r"\b(?:has|have|had|no|lacks?)\s+(?:[a-z-]+\s+){0,4}experience\b",
+                other,
+                _re_mod.I,
+            )
+            # An explicit other object binds later pronouns in this sentence.
+            # Do not transfer its documented use to the requested unknown tool.
+            if (
+                not _re_mod.search(_accent_fold(target), other, _re_mod.I)
+                and not _re_mod.search(
+                    r"\b(?:them|these|those|both)\b", other, _re_mod.I
+                )
+                and _re_mod.match(
+                    rf"(?:He|Bolaji) (?:has )?{use_predicate} [A-Z][A-Za-z0-9_+/-]*\b",
+                    other,
+                )
+            ):
+                refers_back = False
+            if refers_back and predicate:
+                break
+        else:
+            return True
+    return False
+
+
 def _confirmed_experience_limit(answer, target):
     """Evaluator-only recognition of a complete, named confirmation gap."""
+    if _documented_production_use_limit(answer, target):
+        return True
     prefix = (
         r"(?:(?:Similarly,\s+)?(?:he|Bolaji)\s+has\s+"
         r"no confirmed personal production experience with\s+"
