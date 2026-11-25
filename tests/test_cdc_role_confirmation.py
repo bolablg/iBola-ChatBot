@@ -115,7 +115,12 @@ def test_confirmed_answer_still_receives_independent_grounding(current_docs):
     assert result["grounding_checked"]
     assert result.get("answer", CONFIRMED) == CONFIRMED
     assert verifier.invoke.call_count == 1
-    assert verifier.invoke.call_args.args[0][-1].content.endswith(CONFIRMED)
+    from tests.prompt_fields import prompt_field
+
+    assert (
+        prompt_field(verifier.invoke.call_args.args[0][-1].content, "draft_answer")
+        == CONFIRMED
+    )
 
 
 @pytest.mark.parametrize(

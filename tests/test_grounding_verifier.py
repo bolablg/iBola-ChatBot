@@ -79,13 +79,16 @@ class TestVerifyGroundingNode:
         mock_get.assert_not_called()
         assert result["grounding_checked"] is False
 
-    def test_redirect_skips_verification(self):
+    def test_redirect_label_with_evidence_still_requires_verification(self):
         state = _state()
         state["agent_type"] = "redirect"
-        with patch("app.graph.nodes._get_llm") as mock_get:
+        with patch(
+            "app.graph.nodes._get_llm",
+            return_value=_mock_llm(GroundingVerdict(is_grounded=True)),
+        ) as mock_get:
             result = verify_grounding_node(state)
-        mock_get.assert_not_called()
-        assert result["grounding_checked"] is False
+        mock_get.assert_called_once()
+        assert result["grounding_checked"] is True
 
     def test_verifier_error_withholds_unverified_answer(self):
         llm = Mock()

@@ -33,6 +33,7 @@ from app.graph.prompts import (
     TRANSLATE_PROMPT,
     VERIFY_GROUNDING_PROMPT,
     answer_echoes_prompt,
+    format_data_prompt,
 )
 from app.graph.state import (
     AgentCategory,
@@ -147,6 +148,46 @@ def _invoke_with_retry(call, operation: str):
             time.sleep(delay)
 
 
+def _gemini_messages(messages):
+    """Separate application system instructions from text conversation turns.
+
+    Callers construct system messages from the prompt registry. Retrieved text,
+    history and questions remain human-message data, even if they contain role
+    labels. Reject unsupported inputs instead of silently dropping their meaning.
+    """
+    from google.genai import types
+    from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+
+    system_parts = []
+    contents = []
+    for message in messages:
+        if isinstance(message, str):
+            text, role = message, "user"
+        elif isinstance(message, (SystemMessage, HumanMessage, AIMessage)):
+            text = message.content
+            if not isinstance(text, str):
+                raise ValueError("Gemini adapter supports text messages only")
+            if isinstance(message, SystemMessage):
+                if contents:
+                    raise ValueError("System messages must precede conversation turns")
+                system_parts.append(text)
+                continue
+            if isinstance(message, AIMessage) and (
+                message.tool_calls
+                or message.invalid_tool_calls
+                or message.additional_kwargs.get("function_call")
+                or message.additional_kwargs.get("tool_calls")
+            ):
+                raise ValueError("Gemini adapter does not support tool calls")
+            role = "model" if isinstance(message, AIMessage) else "user"
+        else:
+            raise ValueError("Unsupported Gemini message type")
+        contents.append(types.Content(role=role, parts=[types.Part(text=text)]))
+    if not contents:
+        raise ValueError("Gemini requires a conversation turn")
+    return "\n\n".join(system_parts) or None, contents
+
+
 class _SyncGeminiLLM:
     """Minimal sync Gemini wrapper compatible with LangChain prompt templates.
 
@@ -195,21 +236,15 @@ class _SyncGeminiLLM:
         """Accept LangChain message list, return an object with .content."""
         from langchain_core.messages import AIMessage
 
-        # Convert LangChain messages to a single prompt string
-        parts = []
-        for msg in messages:
-            if hasattr(msg, "content"):
-                parts.append(msg.content)
-            elif isinstance(msg, str):
-                parts.append(msg)
-        prompt = "\n\n".join(parts)
+        system_instruction, contents = _gemini_messages(messages)
 
         response = _invoke_with_retry(
             lambda: _provider_generate(
                 self._client,
                 model=self._model,
-                contents=prompt,
+                contents=contents,
                 config={
+                    "system_instruction": system_instruction,
                     **self._sampling_config(),
                     "max_output_tokens": self._max_output_tokens,
                     "thinking_config": self._thinking_config(),
@@ -236,22 +271,16 @@ class _StructuredOutput:
 
         from google import genai
 
-        # Convert messages to prompt
-        parts = []
-        for msg in messages:
-            if hasattr(msg, "content"):
-                parts.append(msg.content)
-            elif isinstance(msg, str):
-                parts.append(msg)
-        prompt = "\n\n".join(parts)
+        system_instruction, contents = _gemini_messages(messages)
 
-        def generate(prompt_text):
+        def generate(instruction):
             return _invoke_with_retry(
                 lambda: _provider_generate(
                     self._llm._client,
                     model=self._llm._model,
-                    contents=prompt_text,
+                    contents=contents,
                     config=genai.types.GenerateContentConfig(
+                        system_instruction=instruction,
                         response_mime_type="application/json",
                         response_schema=self._schema,
                         **self._llm._sampling_config(),
@@ -273,10 +302,17 @@ class _StructuredOutput:
 
         for attempt in range(_STRUCTURED_OUTPUT_RECOVERY_RETRIES + 1):
             try:
-                attempt_prompt = prompt
+                attempt_instruction = system_instruction
                 if attempt:
-                    attempt_prompt = f"{prompt}\n\n{STRUCTURED_OUTPUT_RECOVERY_PROMPT}"
-                response = generate(attempt_prompt)
+                    attempt_instruction = "\n\n".join(
+                        part
+                        for part in (
+                            system_instruction,
+                            STRUCTURED_OUTPUT_RECOVERY_PROMPT,
+                        )
+                        if part
+                    )
+                response = generate(attempt_instruction)
 
                 # The Google GenAI SDK parses structured responses into the
                 # requested Pydantic model when it can. Prefer that result so
@@ -294,7 +330,11 @@ class _StructuredOutput:
                 return self._schema(**data)
             except (TypeError, ValueError) as exc:
                 if attempt >= _STRUCTURED_OUTPUT_RECOVERY_RETRIES:
-                    raise
+                    # Validation errors may contain the rejected model text.
+                    # Keep it out of logs and outward workflow diagnostics.
+                    raise ValueError(
+                        f"Invalid structured response for {self._schema.__name__}"
+                    ) from None
 
                 logger.warning(
                     "Gemini structured output parse failed for %s (attempt %d/%d): "
@@ -302,7 +342,7 @@ class _StructuredOutput:
                     self._schema.__name__,
                     attempt + 1,
                     _STRUCTURED_OUTPUT_RECOVERY_RETRIES + 1,
-                    exc,
+                    type(exc).__name__,
                 )
 
 
@@ -392,10 +432,18 @@ def guardrail_node(state: dict) -> dict:
                 else AgentCategory.PROFESSIONAL
             )
 
-        if result.score >= 60:
+        # One normalized decision drives the graph and its agent metadata.
+        # An out-of-scope category cannot send a redirect-labelled draft to RAG.
+        score = (
+            min(result.score, 59)
+            if category == AgentCategory.OUT_OF_SCOPE
+            else result.score
+        )
+        if score >= 60:
             destination = RoutingDestination.RETRIEVE
         else:
             destination = RoutingDestination.OUT_OF_SCOPE
+            category = AgentCategory.OUT_OF_SCOPE
 
         # Condense rides the same call: standalone + English retrieval forms.
         # Without history there is nothing to resolve, so a "rewrite" can only
@@ -408,7 +456,7 @@ def guardrail_node(state: dict) -> dict:
         retrieval_query = (result.retrieval_query_en or "").strip() or standalone
 
         return {
-            "guardrail_score": result.score,
+            "guardrail_score": score,
             "category": category,
             "routing_destination": destination,
             "original_query": query,
@@ -423,7 +471,7 @@ def guardrail_node(state: dict) -> dict:
                     node="guardrail",
                     action="scored",
                     detail=(
-                        f"score={result.score} cat={category.value} "
+                        f"score={score} cat={category.value} "
                         f"standalone={standalone[:40]} "
                         f"reason={result.reasoning[:60]}"
                     ),
@@ -1335,7 +1383,8 @@ def generate_node(state: dict) -> dict:
         )
         structured_llm = llm.with_structured_output(GeneratedAnswer)
         return structured_llm.invoke(
-            GENERATE_PROMPT.format_messages(
+            format_data_prompt(
+                GENERATE_PROMPT,
                 system_prompt=system_prompt + extra_instruction,
                 reply_language=reply_language,
                 today=today,
@@ -1421,6 +1470,7 @@ def generate_node(state: dict) -> dict:
         "answer": answer,
         "confidence": confidence,
         "context_documents": context_docs,
+        "requires_grounding": bool(context_docs),
         "reasoning_steps": steps,
     }
 
@@ -1602,7 +1652,7 @@ def _verify_grounding_llm_node(state: dict) -> dict:
     """Claim-level verification after generate: fail closed on unsupported
     claims AND on grounded-but-wrong-topic substitutions.
 
-    Redirects are conversational. Knowledge answers without evidence or a
+    Redirects do not enter this node. Knowledge answers without evidence or a
     working verifier receive a refusal, never an unverified draft.
     """
     answer = state.get("answer", "")
@@ -1619,7 +1669,7 @@ def _verify_grounding_llm_node(state: dict) -> dict:
     except Exception:
         enabled = True
 
-    if not enabled or not answer or agent_type == "redirect" or not context_docs:
+    if not enabled or not answer or not context_docs:
         steps.append(
             ReasoningStep(
                 node="verify_grounding",
@@ -1636,8 +1686,7 @@ def _verify_grounding_llm_node(state: dict) -> dict:
             "unsupported_claims": [],
             "reasoning_steps": steps,
         }
-        if agent_type != "redirect":
-            result.update(answer=_insufficient_answer(state), confidence=0.0)
+        result.update(answer=_insufficient_answer(state), confidence=0.0)
         return result
 
     context = _evidence_context(context_docs)
@@ -1660,7 +1709,8 @@ def _verify_grounding_llm_node(state: dict) -> dict:
         )
         structured_llm = llm.with_structured_output(GroundingVerdict)
         verdict: GroundingVerdict = structured_llm.invoke(
-            VERIFY_GROUNDING_PROMPT.format_messages(
+            format_data_prompt(
+                VERIFY_GROUNDING_PROMPT,
                 question=scope_query or "(unknown)",
                 context=context,
                 answer=answer,
@@ -1732,7 +1782,8 @@ def _verify_grounding_llm_node(state: dict) -> dict:
                 _get_llm(temperature=0.0)
                 .with_structured_output(GeneratedAnswer)
                 .invoke(
-                    REPAIR_GROUNDING_PROMPT.format_messages(
+                    format_data_prompt(
+                        REPAIR_GROUNDING_PROMPT,
                         question=scope_query or "(unknown)",
                         context=context,
                         answer=corrected or answer,
@@ -1787,7 +1838,8 @@ def _verify_grounding_llm_node(state: dict) -> dict:
     if corrected and not final_failures:
         try:
             recheck = structured_llm.invoke(
-                VERIFY_GROUNDING_PROMPT.format_messages(
+                format_data_prompt(
+                    VERIFY_GROUNDING_PROMPT,
                     question=scope_query or "(unknown)",
                     context=context,
                     answer=corrected,
@@ -1844,7 +1896,8 @@ def _verify_grounding_llm_node(state: dict) -> dict:
                     and not final_failures
                 ):
                     approval = structured_llm.invoke(
-                        VERIFY_GROUNDING_PROMPT.format_messages(
+                        format_data_prompt(
+                            VERIFY_GROUNDING_PROMPT,
                             question=scope_query or "(unknown)",
                             context=context,
                             answer=candidate,

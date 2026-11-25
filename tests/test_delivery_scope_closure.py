@@ -15,6 +15,7 @@ from app.services.evidence_policy import (
     prepare_evidence,
     preserve_requested_evidence,
 )
+from tests.prompt_fields import prompt_field
 
 CAPTURE = json.loads(
     (Path(__file__).parent / "fixtures/answer_delivery_failures.json").read_text()
@@ -76,7 +77,7 @@ def test_exact_delivered_tools_only_proof_restores_its_named_implementation_once
     actual = llm.with_structured_output.return_value.invoke.call_args.args[0][
         -1
     ].content
-    assert actual.rsplit("Answer to verify:\n", 1)[1] == restored
+    assert prompt_field(actual, "draft_answer") == restored
 
 
 def test_synthetic_named_warehouse_alternative_does_not_inject_cdc():

@@ -2,17 +2,55 @@ BOLAJI BALOGOUN - SKILLS & TOOLS WITH APPLICATION CONTEXT
 
 ---
 
-CORE EXPERTISE AREAS:
-Primary programming language: Python
-Python, advanced SQL, data platform engineering, data modeling, AI and LLM engineering (RAG, agentic workflows), statistical analysis, data visualization, machine learning, automation, cloud computing, FinOps, data product management, data governance, team leadership, problem-solving, cross-functional communication.
+SKILLS, CAPABILITIES AND TECHNOLOGIES:
 
-What are Bolaji's key skills: Python (his primary programming language), advanced SQL, BigQuery, Google Cloud Platform, Airflow, Dataform, AI and LLM engineering, FinOps, and data team leadership.
+Skills and competencies describe work Bolaji can perform. Technologies are the programming languages, query languages, platforms, services and tools used to perform that work. A technology name alone does not establish a capability, equal proficiency, personal implementation or production operating responsibility. The application contexts and ownership limits in the technology sections below describe the documented experience.
 
-Quelles sont les competences cles de Bolaji: Python, SQL avance, BigQuery, Google Cloud Platform, Apache Airflow, Dataform, ingenierie IA et LLM (RAG, workflows agentiques, LangGraph, MCP), FinOps et leadership d'equipes data.
+---
+
+CORE SKILLS AND CAPABILITIES:
+
+Bolaji's professional expertise spans the following skills and competencies.
+
+Data platform architecture: Bolaji designs cloud data platforms and analytical warehouses, connecting operational data with analytical systems. His Gozem work includes a cloud migration and warehouse architecture.
+
+Data pipeline engineering and operation: Bolaji builds and operates data ingestion, transformation and orchestration workflows, including scheduled pipelines and near-real-time processing. Personal on-call responsibility and numerical service-level targets require separate evidence.
+
+Analytics engineering and data modeling: Bolaji designs analytical data models and reusable incremental transformations. His documented transformation work includes partition-filtered merges and scoped data-quality assertions.
+
+Analytics and decision intelligence: Bolaji applies statistical analysis, product analytics, data visualization, experimentation and self-service analytics to business and product decisions.
+
+AI and LLM engineering: Bolaji develops RAG systems, agentic workflows and document-intelligence solutions and has machine-learning and NLP experience. Personal implementation, prototyping and supervision remain distinct responsibilities in each project.
+
+Data governance and reliability: Bolaji works on data-quality monitoring, data governance and role-based access to analytical systems. Governance and reliability claims retain their documented project scope.
+
+Cloud cost engineering and FinOps: Bolaji improves warehouse and pipeline cost efficiency through data-model design, partitioning, clustering, incremental processing and orchestration optimization.
+
+Technical and team leadership: Bolaji leads architecture and delivery, hires and onboards engineers, mentors colleagues and works with business and product stakeholders. These capabilities describe leadership responsibilities rather than technologies.
+
+---
+
+CAPABILITY SUMMARY IN ENGLISH:
+
+Bolaji's core professional skills are data platform architecture; data pipeline engineering and operation; analytics engineering and data modeling; analytics and decision intelligence; AI and LLM engineering; data governance and reliability; cloud cost engineering and FinOps; and technical and team leadership. These are capabilities describing the work he can perform. The following technology sections separately document languages, tools, application contexts and proficiency.
+
+---
+
+COMPETENCES PROFESSIONNELLES EN FRANCAIS:
+
+Les compétences de Bolaji sont l'architecture de plateformes data ; l'ingénierie et l'exploitation de pipelines ; l'analytics engineering et la modélisation des données ; l'analyse et l'intelligence décisionnelle ; l'ingénierie IA et LLM ; la gouvernance et la fiabilité des données ; l'optimisation des coûts cloud et le FinOps ; ainsi que le leadership technique et le management d'équipes. Ces compétences décrivent le travail qu'il sait réaliser. Les sections suivantes présentent séparément les langages, outils, contextes d'utilisation et niveaux de maîtrise documentés.
+
+---
+
+TECHNOLOGIES AND APPLICATION CONTEXT:
+
+Programming languages, query languages, cloud services, databases, frameworks, analytical tools and orchestration tools support the capabilities above. Their names identify technologies rather than standalone capability categories. The documented use of a technology does not imply equal proficiency across every product in its category or ownership of every related project component. Each entry retains its own application context and responsibility limits.
 
 ---
 
 PROGRAMMING LANGUAGES:
+
+Primary programming language: Python
 
 - Python (primary language, 10+ years): pandas, numpy, scikit-learn, Flask, FastAPI, LangGraph.
   Used at: Gozem (data pipelines, automation, AI tools), Rintio (ML models, data engineering), personal projects (iBola chatbot, uDownloader, salary converter). Bolaji's strongest and most-used language.

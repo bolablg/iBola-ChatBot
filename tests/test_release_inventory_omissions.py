@@ -18,6 +18,7 @@ from app.services.evidence_policy import (
     preserve_requested_evidence,
 )
 from scripts.run_eval import check_facts, load_golden
+from tests.prompt_fields import prompt_field
 
 CASES = json.loads(
     (Path(__file__).parent / "fixtures/edcb_release_omissions.json").read_text()
@@ -93,7 +94,7 @@ def test_restored_or_normalized_candidate_needs_independent_verification(
         .args[0][-1]
         .content
     )
-    assert submitted.rsplit("Answer to verify:\n", 1)[1] == expected
+    assert prompt_field(submitted, "draft_answer") == expected
     if not accepted:
         assert result["answer"] == INSUFFICIENT_EVIDENCE_ANSWERS[case["language"]]
 
@@ -186,9 +187,7 @@ def test_changed_correction_is_normalized_then_independently_rechecked(accepted)
         )
     assert verifier.call_count == 2
     assert (
-        verifier.call_args_list[1]
-        .args[0][-1]
-        .content.rsplit("Answer to verify:\n", 1)[1]
+        prompt_field(verifier.call_args_list[1].args[0][-1].content, "draft_answer")
         == expected
     )
     assert result["grounding_checked"] is accepted

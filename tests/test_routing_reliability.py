@@ -22,6 +22,7 @@ from app.services.evidence_policy import (
 )
 from app.settings import LLMSettings
 from scripts.run_eval import check_facts, load_golden
+from tests.prompt_fields import prompt_field
 
 FIXTURE = json.loads(
     (Path(__file__).parent / "fixtures/routing_reliability_failures.json").read_text()
@@ -168,9 +169,7 @@ def test_exact_missing_or_editorial_detail_requires_bounded_repair_and_final_ver
     assert result["grounding_checked"] and result["answer"] == good
     assert verifier.invoke.call_count == 2 and repair.invoke.call_count == 1
     assert (
-        verifier.invoke.call_args.args[0][-1].content.rsplit("Answer to verify:\n", 1)[
-            1
-        ]
+        prompt_field(verifier.invoke.call_args.args[0][-1].content, "draft_answer")
         == good
     )
 
@@ -366,4 +365,7 @@ def test_minimal_guard_preserves_intent_routing_and_request_question(
         .lower()
         .endswith("minimal")
     )
-    assert "Classify the request's intent" in calls[0]["contents"]
+    assert "Classify the request's intent" in calls[0]["config"].system_instruction
+    assert calls[0]["contents"][0].role == "user"
+    assert query in calls[0]["contents"][0].parts[0].text
+    assert "Classify the request's intent" not in calls[0]["contents"][0].parts[0].text

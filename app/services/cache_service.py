@@ -83,7 +83,8 @@ class CacheService:
     @staticmethod
     def _knowledge_namespace() -> str:
         import config
-        from app.graph.prompts import PROMPT_VERSIONS
+        from app.graph.prompts import INSTRUCTION_CORPUS_FINGERPRINT, PROMPT_VERSIONS
+        from app.services.answer_safety import ANSWER_SAFETY_VERSION
         from app.settings import get_settings
         from utils.embedder import CONTRACT_FILENAME, embedding_fingerprint
 
@@ -92,6 +93,8 @@ class CacheService:
             json.dumps(
                 {
                     "prompts": PROMPT_VERSIONS,
+                    "instruction_corpus": INSTRUCTION_CORPUS_FINGERPRINT,
+                    "delivery_policy": ANSWER_SAFETY_VERSION,
                     "handoff_enabled": settings.handoff.enabled,
                     "llm_settings": settings.llm.model_dump(),
                     "model": settings.llm.model_name,
@@ -147,6 +150,9 @@ class CacheService:
             return None
         with self._lock:
             cached_result = copy.deepcopy(self.response_cache.get(cache_key))
+            if cached_result is not None and not self._safe_response(cached_result):
+                self.response_cache.pop(cache_key, None)
+                cached_result = None
             if cached_result is None:
                 self._response_misses += 1
             else:
@@ -158,6 +164,16 @@ class CacheService:
             cached_result["cache_timestamp"] = datetime.now().isoformat()
 
         return cached_result
+
+    @staticmethod
+    def _safe_response(response):
+        from app.services.answer_safety import response_contains_prompt_echo
+
+        return (
+            response.get("grounding_checked") is True
+            and bool(response.get("evidence"))
+            and not response_contains_prompt_echo(response)
+        )
 
     async def set_cached_response(
         self,
@@ -172,7 +188,7 @@ class CacheService:
         if self.response_cache is None:
             return
 
-        if not response.get("grounding_checked") or not response.get("evidence"):
+        if not self._safe_response(response):
             return
         cache_key = self._response_key(query, agent_type, language, context)
         if cache_key is None:

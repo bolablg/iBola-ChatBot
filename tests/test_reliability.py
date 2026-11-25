@@ -64,7 +64,7 @@ def test_structured_output_recovers_from_truncated_json():
     original_generate_content = models.generate_content
 
     def generate_content(**kwargs):
-        prompts.append(kwargs["contents"])
+        prompts.append(kwargs["config"].system_instruction)
         return original_generate_content(**kwargs)
 
     models.generate_content = generate_content
@@ -169,5 +169,5 @@ def test_cache_service_without_cachetools_is_safe():
 def test_professional_prompt_requires_complete_multipart_answers():
     prompt = GENERATE_SYSTEM_PROMPTS[AgentCategory.PROFESSIONAL]
 
-    assert PROMPT_VERSIONS["generate_professional"] == "3.20"
-    assert "include every requested number, title, date, and category" in prompt
+    assert PROMPT_VERSIONS["generate_professional"] == "3.22"
+    assert "answer every supported part, including requested metrics, dates" in prompt

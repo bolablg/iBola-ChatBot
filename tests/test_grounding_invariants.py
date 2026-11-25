@@ -63,6 +63,7 @@ class TestEvidenceInvariant:
         service.workflow = Mock()
         service.workflow.invoke.return_value = {
             "answer": "Bolaji was Data Director at Gozem through July 2026.",
+            "grounding_checked": True,
             "agent_type": "professional",
             "confidence": 0.9,
             "redirect_count": 0,

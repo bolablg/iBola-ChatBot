@@ -655,7 +655,9 @@ def test_restored_correction_is_rechecked_as_delivered(governance_retrieval):
     final_prompt = model.with_structured_output.return_value.invoke.call_args.args[0][
         -1
     ].content
-    assert result["answer"] in final_prompt
+    from tests.prompt_fields import prompt_field
+
+    assert prompt_field(final_prompt, "draft_answer") == result["answer"]
 
 
 @pytest.mark.parametrize(

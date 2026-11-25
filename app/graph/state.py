@@ -155,7 +155,9 @@ class GroundingVerdict(BaseModel):
         default="",
         description=(
             "The answer rewritten using ONLY supported claims, in the same "
-            "language. Empty when is_grounded is true."
+            "language. May be empty only when both is_grounded and addresses_question "
+            "are true and no deterministic constraint violations remain. Otherwise "
+            "correct unsupported claims, missing requested facts or topic mismatch."
         ),
     )
 
@@ -244,6 +246,8 @@ class WorkflowState(TypedDict, total=False):
     confidence: float
     # Chunks that actually entered the generation context (post budget+dedup)
     context_documents: List[Document]
+    # Set by generation; retained through repairs even if source arrays change.
+    requires_grounding: bool
     # Claim-level grounding verification (verify_grounding node)
     grounding_checked: bool
     verification_method: str
