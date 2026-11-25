@@ -1,6 +1,6 @@
 """Inspect decoded prompt data while asserting the structured field exists."""
 
-from xml.etree import ElementTree
+from defusedxml import ElementTree
 
 
 def prompt_field(text, field):
