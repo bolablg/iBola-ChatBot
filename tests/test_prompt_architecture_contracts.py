@@ -5,9 +5,9 @@ import json
 from string import Formatter
 from types import SimpleNamespace
 from unittest.mock import Mock
-from xml.etree import ElementTree
 
 import pytest
+from defusedxml import ElementTree
 from langchain_core.documents import Document
 
 from app.graph import nodes, prompts
