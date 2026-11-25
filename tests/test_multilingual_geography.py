@@ -14,6 +14,7 @@ from app.services.evidence_policy import (
     prepare_evidence,
     preserve_requested_evidence,
 )
+from tests.prompt_fields import prompt_field
 
 FIXTURE = json.loads(
     (
@@ -169,9 +170,9 @@ def test_actual_final_restored_text_requires_independent_verification(accepted):
     if accepted:
         assert result["grounding_checked"]
         final = result["answer"]
-        actual = verifier.invoke.call_args.args[0][-1].content.rsplit(
-            "Answer to verify:\n", 1
-        )[1]
+        actual = prompt_field(
+            verifier.invoke.call_args.args[0][-1].content, "draft_answer"
+        )
         assert actual == final and "Singapour" in final
         assert verifier.invoke.call_count == 1
     else:

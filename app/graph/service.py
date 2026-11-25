@@ -227,6 +227,61 @@ class AgenticRAGService:
             logger.error("Workflow execution failed: %s", exc)
             return self._error_response(session_id, user_language)
 
+        # All graph answers, including repairs and redirects, pass this boundary
+        # before response building, handoff, turn tracing or endpoint streaming.
+        from app.graph.prompts import (
+            DISPUTED_EVIDENCE_ANSWERS,
+            INSUFFICIENT_EVIDENCE_ANSWERS,
+        )
+        from app.services.answer_safety import response_contains_prompt_echo
+
+        leaked = response_contains_prompt_echo(final_state)
+        safe_fallback = final_state.get("answer") in (
+            *INSUFFICIENT_EVIDENCE_ANSWERS.values(),
+            *DISPUTED_EVIDENCE_ANSWERS.values(),
+        )
+        requires_grounding = final_state.get("requires_grounding") or any(
+            final_state.get(key)
+            for key in ("context_documents", "graded_documents", "documents")
+        )
+        unchecked = (
+            requires_grounding
+            and not final_state.get("grounding_checked")
+            and not safe_fallback
+        )
+        if leaked or unchecked:
+            logger.warning(
+                "Workflow output withheld: %s",
+                "instruction_echo" if leaked else "unverified",
+            )
+            final_state = {
+                **final_state,
+                "answer": INSUFFICIENT_EVIDENCE_ANSWERS.get(
+                    user_language, INSUFFICIENT_EVIDENCE_ANSWERS["en"]
+                ),
+                "confidence": 0.0,
+                "grounding_checked": False,
+                "verification_method": None,
+                "actions": [],
+                "context_documents": [],
+                "graded_documents": [],
+                "documents": [],
+                "unsupported_claims": [],
+                "workflow_errors": [],
+                "workflow_warnings": [],
+                "reasoning_steps": [
+                    ReasoningStep(
+                        node="delivery",
+                        action="warning",
+                        detail=(
+                            "instruction_echo_blocked"
+                            if leaked
+                            else "unverified_answer_withheld"
+                        ),
+                    )
+                ],
+            }
+
         elapsed = time.time() - start
 
         # Extract results
@@ -329,7 +384,7 @@ class AgenticRAGService:
             _detect_reply_language(user_input, user_language),
             enabled=get_settings().handoff.enabled,
         )
-        if offer:
+        if offer and not (leaked or unchecked):
             response["actions"] = [offer]
         return response
 

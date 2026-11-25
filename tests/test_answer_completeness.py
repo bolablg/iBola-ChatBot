@@ -9,6 +9,7 @@ from app.graph.answer_completeness import (
     preserve_primary_language,
     preserve_requested_degrees,
 )
+from tests.prompt_fields import prompt_field
 
 
 @pytest.fixture
@@ -120,7 +121,7 @@ def test_final_verifier_correction_remains_final(
     with patch("app.graph.nodes._get_llm", return_value=llm):
         result = verify_grounding_node(state)
     messages = llm.with_structured_output.return_value.invoke.call_args_list[0].args[0]
-    answer_to_verify = messages[-1].content.partition("Answer to verify:\n")[2]
+    answer_to_verify = prompt_field(messages[-1].content, "draft_answer")
     assert "Rust" in answer_to_verify
     if verifier_drops_language:
         assert "Rust" not in result["answer"]

@@ -11,7 +11,7 @@ from app.graph.nodes import (
     grade_documents_node,
     verify_grounding_node,
 )
-from app.graph.state import BatchGradeResult, GroundingVerdict
+from app.graph.state import BatchGradeResult, GeneratedAnswer, GroundingVerdict
 from app.services.evidence_policy import (
     constraint_failures,
     prepare_evidence,
@@ -23,6 +23,7 @@ from app.services.evidence_policy import (
 from app.services.service_inventory import inventory_followup
 from pipeline.chunker import IntelligentChunker
 from scripts.run_eval import check_facts
+from tests.prompt_fields import prompt_field
 
 QUESTION = "Which production services did he personally design and operate?"
 FOLLOWUP = "What other services? Give me something documented."
@@ -492,7 +493,7 @@ def test_conversational_coverage_cannot_rescue_an_unsupported_profile_claim(docs
     verifier = llm.with_structured_output.return_value.invoke
     verifier.side_effect = [
         GroundingVerdict(is_grounded=False, corrected_answer=state["answer"]),
-        GroundingVerdict(is_grounded=False),
+        GeneratedAnswer(answer=state["answer"]),
     ]
     with patch("app.graph.nodes._get_llm", return_value=llm):
         result = verify_grounding_node(state)
@@ -510,7 +511,8 @@ def test_conversational_coverage_cannot_rescue_an_unsupported_profile_claim(docs
     assert "Bolaji operated Kafka in production." in submitted
     assert verifier.call_count == 2
     rechecked = verifier.call_args_list[1].args[0][-1].content
-    assert rechecked.rsplit("Answer to verify:\n", 1)[1] == state["answer"]
+    assert prompt_field(rechecked, "draft_answer") == state["answer"]
+    assert "confirmed_non_use_contradicted:Kafka" in rechecked
     assert "conversation_coverage" in rechecked
     assert (
         "Every profile claim still requires support in the retrieved source text"

@@ -1,4 +1,4 @@
-version: 23
+version: 39
 source_types:
   21_production_service_inventory.txt: candidate_confirmed
   20_owner_confirmed_production_scope.txt: candidate_confirmed
@@ -8,6 +8,13 @@ source_types:
   17_highlights_pitch.txt: summary
   19_owner_confirmed_scope.txt: candidate_confirmed
 assertion_rules:
+- id: latency_threshold_wording_requires_source
+  description: Do not claim that a source states a particular latency threshold unless retrieved source text actually discusses that threshold. A user-provided comparison benchmark is not a measured capability or source quotation; mark an unsupported comparison as unknown and verify the exact answer.
+  answer_pattern: '(?i)\b(?P<threshold>sub[ -]?second)\b'
+  affirmation_pattern: '(?i)\b(?:source|documentation|record|KB|knowledge base)\s+(?:(?:explicitly|specifically|clearly)\s+)?(?:notes?|states?|says?|mentions?|establishes?)\b[^.!?;\n]{0,120}\bsub[ -]?second\b'
+  support_pattern: '(?i)\b(?P<threshold>sub[ -]?second)\b'
+  binding_groups: [threshold]
+  literal_mention: true
 - id: onsite_availability_requires_same_actor_evidence
   description: Working hours and employment type do not establish physical location. Preserve remote, full-time and consulting as their own categories. Do not translate them into affirmative availability for on-site work, présentiel or en mode present without retrieved availability for the same actor and location arrangement.
   answer_pattern: '(?i)\b(?:available|open|willing|disponible|ouvert|prete?|pret)\w*[^.;\n]{0,120}(?:on.site|in.person|presentiel|en mode present)\b|\b(?:on.site|in.person|presentiel|en mode present)[^.;\n]{0,80}\b(?:available|disponible)\b'
@@ -44,6 +51,27 @@ assertion_rules:
   binding_groups: [count]
   clause_support: true
   local_negation: true
+- id: performance_framework_domain_requires_direct_evidence
+  description: A driver or rider performance framework does not establish a team or employee performance-management framework. HR partnership and competency frameworks are not direct design proof of a performance framework. Bind design and domain to the named actor in one source clause.
+  answer_pattern: '(?i)\b(?P<domain>team|employee|staff|manager)\s+performance(?:[ -]management)?\s+frameworks?\b'
+  affirmation_pattern: '(?i)\b(?:designed|defined|created|built|developed|established|implemented)\b'
+  support_pattern: '(?i)\bBolaji\s+(?:(?:personally|directly)\s+)?(?:designed|defined|created|built|developed|established|implemented)\s+(?:(?:a|an|the|his)\s+)?(?P<domain>team|employee|staff|manager|driver|rider)\s+performance(?:[ -]management)?\s+frameworks?\b'
+  exclude_support_pattern: '(?i)\b(?:if|unless|would|could|hypothetical|colleague)\b'
+  exclude_support_line_pattern: '(?i)^\s*(?:Source|Title|Section|Parent context)\s*:'
+  binding_groups: [domain]
+  negation_pattern: '(?i)^\s*(?:if|unless|suppose|assuming|ask whether)\b'
+  clause_support: true
+  local_negation: true
+- id: formal_performance_authority_requires_direct_evidence
+  description: HR partnership, hiring, onboarding and performance-management participation do not establish formal authority. An affirmative personal authority claim requires direct same-actor authority evidence in a supporting clause.
+  answer_pattern: '(?i)\b(?:formal\s+)?performance[ -]management\s+(?:authority|accountability|approval rights)\b'
+  affirmation_pattern: '(?i)\b(?:Bolaji|he|his)\b[^.;\n]{0,100}\b(?:has|had|holds?|held|possess(?:es|ed)?|exercised|was granted|includes?|included|encompasses|entailed|is documented|is confirmed)\b|\b(?:authority|accountability|approval rights)\b[^.;\n]{0,40}\b(?:is|was)\s+(?:held|documented|confirmed|established)\b'
+  support_pattern: '(?i)\bBolaji\s+(?:(?:personally|directly)\s+)?(?:has|had|holds?|held|possess(?:es|ed)?|exercised|was granted)\s+(?:(?:formal|direct|sole|final)\s+){0,2}performance[ -]management\s+(?:authority|accountability|approval rights)\b'
+  exclude_support_pattern: '(?i)\b(?:Source|Title|Section|Parent context)\s*:|\b(?:if|unless|hypothetical|suppose|assuming|would|could|might|colleague|vacancy|requires)\b'
+  exclude_support_line_pattern: '(?i)^\s*(?:Source|Title|Section|Parent context)\s*:'
+  negation_pattern: '(?i)^\s*(?:if|unless|suppose|assuming|ask whether)\b'
+  clause_support: true
+  local_negation: true
 - id: budget_authority_requires_direct_evidence
   answer_pattern: (?i)(?:budget (?:authority|ownership|approval)|(?:department|operating|multi.year) budget|approval
     authority)|(?i:(?:autorite|responsabilite|approbation) (?:du |de )?budget|budget (?:departemental|pluriannuel|de
@@ -59,6 +87,7 @@ assertion_rules:
     (?:authority|ownership|approval)|(?:department|operating|multi.year) budget|approval authority|(?:autorite|responsabilite|approbation)
     (?:du |de )?budget|budget (?:departemental|pluriannuel|de fonctionnement))\s*:\s*(?:yes|confirmed))
 - id: non_use_requires_explicit_negative_evidence
+  record_limit_subjects: [Spark Structured Streaming, Apache Spark Structured Streaming]
   resolve_confirmed_non_use_reference: true
   answer_pattern: (?i)(?:has (?:not|never) (?:directly )?(?:used|worked with)|never used|no (?:(?:personal|direct) )?production
     experience (?:with|in))\s+[^.;,]+|(?i:(?:n'a (?:jamais|pas) (?:directement )?utilise|aucune experience
@@ -81,6 +110,7 @@ assertion_rules:
   clause_support: true
   local_negation: true
 - id: deficiency_requires_same_tool_evidence
+  record_limit_subjects: [Spark Structured Streaming, Apache Spark Structured Streaming]
   description: Missing documentation is a verification gap, not established absence of experience. Bind qualified absence to the actual tool and setting. Production-only absence does not establish total non-use, and an experience gap does not establish absolute absence.
   resolve_confirmed_non_use_reference: true
   answer_pattern: '(?i)\b(?:(?P<absence_before>(?:has\s+)?no)\s+(?:(?:personal|direct|production|professional|practical|hands[ -]on)\s+){0,3}(?P<tools_before>(?:Power BI|DAX|Tableau|dbt|Kafka|(?:Apache\s+)?Spark Structured Streaming|(?:Apache\s+)?Spark|Snowflake|Redshift|Dagster|Pub/Sub|Dataflow|Lakeflow|Databricks)(?:\s*(?:,|and|or|et|ou)\s*(?:Power BI|DAX|Tableau|dbt|Kafka|(?:Apache\s+)?Spark Structured Streaming|(?:Apache\s+)?Spark|Snowflake|Redshift|Dagster|Pub/Sub|Dataflow|Lakeflow|Databricks))*)\s+(?:(?:personal|direct|production|professional|practical|hands[ -]on)\s+){0,3}experience|(?:(?P<absence_after>lack(?:s|ed| of)?|(?:has\s+)?no)\s+(?:(?:personal|direct|production|professional|practical|hands[ -]on)\s+){0,3}experience|experience gap|lacune d.experience|manque d.experience)(?:\s+(?:(?:with|in|of|for|using|en|avec|sur|de)\s+)?(?P<tools_after>(?:Power BI|DAX|Tableau|dbt|Kafka|(?:Apache\s+)?Spark Structured Streaming|(?:Apache\s+)?Spark|Snowflake|Redshift|Dagster|Pub/Sub|Dataflow|Lakeflow|Databricks)(?:\s*(?:,|and|or|et|ou)\s*(?:Power BI|DAX|Tableau|dbt|Kafka|(?:Apache\s+)?Spark Structured Streaming|(?:Apache\s+)?Spark|Snowflake|Redshift|Dagster|Pub/Sub|Dataflow|Lakeflow|Databricks))*))?|(?P<absence_never>(?:has\s+)?never\s+(?:used|worked with))\s+(?P<tools_never>(?:Power BI|DAX|Tableau|dbt|Kafka|(?:Apache\s+)?Spark Structured Streaming|(?:Apache\s+)?Spark|Snowflake|Redshift|Dagster|Pub/Sub|Dataflow|Lakeflow|Databricks)(?:\s*(?:,|and|or|et|ou)\s*(?:Power BI|DAX|Tableau|dbt|Kafka|(?:Apache\s+)?Spark Structured Streaming|(?:Apache\s+)?Spark|Snowflake|Redshift|Dagster|Pub/Sub|Dataflow|Lakeflow|Databricks))*))\b(?:\s+(?:in|en)\s+production)?'
@@ -135,6 +165,7 @@ assertion_rules:
   clause_support: true
   local_negation: true
 - id: system_visibility_requires_own_evidence
+  independent_clause_separator_pattern: '(?i)\s+\b(?:while|whereas|tandis\s+que|alors\s+que)\b\s+(?=(?:the\s+|le\s+)?(?:Vodun Days\s+command cent(?:er|re)|(?:MongoDB\s+)?CDC\s+(?:pipeline|system))\s+(?:provided|provides|gave|gives|delivered|delivers|offered|offers|supports?|supported|used|uses|has|had|was|is)\b)'
   negation_pattern: '(?i)\b(?:not|pas|et non)\s+(?:(?:the|a|le|un)\s+)?(?:MongoDB\s+)?CDC\b'
   description: Visibility for an event command center must not be attributed to a CDC pipeline. Retain each system's own documented measurement and explicitly mark unestablished pipeline metrics unknown.
   answer_pattern: '(?i)(?:\bCDC\b[^.;\n]{0,220}(?:minute.level|visibility|visibilite)|(?:minute.level|visibility|visibilite)[^.;\n]{0,220}\bCDC\b)'
@@ -172,6 +203,59 @@ metric_constraints:
   - (?i)(?:six|6)\s+(?:AI\s+)?use cases\s+(?:were|are|have been)\s+(?:implemented|completed|deployed)
   - '(?i)(?:completed|deployed|delivered)\s+(?:all\s+)?(?:six|6)\s+(?:(?:AI|strategic|high.priority)\s+)?(?:use cases|initiatives|implementations)'
 facets:
+- id: single_customer_intelligence_implementation
+  query_pattern: '(?is)\A(?=[^\n]*\bcustomer\s+(?:analytics|intelligence)\b)'
+  terms: customer intelligence platform rider driver profiling RFM segmentation cohort lifecycle
+  sources: [90_website_canon_llms_full.txt]
+  section_pattern: '^Customer intelligence & lifecycle analytics$'
+  support_pattern: 'Designed and built a customer intelligence platform combining rider and driver profiling, RFM segmentation, and cohort analysis'
+  retain_for_query: true
+  single_case_query_pattern: '(?i)\b(?:strongest|best|one|single)\b[^.!?\n]{0,60}\b(?:example|case|project|implementation)\b'
+  single_case_exclude_pattern: '(?i)\b(?:multiple|several|examples|cases|projects|compare|comparison|contrast|contrasts|contrasted|contrasting|versus|vs|against|both|earlier|previously|quantified|quantitative|numeric|measured|churn|incentive|agricultural|fraud|Metabase|Data Hub|governance)\b|\b(?:9|nine)\s*(?:%(?!\w)|percent(?:age)?\b)|\b(?:another|other)\s+(?:case|project|example)\b|\b(?:no|not|avoid)\s+(?:one|single)\b|\bdo not\s+(?:limit|restrict|give)\b'
+- id: generic_spark_implementation_comparison
+  query_pattern: '(?is)\A(?=[^\n]*\bSpark\b)(?=[^\n]*(?:experience|personal|production|deploy|architecture))'
+  terms: Rintio Apache Spark Hadoop ElasticSearch agricultural data architecture
+  sources: [04_previous_roles_early.txt]
+  section_pattern: '^DATA SCIENTIST - RINTIO'
+  support_pattern: 'Hadoop data lake, an Apache Spark cluster, and ElasticSearch, ingesting 100GB\+ of agricultural data'
+  retain_for_query: true
+- id: detailed_ibola_side_project
+  query_pattern: '(?is)(?:(?=.*(?:side projects?|personal projects?|projets? personnels?|portfolio apps?))(?=.*(?:what|which|list|quels|quelles))|(?=.*\biBola\b)(?=.*(?:architecture|project|chatbot|implementation)))'
+  terms: iBola production-grade agentic RAG portfolio assistant LangGraph
+  sources: [10_apps_and_projects.txt]
+  section_pattern: '^iBOLA - AI-POWERED PORTFOLIO CHATBOT$'
+  support_pattern: 'production-grade agentic RAG.*professional portfolio assistant'
+  retain_for_query: true
+- id: enterprise_governance_user_outcomes
+  query_pattern: '(?is)(?=.*(?:metrics?|KPI|semantic|definitions?))(?=.*(?:governance|conflicting|reporting needs|safeguards|users?|people|outcomes?))'
+  terms: enterprise metrics governance single source truth Claude MCP IAM natural language
+  sources: [90_website_canon_llms_full.txt]
+  section_pattern: '^Enterprise metrics governance & AI-ready semantic layer$'
+  support_pattern: '(?s)enterprise metrics governance framework.*MCP-enabled BigQuery integration in Claude'
+  retain_for_query: true
+  single_case_query_pattern: '(?i)^\s*(?:please\s+)?(?:(?:can|could|would)\s+you\s+)?(?:describe|give(?:\s+me)?|show(?:\s+me)?|provide|outline|present|explain|tell\s+me\s+about|what\s+is|which\s+is)\s+(?:one|a\s+single|single)\s+(?:documented\s+)?case\b|^\s*(?:decris|decrivez|donne|donnez|presente|presentez)\s+(?:moi\s+)?un\s+(?:seul\s+)?cas(?:\s+documente)?\b'
+  single_case_exclude_pattern: '(?i)\b(?:multiple|several|cases|examples|projects|projets|exemples|compare|comparison|plusieurs|comparer|comparaison|Data Hub|observability|Head of Data)\b|\b(?:no|not|avoid)\s+(?:one|single)\b|\b(?:do not|don.t)\s+(?:give|limit|restrict)\b|\b(?:deux|trois|autres|un autre)\s+cas\b|\b(?:another|other)\s+(?:case|project|example)\b'
+- id: confirmed_fraud_metric_attribution
+  query_pattern: '(?i)fraud|fraude|Gozem Money|\b150\s+(?:incidents?|cas)\b|\b25\s*(?:M|million\w*)\s*(?:XOF|CFA|FCFA)\b|\bEDA\b'
+  terms: Gozem Money fraud micro-batch rules EDA incidents discovery ML contribution
+  sources: [18_confirmed_clarifications.txt]
+  section_pattern: '^OWNER-CONFIRMED GOZEM MONEY FRAUD METRIC ATTRIBUTION$'
+  support_pattern: 'ML-based fraud screening did not contribute to either of those results'
+  retain_for_query: true
+- id: ebanking_fraud_monitoring_results
+  query_pattern: '(?i)fraud|fraude|Gozem Money|\b150\s+(?:incidents?|cas)\b|\b25\s*(?:M|million\w*)\s*(?:XOF|CFA|FCFA)\b|\bEDA\b'
+  terms: Gozem Money micro-batch rules EDA 150 incidents month 25M XOF
+  sources: [13_gozem_internal_projects.txt]
+  section_pattern: '^EBANKING ANALYTICS & REPORTING INFRASTRUCTURE'
+  support_pattern: 'micro-batch processing pipeline'
+  retain_for_query: true
+- id: separate_ml_payment_result
+  query_pattern: '(?is)(?=.*(?:fraud|fraude|ML|machine.learning))(?=.*(?:attribut|contribut|compar|separ|payment|paiement|7x))'
+  terms: ML-based fraud screening payment automation field-agent payments 7x faster
+  sources: [13_gozem_internal_projects.txt]
+  section_pattern: '^ML-BASED FRAUD SCREENING & PAYMENT AUTOMATION$'
+  support_pattern: 'field-agent payment processing became 7x faster'
+  retain_for_query: true
 - id: platform_definition_adoption_scope
   query_pattern: '(?i)(?:what(?: is|\x27s)|define|describe|qu.est.ce\s+que|c.est quoi|presente|decris)\s+(?:(?:the|le|la)\s+)?(?:Gozem\s+)?Data\s+Hub\b'
   terms: Gozem Data Hub central platform adoption people operational analytics governance
@@ -424,6 +508,32 @@ section_types:
   evidence_type: interpretation
   include_if_query_matches: (?i)\b(?:dbt|power bi|dax|dagster|snowflake|redshift)\b
 metric_scopes:
+- source: 18_confirmed_clarifications.txt
+  section_pattern: '^OWNER-CONFIRMED GOZEM MONEY FRAUD METRIC ATTRIBUTION$'
+  fields:
+    id: gozem_money_fraud_monitoring
+    project: Gozem Money eBanking analytics and reporting infrastructure
+    methods: micro-batches, rules, and EDA
+    incident_rate: approximately 150 incidents per month
+    fraud_discovery_value: over 25M XOF, not an established monthly total
+    excluded_attribution: ML-based fraud screening did not contribute to either result
+    separate_result: the ML-screening and payment automation project reports 7x faster field-agent payment processing
+    provenance: owner confirmation received November 20, 2026, not a project or measurement date
+- source: 13_gozem_internal_projects.txt
+  section_pattern: '^EBANKING ANALYTICS & REPORTING INFRASTRUCTURE'
+  fields:
+    id: gozem_money_fraud_monitoring
+    methods: micro-batches, rules, and EDA
+    incident_rate: approximately 150 incidents per month
+    fraud_discovery_value: over 25M XOF, not an established monthly total
+    excluded_attribution: ML-based fraud screening did not contribute to either result
+- source: 13_gozem_internal_projects.txt
+  section_pattern: '^ML-BASED FRAUD SCREENING & PAYMENT AUTOMATION$'
+  fields:
+    id: separate_ml_payment_automation
+    project: ML-based fraud screening and payment automation
+    result: field-agent payment processing became 7x faster
+    not_established: ML alone caused the improvement; contribution to the 150 incidents/month or over 25M XOF fraud discovery
 - source: 90_website_canon_llms_full.txt
   section_pattern: '(?i)(?:FinOps and analytical serving|Data platform modernization and FinOps transformation)'
   fields:
@@ -507,10 +617,13 @@ metric_scopes:
     id: streaming_workload_volume
     average: 45 million telemetry and operational events per day
     population: separate Gozem streaming workload, distinct from 5 TB batch upserts
-    not_established: not an individual MongoDB CDC pipeline count, throughput ceiling, sub-second latency or
-      availability guarantee
+    not_established: individual MongoDB CDC pipeline event counts; maximum throughput capacity; end-to-end latency; availability guarantees
 required_limits:
 - id: requested_manager_layer_scope_unestablished
+  restore_with_limit:
+    id: department_budget_authority_unestablished
+    en: manager layers, direct-report counts and department budget authority
+    fr: les niveaux de management, le nombre de rapports directs et son autorite sur le budget du departement
   description: Give documented team-building experience separately from the unestablished manager layers or direct-report count requested by a vacancy. Do not import the vacancy's staffing into Bolaji's history.
   sources: [19_owner_confirmed_scope.txt, 11_leadership_style.txt]
   query_pattern: '(?i)manager.of.managers|(?:two|2|deux|\d+)\s+managers|manager(?:ial)? layers?|direct.report|line.management(?: authority)?'
@@ -524,11 +637,23 @@ required_limits:
     fr: les niveaux de management et le nombre de rapports directs
 - id: self_service_measurement_period_unknown
   scope_id: self_service_adoption
+  restore_sources: [13_gozem_internal_projects.txt]
+  restore_section_pattern: '(?i)^SELF-SERVICE NO-CODE DATA EXPLORATION PLATFORM'
+  restore_support_pattern: '(?i)La periode precise de mesure et la methode de comparaison ne sont pas documentees dans ce dossier'
+  restore_limit:
+    en: measurement period
+    fr: la periode de mesure
   query_pattern: (?i)(?:measurement (?:period|interval|window)|time period|over what period|periode (?:connue|de
     mesure)|mesurees sur une periode)
   target_pattern: (?:period|interval|window|periode|fenetre)
 - id: self_service_comparison_method_unknown
   scope_id: self_service_adoption
+  restore_sources: [13_gozem_internal_projects.txt]
+  restore_section_pattern: '(?i)^SELF-SERVICE NO-CODE DATA EXPLORATION PLATFORM'
+  restore_support_pattern: '(?i)La periode precise de mesure et la methode de comparaison ne sont pas documentees dans ce dossier'
+  restore_limit:
+    en: comparison method
+    fr: la methode de comparaison
   query_pattern: (?i)(?:comparison (?:method|methodology)|methode de comparaison|measurement method)
   target_pattern: (?:method|comparison|methode|comparaison|methodologie)
 - id: on_call_willingness_unknown
@@ -547,6 +672,25 @@ required_limits:
   restore_limit:
     en: on-call responsibility
     fr: les responsabilités d'astreinte
+- id: department_budget_authority_unestablished
+  description: Keep the retrieved owner-confirmed budget-authority limit alongside relevant leadership evidence when the request asks for a department or transformation budget. Cost savings and hiring business cases do not establish budget ownership.
+  sources:
+  - 19_owner_confirmed_scope.txt
+  section_pattern: ^GOZEM TEAM GROWTH AND ROLE PERIODS$
+  evidence_types:
+  - candidate_confirmed
+  support_pattern: This\ confirmation\ does\ not\ establish\ direct\-report\ counts,\ manager\ layers,\ department\ budget\ authority,\ or\ the\ precise\ dates\ of\ all\ 12\ hires\.
+  restore_sources:
+  - 19_owner_confirmed_scope.txt
+  restore_section_pattern: ^GOZEM TEAM GROWTH AND ROLE PERIODS$
+  restore_support_pattern: This\ confirmation\ does\ not\ establish\ direct\-report\ counts,\ manager\ layers,\ department\ budget\ authority,\ or\ the\ precise\ dates\ of\ all\ 12\ hires\.
+  query_pattern: (?i)\b(?:(?:constrained(?:\s+transformation)?|transformation|department|operating|multi.year)\s+budget|budget\s+(?:authority|ownership|approval)|budget\s+(?:contraint|departemental|de transformation))\b
+  target_pattern: budget|budgetaire
+  direct_support_pattern: (?i)^\s*Bolaji\s+(?:(?:personally|directly)\s+)?(?:(?:owned|approved|held|was accountable for)\s+(?:(?:the|his|a)\s+)?(?:department|operating|transformation)\s+budget(?:\s+authority)?|(?:has|had)\s+(?:(?:the|his|a)\s+)?(?:department|operating|transformation)\s+budget\s+authority)\s*$
+  direct_support_exclude_pattern: (?i)\b(?:if|unless|whether|assuming|suppose|might|would|could|hypothetical|vacancy|fictional|another|colleague)\b
+  restore_limit:
+    en: department budget authority
+    fr: son autorite sur le budget du departement
 - id: clinical_domain_not_established
   description: Preserve documented leadership examples while distinguishing whether retrieved evidence establishes clinical-domain leadership. This boundary concerns the evidence, not an assertion of absent capability or experience.
   direct_support_pattern: '(?i)(?:Bolaji|he|il).{0,40}(?:led|directed|managed|dirige).{0,60}(?:clinical|healthcare|public.health)'
@@ -572,12 +716,60 @@ required_identity:
   query_pattern: (?i)\b(?:aws|ec2)\b
   answer_pattern: (?i)(?:EC2|700|operational.{0,15}platform|governed.{0,20}platform)
 required_details:
+- id: requested_streaming_production_inventory_missing
+  description: A broad request for personally delivered streaming technologies, including a mixed AWS and streaming list, must preserve the retrieved Pub/Sub and Dataflow implementation. Do not substitute an AWS-only answer or omit the streaming part.
+  sources: [20_owner_confirmed_production_scope.txt]
+  support_pattern: 'At Gozem, Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline'
+  query_pattern: '(?is)\A(?=[^\n]*(?:which|what|list|quels|quelles))(?=[^\n]*(?:streaming technologies|streaming services|technologies de streaming))(?=[^\n]*(?:personal|designed|operated|personnel|concu|exploit))'
+  query_exclude_pattern: '(?is)\A[^\n]*\b(?:other|additional|besides|except|excluding|autres)\b|\A[^\n]*\b(?:only|uniquement)\s+(?:Kafka|Spark|NiFi|Lakeflow|AWS|Pub/Sub|Dataflow)\b'
+  false_unknown_pattern: '(?i)I don.t have enough verified information'
+  false_unknown_exclude_pattern: '(?i)\b(?:if|unless|hypothetical|suppose|incorrect|false|wrong|not true)\b|["«»]'
+  answer_pattern: '(?is)(?=.*Pub/Sub)(?=.*Dataflow)(?=.*MongoDB)(?=.*Gozem)'
+  restore_quote:
+    language: en
+    label: Streaming implementation
+    render: sentence
+    pattern: 'At Gozem, Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline\.'
+- id: enterprise_governance_single_truth_missing
+  description: Keep the enterprise metrics implementation's documented single source of truth distinct from an unestablished country-team negotiation process. A known reporting outcome is not made unknown by missing details about the process.
+  sources: [90_website_canon_llms_full.txt]
+  section_pattern: '^Enterprise metrics governance & AI-ready semantic layer$'
+  support_pattern: 'Established a single source of truth for business metrics across analytics, reporting, and AI-powered workflows'
+  query_pattern: '(?is)(?=.*(?:metrics?|definitions?|reporting))(?=.*(?:governance|quality|access|safeguards))(?=.*(?:people|users?|changed|outcomes?))'
+  query_exclude_pattern: '(?is)\A(?=[^\n]*(?:Data Hub|observability|Head of Data))(?![^\n]*(?:enterprise metrics|MCP|Data Director))'
+  answer_activation_pattern: '(?i)enterprise metrics|MCP(?:.enabled)? BigQuery|standardized metric definitions with BigQuery and Dataform|I don.t have enough verified information'
+  answer_pattern: '(?i)single source of truth|source unique de verite'
+  restore_quote:
+    language: en
+    label: Governance outcome
+    render: sentence
+    pattern: 'Established a single source of truth for business metrics across analytics, reporting, and AI-powered workflows\.'
+- id: enterprise_governance_user_access_outcome_missing
+  description: Preserve the enterprise governance implementation's documented change for selected senior users, natural-language data access under their existing IAM permissions. Do not turn an unknown country-specific negotiation or adoption count into a blanket denial of all user outcomes.
+  sources: [90_website_canon_llms_full.txt]
+  section_pattern: '^Enterprise metrics governance & AI-ready semantic layer$'
+  support_pattern: 'Selected senior users could query enterprise data using natural language within their existing Google Cloud IAM permissions'
+  query_pattern: '(?is)(?=.*(?:metrics?|definitions?|reporting))(?=.*(?:governance|quality|access|safeguards))(?=.*(?:people|users?|changed|outcomes?))'
+  query_exclude_pattern: '(?is)\A(?=[^\n]*(?:Data Hub|observability|Head of Data))(?![^\n]*(?:enterprise metrics|MCP|Data Director))'
+  answer_activation_pattern: '(?i)enterprise metrics|MCP(?:.enabled)? BigQuery|standardized metric definitions with BigQuery and Dataform|I don.t have enough verified information'
+  answer_pattern: '(?is)(?=.*selected)(?=.*senior)(?=.*natural.language)(?=.*existing)(?=.*(?:IAM|permissions))'
+  false_unknown_pattern: '(?i)(?:does not|doesn.t)\s+(?:specify|document|establish)[^.!?;]{0,35}(?:what changed for (?:the )?people|(?:any |the )?user outcomes)|(?:user outcomes|results for users|changes for (?:the )?people using (?:the )?reports)\s+(?:are|were|remain)\s+(?:not documented|unknown|unestablished)|I don.t have enough verified information'
+  false_unknown_scope_pattern: '(?i)^\s*(?:For|On|In|Within)\s+(?:the\s+)?(?P<prefix_scope>[^,]{1,100}),|(?:unknown|unestablished|not documented)\s+(?:for|on|in|within)\s+(?:the\s+)?(?P<suffix_scope>[^.!?;]{1,100})$'
+  false_unknown_same_scope_pattern: '(?i)^(?:(?:enterprise metrics|semantic layer|MCP(?:.enabled)? BigQuery|governance implementation|this implementation|that implementation)\b|(?:people|users?|reports?)(?: using (?:the )?reports?)?$)'
+  false_unknown_exclude_pattern: '(?i)\b(?:if|unless|hypothetical|suppose|incorrect|false|wrong|not true|quantitative|quantified|numerical|numeric|adoption counts?|Data Hub|Metabase|observability|another project|separate project)\b|["«»]'
+  restore_quote:
+    language: en
+    label: User access outcome
+    render: sentence
+    pattern: 'Selected senior users could query enterprise data using natural language within their existing Google Cloud IAM permissions\.'
 - id: requested_dataform_public_reference_missing
   description: An inspectable public framework reference needs the complete URL in its retrieved project record. A title or bare domain is insufficient; do not guess a repository, scheme or path.
   sources: [90_website_canon_llms_full.txt]
   section_pattern: '^Advanced Dataform framework · 2025$'
   support_pattern: 'Project page: https://www\.bolablg\.com/projects/dataform-modeling-lab/(?=$|[\s)\]"»]|[.,;](?=$|[\s)\]"»]))'
-  query_pattern: '(?is)(?=.*Dataform)(?=.*(?:public|article|repository|\brepo\b|inspect|link|lien|documentation))'
+  topic_pattern: '(?i)\bDataform\b'
+  query_exclude_pattern: '(?is)^(?!.*\bDataform\b).*\bdbt\b'
+  query_pattern: '(?i)(?:public|article|repository|\brepo\b|inspect|link|lien|documentation)'
   answer_pattern: '(?i)https://www\.bolablg\.com/projects/dataform-modeling-lab/(?=$|[\s)\]"»]|[.,;](?=$|[\s)\]"»]))'
   restore_quotes:
     en:
@@ -760,11 +952,13 @@ required_details:
   sources: [01_career_overview.txt, 03_previous_role_gozem_gda.txt, 90_website_canon_llms_full.txt]
   support_pattern: '(?i)Global Data Analyst'
   query_pattern: '(?is)(?=.*production)(?=.*(?:personally|personal|hands.on))(?=.*(?:pipeline|data engineering))'
-  claim_pattern: '(?i)cloud migration|migrat\w*[^.!?\n]{0,100}(?:10\+?\s*TB|over\s+10\s*TB|10\s*TB\s+plus)|50\+? scheduled ETL'
+  claim_pattern: '(?i)cloud migration|migrat\w*[^.!?\n]{0,100}?(?:10\+?\s*TB|over\s+10\s*TB|10\s*TB\s+plus)|50\+? scheduled ETL'
   governing_role_pattern: '(?i)Global Data Analyst|Data Director|Head of Data'
   topic_intro_pattern: '(?i)\s*(?:Regarding|As for)\s+(?:the\s+)?(?:Google\s+)?cloud migration'
   role_prefix_pattern: '(?i)(?:as(?: a| the)?|during(?: his| the)?(?: earlier| former| previous)?|in his(?: earlier| former| previous)?|en tant que|pendant(?: son)?)\s+$'
   role_heading_pattern: '(?i)^\s*(?:Global Data Analyst|Data Director|Head of Data)(?:\s+at Gozem|\s+role|\s*\([^)]*\))*\s*:?\s*$'
+  role_postfix_bridge_pattern: '(?ix)\s*(?:pipelines)?(?:\s+(?:within|in)\s+(?:a|one|single|\d+)(?:\s+(?:single|calendar|fiscal))?\s+(?:quarter|month|year|week)s?)?(?:\s+without\s+(?:operational\s+)?interruption)?(?:\s+while\s+(?:establishing|designing|building|operating)\s+(?:(?:a|the)\s+)?(?:\d+\+?\s+)?(?:scheduled\s+)?(?:ETL|data)\s+pipelines)?\s+(?:as(?:\s+(?:a|the))?|during\s+his(?:\s+role\s+as)?|en\s+tant\s+que)\s+'
+  role_postfix_tail_pattern: '(?i)\s*(?:role)?(?:\s+at\s+Gozem)?\s*'
   restore_quote:
     language: en
     label: Earlier role evidence
@@ -793,6 +987,8 @@ required_details:
   scope_id: streaming_workload_volume
   sources: [90_website_canon_llms_full.txt]
   query_pattern: '(?i)throughput|event volume|latency|availability|debit|volume|latence|disponibilite'
+  false_unknown_pattern: '(?ix)\A(?=[^.!?;]*\b(?:these\s+systems|all\s+(?:the\s+)?systems|these\s+workloads|any\s+(?:of\s+these\s+)?systems)\b)(?=[^.!?;]*\b(?:document(?:ed)?|established|recorded|unknown|unestablished)\b)(?:(?=[^.!?;]*\b(?:no|neither|does\s+not\s+document|doesn.t\s+document)\s+(?:\w+\s+){0,3}?(?:throughput|event\s+volume)\b)|(?=[^.!?;]*\b(?:throughput|event\s+volume)(?:\s+(?:measurements?|metrics?|figures?))?(?:\s+for\s+(?:these\s+systems|all\s+(?:the\s+)?systems|these\s+workloads))?\s+(?:is|are|was|were|remains?)\s+(?:not\s+(?:documented|established|recorded)|unknown|unestablished)\b))'
+  false_unknown_exclude_pattern: '(?i)\b(?:if|unless|hypothetical|suppose|incorrect|false|wrong|not true|peak|maximum|capacity|ceilings?|guarantees?|individual|project.specific|issues?|problems?|bottlenecks?)\b|[\"«»]'
   answer_pattern: '(?is)(?=.*(?:average|averaged|moyenn\w*))(?=.*45\s*(?:million|m\b))(?=.*(?:separate|distinct|separe\w*).{0,55}(?:streaming|workload|flux)|.*(?:streaming|workload|flux).{0,55}(?:separate|distinct|separe\w*))'
   restore_quote:
     language: en
@@ -869,6 +1065,9 @@ required_details:
   support_pattern: existing Google Cloud IAM permissions
   query_pattern: (?i)(?=.*(?:metric|governance|KPI))(?=.*(?:access|permission|safeguard))
   id: requested_IAM_access_boundary_missing
+  section_pattern: ^Enterprise metrics governance & AI-ready semantic layer$
+  query_exclude_pattern: '(?is)\A(?=[^\n]*(?:Data Hub|observability|Head of Data))(?![^\n]*(?:enterprise metrics|MCP|Data Director))'
+  answer_activation_pattern: '(?i)enterprise metrics|MCP(?:.enabled)? BigQuery|standardized metric definitions with BigQuery and Dataform|I don.t have enough verified information'
   answer_pattern: (?i)\bIAM\b
   restore_quote:
     language: en
@@ -878,6 +1077,9 @@ required_details:
   support_pattern: existing Google Cloud IAM permissions
   query_pattern: (?i)(?=.*(?:metric|governance|KPI))(?=.*(?:access|permission|safeguard))
   id: requested_Claude_integration_missing
+  section_pattern: ^Enterprise metrics governance & AI-ready semantic layer$
+  query_exclude_pattern: '(?is)\A(?=[^\n]*(?:Data Hub|observability|Head of Data))(?![^\n]*(?:enterprise metrics|MCP|Data Director))'
+  answer_activation_pattern: '(?i)enterprise metrics|MCP(?:.enabled)? BigQuery|standardized metric definitions with BigQuery and Dataform|I don.t have enough verified information'
   answer_pattern: (?i)\bClaude\b
   restore_quote:
     language: en
@@ -922,10 +1124,25 @@ required_details:
       scope_label: mandat Head of Data, octobre 2022 - mars 2025
       pattern: L\x27adoption de Metabase a atteint plus de 12 utilisateurs managers actifs[^\n]*centrale\.
 
+- id: requested_observed_event_match_rate_missing
+  description: Retain a specifically requested rider match observation with its event and peak-day measurement context. The record is observational and does not establish causal improvement or a match-rate baseline.
+  sources: [13_gozem_internal_projects.txt]
+  section_pattern: '(?i)^REAL-TIME MARKET MONITORING SYSTEM'
+  support_pattern: 'on the peak day of Vodun Days, ride requests[^\n]+rider match rate was [0-9]+%'
+  query_pattern: '(?is)(?=.*rider)(?=.*match)(?=.*(?:caus|baseline|comparison|observ))'
+  answer_pattern: '(?is)(?=.*88\s*(?:%|percent))(?=.*(?:rider|match))(?=.*Vodun Days)(?=.*peak day)(?=.*(?:observ|not.{0,25}causal|no.{0,25}causal))'
+  restore_quote:
+    language: en
+    label: Observed event metric
+    render: sentence
+    pattern: 'on the peak day of Vodun Days, ride requests[^.\n]+rider match rate was (?P<value>[0-9]+)%\.'
+    value_group: value
+    expected_value: '88'
+
 request_scopes:
 - id: requested_personal_production_scope
-  description: The question requests personal production design or operation. An unqualified experience list inherits that setting. For every mentioned tool, provide direct actor/tool/setting proof, an explicitly labeled inventory or project-stack fact, or a locally scoped statement that personal production operation remains unverified. Project leadership does not establish operation of every service.
-  query_pattern: '(?is)(?=.*\bproduction\b)(?=.*\b(?:personally|personal|personnellement|personnel\w*)\b)'
+  description: The question requests personal production design or operation. An unqualified experience list inherits that setting. For every mentioned tool, provide direct actor/tool/setting proof, an explicitly labeled inventory or project-stack fact, or a locally scoped statement that personal production operation remains unverified. Project leadership does not establish operation of every service. If personal production responsibility is established but an employer or project association is not, preserve the responsibility and remove that association or qualify the service's employer or project as unknown. Do not convert an affiliation gap into missing operation experience or let one service inherit another service's employer heading.
+  query_pattern: '(?is)(?=.*\bproduction\b)(?=.*\b(?:personally|personal|personnellement|personnel\w*|operational ownership)\b)'
   subject_pattern: '(?i)\b(?:AWS EC2|AWS S3|EC2|S3|Pub/Sub|Dataflow|Apache NiFi|NiFi|Spark|Lakeflow)\b'
   record_limit_subjects: [Spark Structured Streaming, Apache Spark Structured Streaming]
   record_limit_modifiers: ['\bpersonal production experience\b', '\bproduction experience\b', '\bCDC event counts\b', '\bend-to-end latency\b', '\bavailability\b', '\bon-call responsibility for\b']
@@ -933,6 +1150,11 @@ request_scopes:
     ec2: aws ec2
     s3: aws s3
     nifi: apache nifi
+  technology_comparisons:
+  - subject: Spark
+    qualified_pattern: '(?i)\b(?:Apache\s+)?Spark\s+Structured\s+Streaming\b'
+    generic_pattern: '(?i)\b(?:Apache\s+)?Spark\b'
+    broad_query_pattern: '(?i)\b(?:other|additional|all|which|what|autres|supplementaires|toutes|tous|quels|quelles)\b[^.!?\n]{0,70}\b(?:technologies|frameworks|tools|services|engines|systems|outils|moteurs|systemes)\b|\b(?:technologies|frameworks|tools|services|engines|systems|outils|moteurs|systemes)\b[^.!?\n]{0,40}\b(?:other|additional|all|autres|supplementaires|additionnels?|additionnelles?)\b'
   personal_support_pattern: |-
     (?ix)\b(?:Bolaji|he|il)\s+(?:(?:has|had|a|personally|directly|personnellement|directement)\s+){0,3}
     (?:
@@ -959,6 +1181,9 @@ request_scopes:
   project_predicate_separator_pattern: '(?i)\s+and\s+(?=(?:(?:he|Bolaji)\s+)?personally\s+(?:designed|operated|used|deployed)\b)'
   shared_location_prefix_pattern: '(?i)^\s*(?:at|for|within|chez|dans)\s+[^,;.!?\n]{1,80},\s*'
   unknown_project_pattern: '(?i)(?:employer|project)[^.!?;\n]{0,85}(?:not\s+(?:specified|documented)|unknown)'
+  unknown_project_record_limit_pattern: '(?i)^\s*(?:This\s+(?:clarification|confirmation)|The\s+(?:record|evidence))\s+does\s+not\s+(?:identify|specify|establish)\s+(?:(?:an?|any|the)\s+)?(?:employer|project)(?:\s+(?:and|or)\s+(?:employer|project))?\s+for\s+(?:(?:the|this|that|its)\s+)?{tool}(?:\s+(?:bucket|service))?\s*$'
+  unknown_project_qualification_pattern: '(?ix)(?:^|[,:(])\s*(?:with\s+)?(?:(?:the|its|exact|specific|precise)\s+){0,2}(?:employer|project)(?:\s*(?:and|or|/)\s*(?:employer|project))?(?:\s+(?:for|of)\s+(?:(?:this|that|the|its)\s+(?:(?:AWS\s+)?(?:S3|EC2|Pub/Sub|Dataflow|Spark|NiFi|Lakeflow)\s+)?(?:bucket|service)|(?:AWS\s+)?(?:S3|EC2|Pub/Sub|Dataflow|Spark|NiFi|Lakeflow)))?\s+(?:(?:is|are|remains?|remaining)\s+)?(?:not\s+(?:(?:currently|explicitly|yet)\s+)?(?:specified|documented|identified)|unknown|unspecified|undocumented)\s*$'
+  unknown_project_qualification_exclude_pattern: '(?i)\b(?:if|unless|whether|assuming|suppose|hypothetical|could|would|might)\b|\bnot\s+(?:unknown|unspecified|undocumented)\b'
   project_key: data_hub
   project_reference_pattern: '(?i)^(?:its\b|this (?:project|platform)\b|the (?:documented|published) stack\b)'
   project_anchor_pattern: '(?i)\b(?:Gozem\s+)?Data Hub\b'
@@ -970,13 +1195,49 @@ request_scopes:
   exclude_support_pattern: '(?i)\b(?:taught|teaches|teaching|supervised|delivered|designed)\b[^.;\n]{0,60}\b(?:training|bootcamp|module|lab|prototype|formation|atelier)\b|\b(?:for|during|in|en|pour)\s+(?:a\s+|an\s+)?(?:training|bootcamp|lab|prototype|formation|atelier)\b'
   operation_pattern: '(?i)\b(?:personally|operated|operating|operates|use|uses|used|using|designed|designing|designs|deployed|deploys|builds|built|exploite|utilise|concu)\b'
 
+record_limit_subject_atoms:
+- '(?:direct[ -]reports?(?:\s+counts?)?|manager(?:ial)?\s+layers?|(?:total\s+|team\s+)?headcount)'
+- '(?:formal\s+)?performance[ -]management\s+authority'
+- 'budget(?:\s+(?:amounts?|approval|authority|ownership))?'
+- 'approval\s+(?:authority|rights|mandates?)'
+- 'rejected\s+(?:options?|vendors?|alternatives?)'
+- 'measured\s+(?:returns?|ROI|outcomes?)'
+- 'build\s+(?:versus|vs)\s+vendor\s+(?:comparisons?|options?|decisions?)'
+- 'executive\s+(?:disagreement\s+)?(?:resolutions?|disagreements?|conflicts?)'
+- '(?:measurement\s+(?:periods?|intervals?|windows?)|comparison\s+(?:methods?|methodologies))'
+- '(?:montants?\s+du\s+budget|niveaux\s+de\s+management|nombre\s+de\s+rapports\s+directs|periode\s+de\s+mesure|methode\s+de\s+comparaison)'
+
+experience_status_answers:
+- id: closed_streaming_experience_status
+  confirmed_subject: Kafka
+  limit_subject: Spark Structured Streaming
+  intent_pattern: '(?i)\b(?:experience|experiences|hands[ -]on|evidence|used|uses|utilise|utilisee|deploy\w*|deploi\w*|exploite\w*|operated|operates)\b'
+  exclude_query_pattern: '(?i)\b(?:other|additional|similar|alternatives?|instead|closest|compare|comparison|contrast|versus|vs|else|more|latency|throughput|availability|on.call|team|headcount|countries|budget|salary|notice|certifications?|timeline|years?|when|how|why|explain|wording|phrase|options?|best.practice|autres|supplementaires|comparer|comparaison|latence|debit|budget|salaire|preavis|quand|comment|pourquoi)\b|\b(?:do not|don.t|avoid)\s+(?:mention|discuss)\b'
+  other_subject_pattern: '(?i)\b(?:Spark|AWS|S3|EC2|BigQuery|Airflow|Dataform|Python|SQL|Power BI|DAX|Tableau|Snowflake|Redshift|Pub/Sub|Dataflow|NiFi|Lakeflow|Databricks|Flink|Pulsar|Rust|Go|Hadoop)\b'
+  reference_tail_patterns:
+  - '(?i)(?:what|which)\s+(?:hands[ -]on\s+)?evidence\s+(?:does|did)\s+(?:Bolaji|he)\s+have\s+(?:with|for)\s+(?:those|these)\s+(?:exact\s+)?technologies'
+  - '(?i)(?:what|which)\s+(?:(?:named|documented)\s+)?projects?\s+(?:proves?|shows?|supports?|confirms?|documents?|demonstrates?)\s+(?:it|this|that|(?:his\s+)?(?:(?:personal|production)\s+)*(?:experience|deployment|use))'
+  - '(?i)(?:quel|quels)\s+projets?(?:\s+(?:nommes?|documentes?))?\s+(?:le|cela)\s+(?:prouve|prouvent|confirme|confirment|demontre|demontrent)'
+  - '(?i)(?:in production|en production|not|pas|non)'
+  limit_source: 20_owner_confirmed_production_scope.txt
+  limit_section_pattern: '^OWNER-CONFIRMED PRODUCTION RESPONSIBILITY$'
+  limit_support_pattern: '(?i)These clarifications do not add personal Spark Structured Streaming, Apache NiFi or Lakeflow production experience'
+  limit_positive_pattern: '(?is)(?=.*\b(?:Bolaji|he|his|il|son|ses|sa)\b)(?=.*\bSpark Structured Streaming\b)(?=.*\bproduction\b)'
+
 experience_confirmations:
 - id: confirmed_non_use_requires_answer
   description: Explicit owner-confirmed absence must be stated when the requested tool is covered by that retrieved confirmation. Do not retain an outdated unknown or infer inability. Without an explicit confirmation, retain a documentation limit.
   source: 20_owner_confirmed_production_scope.txt
   negative_pattern: '(?i)Bolaji has no (?P<subject>[A-Za-z][A-Za-z /-]{0,45}?) experience at all'
+  positive_pattern: '(?ix)\b(?:Bolaji|he|il)\b(?:(?!\b(?:another|colleague)\b)[^.;\n]){0,45}?\b(?P<operation_before>use[sd]?|worked\s+with|ran|managed|maintained|deployed|operated|designed|built|implemented|delivered|utilise|deploye|exploite|concu)\b(?:(?!\b(?:not|never|no|pas|jamais)\b)[^.;\n]){0,70}\b{subject}\b|\b(?:Bolaji|he|il)\s+(?P<experience_before>has|had|a)\s+(?:(?!\b(?:no|not|never|aucune?)\b)[^.;\n]){0,45}?\b(?:{subject}\s+experience|experience\s+(?:with|in|avec|en)\s+{subject})\b|(?=(?:his\s+{subject}\b|{subject}\b[^.;\n]{0,80}\bby\s+(?:Bolaji|him)\b))\b(?:his\s+)?{subject}\s+(?:(?:architecture|pipeline|system|delivery|implementation|production|experience)\s+){0,3}(?:was|is|has\s+been)\s+(?:(?:personally|directly|actually)\s+){0,2}(?P<operation_after>used|deployed|operated|designed|built|documented|confirmed|established)\b'
+  positive_predicate_groups: [operation_before, experience_before, operation_after]
+  positive_exclude_pattern: '(?i)\b(?:if|unless|would|could|hypothetical|fictional|requirement|vacancy)\b|\b(?:by|another)\s+(?:engineer|colleague|person|employee)\b'
 
 editorial_constraints:
+- id: knowledge_snapshot_url_not_public_reference
+  unconditional: true
+  description: Knowledge snapshot URLs are retrieval provenance, not public article, project or repository destinations. Never expose llms.txt or llms-full.txt links in the visitor answer. Retain a documented artifact URL from the source body; if the separate article URL is unavailable, state that record limit without inventing a destination. Preserve API evidence for auditing.
+  answer_pattern: (?i)(?:(?:https?://)?[A-Za-z0-9.-]+(?::[0-9]+)?)?/llms(?:-full)?\.txt(?=$|[?#\s)\]}>"',;:]|[.](?=$|[\s)\]}>"',;:]))
 - id: superseded_growth_interval_echo
   description: Give the confirmed growth stages directly without echoing the superseded interval, even to deny it. State the remaining headcount documentation limit without repeating that interval.
   sources: [19_owner_confirmed_scope.txt]
@@ -985,7 +1246,8 @@ editorial_constraints:
   answer_pattern: '(?i)(?:de |from )(?:zero|0).{0,12}(?:14|quatorze)'
 
 role_project_relations:
-- id: cdc_role_attribution_requires_direct_evidence
+- &project_role_scope
+  id: cdc_role_attribution_requires_direct_evidence
   description: Retain only role associations directly supported by the same project's actor and responsibility record. Dataflow use in the earlier cloud migration and a nearby role title do not date CDC delivery. A confirmed work-role interval locates the work within that role; it does not establish exact project start or completion dates, continuous operation throughout that interval, or dates for another service.
   project_pattern: '(?i)\bMongoDB\s+(?:CDC|change\s+data\s+capture)\b|\bCDC\s+pipeline\b'
   role_pattern: '(?i)Global Data Analyst|Head of Data|Data Director|Director of Data'
@@ -1003,8 +1265,30 @@ role_project_relations:
   unrelated_project_prefix_pattern: '(?i)\b(?:independently of|separate from|unrelated to|not for)\s+(?:the\s+)?$'
   support_relation_pattern: '(?i)\b(?:Bolaji|he|il)\s+(?:(?:has|had|a|personally|directly|personnellement)\s+){0,3}(?:designed|operated|built|implemented|concu|exploite|construit|implemente)(?:\s+and\s+(?:designed|operated|built|implemented))?\s+(?:the\s+)?(?:MongoDB\s+(?:CDC|change\s+data\s+capture)(?:\s+pipeline)?|CDC\s+pipeline|(?:Google\s+Cloud\s+)?Pub/Sub\s+and\s+(?:Google\s+Cloud\s+)?Dataflow(?:\s+in\s+production)?\s+for\s+(?:the\s+)?MongoDB\s+(?:CDC|change\s+data\s+capture)(?:\s+pipeline)?)\b'
   support_exclude_pattern: '(?i)\b(?:if|hypothetical|fictional|would|could|never|not|unverified|unknown|undocumented)\b'
+- <<: *project_role_scope
+  id: ec2_role_attribution_requires_direct_evidence
+  description: Confirmed personal EC2 design and operation for Gozem Data Hub does not establish its role or work period. A CDC role confirmation, nearby heading, another service, or another actor cannot date the EC2 responsibility. Require the same clause to link Bolaji, EC2 production responsibility, Data Hub, and the claimed role. Keep confirmed EC2 responsibility separately undated when its role is unknown.
+  project_pattern: '(?i)\b(?:AWS\s+)?EC2\b'
+  claim_sentence_scope: true
+  after_project_role_pattern: '(?i)\s+(?:in\s+production\s+)?(?:for\s+(?:the\s+)?(?:Gozem\s+)?Data Hub\s+)?(?:as(?: a| the)?|during(?: his| the)?(?: role as)?)\s+'
+  support_relation_pattern: '(?i)\b(?:Bolaji|he|il)\s+(?:(?:has|had|a|personally|directly|personnellement)\s+){0,3}(?:designed|operated|built|implemented|concu|exploite)(?:\s+and\s+(?:designed|operated|built|implemented))?\s+(?:AWS\s+)?EC2\s+in\s+production\b'
+  support_anchor_pattern: '(?i)\b(?:Gozem\s+)?Data Hub\b'
+  support_same_clause: true
+  other_actor_pattern: '(?i)\b(?:colleague|another engineer|another person|another employee|son collegue)\b'
+  conditional_prefix_pattern: '(?i)^\s*(?:if|unless|suppose|assuming|hypothetically)\b'
 
 relationship_constraints:
+- id: fraud_metrics_exclude_ml_attribution
+  description: The approximately 150 incidents per month and over 25M XOF fraud discovery came from micro-batches, rules, and EDA. ML screening did not contribute to either result. Keep the separate 7x field-agent payment result in its own project scope.
+  binding_mode: predicate_attribution
+  subject_pattern: '(?i)\b(?:ML(?:[ -]based)?|machine[ -]learning|apprentissage automatique)\b(?:[ -]+fraud[ -]+screening)?'
+  other_subject_pattern: '(?i)\bmicro[ -]?batch\w*|\brule[ -]based\b|\brules?\b|\bEDA\b|\bregles\b'
+  clause_extra_predicates: '\b(?:reports?|reported|became|becomes|improved|achieved|delivered)\b'
+  predicate_pattern: '(?i)\b(?:surfaces?|surfaced|flags?|flagged|detects?|detected|identif(?:y|ies|ied)|discover(?:s|ed)?|produc(?:e|es|ed)|contribut(?:e|es|ed)|yield(?:s|ed)?|caus(?:e|es|ed)|result(?:s|ed)? in|responsible for|credited with|attribu\w*|contribu\w*|detecte\w*|signale\w*|identifie\w*)\b'
+  metric_pattern: '(?i)\b150\s+(?:incidents?|cases?|cas)\b|\b25\s*(?:M|million\w*)\s*(?:XOF|CFA|FCFA)\b'
+  reference_pattern: '(?i)^\s*(?:(?:it|they|this|that|the|these|those)\s*(?:systems?|models?|pipelines?|screening|approaches?)?\b|(?:did|does|do|has|have|had|was|were|is|are)\b|(?:surface|flag|detect|identify|discover|produce|contribute|yield|cause)\w*\b)'
+  subject_exclude_prefix_pattern: '(?i)(?:unlike|rather than|as opposed to|independent(?:ly)? from|separately from|no evidence (?:that|of))\s*$'
+  clause_separator_pattern: '(?i)\b(?:while|whereas|tandis que|alors que)\b'
 - id: cdc_migration_metrics_require_separate_scope
   description: The 10+ TB migration within a single quarter belongs to the earlier Global Data Analyst cloud infrastructure migration, not the MongoDB CDC pipeline. Keep CDC responsibility and migration measurements in separately attributed claims.
   binding_mode: local_cooccurrence

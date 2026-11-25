@@ -139,6 +139,94 @@ def _confirmed_experience_limit(answer, target):
     normalized = " ".join(_accent_fold(answer).split())
     for sentence in normalized.split("."):
         sentence = " ".join(sentence.split())
+        deployment_limit = _re_mod.fullmatch(
+            r"(?:There is )?no documented (?:(?:personal|direct) )?production "
+            r"experience (?:deploying|using|with) (?P<subject>[^,.;]+?)"
+            r"(?:,\s+(?:though|although|whereas|while)\s+(?P<contrast>[^.;]+))?",
+            sentence,
+            _re_mod.I,
+        )
+        if deployment_limit and _re_mod.fullmatch(
+            _accent_fold(target), deployment_limit.group("subject"), _re_mod.I
+        ):
+            contrast = deployment_limit.group("contrast")
+            # The named unknown must occur only in its complete negative clause.
+            # A separate, independently grounded tool record cannot prove it.
+            if (
+                len(list(_re_mod.finditer(_accent_fold(target), normalized, _re_mod.I)))
+                != 1
+            ):
+                continue
+            if contrast:
+                other = _re_mod.fullmatch(
+                    r"(?P<tool>[a-z][a-z /-]{0,60}?) (?:is|was|has been) documented "
+                    r"(?:for|at|in) (?P<documented_scope>[^,;:]+)|"
+                    r"(?:he|Bolaji) (?:used|deployed|operated|implemented) "
+                    r"(?P<active_tool>[a-z][a-z /-]{0,60}?) (?:at|in|for) (?P<active_scope>[^,;:]+)",
+                    contrast,
+                    _re_mod.I,
+                )
+                if not other or _re_mod.search(
+                    r"\b(?:and|but|yet|however|if|unless|whether|would|could|might)\b",
+                    contrast,
+                    _re_mod.I,
+                ):
+                    continue
+                from app.services.evidence_policy import policy_data
+
+                scope = other.group("documented_scope") or other.group("active_scope")
+                if other.group("active_scope") and not _re_mod.fullmatch(
+                    r"[A-Z][\w'/-]*(?:\s+[A-Z][\w'/-]*){0,4}"
+                    r"(?:\s+for\s+processing\s+[a-z-]+(?:\s+[a-z-]+){0,8})?",
+                    scope,
+                ):
+                    continue
+                if _re_mod.search(
+                    r"\b(?:then|after|before|to|where|which|because|since|as|that|it|he|she|they|Bolaji|is|was|are|were|has|have|had|"
+                    r"use[sd]?|using|deployed|deploying|operated|operating|designed|designing|"
+                    r"built|building|implemented|implementing|managed|managing|ran|runs?)\b",
+                    scope,
+                    _re_mod.I,
+                ):
+                    continue
+                tools = next(
+                    rule["subject_pattern"]
+                    for rule in policy_data()["assertion_rules"]
+                    if rule["id"] == "deficiency_requires_same_tool_evidence"
+                )
+                if _re_mod.search(tools, scope, _re_mod.I):
+                    continue
+                other_tool = _re_mod.sub(
+                    r"^Apache\s+",
+                    "",
+                    other.group("tool") or other.group("active_tool"),
+                    flags=_re_mod.I,
+                )
+                if not _re_mod.fullmatch(tools, other_tool):
+                    continue
+            return True
+        project_limit = _re_mod.fullmatch(
+            r"No named project proves personal deployment of (?P<tools>.+)",
+            sentence,
+            _re_mod.I,
+        )
+        if project_limit:
+            from app.services.evidence_policy import policy_data
+
+            subjects = _re_mod.split(
+                r"\s+(?:or|and)\s+|,\s*(?:(?:or|and)\s+)?",
+                project_limit.group("tools"),
+                flags=_re_mod.I,
+            )
+            tool_pattern = next(
+                rule["subject_pattern"]
+                for rule in policy_data()["assertion_rules"]
+                if rule["id"] == "deficiency_requires_same_tool_evidence"
+            )
+            if all(_re_mod.fullmatch(tool_pattern, tool) for tool in subjects) and any(
+                tool.casefold() == _accent_fold(target).casefold() for tool in subjects
+            ):
+                return True
         # Reject a conditional before clause extraction can detach its premise.
         if not _re_mod.match(prefix, sentence, _re_mod.I) or _re_mod.search(
             r"\b(?:if|unless|whether|when|would|could|might|assuming|suppose|provided|hypothetical|example)\b",
@@ -309,13 +397,26 @@ class HTTPTarget:
     pins the exact history).
     """
 
-    def __init__(self, base_url):
+    def __init__(self, base_url, min_start_interval=0.0):
+        import math
+        import threading
+
         import httpx
 
+        if not math.isfinite(min_start_interval) or min_start_interval < 0:
+            raise ValueError("HTTP start interval must be finite and nonnegative")
         self.base_url = base_url.rstrip("/")
         self.client = httpx.Client(timeout=60)
+        self.min_start_interval = min_start_interval
+        self._post_lock = threading.Lock()
+        self._next_post_at = 0.0
 
     def _post(self, question, session_id, lang):
+        with self._post_lock:
+            if self.min_start_interval:
+                time.sleep(max(0.0, self._next_post_at - time.monotonic()))
+                self._next_post_at = time.monotonic() + self.min_start_interval
+        started = time.monotonic()
         resp = self.client.post(
             f"{self.base_url}/ask-agentic",
             headers=EVAL_HTTP_HEADERS,
@@ -326,13 +427,40 @@ class HTTPTarget:
             },
         )
         resp.raise_for_status()
-        return resp.json()
+        result = resp.json()
+        return {**result, "_eval_http_latency_s": time.monotonic() - started}
 
     def ask(self, question, lang="en", history=None):
         session_id = f"eval-{uuid.uuid4().hex[:12]}"
-        for prior_user, _prior_bot in history or []:
-            self._post(prior_user, session_id, lang)
-        return self._post(question, session_id, lang)
+        prefix_turns = []
+        replay_started = time.monotonic()
+        try:
+            for prior_user, _prior_bot in history or []:
+                response = self._post(prior_user, session_id, lang)
+                prefix_turns.append(
+                    {
+                        "question": prior_user,
+                        "answer": response.get("answer", ""),
+                        "grounding_checked": response.get("grounding_checked", False),
+                        "agent_type": response.get("agent_type"),
+                        "workflow_errors": response.get("workflow_errors", []),
+                        "workflow_warnings": response.get("workflow_warnings", []),
+                        "error": _extract_workflow_error(response),
+                        "warning": _extract_workflow_warning(response),
+                        "provenance": response.get("provenance", {}),
+                        "http_latency_s": response.get("_eval_http_latency_s"),
+                    }
+                )
+            replay_s = time.monotonic() - replay_started
+            result = self._post(question, session_id, lang)
+        except Exception as exc:
+            exc.eval_prefix_turns = prefix_turns
+            raise
+        return {
+            **result,
+            "prefix_turns": prefix_turns,
+            "_eval_prefix_replay_s": replay_s,
+        }
 
 
 class Judge:
@@ -495,10 +623,15 @@ def run_one(target, judge, row):
         error = _extract_workflow_error(result)
         warning = _extract_workflow_warning(result)
     except Exception as exc:
-        result = {"answer": "", "evidence": []}
+        result = {
+            "answer": "",
+            "evidence": [],
+            "prefix_turns": getattr(exc, "eval_prefix_turns", []),
+        }
         error = str(exc)[:200]
         warning = None
-    latency = time.time() - start
+    conversation_latency = time.time() - start
+    latency = result.get("_eval_http_latency_s", conversation_latency)
 
     answer = result.get("answer", "")
     evidence = result.get("evidence", []) or []
@@ -532,7 +665,15 @@ def run_one(target, judge, row):
         "provenance": result.get("provenance", {}),
         "evidence_sources": [e.get("source") for e in evidence[:5]],
         "unsupported_claims": result.get("unsupported_claims", []),
+        "prefix_turns": result.get("prefix_turns", []),
         "latency_s": round(latency, 3),
+        "latency_protocol": (
+            "http_final_response_v1"
+            if "_eval_http_latency_s" in result
+            else "target_call_elapsed_v1"
+        ),
+        "conversation_elapsed_s": round(conversation_latency, 3),
+        "prefix_replay_elapsed_s": result.get("_eval_prefix_replay_s"),
         "fact_pass": fact_pass,
         "fact_failures": fact_failures,
         "scores": scores,
@@ -640,6 +781,15 @@ def aggregate(results):
     return agg
 
 
+def nonnegative_interval(value):
+    import math
+
+    number = float(value)
+    if not math.isfinite(number) or number < 0:
+        raise argparse.ArgumentTypeError("interval must be finite and nonnegative")
+    return number
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--golden", default=str(GOLDEN_PATH))
@@ -647,6 +797,9 @@ def main():
     parser.add_argument("--limit", type=int)
     parser.add_argument("--concurrency", type=int, default=4)
     parser.add_argument("--base-url", help="hit a deployed instance instead")
+    parser.add_argument(
+        "--http-min-start-interval", type=nonnegative_interval, default=0.0
+    )
     parser.add_argument("--model", help="override LLM_MODEL_NAME for the sweep")
     parser.add_argument("--judge-model", default=JUDGE_MODEL)
     parser.add_argument("--no-judge", action="store_true", help="fact checks only")
@@ -670,7 +823,11 @@ def main():
         f"Running {len(rows)} questions "
         f"({'HTTP ' + args.base_url if args.base_url else 'in-process'})..."
     )
-    target = HTTPTarget(args.base_url) if args.base_url else InProcessTarget()
+    target = (
+        HTTPTarget(args.base_url, min_start_interval=args.http_min_start_interval)
+        if args.base_url
+        else InProcessTarget()
+    )
     judge = None if args.no_judge else Judge(model=args.judge_model)
 
     results = []
@@ -726,6 +883,16 @@ def main():
         "target": args.base_url or "in-process",
         "tags": args.tags,
         "aggregates": agg,
+        "gate_aggregate_scope": (
+            "smoke"
+            if set(args.tags or []) == {"smoke", "recruiter_regression"}
+            else "all selected cases"
+        ),
+        "gate_latency_protocol": (
+            "conversation_elapsed_v1"
+            if set(args.tags or []) == {"smoke", "recruiter_regression"}
+            else "target_call_elapsed_v1"
+        ),
         "results": results,
     }
 

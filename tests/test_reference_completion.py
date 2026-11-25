@@ -19,6 +19,7 @@ from app.services.evidence_policy import (
     preserve_requested_evidence,
 )
 from scripts.run_eval import check_facts
+from tests.prompt_fields import prompt_field
 
 FIXTURE = json.loads(
     (Path(__file__).parent / "fixtures/reference_completion_failures.json").read_text()
@@ -98,9 +99,7 @@ def test_exact_valid_verdict_correction_is_rechecked_without_unnecessary_repair(
         for call in llm.with_structured_output.call_args_list
     )
     assert (
-        verifier.invoke.call_args.args[0][-1].content.rsplit("Answer to verify:\n", 1)[
-            1
-        ]
+        prompt_field(verifier.invoke.call_args.args[0][-1].content, "draft_answer")
         == result["answer"]
     )
 
@@ -305,9 +304,7 @@ def test_restored_reference_requires_verification_of_the_actual_final_text(accep
     if accepted:
         assert result["grounding_checked"] and URL in result["answer"]
         assert (
-            verifier.invoke.call_args.args[0][-1].content.rsplit(
-                "Answer to verify:\n", 1
-            )[1]
+            prompt_field(verifier.invoke.call_args.args[0][-1].content, "draft_answer")
             == result["answer"]
         )
     else:

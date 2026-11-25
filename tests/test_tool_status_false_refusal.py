@@ -16,6 +16,7 @@ from app.services.evidence_policy import (
     prepare_evidence,
 )
 from scripts.run_eval import check_facts, load_golden
+from tests.prompt_fields import prompt_field
 
 CASE = json.loads(
     (Path(__file__).parent / "fixtures/tool_status_false_refusal.json").read_text()
@@ -88,9 +89,9 @@ def test_synthetic_bounded_repair_separates_statuses_and_rechecks_exact_text(acc
         )
     assert verifier.invoke.call_count == 2 and repair.invoke.call_count == 1
     assert (
-        verifier.invoke.call_args_list[1]
-        .args[0][-1]
-        .content.rsplit("Answer to verify:\n", 1)[1]
+        prompt_field(
+            verifier.invoke.call_args_list[1].args[0][-1].content, "draft_answer"
+        )
         == SAFE
     )
     assert result["grounding_checked"] is accepted

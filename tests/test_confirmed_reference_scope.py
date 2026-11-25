@@ -17,6 +17,7 @@ from app.services.evidence_policy import (
     prepare_evidence,
 )
 from scripts.run_eval import check_facts, load_golden
+from tests.prompt_fields import prompt_field
 
 FIXTURE = json.loads(
     (
@@ -80,7 +81,7 @@ def test_exact_initial_tool_status_was_true_and_llm_approved_before_false_refusa
     assert result.get("answer", answer) == answer and result["grounding_checked"]
     assert llm.with_structured_output.return_value.invoke.call_count == 1
     text = llm.with_structured_output.return_value.invoke.call_args.args[0][-1].content
-    assert text.rsplit("Answer to verify:\n", 1)[1] == answer
+    assert prompt_field(text, "draft_answer") == answer
 
 
 @pytest.mark.parametrize(
@@ -300,9 +301,7 @@ def test_synthetic_bounded_budget_repair_preserves_known_outcome_and_final_verif
     assert result["grounding_checked"] and "42.57%" in result["answer"]
     assert "outcome" not in result["answer"].lower()
     assert verifier.invoke.call_count == 2
-    actual = verifier.invoke.call_args.args[0][-1].content.rsplit(
-        "Answer to verify:\n", 1
-    )[1]
+    actual = prompt_field(verifier.invoke.call_args.args[0][-1].content, "draft_answer")
     assert actual == result["answer"]
 
 
