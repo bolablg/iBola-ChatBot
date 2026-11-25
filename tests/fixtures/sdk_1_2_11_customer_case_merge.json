@@ -1,0 +1,62 @@
+{
+  "id": "recruiter-adi-01-t1",
+  "question": "This is a recruiter simulation for a fictional senior analytics and data intelligence specialist opening at a mobility marketplace. We need someone who connects customer analytics to operational decisions. What is Bolaji\u2019s strongest relevant example, and what did he personally own?",
+  "answer": "As a Global Data Analyst at Gozem, Bolaji connected customer analytics to operational decisions by building and operating an end-to-end business intelligence capability and customer intelligence platform using BigQuery, SQL, Python, scikit-learn, Looker Studio, and Google Sheets. He personally owned the data ingestion, modeling, reporting, monitoring, and insight generation, as well as designing rider and driver profiling, RFM segmentation, and cohort analysis that informed an incentive response supporting an approximately 9% improvement in driver retention.",
+  "scores": {
+    "relevance": 10,
+    "accuracy": 7,
+    "helpfulness": 10,
+    "faithfulness": 6,
+    "rationale": "The answer is highly relevant and helpful by providing a concrete example with a quantified outcome, but it slightly reduces accuracy and faithfulness by incorrectly attributing the 9% retention improvement to the general design of analytics platforms rather than the specific, separate churn analysi"
+  },
+  "evidence": [
+    {
+      "source": "90_website_canon_llms_full.txt",
+      "chunk_id": "90_website_canon_llms_full.txt::29",
+      "section": "Business intelligence & market performance insights",
+      "retrieval_rank": 1,
+      "retrieval_score": 22.0,
+      "parent_context": "Bolaji BALOGOUN \u00b7 Biography > Global Data Analyst \u00b7 GOZEM \u00b7 Nov 2019 - Sep 2022",
+      "scope_context": "Global Data Analyst \u00b7 GOZEM \u00b7 Nov 2019 - Sep 2022",
+      "evidence_type": "published",
+      "metric_scope": {},
+      "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN \u00b7 Data Engineer \u00b7 Data Architect (full content) | Section: Business intelligence & market performance insights | Parent context: Bolaji BALOGOUN \u00b7 Biography > Global Data Analyst \u00b7 GOZEM \u00b7 Nov 2019 - Sep 2022\n\nResult: Enabled leadership teams to proactively manage business performance through recurring insights, KPI monitoring, root-cause analysis, and actionable recommendations across multiple markets.\nProblem: As the business expanded, leaders needed more than operational reporting. They required a reliable understanding of performance drivers, emerging risks, and market trends to support timely decision-making across countries.\nSolution: Built and operated an end-to-end business intelligence capability covering data ingestion, modeling, reporting, monitoring, and insight generation. Partnered with business leaders to define KPIs, investigated performance variances and anomalies, and translated operational data into recurring market-health assessments, recommendations, and decision-support materials presented to country managers and senior leadership.\nTools: BigQuery \u00b7 SQL \u00b7 Python \u00b7 Looker Studio \u00b7 Google Sheets\n\n- Established the company's analytics foundations by translating operational challenges into KPIs, reporting frameworks, monitoring systems, and recurring market intelligence that enabled more informed decision-making across the business.\n- Modernized the data platform by migrating to Google Cloud and BigQuery, accelerating access to insights, enabling self-service reporting through familiar tools, and reducing reliance on manual analytical processes.\n- Automated 50+ analytical and operational workflows across Operations, Finance, Marketing, and Support, eliminating repetitive manual work and allowing teams to focus on higher-value activities.\n- Partnered with business leaders to analyze market dynamics, operational performance, and driver behavior, helping shape incentive programs while building the automation and controls required to execute them at scale.\n- Built customer profiling, segmentation, and cohort analysis capabilities that strengthened campaign targeting, improved retention analysis, and enabled more data-driven marketing decisions.\n- Established an automated fraud monitoring capability that surfaced suspicious patterns within hours rather than days, strengthening risk visibility and laying the foundation for future ML-driven fraud detection."
+    },
+    {
+      "source": "90_website_canon_llms_full.txt",
+      "chunk_id": "90_website_canon_llms_full.txt::28",
+      "section": "Customer intelligence & lifecycle analytics",
+      "retrieval_rank": 2,
+      "retrieval_score": 0.031281,
+      "parent_context": "Bolaji BALOGOUN \u00b7 Biography > Global Data Analyst \u00b7 GOZEM \u00b7 Nov 2019 - Sep 2022",
+      "scope_context": "Global Data Analyst \u00b7 GOZEM \u00b7 Nov 2019 - Sep 2022",
+      "evidence_type": "published",
+      "metric_scope": {},
+      "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN \u00b7 Data Engineer \u00b7 Data Architect (full content) | Section: Customer intelligence & lifecycle analytics | Parent context: Bolaji BALOGOUN \u00b7 Biography > Global Data Analyst \u00b7 GOZEM \u00b7 Nov 2019 - Sep 2022\n\nResult: Enabled more targeted acquisition, retention, and re-engagement strategies by giving Marketing a comprehensive view of customer behavior through segmentation, cohort analysis, and lifecycle intelligence.\nProblem: Marketing lacked a structured understanding of customer behavior and lifecycle stages, making it difficult to personalize campaigns, identify retention opportunities, and measure long-term engagement patterns.\nSolution: Designed and built a customer intelligence platform combining rider and driver profiling, RFM segmentation, and cohort analysis. Transformed transactional and operational data into actionable customer segments and behavioral insights, helping teams identify high-value users, understand retention drivers, and tailor engagement strategies throughout the customer lifecycle.\nTools: BigQuery \u00b7 Python \u00b7 scikit-learn \u00b7 Looker Studio \u00b7 Google Sheets"
+    },
+    {
+      "source": "01_career_overview.txt",
+      "chunk_id": "01_career_overview.txt::3",
+      "section": "BOLAJI BALOGOUN - CAREER OVERVIEW & TIMELINE",
+      "retrieval_rank": 4,
+      "retrieval_score": 0.016393,
+      "parent_context": "",
+      "scope_context": "",
+      "evidence_type": "curated",
+      "metric_scope": {},
+      "content_preview": "Source: 01_career_overview.txt | Title: BOLAJI BALOGOUN - CAREER OVERVIEW & TIMELINE | Section: BOLAJI BALOGOUN - CAREER OVERVIEW & TIMELINE\n\nPREVIOUS ROLE: Global Data Analyst - Gozem (November 2019 - September 2022)\nBolaji was Gozem's first data hire. He built the analytics function from the ground up: led the cloud migration of the entire data infrastructure to Google Cloud, migrating 10+ TB within a single quarter without operational interruption into a BigQuery warehouse he designed with 50+ scheduled ETL pipelines. He drove the fraud-patterns database that delivered zero unknown financial defaults, consolidated 20+ KPIs into the daily business-health report used by country managers and top management, shipped marketing segmentation supporting targeted campaigns, founded the analytics engineering function, and grew a distributed team of 4. His separate agricultural-season churn analysis informed an incentive response supporting an approximately 9% improvement in driver retention. This role is where Bolaji taught himself GCP, BigQuery, and cloud data engineering."
+    },
+    {
+      "source": "12_product_analytics.txt",
+      "chunk_id": "12_product_analytics.txt::4",
+      "section": "SEASONAL DRIVER-RETENTION ANALYSIS",
+      "retrieval_rank": 8,
+      "retrieval_score": 0.015385,
+      "parent_context": "BOLAJI BALOGOUN - PRODUCT ANALYTICS CASE STUDIES AT GOZEM",
+      "scope_context": "",
+      "evidence_type": "curated",
+      "metric_scope": {},
+      "content_preview": "Source: 12_product_analytics.txt | Title: BOLAJI BALOGOUN - PRODUCT ANALYTICS CASE STUDIES AT GOZEM | Section: SEASONAL DRIVER-RETENTION ANALYSIS | Parent context: BOLAJI BALOGOUN - PRODUCT ANALYTICS CASE STUDIES AT GOZEM\n\nBolaji identified driver churn associated with the agricultural season and informed an incentive response. The analysis supported an approximately 9% improvement in driver retention. A quarter-over-quarter measurement interval and a percentage-point interpretation are not established. Evidence: E-057 and conflict resolution C-006, reconfirmed as driver retention on October 28, 2026."
+    }
+  ]
+}

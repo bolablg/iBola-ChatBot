@@ -1,0 +1,452 @@
+{
+  "candidate": "ca8965eb75e9762d3da005ca44ff2313bbd69322",
+  "comparator": {
+    "evaluation_headers": {
+      "X-Ibola-No-Trace": "1",
+      "X-Ibola-No-Notifications": "1"
+    },
+    "case_id": "recruiter-sde-03-t4",
+    "sequence": 2,
+    "session_id": "eval-9a1f2e6694ed",
+    "question": "What is his closest documented experience with real-time event processing, and how does its latency compare with sub-second streaming?",
+    "language": "en",
+    "started_at": "2026-11-21T03:52:09.989443+00:00",
+    "response": {
+      "answer": "I don't have enough verified information to answer that specific question.",
+      "actions": [],
+      "agent_type": "professional",
+      "confidence": 0.0,
+      "language": "en",
+      "redirect_count": 0,
+      "session_id": "eval-9a1f2e6694ed",
+      "should_end_chat": false,
+      "response_time": 4.902,
+      "evidence": [
+        {
+          "source": "90_website_canon_llms_full.txt",
+          "chunk_id": "90_website_canon_llms_full.txt::5",
+          "section": "Workload and measurement scope",
+          "retrieval_rank": 1,
+          "retrieval_score": 18.0,
+          "parent_context": "Bolaji BALOGOUN \u00b7 Biography",
+          "scope_context": "",
+          "evidence_type": "published",
+          "metric_scope": {
+            "id": "streaming_workload_volume",
+            "average": "45 million telemetry and operational events per day",
+            "population": "separate Gozem streaming workload, distinct from 5 TB batch upserts",
+            "not_established": "individual MongoDB CDC pipeline event counts; maximum throughput capacity; end-to-end latency; availability guarantees"
+          },
+          "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN \u00b7 Data Engineer \u00b7 Data Architect (full content) | Section: Workload and measurement scope | Parent context: Bolaji BALOGOUN \u00b7 Biography\n\nAt Gozem, batch workloads averaged approximately 5 TB of daily upserts into existing modeled tables. A separate streaming workload averaged 45 million telemetry and operational events per day; that event count was not all company activity and was not included in the batch measure. The platform contained nearly 300 Dataform models and Airflow DAGs combined, a different population from the 250+ monitored pipelines."
+        },
+        {
+          "source": "90_website_canon_llms_full.txt",
+          "chunk_id": "90_website_canon_llms_full.txt::7",
+          "section": "Applied AI, automation, and reliability",
+          "retrieval_rank": 1,
+          "retrieval_score": 20.0,
+          "parent_context": "Bolaji BALOGOUN \u00b7 Biography",
+          "scope_context": "",
+          "evidence_type": "published",
+          "metric_scope": {
+            "id": "invoice_time_savings",
+            "value": "40+ hours",
+            "qualifier": "estimated savings, not established measured time savings",
+            "population": "per country Financing Manager",
+            "measurement_period": "per month",
+            "provenance": "explicit estimated savings in the cited invoice records"
+          },
+          "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN \u00b7 Data Engineer \u00b7 Data Architect (full content) | Section: Applied AI, automation, and reliability | Parent context: Bolaji BALOGOUN \u00b7 Biography\n\nBolaji co-led Gozem\u2019s AI strategy. The group shipped 30+ production automation tools during his Data Director mandate. He prototyped invoice extraction in Vertex AI Studio and built a workflow with validation and human review. Estimated savings were 40+ hours per country Financing Manager each month. The Vodun Days command center gave Operations minute-level visibility into driver supply. On the peak day, ride requests were 48% above the average for the other event days and the rider match rate was 88%.\n\nHe also built application-ready data flows from MongoDB, BigQuery, Google Cloud Storage, and Sheets, plus a near-real-time MongoDB CDC pipeline that published change events through Pub/Sub, processed them in Dataflow, updated BigQuery, and supported real-time visualization in Looker Studio. These systems paired data products with operational services and decision workflows."
+        },
+        {
+          "source": "05_skills_and_tools.txt",
+          "chunk_id": "05_skills_and_tools.txt::8",
+          "section": "DATA INGESTION & TRANSFORMATION:",
+          "retrieval_rank": 1,
+          "retrieval_score": 0.032258,
+          "parent_context": "BOLAJI BALOGOUN - SKILLS & TOOLS WITH APPLICATION CONTEXT",
+          "scope_context": "",
+          "evidence_type": "curated",
+          "metric_scope": {},
+          "content_preview": "Source: 05_skills_and_tools.txt | Title: BOLAJI BALOGOUN - SKILLS & TOOLS WITH APPLICATION CONTEXT | Section: DATA INGESTION & TRANSFORMATION: | Parent context: BOLAJI BALOGOUN - SKILLS & TOOLS WITH APPLICATION CONTEXT\n\n- Dataform: SQL-based data modeling and transformation.\n  Used at: Gozem (Bolaji built a custom JavaScript-based smart-template framework extending Dataform for incremental data flows, partition-filtered merges, and scoped assertions, documented on his blog; this work contributed to the 42.57% cost reduction).\n\n- Google Dataflow and Pub/Sub: stream and batch processing.\n  Used at: Gozem (near real-time data processing)."
+        },
+        {
+          "source": "13_gozem_internal_projects.txt",
+          "chunk_id": "13_gozem_internal_projects.txt::5",
+          "section": "REAL-TIME MARKET MONITORING SYSTEM - Transportation Operations",
+          "retrieval_rank": 3,
+          "retrieval_score": 0.016393,
+          "parent_context": "BOLAJI BALOGOUN - INTERNAL PROJECTS LED AT GOZEM (2019 - 2026, tenure ended July 2026) > DATA DIRECTOR ERA (April 2025 - July 2026)",
+          "scope_context": "DATA DIRECTOR ERA (April 2025 - July 2026)",
+          "evidence_type": "curated",
+          "metric_scope": {},
+          "content_preview": "Source: 13_gozem_internal_projects.txt | Title: BOLAJI BALOGOUN - INTERNAL PROJECTS LED AT GOZEM (2019 - 2026, tenure ended July 2026) | Section: REAL-TIME MARKET MONITORING SYSTEM - Transportation Operations | Parent context: BOLAJI BALOGOUN - INTERNAL PROJECTS LED AT GOZEM (2019 - 2026, tenure ended July 2026) > DATA DIRECTOR ERA (April 2025 - July 2026)\n\n- Situation: transportation operations had no live visibility on supply-demand imbalances during high-demand events (public holidays, major urban events), leading to slow operational response.\n- Action: Bolaji architected a minute-granularity pipeline aggregating GPS, booking, and driver-availability signals. He built supply-demand imbalance detection with threshold-based alerts, plus an operational dashboard surfacing demand-density maps, supply-gap indicators, driver engagement scores, and event KPIs, with automated Google Chat alerts.\n- Tools: MongoDB, BigQuery, Python, Apache Airflow, Looker Studio, Google Chat API.\n- Outcome: on the peak day of Vodun Days, ride requests were 48% above the average for the other event days, and the rider match rate was 88%. The same comparison reported 10.2% higher supply rate and 7.4% higher request-to-completion rate. The analysis covered approximately 2,000 users and was observational."
+        },
+        {
+          "source": "90_website_canon_llms_full.txt",
+          "chunk_id": "90_website_canon_llms_full.txt::17",
+          "section": "Operational command center for public events",
+          "retrieval_rank": 8,
+          "retrieval_score": 0.015385,
+          "parent_context": "Bolaji BALOGOUN \u00b7 Biography > Data Director \u00b7 GOZEM \u00b7 Apr 2025 - Jul 2026",
+          "scope_context": "Data Director \u00b7 GOZEM \u00b7 Apr 2025 - Jul 2026",
+          "evidence_type": "published",
+          "metric_scope": {},
+          "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN \u00b7 Data Engineer \u00b7 Data Architect (full content) | Section: Operational command center for public events | Parent context: Bolaji BALOGOUN \u00b7 Biography > Data Director \u00b7 GOZEM \u00b7 Apr 2025 - Jul 2026\n\nResult: Supported near-real-time marketplace operations during Vodun Days. On the peak day, ride requests were 48% above the average for the other event days, and the rider match rate was 88%.\nProblem: As the official transportation partner for a public festival (Vodun Days), Gozem faced a high-visibility operational challenge in a city where it did not normally operate. Some drivers were mobilized from neighboring regions to support expected demand. Operations lacked historical references, and the real-time visibility required to monitor marketplace conditions, anticipate supply shortages, and coordinate interventions during the event's busiest periods.\nSolution: Designed and delivered a minute-level monitoring system that combined GPS telemetry, booking activity, driver availability, and marketplace performance signals. Built a unified dashboard with demand-density maps, supply-gap indicators, driver engagement metrics, and event KPIs, and set up automated Google Chat alerts.\n\nThe command center helped Operations detect emerging supply constraints, coordinate drivers, and respond to changing demand in near real time. The peak-day analysis covered approximately **2,000 users**. Compared with other days' average, the analysis reported a **10.2% increase in supply rate** and a **7.4% increase in request-to-completion rate**. The figures are observational.\nTools: BigQuery \u00b7 Google Chat \u00b7 Looker Studio \u00b7 Python \u00b7 Apache Airflow \u00b7 Webhooks"
+        }
+      ],
+      "grounding_checked": false,
+      "verification_method": "unverified",
+      "answer_sources": [
+        {
+          "id": "published-profile",
+          "label": "Published profile",
+          "section": "Workload and measurement scope",
+          "url": "https://www.bolablg.com/llms-full.txt",
+          "rank": 1
+        },
+        {
+          "id": "published-profile",
+          "label": "Published profile",
+          "section": "Applied AI, automation, and reliability",
+          "url": "https://www.bolablg.com/llms-full.txt",
+          "rank": 1
+        },
+        {
+          "id": "skills-tools",
+          "label": "Skills & tools",
+          "section": "DATA INGESTION & TRANSFORMATION:",
+          "url": "https://www.bolablg.com/skills/",
+          "rank": 1
+        },
+        {
+          "id": "project-record",
+          "label": "Project record",
+          "section": "REAL-TIME MARKET MONITORING SYSTEM - Transportation Operations",
+          "url": null,
+          "rank": 3
+        },
+        {
+          "id": "published-profile",
+          "label": "Published profile",
+          "section": "Operational command center for public events",
+          "url": "https://www.bolablg.com/llms-full.txt",
+          "rank": 8
+        }
+      ],
+      "unsupported_claims": [
+        "latency_threshold_wording_requires_source"
+      ],
+      "workflow_errors": [],
+      "workflow_warnings": [],
+      "trace_id": null,
+      "provenance": {
+        "code_revision": "b397d7d64e8cf7da",
+        "deployment_revision": null,
+        "corpus_revision": "175e61503cf7c1c5",
+        "kb_revision": "175e61503cf7c1c5",
+        "policy_revision": "e3b287a103c90b57",
+        "index_sync_pending": false,
+        "chunker_version": "3",
+        "model": "gemini-3.5-flash-lite",
+        "thinking_config": {
+          "thinking_level": "low"
+        },
+        "routing_thinking_config": {
+          "thinking_level": "minimal"
+        },
+        "generation_thinking_config": {
+          "thinking_level": "low"
+        },
+        "generation_temperature": null,
+        "verifier_model": "gemini-3.5-flash-lite",
+        "verifier_thinking_level": "low",
+        "verifier_thinking_budget": null,
+        "prompt_versions": {
+          "inventory_followup": "1.1",
+          "guardrail": "2.2",
+          "condense": "1.1",
+          "batch_grade": "2.3",
+          "rewrite": "2.1",
+          "generate_professional": "3.21",
+          "generate_education": "3.6",
+          "generate_learning": "3.6",
+          "verify_grounding": "2.16",
+          "repair_grounding": "1.8",
+          "upper_bound_clarification": "1.0",
+          "skills_completeness_clarification": "1.0",
+          "insufficient_evidence": "1.1",
+          "disputed_evidence": "1.0",
+          "project_identity": "1.0",
+          "evidence_detail": "1.2",
+          "confirmed_non_use": "1.0",
+          "documentation_limit": "1.0",
+          "personal_production_limit": "1.1",
+          "degree_clarification": "1.0",
+          "language_retry": "1.0",
+          "structured_output_recovery": "1.0",
+          "out_of_scope": "2.0",
+          "translate": "1.0",
+          "notification_suppressed": "1.0"
+        }
+      },
+      "cached": false,
+      "_eval_http_latency_s": 4.903827916976297
+    },
+    "http_elapsed_s": 4.904
+  },
+  "spark": {
+    "result": {
+      "id": "recruiter-sde-03-t2",
+      "category": "canonical",
+      "lang": "en",
+      "tags": [
+        "recruiter_regression"
+      ],
+      "question": "I am asking only about experience: has Bolaji personally deployed Kafka or Spark Structured Streaming, and which named project proves it?",
+      "answer": "Bolaji has no experience with Kafka and has never used it. There is no documented production experience deploying Spark Structured Streaming, though Apache Spark is documented for a 100GB+ agricultural data project at Rintio.",
+      "agent_type": "professional",
+      "evidence_count": 4,
+      "evidence": [
+        {
+          "source": "20_owner_confirmed_production_scope.txt",
+          "chunk_id": "20_owner_confirmed_production_scope.txt::0",
+          "section": "OWNER-CONFIRMED PRODUCTION RESPONSIBILITY",
+          "retrieval_rank": 1,
+          "retrieval_score": 46.0,
+          "parent_context": "",
+          "scope_context": "",
+          "evidence_type": "candidate_confirmed",
+          "metric_scope": {},
+          "content_preview": "Source: 20_owner_confirmed_production_scope.txt | Title: OWNER-CONFIRMED PRODUCTION RESPONSIBILITY | Section: OWNER-CONFIRMED PRODUCTION RESPONSIBILITY\n\nConfirmation recorded on November 19, 2026. This is the confirmation date, not a date assigned to the underlying work. Evidence classification: candidate_confirmed.\n\nAt Gozem, Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline. The owner subsequently clarified that he is both an architect and engineer and personally designed and operated the production services he used. This supersedes the earlier design-only qualification for these services.\n\nFor the Gozem Data Hub, Bolaji personally designed and operated AWS EC2 in production.\n\nBolaji personally set up an AWS S3 bucket in production. Bolaji personally operates an AWS S3 bucket in production, reading data from it and writing data back. He owns and operates the bucket on an ongoing basis. AWS S3 serves as an exchange layer with the product team and has also been used in projects. This clarification does not identify an employer or project for the S3 bucket and does not establish on-call responsibility.\n\nBolaji has no Kafka experience at all. Bolaji has never used Kafka. This is an explicit owner-confirmed absence of experience, not an inference from an omitted tool. It does not imply inability to learn Kafka or a deficiency in other streaming technologies.\n\nThese clarifications do not add personal Spark Structured Streaming, Apache NiFi or Lakeflow production experience. They do not establish CDC event counts, end-to-end latency or availability. The separately documented streaming-workload average remains a different measurement population.\n\nCDC role and period, owner confirmation received November 20, 2026: During his Head of Data role at Gozem (October 2022 to March 2025), Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline.\n\nThis confirmation locates the CDC work within that role period. It does not establish the project's exact start or completion dates, continuous operation throughout the entire role, on-call coverage, latency or uptime guarantees. It does not assign that role period to AWS EC2, AWS S3 or other services. The earlier Google Cloud migration remains separately attributed to the Global Data Analyst role.\n\nConfirmation provenance: Asked which role and period covered his design and operation of the MongoDB CDC pipeline, the owner answered: \"Head of Data, Oct 2022\u2013Mar 2025\". Evidence classification: candidate_confirmed. The November 20 date records when this role clarification was received, not when the project started or ended."
+        },
+        {
+          "source": "90_website_canon_llms_full.txt",
+          "chunk_id": "90_website_canon_llms_full.txt::7",
+          "section": "Applied AI, automation, and reliability",
+          "retrieval_rank": 1,
+          "retrieval_score": 20.0,
+          "parent_context": "Bolaji BALOGOUN \u00b7 Biography",
+          "scope_context": "",
+          "evidence_type": "published",
+          "metric_scope": {
+            "id": "invoice_time_savings",
+            "value": "40+ hours",
+            "qualifier": "estimated savings, not established measured time savings",
+            "population": "per country Financing Manager",
+            "measurement_period": "per month",
+            "provenance": "explicit estimated savings in the cited invoice records"
+          },
+          "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN \u00b7 Data Engineer \u00b7 Data Architect (full content) | Section: Applied AI, automation, and reliability | Parent context: Bolaji BALOGOUN \u00b7 Biography\n\nBolaji co-led Gozem\u2019s AI strategy. The group shipped 30+ production automation tools during his Data Director mandate. He prototyped invoice extraction in Vertex AI Studio and built a workflow with validation and human review. Estimated savings were 40+ hours per country Financing Manager each month. The Vodun Days command center gave Operations minute-level visibility into driver supply. On the peak day, ride requests were 48% above the average for the other event days and the rider match rate was 88%.\n\nHe also built application-ready data flows from MongoDB, BigQuery, Google Cloud Storage, and Sheets, plus a near-real-time MongoDB CDC pipeline that published change events through Pub/Sub, processed them in Dataflow, updated BigQuery, and supported real-time visualization in Looker Studio. These systems paired data products with operational services and decision workflows."
+        },
+        {
+          "source": "90_website_canon_llms_full.txt",
+          "chunk_id": "90_website_canon_llms_full.txt::14",
+          "section": "Gozem Data Hub: operational apps & analytics platform",
+          "retrieval_rank": 1,
+          "retrieval_score": 21.0,
+          "parent_context": "Bolaji BALOGOUN \u00b7 Biography > Data Director \u00b7 GOZEM \u00b7 Apr 2025 - Jul 2026",
+          "scope_context": "Data Director \u00b7 GOZEM \u00b7 Apr 2025 - Jul 2026",
+          "evidence_type": "published",
+          "metric_scope": {},
+          "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN \u00b7 Data Engineer \u00b7 Data Architect (full content) | Section: Gozem Data Hub: operational apps & analytics platform | Parent context: Bolaji BALOGOUN \u00b7 Biography > Data Director \u00b7 GOZEM \u00b7 Apr 2025 - Jul 2026\n\nResult: Unified analytics, AI, and operational tools into a single platform serving 700+ stakeholders across five countries.\nProblem: As Gozem evolved from a startup into a scale-up, the demand for operational applications, automation workflows, analytics products, and AI-powered tools grew rapidly across the organization.\n\nProduct and engineering teams remained primarily focused on revenue-generating marketplace initiatives, limiting their capacity to support the growing number of operational use cases. Many requests to the Data team recurred, including ad hoc analyses, data extractions, and operational workflows that required intervention from analysts and engineers.\n\nThe Data team also lacked a shared environment for its growing portfolio of tools, applications, analytics assets, and AI services. It had two goals.\n\n1. Give operational teams direct access to data products, analytics, and tools to reduce recurring requests to the Data team.\n2. Establish a common platform for the Data team to quickly design, deploy, and govern applications, automation, and AI solutions at scale.\nSolution: Architected and led the development of **Gozem Data Hub**, a centralized data and AI workspace for delivering self-service products across the organization.\n\nThe platform brought operational applications, analytics tools, AI solutions, automation workflows, and data exploration into one environment with shared standards for authentication, authorization, deployment, and governance.\n\nThe Data team used reusable architecture and AI-assisted engineering workflows to deliver production applications for operational teams. These applications moved a large share of analytical and operational requests from manual tickets to self-service tools that business users could operate directly.\n\nBusiness teams could independently access insights, applications, and AI tools, and the Data team had more time for higher-value initiatives.\nTools: React \u00b7 FastAPI \u00b7 AWS EC2 \u00b7 BigQuery \u00b7 MongoDB \u00b7 Nginx \u00b7 Docker \u00b7 Google Cloud Storage \u00b7 Artifact Registry \u00b7 Python"
+        },
+        {
+          "source": "90_website_canon_llms_full.txt",
+          "chunk_id": "90_website_canon_llms_full.txt::47",
+          "section": "Tech stack",
+          "retrieval_rank": 4,
+          "retrieval_score": 0.016129,
+          "parent_context": "Bolaji BALOGOUN \u00b7 Biography",
+          "scope_context": "",
+          "evidence_type": "published",
+          "metric_scope": {},
+          "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN \u00b7 Data Engineer \u00b7 Data Architect (full content) | Section: Tech stack | Parent context: Bolaji BALOGOUN \u00b7 Biography\n\nBolaji personally uses Cloud Functions and Vertex AI in production.\n\n\n- Data platforms & governance: BigQuery \u00b7 ClickHouse \u00b7 BigLake \u00b7 Databricks (projects and labs) \u00b7 Dataplex \u00b7 Unity Catalog\n- Databases & storage: PostgreSQL \u00b7 MongoDB \u00b7 Google Cloud Storage \u00b7 AWS S3 \u00b7 Delta Lake \u00b7 Apache Iceberg\n- Pipelines & streaming: Airflow \u00b7 Dataform \u00b7 Dataflow \u00b7 Apache NiFi \u00b7 Lakeflow \u00b7 Spark \u00b7 Pub/Sub\n- Languages & frameworks: Python \u00b7 SQL \u00b7 R \u00b7 Bash \u00b7 Scala \u00b7 FastAPI\n- Cloud & delivery: Google Cloud \u00b7 Compute Engine \u00b7 AWS \u00b7 AWS EC2 \u00b7 Cloud Run \u00b7 Cloud Functions \u00b7 Docker \u00b7 Artifact Registry \u00b7 Git\n- Analytics & visualization: Data Studio \u00b7 Superset \u00b7 Metabase \u00b7 Grafana\n- AI & automation: Vertex AI \u00b7 Gemini \u00b7 Codex \u00b7 RAG \u00b7 LangGraph (iBola project) \u00b7 MCP"
+        }
+      ],
+      "grounding_checked": true,
+      "provenance": {
+        "code_revision": "b397d7d64e8cf7da",
+        "deployment_revision": null,
+        "corpus_revision": "175e61503cf7c1c5",
+        "kb_revision": "175e61503cf7c1c5",
+        "policy_revision": "e3b287a103c90b57",
+        "index_sync_pending": false,
+        "chunker_version": "3",
+        "model": "gemini-3.5-flash-lite",
+        "thinking_config": {
+          "thinking_level": "low"
+        },
+        "routing_thinking_config": {
+          "thinking_level": "minimal"
+        },
+        "generation_thinking_config": {
+          "thinking_level": "low"
+        },
+        "generation_temperature": null,
+        "verifier_model": "gemini-3.5-flash-lite",
+        "verifier_thinking_level": "low",
+        "verifier_thinking_budget": null,
+        "prompt_versions": {
+          "inventory_followup": "1.1",
+          "guardrail": "2.2",
+          "condense": "1.1",
+          "batch_grade": "2.3",
+          "rewrite": "2.1",
+          "generate_professional": "3.21",
+          "generate_education": "3.6",
+          "generate_learning": "3.6",
+          "verify_grounding": "2.16",
+          "repair_grounding": "1.8",
+          "upper_bound_clarification": "1.0",
+          "skills_completeness_clarification": "1.0",
+          "insufficient_evidence": "1.1",
+          "disputed_evidence": "1.0",
+          "project_identity": "1.0",
+          "evidence_detail": "1.2",
+          "confirmed_non_use": "1.0",
+          "documentation_limit": "1.0",
+          "personal_production_limit": "1.1",
+          "degree_clarification": "1.0",
+          "language_retry": "1.0",
+          "structured_output_recovery": "1.0",
+          "out_of_scope": "2.0",
+          "translate": "1.0",
+          "notification_suppressed": "1.0"
+        }
+      },
+      "evidence_sources": [
+        "20_owner_confirmed_production_scope.txt",
+        "90_website_canon_llms_full.txt",
+        "90_website_canon_llms_full.txt",
+        "90_website_canon_llms_full.txt"
+      ],
+      "unsupported_claims": [],
+      "prefix_turns": [
+        {
+          "question": "This is a recruiter simulation, not a real offer. For a senior data engineer who must run Kafka and Spark Structured Streaming in production, what hands-on evidence does Bolaji have with those exact technologies?",
+          "answer": "Bolaji has no Kafka experience at all and has never used Kafka. For Spark Structured Streaming, there is no documented production experience with that exact technology, though Apache Spark (PySpark) is documented for a 100GB+ agricultural data project at Rintio.",
+          "grounding_checked": true,
+          "agent_type": "professional",
+          "workflow_errors": [],
+          "workflow_warnings": [],
+          "error": null,
+          "warning": null,
+          "provenance": {
+            "code_revision": "b397d7d64e8cf7da",
+            "deployment_revision": null,
+            "corpus_revision": "175e61503cf7c1c5",
+            "kb_revision": "175e61503cf7c1c5",
+            "policy_revision": "e3b287a103c90b57",
+            "index_sync_pending": false,
+            "chunker_version": "3",
+            "model": "gemini-3.5-flash-lite",
+            "thinking_config": {
+              "thinking_level": "low"
+            },
+            "routing_thinking_config": {
+              "thinking_level": "minimal"
+            },
+            "generation_thinking_config": {
+              "thinking_level": "low"
+            },
+            "generation_temperature": null,
+            "verifier_model": "gemini-3.5-flash-lite",
+            "verifier_thinking_level": "low",
+            "verifier_thinking_budget": null,
+            "prompt_versions": {
+              "inventory_followup": "1.1",
+              "guardrail": "2.2",
+              "condense": "1.1",
+              "batch_grade": "2.3",
+              "rewrite": "2.1",
+              "generate_professional": "3.21",
+              "generate_education": "3.6",
+              "generate_learning": "3.6",
+              "verify_grounding": "2.16",
+              "repair_grounding": "1.8",
+              "upper_bound_clarification": "1.0",
+              "skills_completeness_clarification": "1.0",
+              "insufficient_evidence": "1.1",
+              "disputed_evidence": "1.0",
+              "project_identity": "1.0",
+              "evidence_detail": "1.2",
+              "confirmed_non_use": "1.0",
+              "documentation_limit": "1.0",
+              "personal_production_limit": "1.1",
+              "degree_clarification": "1.0",
+              "language_retry": "1.0",
+              "structured_output_recovery": "1.0",
+              "out_of_scope": "2.0",
+              "translate": "1.0",
+              "notification_suppressed": "1.0"
+            }
+          },
+          "http_latency_s": 4.454422625014558
+        }
+      ],
+      "latency_s": 4.486,
+      "latency_protocol": "http_final_response_v1",
+      "conversation_elapsed_s": 8.942,
+      "prefix_replay_elapsed_s": 4.455190500011668,
+      "fact_pass": false,
+      "fact_failures": [
+        "missing explicit documentation limit: Spark Structured Streaming"
+      ],
+      "scores": {
+        "relevance": 10,
+        "accuracy": 10,
+        "helpfulness": 10,
+        "faithfulness": 4,
+        "rationale": "The answer is relevant and accurate, but its faithfulness is capped because it mentions a Rintio project that is not supported by the retrieved context."
+      },
+      "error": null,
+      "warning": null,
+      "judge_error": null,
+      "judge_diagnostics": {
+        "protocol": "bounded-format-recovery-1",
+        "attempts": [
+          {
+            "attempt": 1
+          }
+        ],
+        "retry_reasons": [],
+        "decoding_source": "text",
+        "status": "success"
+      },
+      "chars_in": 7346,
+      "chars_out": 225
+    },
+    "golden": {
+      "id": "recruiter-sde-03-t2",
+      "category": "canonical",
+      "lang": "en",
+      "tags": [
+        "recruiter_regression"
+      ],
+      "conversation_turn_id": "SDE-03-T2",
+      "question": "I am asking only about experience: has Bolaji personally deployed Kafka or Spark Structured Streaming, and which named project proves it?",
+      "gold": "Owner explicitly confirmed no Kafka experience. Spark Structured Streaming production ownership remains unverified. Adjacent confirmed evidence includes personal production design of a Gozem MongoDB CDC pipeline using Pub/Sub and Dataflow; Rintio documented Hadoop/Spark production work does not establish Spark Structured Streaming. Require retrieved confirmation for Kafka absence; older evidence alone warrants only an unknown.",
+      "must_contain": [],
+      "forbidden_agent_types": [
+        "contact",
+        "opportunity",
+        "message"
+      ],
+      "require_evidence": true,
+      "require_grounded": true,
+      "history": [
+        [
+          "This is a recruiter simulation, not a real offer. For a senior data engineer who must run Kafka and Spark Structured Streaming in production, what hands-on evidence does Bolaji have with those exact technologies?",
+          "Yes! If you have an exciting data, AI, or leadership role, Bolaji would love to hear about it. Use the options below to connect."
+        ]
+      ],
+      "must_mark_unknown": [
+        "Spark Structured Streaming"
+      ],
+      "must_resolve_experience": [
+        "Kafka"
+      ]
+    }
+  }
+}

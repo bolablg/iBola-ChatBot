@@ -1,0 +1,157 @@
+{
+  "powerbi": {
+    "id": "recruiter-adi-02-t5",
+    "question": "Our team mandates Power BI semantic models and DAX, with no ramp-up allowance. Has he actually used those in production, or would that be an experience gap?",
+    "answer": "Bolaji's documented BI tools are Looker and Looker Studio; direct production use of Power BI and DAX is not established. Documentation for measured adoption efficiency results, denominators, and time periods regarding his self-service analytics work is unknown.",
+    "scores": {
+      "relevance": 7,
+      "accuracy": 10,
+      "helpfulness": 5,
+      "faithfulness": 4,
+      "rationale": "The answer correctly states that Power BI/DAX use is not established, but it includes an irrelevant and unsupported sentence about self-service analytics documentation."
+    },
+    "evidence": [
+      {
+        "source": "05_skills_and_tools.txt",
+        "chunk_id": "05_skills_and_tools.txt::10",
+        "section": "TOOL CATEGORY COMPARISONS (transferable concepts):",
+        "retrieval_rank": 1,
+        "retrieval_score": 0.032787,
+        "parent_context": "BOLAJI BALOGOUN - SKILLS & TOOLS WITH APPLICATION CONTEXT",
+        "scope_context": "",
+        "evidence_type": "interpretation",
+        "metric_scope": {},
+        "content_preview": "Source: 05_skills_and_tools.txt | Title: BOLAJI BALOGOUN - SKILLS & TOOLS WITH APPLICATION CONTEXT | Section: TOOL CATEGORY COMPARISONS (transferable concepts): | Parent context: BOLAJI BALOGOUN - SKILLS & TOOLS WITH APPLICATION CONTEXT\n\nThese comparisons describe shared concepts. They do not document direct production use, equal proficiency, or feature parity. Actual tools used are identified in the separate \"Used at\" entries above.\n- dbt and Dataform share SQL-based modeling, DAG, testing, documentation, and data-warehouse CI/CD concepts. Bolaji's documented framework implementation was in Dataform at Gozem; this comparison does not establish direct dbt use.\n  Est-ce que Bolaji connait dbt: son experience documentee porte sur Dataform et son framework de templates chez Gozem. Les concepts SQL, DAG et tests sont transferables; l'utilisation directe de dbt n'est pas etablie par cette comparaison.\n- Power BI and Looker Studio share dashboard, modeling, visual-storytelling, sharing, and governance concepts. This comparison does not establish Power BI, DAX, or Tableau production use or proficiency. The documented Gozem tools in the BI record are Looker and Looker Studio.\n- Snowflake/Redshift and BigQuery/ClickHouse share cloud-warehouse, MPP SQL, partitioning, clustering, and cost-tuning concepts. This comparison does not establish direct Snowflake or Redshift use.\n- Airflow and Dagster share workflow-orchestration, scheduling, monitoring, and pipeline-management concepts. This comparison does not establish direct Dagster use."
+      },
+      {
+        "source": "05_skills_and_tools.txt",
+        "chunk_id": "05_skills_and_tools.txt::6",
+        "section": "DATA VISUALIZATION & BI:",
+        "retrieval_rank": 2,
+        "retrieval_score": 0.031514,
+        "parent_context": "BOLAJI BALOGOUN - SKILLS & TOOLS WITH APPLICATION CONTEXT",
+        "scope_context": "",
+        "evidence_type": "curated",
+        "metric_scope": {},
+        "content_preview": "Source: 05_skills_and_tools.txt | Title: BOLAJI BALOGOUN - SKILLS & TOOLS WITH APPLICATION CONTEXT | Section: DATA VISUALIZATION & BI: | Parent context: BOLAJI BALOGOUN - SKILLS & TOOLS WITH APPLICATION CONTEXT\n\n- Looker and Looker Studio: dashboards, data modeling layers.\n  Used at: Gozem (performance monitoring, data quality dashboards, management reporting).\n\n- Metabase: self-service analytics.\n  Used at: Gozem (the no-code exploration layer that halved routine query load on the central data team, with 12+ active manager users).\n\n- Plotly (Python) and analytics web apps: interactive charts and data applications.\n  Used at: Gozem (Data Hub self-service analytics modules), personal projects.\n\n- Kibana and Apache Superset: log and BI dashboards.\n  Used at: Rintio (agricultural data dashboards and leadership reporting)."
+      }
+    ]
+  },
+  "history": [
+    [
+      "You describe management reporting, but I need finance-grade metric consistency. What evidence shows how he reconciled KPI definitions, data quality and conflicting stakeholder numbers?",
+      "Bolaji designed and implemented an enterprise metrics governance framework, establishing a single source of truth for business metrics. This included creating a centralized metrics catalog documenting KPI derivations, relationships, and calculation formulas, which standardized KPI computation through reusable BigQuery and Dataform assets. His work also resolved long-standing reporting disputes between Finance, Operations, and Product by setting a governance bar across over 250 production pipelines."
+    ],
+    [
+      "The framework across five markets is relevant. What measured adoption or efficiency result came from his self-service analytics work, and what was the denominator and time period?",
+      "Bolaji's self-service analytics work, specifically the Gozem Data Hub, served over 700 people including employees, field agents, and partners across five African countries by the end of his mandate. Two engineers he onboarded subsequently shipped two additional self-service apps onto the platform. I don't have information about information on measured adoption or efficiency results from his self-service analytics work, nor the denominator and time period for such results. It does mention the number of people served by the Gozem Data Hub and the number of additional self-service apps shipped. You may be able to find more information by emailing hello@bolablg.com."
+    ]
+  ],
+  "self_service": {
+    "question": "Pour notre mission, je dois documenter des r\u00e9sultats v\u00e9rifiables. La r\u00e9duction de moiti\u00e9 des demandes de requ\u00eates et les douze managers form\u00e9s sont-elles mesur\u00e9es sur une p\u00e9riode connue, avec une m\u00e9thode de comparaison document\u00e9e ?",
+    "response": {
+      "answer": "Je n'ai pas assez d'informations v\u00e9rifi\u00e9es pour r\u00e9pondre \u00e0 cette question pr\u00e9cise.",
+      "actions": [],
+      "agent_type": "professional",
+      "confidence": 0.0,
+      "language": "fr",
+      "redirect_count": 0,
+      "session_id": "eval-a612ba0c1291",
+      "should_end_chat": false,
+      "response_time": 5.455,
+      "evidence": [
+        {
+          "source": "13_gozem_internal_projects.txt",
+          "chunk_id": "13_gozem_internal_projects.txt::13",
+          "section": "SELF-SERVICE NO-CODE DATA EXPLORATION PLATFORM - Data Democratization",
+          "retrieval_rank": 2,
+          "retrieval_score": 0.031778,
+          "parent_context": "BOLAJI BALOGOUN - INTERNAL PROJECTS LED AT GOZEM (2019 - 2026, tenure ended July 2026) > HEAD OF DATA ERA (October 2022 - March 2025)",
+          "scope_context": "HEAD OF DATA ERA (October 2022 - March 2025)",
+          "evidence_type": "curated",
+          "metric_scope": {
+            "id": "self_service_adoption",
+            "project": "Metabase no-code exploration layer",
+            "population": "12+ active manager users; this is not a count of managers trained",
+            "outcome": "routine query volume on the central data team halved",
+            "role_period": "Head of Data, October 2022 to March 2025; project context only",
+            "measurement_period": "not documented in the source record",
+            "comparison_method": "not documented; needs assessment was implementation preparation",
+            "provenance": "source audit of 13_gozem_internal_projects.txt, self-service platform section"
+          },
+          "content_preview": "Source: 13_gozem_internal_projects.txt | Title: BOLAJI BALOGOUN - INTERNAL PROJECTS LED AT GOZEM (2019 - 2026, tenure ended July 2026) | Section: SELF-SERVICE NO-CODE DATA EXPLORATION PLATFORM - Data Democratization | Parent context: BOLAJI BALOGOUN - INTERNAL PROJECTS LED AT GOZEM (2019 - 2026, tenure ended July 2026) > HEAD OF DATA ERA (October 2022 - March 2025)\n\n- Situation: non-technical users across operations, finance, product, and customer support depended on the central data team for routine reporting and ad-hoc queries, creating a bottleneck.\n- Action: Bolaji assessed data literacy and exploration needs across all Gozem markets, then coordinated configuration of a no-code query and exploration layer (Metabase) integrated with Gozem's central data warehouse.\n- Tools: Metabase, BigQuery, Looker.\n- Outcome: adoption reached 12+ active manager users, halving routine query volume on the central data team.\n\nR\u00e9sum\u00e9 fran\u00e7ais (traduction des faits ci-dessus): L'adoption de Metabase a atteint plus de 12 utilisateurs managers actifs et a divis\u00e9 par deux le volume des requ\u00eates courantes adress\u00e9es \u00e0 l'\u00e9quipe data centrale. Il s'agit d'utilisateurs actifs, pas d'un effectif confirm\u00e9 de managers form\u00e9s. La p\u00e9riode pr\u00e9cise de mesure et la m\u00e9thode de comparaison ne sont pas document\u00e9es dans ce dossier."
+        }
+      ],
+      "grounding_checked": false,
+      "verification_method": "unverified",
+      "answer_sources": [
+        {
+          "id": "project-record",
+          "label": "Project record",
+          "section": "SELF-SERVICE NO-CODE DATA EXPLORATION PLATFORM - Data Democratization",
+          "url": null,
+          "rank": 2
+        }
+      ],
+      "unsupported_claims": [
+        "self_service_measurement_period_unknown",
+        "self_service_comparison_method_unknown"
+      ],
+      "workflow_errors": [],
+      "workflow_warnings": [],
+      "trace_id": null,
+      "provenance": {
+        "code_revision": "eddfeba6949baeaf",
+        "deployment_revision": null,
+        "corpus_revision": "175e61503cf7c1c5",
+        "kb_revision": "175e61503cf7c1c5",
+        "policy_revision": "efb446822ce11d7f",
+        "index_sync_pending": false,
+        "chunker_version": "3",
+        "model": "gemini-3.5-flash-lite",
+        "thinking_config": {
+          "thinking_level": "low"
+        },
+        "routing_thinking_config": {
+          "thinking_level": "minimal"
+        },
+        "generation_thinking_config": {
+          "thinking_level": "low"
+        },
+        "generation_temperature": null,
+        "verifier_model": "gemini-3.5-flash-lite",
+        "verifier_thinking_level": "low",
+        "verifier_thinking_budget": null,
+        "prompt_versions": {
+          "inventory_followup": "1.1",
+          "guardrail": "2.2",
+          "condense": "1.1",
+          "batch_grade": "2.3",
+          "rewrite": "2.1",
+          "generate_professional": "3.21",
+          "generate_education": "3.6",
+          "generate_learning": "3.6",
+          "verify_grounding": "2.16",
+          "repair_grounding": "1.8",
+          "upper_bound_clarification": "1.0",
+          "skills_completeness_clarification": "1.0",
+          "insufficient_evidence": "1.1",
+          "disputed_evidence": "1.0",
+          "project_identity": "1.0",
+          "evidence_detail": "1.2",
+          "confirmed_non_use": "1.0",
+          "documentation_limit": "1.0",
+          "personal_production_limit": "1.1",
+          "degree_clarification": "1.0",
+          "language_retry": "1.0",
+          "structured_output_recovery": "1.0",
+          "out_of_scope": "2.0",
+          "translate": "1.0",
+          "notification_suppressed": "1.0"
+        }
+      },
+      "cached": false,
+      "_eval_http_latency_s": 5.456576832977589
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "question": "I am asking only about experience: has Bolaji personally deployed Kafka or Spark Structured Streaming, and which named project proves it?",
+  "history": [
+    [
+      "This is a recruiter simulation, not a real offer. For a senior data engineer who must run Kafka and Spark Structured Streaming in production, what hands-on evidence does Bolaji have with those exact technologies?",
+      "Bolaji has no Kafka experience at all and has never used Kafka. For Apache Spark, Bolaji used Apache Spark and PySpark at Rintio for a data lake and processing for 100GB+ of agricultural data, but there is no documentation of hands-on production experience with Spark Structured Streaming."
+    ]
+  ],
+  "evidence": [
+    {
+      "source": "04_previous_roles_early.txt",
+      "chunk_id": "04_previous_roles_early.txt::1",
+      "section": "DATA SCIENTIST - RINTIO (March 2018 - May 2019, including the March - June apprenticeship)",
+      "retrieval_rank": 1,
+      "retrieval_score": 23.0,
+      "parent_context": "BOLAJI BALOGOUN - EARLY CAREER",
+      "scope_context": "DATA SCIENTIST - RINTIO (March 2018 - May 2019, including the March - June apprenticeship)",
+      "evidence_type": "curated",
+      "metric_scope": {},
+      "content_preview": "Source: 04_previous_roles_early.txt | Title: BOLAJI BALOGOUN - EARLY CAREER | Section: DATA SCIENTIST - RINTIO (March 2018 - May 2019, including the March - June apprenticeship) | Parent context: BOLAJI BALOGOUN - EARLY CAREER\n\nRintio is a technology company focused on precision agriculture. Bolaji developed analytics and data science products for Duniya, Rintio's smart-farming MVP for Beninese farmers, and supported outsourcing clients in their data transformation.\n\nKey achievements:\n- Designed and deployed a big data architecture combining a Hadoop data lake, an Apache Spark cluster, and ElasticSearch, ingesting 100GB+ of agricultural data from multiple sources (scraped market data, spreadsheets, PDFs, images) covering crops, fertilizers, yields, rainfall, and climate.\n- Built end-to-end ingestion and transformation pipelines turning raw agricultural data into ML-ready features for the smart-farming app.\n- Developed statistical crop yield forecast models using regression algorithms, mainly for maize with additional models for beans. Forecasts powered sourcing, cycle, and pricing decisions.\n- Delivered a consolidated leadership BI report in Kibana and Apache Superset covering multiple KPIs and data domains.\n- Delivered an executive data & AI training mission to Societe Generale Maroc's top management: training content and lab use cases tailored to banking applications of data and AI.\n\nTools: Python, Apache Spark, Hadoop, ElasticSearch, scikit-learn, Kibana, Apache Superset, SQL, GitLab."
+    },
+    {
+      "source": "20_owner_confirmed_production_scope.txt",
+      "chunk_id": "20_owner_confirmed_production_scope.txt::0",
+      "section": "OWNER-CONFIRMED PRODUCTION RESPONSIBILITY",
+      "retrieval_rank": 1,
+      "retrieval_score": 46.0,
+      "parent_context": "",
+      "scope_context": "",
+      "evidence_type": "candidate_confirmed",
+      "metric_scope": {},
+      "content_preview": "Source: 20_owner_confirmed_production_scope.txt | Title: OWNER-CONFIRMED PRODUCTION RESPONSIBILITY | Section: OWNER-CONFIRMED PRODUCTION RESPONSIBILITY\n\nConfirmation recorded on November 19, 2026. This is the confirmation date, not a date assigned to the underlying work. Evidence classification: candidate_confirmed.\n\nAt Gozem, Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline. The owner subsequently clarified that he is both an architect and engineer and personally designed and operated the production services he used. This supersedes the earlier design-only qualification for these services.\n\nFor the Gozem Data Hub, Bolaji personally designed and operated AWS EC2 in production.\n\nBolaji personally set up an AWS S3 bucket in production. Bolaji personally operates an AWS S3 bucket in production, reading data from it and writing data back. He owns and operates the bucket on an ongoing basis. AWS S3 serves as an exchange layer with the product team and has also been used in projects. This clarification does not identify an employer or project for the S3 bucket and does not establish on-call responsibility.\n\nBolaji has no Kafka experience at all. Bolaji has never used Kafka. This is an explicit owner-confirmed absence of experience, not an inference from an omitted tool. It does not imply inability to learn Kafka or a deficiency in other streaming technologies.\n\nThese clarifications do not add personal Spark Structured Streaming, Apache NiFi or Lakeflow production experience. They do not establish CDC event counts, end-to-end latency or availability. The separately documented streaming-workload average remains a different measurement population.\n\nCDC role and period, owner confirmation received November 20, 2026: During his Head of Data role at Gozem (October 2022 to March 2025), Bolaji personally designed and operated Pub/Sub and Dataflow in production for the MongoDB CDC pipeline.\n\nThis confirmation locates the CDC work within that role period. It does not establish the project's exact start or completion dates, continuous operation throughout the entire role, on-call coverage, latency or uptime guarantees. It does not assign that role period to AWS EC2, AWS S3 or other services. The earlier Google Cloud migration remains separately attributed to the Global Data Analyst role.\n\nConfirmation provenance: Asked which role and period covered his design and operation of the MongoDB CDC pipeline, the owner answered: \"Head of Data, Oct 2022\u2013Mar 2025\". Evidence classification: candidate_confirmed. The November 20 date records when this role clarification was received, not when the project started or ended."
+    },
+    {
+      "source": "90_website_canon_llms_full.txt",
+      "chunk_id": "90_website_canon_llms_full.txt::7",
+      "section": "Applied AI, automation, and reliability",
+      "retrieval_rank": 1,
+      "retrieval_score": 20.0,
+      "parent_context": "Bolaji BALOGOUN \u00b7 Biography",
+      "scope_context": "",
+      "evidence_type": "published",
+      "metric_scope": {
+        "id": "invoice_time_savings",
+        "value": "40+ hours",
+        "qualifier": "estimated savings, not established measured time savings",
+        "population": "per country Financing Manager",
+        "measurement_period": "per month",
+        "provenance": "explicit estimated savings in the cited invoice records"
+      },
+      "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN \u00b7 Data Engineer \u00b7 Data Architect (full content) | Section: Applied AI, automation, and reliability | Parent context: Bolaji BALOGOUN \u00b7 Biography\n\nBolaji co-led Gozem\u2019s AI strategy. The group shipped 30+ production automation tools during his Data Director mandate. He prototyped invoice extraction in Vertex AI Studio and built a workflow with validation and human review. Estimated savings were 40+ hours per country Financing Manager each month. The Vodun Days command center gave Operations minute-level visibility into driver supply. On the peak day, ride requests were 48% above the average for the other event days and the rider match rate was 88%.\n\nHe also built application-ready data flows from MongoDB, BigQuery, Google Cloud Storage, and Sheets, plus a near-real-time MongoDB CDC pipeline that published change events through Pub/Sub, processed them in Dataflow, updated BigQuery, and supported real-time visualization in Looker Studio. These systems paired data products with operational services and decision workflows."
+    }
+  ],
+  "initial": "Bolaji has no Kafka experience at all and has never used Kafka. For Apache Spark, Bolaji used Apache Spark and PySpark at Rintio for a data lake and processing for 100GB+ of agricultural data, but there is no documentation of hands-on production experience with Spark Structured Streaming.",
+  "corrected": "Bolaji has no Kafka experience at all. Regarding Spark Structured Streaming, personal production operation is unverified in the documentation, while Apache Spark was used at Rintio for a data lake and processing for 100GB+ of agricultural data.",
+  "repair": "Bolaji has no Kafka experience at all and has never used Kafka. Regarding Spark Structured Streaming, personal production operation is a detail that the retrieved evidence does not establish, while Apache Spark was used at Rintio for a data lake and processing for 100GB+ of agricultural data.",
+  "having_draft": "Bolaji has no experience with Kafka, having never used it. Documentation does not establish personal production experience with Spark Structured Streaming, and no named project proves either deployment."
+}

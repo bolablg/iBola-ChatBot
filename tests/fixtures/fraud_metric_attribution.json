@@ -1,0 +1,149 @@
+{
+  "source_run": 44843920392,
+  "captured_result": {
+    "id": "met-006",
+    "category": "metric",
+    "lang": "en",
+    "tags": [
+      "smoke"
+    ],
+    "question": "Tell me about the fraud Bolaji's systems flagged at Gozem Money.",
+    "answer": "At Gozem Money, Bolaji's micro-batch processing pipeline and ML-based fraud screening systems surface about 150 incidents per month and flagged a major fraud worth over 25M XOF.",
+    "agent_type": "professional",
+    "evidence_count": 4,
+    "evidence": [
+      {
+        "source": "13_gozem_internal_projects.txt",
+        "chunk_id": "13_gozem_internal_projects.txt::11",
+        "section": "EBANKING ANALYTICS & REPORTING INFRASTRUCTURE - Gozem Money (Fintech)",
+        "retrieval_rank": 1,
+        "retrieval_score": 0.032787,
+        "parent_context": "BOLAJI BALOGOUN - INTERNAL PROJECTS LED AT GOZEM (2019 - 2026, tenure ended July 2026) > HEAD OF DATA ERA (October 2022 - March 2025)",
+        "scope_context": "HEAD OF DATA ERA (October 2022 - March 2025)",
+        "evidence_type": "curated",
+        "metric_scope": {},
+        "content_preview": "Source: 13_gozem_internal_projects.txt | Title: BOLAJI BALOGOUN - INTERNAL PROJECTS LED AT GOZEM (2019 - 2026, tenure ended July 2026) | Section: EBANKING ANALYTICS & REPORTING INFRASTRUCTURE - Gozem Money (Fintech) | Parent context: BOLAJI BALOGOUN - INTERNAL PROJECTS LED AT GOZEM (2019 - 2026, tenure ended July 2026) > HEAD OF DATA ERA (October 2022 - March 2025)\n\n- Situation: Gozem Money needed real-time fraud monitoring, a fintech-grade data warehouse, and a reporting layer to support mobile payment operations and regulatory needs across African markets.\n- Action: Bolaji designed and supervised deployment of a micro-batch processing pipeline monitoring anomalous patterns, fraud signals, and threshold breaches. He built the fintech data warehouse for Togo operations, powered by ETL/ELT pipelines and data models as the foundational layer for financial analytics, regulatory submissions, and stakeholder dashboards (transaction volumes, product adoption, revenue, cohorts), with documented data models, reporting glossary, and metric definitions.\n- Tools: Apache Airflow, Python, MongoDB, BigQuery, Dataflow, Cloud Storage.\n- Outcome: the system surfaces about 150 incidents per month and flagged a major fraud worth over 25M XOF, while powering regulatory reporting for Gozem Money."
+      },
+      {
+        "source": "01_career_overview.txt",
+        "chunk_id": "01_career_overview.txt::2",
+        "section": "BOLAJI BALOGOUN - CAREER OVERVIEW & TIMELINE",
+        "retrieval_rank": 2,
+        "retrieval_score": 0.031258,
+        "parent_context": "",
+        "scope_context": "",
+        "evidence_type": "curated",
+        "metric_scope": {},
+        "content_preview": "Source: 01_career_overview.txt | Title: BOLAJI BALOGOUN - CAREER OVERVIEW & TIMELINE | Section: BOLAJI BALOGOUN - CAREER OVERVIEW & TIMELINE\n\nPREVIOUS ROLE: Head of Data - Gozem (October 2022 - March 2025)\nBefore becoming Data Director, Bolaji was Head of Data for Gozem's Sub-Saharan Africa group: governance, team scaling from 4 to 14+ during the Head of Data period (October 2022 - March 2025), FinOps, and fintech-grade analytics. He led FinOps initiatives that cut Google Cloud costs by 42.57% in a single quarter while maintaining SLAs on data freshness and integrity, led ML-based fraud screening that made field-agent payment processing 7x faster, built the fintech analytics infrastructure that surfaces ~150 incidents per month and flagged a fraud worth over 25M XOF, and onboarded 12 hires from 50+ evaluated candidates with 30/60/90-day ramp milestones."
+      },
+      {
+        "source": "13_gozem_internal_projects.txt",
+        "chunk_id": "13_gozem_internal_projects.txt::12",
+        "section": "ML-BASED FRAUD SCREENING & PAYMENT AUTOMATION",
+        "retrieval_rank": 3,
+        "retrieval_score": 0.016129,
+        "parent_context": "BOLAJI BALOGOUN - INTERNAL PROJECTS LED AT GOZEM (2019 - 2026, tenure ended July 2026) > HEAD OF DATA ERA (October 2022 - March 2025)",
+        "scope_context": "HEAD OF DATA ERA (October 2022 - March 2025)",
+        "evidence_type": "curated",
+        "metric_scope": {},
+        "content_preview": "Source: 13_gozem_internal_projects.txt | Title: BOLAJI BALOGOUN - INTERNAL PROJECTS LED AT GOZEM (2019 - 2026, tenure ended July 2026) | Section: ML-BASED FRAUD SCREENING & PAYMENT AUTOMATION | Parent context: BOLAJI BALOGOUN - INTERNAL PROJECTS LED AT GOZEM (2019 - 2026, tenure ended July 2026) > HEAD OF DATA ERA (October 2022 - March 2025)\n\n- Action: Bolaji led the development of ML-based fraud screening and financial transaction monitoring pipelines.\n- Outcome: field-agent payment processing became 7x faster, and a Group Financial Closing Database was delivered for enterprise-wide performance monitoring."
+      },
+      {
+        "source": "90_website_canon_llms_full.txt",
+        "chunk_id": "90_website_canon_llms_full.txt::23",
+        "section": "Payments intelligence and fraud monitoring",
+        "retrieval_rank": 4,
+        "retrieval_score": 0.016129,
+        "parent_context": "Bolaji BALOGOUN · Biography > Head of Data · GOZEM · Oct 2022 - Mar 2025",
+        "scope_context": "Head of Data · GOZEM · Oct 2022 - Mar 2025",
+        "evidence_type": "published",
+        "metric_scope": {},
+        "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN · Data Engineer · Data Architect (full content) | Section: Payments intelligence and fraud monitoring | Parent context: Bolaji BALOGOUN · Biography > Head of Data · GOZEM · Oct 2022 - Mar 2025\n\nResult: Established Gozem Money's analytics and risk foundations, identifying tens of millions of XOF in potential losses while supporting financial and regulatory reporting.\nProblem: As Gozem launched Gozem Money, its digital payments and money transfer business, it needed a data platform that could scale to support transaction monitoring, fraud prevention, financial reporting, and regulatory obligations. The company needed to detect external fraud attempts and internal misuse of payment processes while building reliable reporting from scratch.\nSolution: Led the design and implementation of the Gozem Money data architecture across ingestion, transformation, storage, reporting, and monitoring. Built the Togo payments warehouse and ELT pipelines that supplied data for financial analytics, operational reporting, and regulatory reporting.\n\nDesigned and supervised fraud monitoring that combined rule-based screening, anomaly detection, transaction threshold monitoring, and investigative analytics. Worked with Product, Operations, and leadership to identify emerging fraud patterns, investigate suspicious activity, and turn findings into new controls, alerts, and process safeguards.\n\nSet up an ongoing process to document newly discovered fraud schemes and operational risks and use them to update monitoring. Added data quality checks, governed metric definitions, and documented reporting logic to support reliable reporting and compliance readiness as the business grew.\nTools: BigQuery · Dataform · Apache Airflow · Webhooks · Google Cloud Storage"
+      }
+    ],
+    "grounding_checked": true,
+    "provenance": {
+      "code_revision": "ed6a66e04ae2c6b1",
+      "deployment_revision": "ibola-chatbot-00072-guh",
+      "corpus_revision": "91c0084e17159130",
+      "kb_revision": "91c0084e17159130",
+      "policy_revision": "467a9b77fa85f0fe",
+      "index_sync_pending": false,
+      "chunker_version": "3",
+      "model": "gemini-3.5-flash-lite",
+      "thinking_config": {
+        "thinking_level": "low"
+      },
+      "routing_thinking_config": {
+        "thinking_level": "minimal"
+      },
+      "generation_thinking_config": {
+        "thinking_level": "low"
+      },
+      "generation_temperature": null,
+      "verifier_model": "gemini-3.5-flash-lite",
+      "verifier_thinking_level": "low",
+      "verifier_thinking_budget": null,
+      "prompt_versions": {
+        "inventory_followup": "1.1",
+        "guardrail": "2.2",
+        "condense": "1.1",
+        "batch_grade": "2.3",
+        "rewrite": "2.1",
+        "generate_professional": "3.20",
+        "generate_education": "3.6",
+        "generate_learning": "3.6",
+        "verify_grounding": "2.16",
+        "repair_grounding": "1.7",
+        "upper_bound_clarification": "1.0",
+        "skills_completeness_clarification": "1.0",
+        "insufficient_evidence": "1.1",
+        "disputed_evidence": "1.0",
+        "project_identity": "1.0",
+        "evidence_detail": "1.1",
+        "documentation_limit": "1.0",
+        "personal_production_limit": "1.1",
+        "degree_clarification": "1.0",
+        "language_retry": "1.0",
+        "structured_output_recovery": "1.0",
+        "out_of_scope": "2.0",
+        "translate": "1.0",
+        "notification_suppressed": "1.0"
+      }
+    },
+    "evidence_sources": [
+      "13_gozem_internal_projects.txt",
+      "01_career_overview.txt",
+      "13_gozem_internal_projects.txt",
+      "90_website_canon_llms_full.txt"
+    ],
+    "unsupported_claims": [],
+    "latency_s": 3.466,
+    "fact_pass": true,
+    "fact_failures": [],
+    "scores": {
+      "relevance": 10,
+      "accuracy": 7,
+      "helpfulness": 8,
+      "faithfulness": 4,
+      "rationale": "The answer is relevant and mostly accurate, but it incorrectly synthesizes information by claiming an ML-based system was involved in flagging the fraud, a claim not supported by the context."
+    },
+    "error": null,
+    "warning": null,
+    "judge_error": null,
+    "judge_diagnostics": {
+      "protocol": "bounded-format-recovery-1",
+      "attempts": [
+        {
+          "attempt": 1
+        }
+      ],
+      "retry_reasons": [],
+      "decoding_source": "text",
+      "status": "success"
+    },
+    "chars_in": 4799,
+    "chars_out": 177
+  },
+  "owner_confirmation": "No ML contribution to the approximately 150 incidents/month or fraud discovery worth over 25M XOF; micro-batches, rules and EDA."
+}

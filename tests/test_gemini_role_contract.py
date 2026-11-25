@@ -220,7 +220,8 @@ def test_generation_and_verification_keep_evidence_out_of_system(
         assert "UNTRUSTED_HISTORY_MARKER" not in text(body["systemInstruction"])
     assert _SKILLS_AND_TOOLS_RULE in text(requests[0]["systemInstruction"])
     assert _SKILLS_AND_TOOLS_RULE in text(requests[1]["systemInstruction"])
-    assert "UNTRUSTED_HISTORY_MARKER" in text(requests[0]["contents"][0])
+    # Staging intentionally excludes unrelated history from standalone questions.
+    assert "UNTRUSTED_HISTORY_MARKER" not in text(requests[0]["contents"][0])
     assert result["grounding_checked"] is (not verifier_error)
     assert (result["answer"] == answer) is (not verifier_error)
     if verifier_error:

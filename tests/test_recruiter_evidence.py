@@ -545,12 +545,21 @@ def test_requested_access_safeguards_are_complete_only_with_retrieved_support():
     docs = [
         Document(
             page_content="MCP-enabled BigQuery integration in Claude within existing Google Cloud IAM permissions.",
-            metadata={"source": "90_website_canon_llms_full.txt"},
+            metadata={
+                "source": "90_website_canon_llms_full.txt",
+                "section_header": "Enterprise metrics governance & AI-ready semantic layer",
+            },
         )
     ]
     query = "What metric governance and access safeguards did he establish?"
     assert (
-        len(constraint_failures("He standardized metric definitions.", docs, query))
+        len(
+            constraint_failures(
+                "He standardized metric definitions with BigQuery and Dataform.",
+                docs,
+                query,
+            )
+        )
         == 2
     )
     assert not constraint_failures(
@@ -569,19 +578,27 @@ def governance_retrieval():
     return raw, [Document(**doc) for doc in raw["documents"]]
 
 
+def governance_draft_with_known_outcomes(raw):
+    # Synthetic draft: the new outcome regressions cover their omission. This
+    # control isolates the remaining three restorations within the same budget.
+    return raw["draft"] + (
+        " Established a single source of truth for business metrics across analytics, reporting, and AI-powered workflows."
+        " Selected senior users could query enterprise data using natural language within their existing Google Cloud IAM permissions."
+    )
+
+
 def test_missing_requested_details_restore_exact_scoped_quotes_and_are_idempotent(
     governance_retrieval,
 ):
     from app.services.evidence_policy import preserve_requested_evidence
 
     raw, docs = governance_retrieval
-    answer, restored = preserve_requested_evidence(
-        raw["draft"], docs, raw["query"], "English"
-    )
+    draft = governance_draft_with_known_outcomes(raw)
+    answer, restored = preserve_requested_evidence(draft, docs, raw["query"], "English")
     assert len(restored) == 3
     assert "IAM permissions" in answer and "Claude" in answer
     assert "data-quality checks" in answer and "reporting disputes" in answer
-    assert "DATA DIRECTOR ERA" in answer
+    assert "DATA DIRECTOR ERA" not in answer
     again, changed = preserve_requested_evidence(answer, docs, raw["query"], "English")
     assert again == answer and not changed
     assert preserve_requested_evidence(raw["draft"], [], raw["query"], "English") == (
@@ -635,7 +652,10 @@ def test_restored_correction_is_rechecked_as_delivered(governance_retrieval):
     raw, docs = governance_retrieval
     model = Mock()
     model.with_structured_output.return_value.invoke.side_effect = [
-        GroundingVerdict(is_grounded=False, corrected_answer=raw["draft"]),
+        GroundingVerdict(
+            is_grounded=False,
+            corrected_answer=governance_draft_with_known_outcomes(raw),
+        ),
         GroundingVerdict(is_grounded=True),
     ]
     with patch("app.graph.nodes._get_llm", return_value=model):
@@ -712,9 +732,9 @@ def test_french_adoption_restores_only_the_exact_retrieved_scoped_translation():
     answer, restored = preserve_requested_evidence(draft, [doc], query, "French")
     assert restored == ["self_service_active_manager_population_missing"]
     assert "plus de 12 utilisateurs managers actifs" in answer
-    assert "Résumé français du dossier" in answer
-    assert "mandat Head of Data, octobre 2022 - mars 2025" in answer
-    assert answer[len(draft) :].split("« ")[1].split(" »")[0] in text
+    assert "Résumé français du dossier" not in answer
+    assert "mandat Head of Data, octobre 2022 - mars 2025" not in answer
+    assert answer[len(draft) :].strip() in text
     assert preserve_requested_evidence(answer, [doc], query, "French") == (answer, [])
     doc.metadata["scope_context"] = "Data Director (April 2025 - July 2026)"
     assert preserve_requested_evidence(draft, [doc], query, "French") == (draft, [])

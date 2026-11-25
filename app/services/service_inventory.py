@@ -119,7 +119,7 @@ def inventory_followup(state, documents, language):
                     residue = re.sub(pattern, "", residue, flags=re.I)
             affirmative = re.search(
                 r"^\s*(?:[-*•]\s*)?(?:Bolaji|he|his (?:hands-on )?production scope)\s+(?:(?:has|personally|also|designed|and|hands-on)\s+){0,5}(?:designed|operated|uses?|used|managed|built|deployed|covers|includes)\b|"
-                r"^\s*(?:(?:his|the)\s+)?(?:(?:confirmed|documented|production|core|operational|relevant|data|and|AWS|GCP)\s+)*(?:service inventory|inventory|services)\s*(?::|includes?\b|covers\b|spans\b)",
+                r"^\s*(?:(?:his|the)\s+)?(?:(?:confirmed|documented|production|core|operational|relevant|data|and|AWS|GCP)\s+)*(?:service inventory|inventory|services)\s*(?::|(?:also\s+)?(?:includes?\b|covers\b|spans\b))",
                 clause,
                 re.I,
             )

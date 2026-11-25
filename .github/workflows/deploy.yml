@@ -151,6 +151,14 @@ jobs:
           python -m pip install --upgrade "pip==26.2.1"
           python -m pip install --require-hashes -r requirements.lock
 
+      - name: Refresh checked-out knowledge index
+        if: env.GEMINI_API_KEY != ''
+        env:
+          LANGFUSE_ENABLED: 'false'
+          LANGSMITH_TRACING: 'false'
+          LANGCHAIN_TRACING_V2: 'false'
+        run: python pipeline/update_vectorstore.py
+
       - name: Run golden-QA smoke eval
         if: env.GEMINI_API_KEY != ''
         env:
@@ -199,6 +207,13 @@ jobs:
         run: |
           python -m pip install --upgrade "pip==26.2.1"
           python -m pip install --require-hashes -r requirements.lock
+
+      - name: Refresh checked-out knowledge index
+        env:
+          LANGFUSE_ENABLED: 'false'
+          LANGSMITH_TRACING: 'false'
+          LANGCHAIN_TRACING_V2: 'false'
+        run: python pipeline/update_vectorstore.py
 
       - name: Run full golden-set eval
         id: evaluation
@@ -465,11 +480,11 @@ jobs:
           -H 'X-Ibola-No-Notifications: 1' \
               -d '{"user_input":"What is Bolaji latest role?","session_id":"weekly-warmup","user_language":"en"}' || true
           done
-          python scripts/run_eval.py --tags smoke --base-url "$PROD_URL" --concurrency 4 --report-path local/eval_reports/production-smoke.json
+          python scripts/run_eval.py --tags smoke recruiter_regression --base-url "$PROD_URL" --concurrency 2 --http-min-start-interval 2.5 --report-path local/eval_reports/production-smoke.json
 
       - name: Gate production smoke against accepted baseline
         id: quality_gate
-        run: python scripts/eval_gate.py --report local/eval_reports/production-smoke.json --strict
+        run: python scripts/eval_gate.py --report local/eval_reports/production-smoke.json --strict --baseline eval/accepted_baseline_smoke.json
 
       - name: Upload production smoke eval report
         if: always()
@@ -549,6 +564,17 @@ jobs:
         with:
           project_id: ${{ secrets.GCP_PROJECT }}
 
+      - name: Prepare indexed knowledge for image
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          LANGFUSE_ENABLED: 'false'
+          LANGSMITH_TRACING: 'false'
+          LANGCHAIN_TRACING_V2: 'false'
+        run: |
+          python -m pip install --upgrade "pip==26.2.1"
+          python -m pip install --require-hashes -r requirements.lock
+          python pipeline/update_vectorstore.py
+
       - name: Build and push Docker image
         env:
           GCP_PROJECT: ${{ secrets.GCP_PROJECT }}
@@ -615,8 +641,6 @@ jobs:
             echo "Could not resolve canary URL"; exit 1
           fi
           echo "Canary URL: $CANARY_URL"
-          python -m pip install --upgrade "pip==26.2.1"
-          python -m pip install --require-hashes -r requirements.lock
           # Warm the canary first: min-instances=0 means the first request
           # cold-starts (model + index load, ~35s) and would blow the latency
           # gate on an otherwise-healthy revision. Warm, wait, then measure.
@@ -629,8 +653,8 @@ jobs:
           -H 'X-Ibola-No-Notifications: 1' \
               -d '{"user_input":"What is Bolaji latest role?","session_id":"warmup","user_language":"en"}' || true
           done
-          python scripts/run_eval.py --tags smoke --base-url "$CANARY_URL" --concurrency 4 --report-path local/eval_reports/canary.json
-          python scripts/eval_gate.py --report local/eval_reports/canary.json --strict
+          python scripts/run_eval.py --tags smoke recruiter_regression --base-url "$CANARY_URL" --concurrency 2 --http-min-start-interval 2.5 --report-path local/eval_reports/canary.json
+          python scripts/eval_gate.py --report local/eval_reports/canary.json --strict --baseline eval/accepted_baseline_smoke.json
 
       - name: Upload canary eval report
         if: always()

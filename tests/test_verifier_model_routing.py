@@ -150,10 +150,16 @@ def test_strategy_progress_requires_exact_section_and_does_not_cleanse_completio
             page_content=text, metadata={**doc.metadata, "source": "different.txt"}
         ),
     ]:
-        assert preserve_requested_evidence(draft, [bad], q, "English") == (draft, [])
+        assert preserve_requested_evidence(draft, [bad], q, "English") == (
+            "He used a scoring framework. The retrieved evidence does not establish measured return.",
+            [],
+        )
     assert preserve_requested_evidence(
         draft, [doc], "What languages does he speak?", "English"
-    ) == (draft, [])
+    ) == (
+        "He used a scoring framework. The retrieved evidence does not establish measured return.",
+        [],
+    )
     wrong = "He completed six AI use cases."
     result, _ = preserve_requested_evidence(wrong, [doc], q, "English")
     assert "implementation_status" in constraint_failures(result, [doc], q)

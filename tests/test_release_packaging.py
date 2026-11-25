@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pathspec
 import pytest
+import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 AUTH_FILES = ["gha-creds-release-test.json", "nested/gha-creds-release-test.json"]
@@ -50,3 +51,38 @@ def test_build_exclusions_protect_authentication_and_preserve_runtime(name):
         assert spec.match_file(secret), (name, secret)
     for runtime in RUNTIME_FILES:
         assert not spec.match_file(runtime), (name, runtime)
+
+
+@pytest.mark.parametrize(
+    "job,consumer",
+    [
+        ("eval-gate", "Run golden-QA smoke eval"),
+        ("nightly-eval", "Run full golden-set eval"),
+        ("deploy", "Build and push Docker image"),
+    ],
+)
+def test_release_index_refresh_is_blocking_and_precedes_its_consumer(job, consumer):
+    workflow = yaml.safe_load((ROOT / ".github/workflows/deploy.yml").read_text())
+    config = workflow["jobs"][job]
+    steps = config["steps"]
+    refreshes = [
+        (i, step)
+        for i, step in enumerate(steps)
+        if "python pipeline/update_vectorstore.py" in step.get("run", "")
+    ]
+    assert len(refreshes) == 1
+    position, refresh = refreshes[0]
+    assert position < next(
+        i for i, step in enumerate(steps) if step.get("name") == consumer
+    )
+    assert not refresh.get("continue-on-error", False)
+    assert "|| true" not in refresh["run"]
+    env = {**config.get("env", {}), **refresh.get("env", {})}
+    assert env["GEMINI_API_KEY"] == "${{ secrets.GEMINI_API_KEY }}"
+    assert all(
+        env[key] == "false"
+        for key in ("LANGFUSE_ENABLED", "LANGSMITH_TRACING", "LANGCHAIN_TRACING_V2")
+    )
+    assert (
+        "--rebuild" not in refresh["run"]
+    )  # Preserve the existing embedding contract.

@@ -1,0 +1,90 @@
+{
+  "recruiter-hda-03-t3": {
+    "id": "recruiter-hda-03-t3",
+    "question": "What organization structure did he actually manage: total headcount, direct reports, manager layers, countries and formal performance-management authority? Our requirement is 25 people through managers, so please do not equate a cross-country team with manager-of-managers experience.",
+    "answer": "Bolaji managed a total headcount of 14+ professionals across five African operating markets (Togo, Benin, Cameroon, Congo, Gabon) during his Head of Data period. Direct reports and manager layers are unknown. He partnered with HR on performance management and designed team performance frameworks.",
+    "scores": {
+      "relevance": 10,
+      "accuracy": 10,
+      "helpfulness": 9,
+      "faithfulness": 4,
+      "rationale": "The answer is relevant and accurate, but faithfulness is capped because the claim about designing 'team performance frameworks' is not explicitly supported by the context."
+    },
+    "evidence": [
+      {
+        "source": "90_website_canon_llms_full.txt",
+        "chunk_id": "90_website_canon_llms_full.txt::21",
+        "section": "Scaling the data organization for multi-country growth",
+        "retrieval_rank": 1,
+        "retrieval_score": 24.0,
+        "parent_context": "Bolaji BALOGOUN \u00b7 Biography > Head of Data \u00b7 GOZEM \u00b7 Oct 2022 - Mar 2025",
+        "scope_context": "Head of Data \u00b7 GOZEM \u00b7 Oct 2022 - Mar 2025",
+        "evidence_type": "published",
+        "metric_scope": {},
+        "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN \u00b7 Data Engineer \u00b7 Data Architect (full content) | Section: Scaling the data organization for multi-country growth | Parent context: Bolaji BALOGOUN \u00b7 Biography > Head of Data \u00b7 GOZEM \u00b7 Oct 2022 - Mar 2025\n\nResult: Grew the Data organization from 4 to 14+ professionals and matured it into a business-aligned function supporting multi country and business growth.\nProblem: As Gozem transitioned from startup to scale-up, growing analytics demand, platform complexity, operational reporting requirements, and business specialization created the need for a larger and more structured data organization. The team needed to plan for new capabilities, specialize roles, formalize hiring and governance, and coordinate with business stakeholders.\nSolution: Assessed organizational capability gaps and designed the operating model for the data function across Analytics, Data Engineering, and Data Science. Defined role charters, hiring plans, career expectations, competency frameworks, and team structures based on business priorities and anticipated growth.\n\nPartnered with HR on workforce planning, hiring business cases, candidate evaluation frameworks, technical assessments, interviews, hiring decisions, onboarding, and performance management. Used **Breezy HR** to manage recruiting.\n\nCentralized the data team's requests in **Asana** and built dashboards from exported request data. The dashboards tracked request volume, demand sources, work categories, delivery times, team utilization, and capacity trends. Used these measures to inform staffing, prioritization, coaching, and resource allocation.\n\nIntroduced a domain-based partnership with business leaders that clarified data ownership, strengthened governance, and set clear accountability for KPIs. Made the data team part of recurring operational, strategic, and Growth decisions.\nTools: Breezy HR \u00b7 Google Workspace \u00b7 Asana \u00b7 BigQuery \u00b7 Looker Studio"
+      },
+      {
+        "source": "19_owner_confirmed_scope.txt",
+        "chunk_id": "19_owner_confirmed_scope.txt::2",
+        "section": "GOZEM TEAM GROWTH AND ROLE PERIODS",
+        "retrieval_rank": 1,
+        "retrieval_score": 17.0,
+        "parent_context": "BOLAJI BALOGOUN - OWNER-CONFIRMED CLAIM SCOPE",
+        "scope_context": "",
+        "evidence_type": "candidate_confirmed",
+        "metric_scope": {},
+        "content_preview": "Source: 19_owner_confirmed_scope.txt | Title: BOLAJI BALOGOUN - OWNER-CONFIRMED CLAIM SCOPE | Section: GOZEM TEAM GROWTH AND ROLE PERIODS | Parent context: BOLAJI BALOGOUN - OWNER-CONFIRMED CLAIM SCOPE\n\nBolaji was the first data hire in 2019. The initial team grew to 4 during the Global Data Analyst era (November 2019 - September 2022). The organization then grew from 4 to 14+ during his Head of Data period (October 2022 - March 2025). His later Data Director period was April 2025 - July 2026. The full team build must not be dated entirely to that later mandate. This confirmation does not establish direct-report counts, manager layers, department budget authority, or the precise dates of all 12 hires."
+      },
+      {
+        "source": "11_leadership_style.txt",
+        "chunk_id": "11_leadership_style.txt::2",
+        "section": "MANAGEMENT EXPERIENCE:",
+        "retrieval_rank": 2,
+        "retrieval_score": 0.016393,
+        "parent_context": "BOLAJI BALOGOUN - LEADERSHIP STYLE & MANAGEMENT PHILOSOPHY",
+        "scope_context": "",
+        "evidence_type": "curated",
+        "metric_scope": {},
+        "content_preview": "Source: 11_leadership_style.txt | Title: BOLAJI BALOGOUN - LEADERSHIP STYLE & MANAGEMENT PHILOSOPHY | Section: MANAGEMENT EXPERIENCE: | Parent context: BOLAJI BALOGOUN - LEADERSHIP STYLE & MANAGEMENT PHILOSOPHY\n\nAt Gozem, Bolaji was the first data hire in 2019. The initial team grew to 4, then expanded from 4 to 14+ professionals during the Head of Data period (October 2022 - March 2025). The organization supported five African operating markets (Togo, Benin, Cameroon, Congo, Gabon) and spanned eight analytics domains. Singapore was company headquarters only. He coordinated end-to-end onboarding for 12 hires from 50+ evaluated candidates with 30/60/90-day ramp milestones. The hiring rubrics, interview loops, and onboarding programs he designed are still in use across the function.\n\nHis management approach included:\n- Recruiting and building distributed teams across multiple countries and cultures.\n- Introducing effective processes, mentorship programs, and continuous learning initiatives.\n- Leveraging LLM tools to boost team productivity and project delivery speed, including bringing Claude into leadership workflows and product engineering.\n- Wearing multiple hats when needed: data architect, data engineer, analytics engineer, and data governance specialist.\n- Pushing capability outward as much as upward: a self-service no-code exploration platform halved the routine query load on the central team by putting 12+ managers directly in the data."
+      },
+      {
+        "source": "14_career_advice.txt",
+        "chunk_id": "14_career_advice.txt::6",
+        "section": "HOW TO BECOME EFFECTIVE IN BOTH STRATEGY AND HANDS-ON BUILDING:",
+        "retrieval_rank": 7,
+        "retrieval_score": 0.015625,
+        "parent_context": "BOLAJI BALOGOUN - CAREER ADVICE FOR ASPIRING DATA AND AI PROFESSIONALS",
+        "scope_context": "",
+        "evidence_type": "curated",
+        "metric_scope": {},
+        "content_preview": "Source: 14_career_advice.txt | Title: BOLAJI BALOGOUN - CAREER ADVICE FOR ASPIRING DATA AND AI PROFESSIONALS | Section: HOW TO BECOME EFFECTIVE IN BOTH STRATEGY AND HANDS-ON BUILDING: | Parent context: BOLAJI BALOGOUN - CAREER ADVICE FOR ASPIRING DATA AND AI PROFESSIONALS\n\nBolaji's career demonstrates that you don't have to choose between being a leader and being a builder. At Gozem, he simultaneously served as Data Director (strategy, team management, C-level reporting) and a hands-on architect (writing code, designing systems, deploying pipelines). The key is to stay close to the work. Leaders who stop building lose touch with what's possible and what's hard. Even while running a 14+ person organization, Bolaji kept a significant share of his time on hands-on building: coding, architecting, and shipping products."
+      }
+    ]
+  },
+  "recruiter-hda-05-t6": {
+    "id": "recruiter-hda-05-t6",
+    "question": "For the AI strategy you mentioned, how did he prioritize the six implementations, compare build versus vendor options and resolve disagreement with executives? What budget amount, approval authority, rejected option and measured return are documented rather than implied?",
+    "answer": "Bolaji prioritized initiatives using an impact-scoring framework incorporating productivity, employee experience, and business value (EBITDA) metrics, and produced vendor assessments for selected initiatives. Build versus vendor comparisons, executive disagreement resolutions, budget amounts, approval authority, rejected options, and measured returns are undocumented. \n\nResult: Turned fragmented AI experimentation into a structured enterprise roadmap, identifying 49 opportunities and advancing 6 high-priority initiatives into implementation.",
+    "scores": {
+      "relevance": 10,
+      "accuracy": 10,
+      "helpfulness": 10,
+      "faithfulness": 4,
+      "rationale": "The answer is relevant, accurate, and helpful, but its claim that certain details are 'undocumented' is an inference about the context rather than a statement directly supported by it, limiting its faithfulness score."
+    },
+    "evidence": [
+      {
+        "source": "90_website_canon_llms_full.txt",
+        "chunk_id": "90_website_canon_llms_full.txt::13",
+        "section": "AI strategy & investment portfolio",
+        "retrieval_rank": 1,
+        "retrieval_score": 0.032787,
+        "parent_context": "Bolaji BALOGOUN \u00b7 Biography > Data Director \u00b7 GOZEM \u00b7 Apr 2025 - Jul 2026",
+        "scope_context": "Data Director \u00b7 GOZEM \u00b7 Apr 2025 - Jul 2026",
+        "evidence_type": "published",
+        "metric_scope": {},
+        "content_preview": "Source: 90_website_canon_llms_full.txt | Title: Bolaji BALOGOUN \u00b7 Data Engineer \u00b7 Data Architect (full content) | Section: AI strategy & investment portfolio | Parent context: Bolaji BALOGOUN \u00b7 Biography > Data Director \u00b7 GOZEM \u00b7 Apr 2025 - Jul 2026\n\nResult: Turned fragmented AI experimentation into a structured enterprise roadmap, identifying 49 opportunities and advancing 6 high-priority initiatives into implementation.\nProblem: Gozem needed a scalable approach to evaluate AI opportunities across multiple business lines while navigating a rapidly evolving technology landscape. Leadership required a structured framework to prioritize initiatives by business value, compare solution providers, and align AI investments with operational and growth objectives.\nSolution: Partnered with more than 50 stakeholders across nine business units to identify AI opportunities, document business requirements, and assess existing grassroots AI adoption across the organization. Combined internal usage patterns, stakeholder input, and market intelligence to build on practices employees had already adopted.\n\nBuilt a centralized AI portfolio management system cataloging 49 use cases and 133 vendors across 38 technology categories. Designed an impact-scoring framework incorporating productivity, employee experience, and business value (EBITDA) metrics to prioritize opportunities and support executive decision-making. Produced adoption roadmaps, vendor assessments, and implementation recommendations for selected initiatives.\nTools: Google Forms \u00b7 Google Sheets \u00b7 LLM \u00b7 Python \u00b7 Git"
+      }
+    ]
+  }
+}
